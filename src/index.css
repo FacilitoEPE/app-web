@@ -6,6 +6,11 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+    /* Sombras: tarjetas en reposo y en hover, brillo de marca (botones de ícono, tooltips) y acción destructiva */
+    --shadow-card: 0 2px 12px rgb(0 0 0 / 0.03);
+    --shadow-card-hover: 0 4px 20px rgb(0 0 0 / 0.06);
+    --shadow-glow: 0 4px 12px -2px var(--brand-gradient-glow);
+    --shadow-danger: 0 4px 12px color-mix(in oklab, var(--destructive) 30%, transparent);
     --font-heading: var(--font-sans);
     --font-sans: 'Plus Jakarta Sans Variable', sans-serif;
     --color-brand: var(--brand);

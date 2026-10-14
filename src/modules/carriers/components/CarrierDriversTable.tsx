@@ -8,8 +8,7 @@ import { TableToolbar, TableCountPill } from "@/shared/components/TableToolbar";
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import type { Driver } from "@/modules/carriers/carriers.data";
-
-const PAGE_SIZE = 8;
+import { paginate } from "@/shared/utils/paginate";
 
 interface CarrierDriversTableProps {
     data: Driver[];
@@ -25,9 +24,7 @@ export default function CarrierDriversTable({ data, hasActiveFilters, onClearFil
     // Se guarda el chofer completo: al confirmar sale de `data` y el texto no debe vaciarse mientras el modal se cierra
     const [deleting, setDeleting] = useState<{ open: boolean; driver: Driver | null }>({ open: false, driver: null });
 
-    const pageCount = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
-    const visibleData = data.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const { pageCount, currentPage, visible: visibleData } = paginate(data, page);
 
     const getRowActions = (row: Driver): { primary: RowAction[] } => ({
         primary: [
@@ -44,7 +41,7 @@ export default function CarrierDriversTable({ data, hasActiveFilters, onClearFil
             description="Los choferes y vehículos se asignan por rango de fechas dentro de cada trazabilidad de transporte."
             headerRight={
                 <TableToolbar>
-                    <TableCountPill icon={<UserRound size={16} strokeWidth={2.5} className="text-brand" />} count={data.length} label="choferes" />
+                    <TableCountPill icon={<UserRound size={16} strokeWidth={2.5} className="text-brand" />} count={data.length} singular="chofer" plural="choferes" />
                 </TableToolbar>
             }
             isEmpty={visibleData.length === 0}

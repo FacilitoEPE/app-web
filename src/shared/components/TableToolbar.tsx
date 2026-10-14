@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ChevronDown, Download, LayoutGrid, List } from "lucide-react";
+import { ChevronDown, Download, FileSpreadsheet, FileText, LayoutGrid, List } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -7,6 +7,8 @@ import {
     DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { plural } from "@/shared/utils/plural";
+import { exportCsv, exportPdf, type TableExport } from "@/shared/utils/exportTable";
 
 /**
  * Fila de controles a la derecha del título de una tabla (TableCard `headerRight`).
@@ -36,27 +38,32 @@ export function TableCountText({ visible, total, label }: TableCountTextProps) {
 interface TableCountPillProps {
     icon: ReactNode;
     count: number;
-    /** Sustantivo en plural, ej. "campañas" */
-    label: string;
+    /** Sustantivo en singular, ej. "campaña" */
+    singular: string;
+    /** Sustantivo en plural, ej. "campañas"; se usa con 0 y con más de 1 */
+    plural: string;
 }
 
 /** Píldora de conteo con ícono; para tablas que quieren un contador más destacado que TableCountText */
-export function TableCountPill({ icon, count, label }: TableCountPillProps) {
+export function TableCountPill({ icon, count, singular, plural: pluralLabel }: TableCountPillProps) {
     return (
         <div className="flex h-14 items-center gap-2 px-4 rounded-xl bg-brand-surface border border-brand-border">
             {icon}
-            <span className="text-[13px] font-bold text-brand-dark">{count} {label}</span>
+            <span className="text-[13px] font-bold text-brand-dark">{count} {plural(count, singular, pluralLabel)}</span>
         </div>
     );
 }
 
 interface TableExportMenuProps {
-    onExportExcel: () => void;
-    onExportPdf: () => void;
+    /** Arma lo que se exporta (las filas visibles con los filtros aplicados); se llama al elegir el formato */
+    getData: () => TableExport;
 }
 
-/** Botón "Exportar" con Excel/PDF detrás de un menú. Se omite del todo en tablas que no exportan nada. */
-export function TableExportMenu({ onExportExcel, onExportPdf }: TableExportMenuProps) {
+/**
+ * Botón "Exportar": Excel baja un CSV (Excel lo abre directo, con acentos) y PDF abre el diálogo de impresión
+ * con la tabla formateada para "Guardar como PDF". Se omite del todo en tablas que no exportan nada.
+ */
+export function TableExportMenu({ getData }: TableExportMenuProps) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger
@@ -69,11 +76,11 @@ export function TableExportMenu({ onExportExcel, onExportPdf }: TableExportMenuP
                 <ChevronDown size={14} strokeWidth={3} className="text-ink-muted/50" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8} className="w-44 rounded-xl shadow-xl border-border/50 bg-popover p-1.5">
-                <DropdownMenuItem onClick={onExportExcel} className="gap-2.5 px-3 py-2.5 text-[13px] font-medium text-ink-body rounded-lg cursor-pointer transition-colors">
-                    Exportar a Excel
+                <DropdownMenuItem onClick={() => exportCsv(getData())} className="gap-2.5 px-3 py-2.5 text-[13px] font-medium text-ink-body rounded-lg cursor-pointer transition-colors">
+                    <FileSpreadsheet size={16} className="text-brand" /> Excel (.csv)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onExportPdf} className="gap-2.5 px-3 py-2.5 text-[13px] font-medium text-ink-body rounded-lg cursor-pointer transition-colors">
-                    Exportar a PDF
+                <DropdownMenuItem onClick={() => exportPdf(getData())} className="gap-2.5 px-3 py-2.5 text-[13px] font-medium text-ink-body rounded-lg cursor-pointer transition-colors">
+                    <FileText size={16} className="text-brand" /> PDF (imprimir)
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

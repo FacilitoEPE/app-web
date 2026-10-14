@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ContactRound, Eye, FileSignature, Link, Link2Off, Pencil, Plus, RotateCw, TriangleAlert, Users } from "lucide-react";
+import { AlertCircle, ContactRound, Eye, FileSignature, Link, Link2Off, Pencil, Plus, RotateCw, TriangleAlert, Users } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Spinner } from "@/shared/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
@@ -15,18 +14,20 @@ import CampaignContextBanner from "@/modules/campaigns/components/CampaignContex
 import CampaignLinkClientModal from "@/modules/campaigns/components/CampaignLinkClientModal";
 import CampaignClientRecordModal from "@/modules/campaigns/components/CampaignClientRecordModal";
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
-import { getCampana } from "@/modules/campaigns/api/campaign.api";
 import { deleteClienteNegocioCampana, getClientesNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.api";
-import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { ClienteNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.mapper";
 import { formatCampaignNumber } from "@/modules/campaigns/campaignDetails.utils";
+import { useCampaign } from "@/modules/campaigns/useCampaign";
+import { ContextBannerPlaceholder } from "@/shared/components/ContextBanner";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
+import { Spinner } from "@/shared/components/ui/spinner";
+import { plural } from "@/shared/utils/plural";
+import { paginate } from "@/shared/utils/paginate";
 
-const PAGE_SIZE = 8;
 const TYPE_LABEL: Record<string, string> = { exportador: "Exportador", industria: "Industria" };
 const clientName = (row: ClienteNegocioCampana) => row.clienteNegocio?.nombreEmpresa ?? "Cliente";
 const clientType = (row: ClienteNegocioCampana) => row.clienteNegocio ? TYPE_LABEL[row.clienteNegocio.tipoCliente] ?? row.clienteNegocio.tipoCliente : "—";
 
-type LoadState = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; campaign: Campana };
 type RecordModal = { open: boolean; mode: "view" | "edit"; client: ClienteNegocioCampana | null };
 const CLOSED_RECORD: RecordModal = { open: false, mode: "view", client: null };
 
@@ -35,7 +36,10 @@ export default function CampaignClientsPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const campaniaId = Number(id);
-    const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
+    const isValidCampaign = Number.isInteger(campaniaId) && campaniaId > 0;
+    const campaign = useCampaign(campaniaId);
+    const [isLoading, setIsLoading] = useState(isValidCampaign);
+    const [loadError, setLoadError] = useState<string | null>(isValidCampaign ? null : "La campaña no es válida.");
     const [clients, setClients] = useState<ClienteNegocioCampana[]>([]);
     const [page, setPage] = useState(1);
     const [linkOpen, setLinkOpen] = useState(false);
@@ -47,26 +51,27 @@ export default function CampaignClientsPage() {
     const [successOpen, setSuccessOpen] = useState(false);
 
     const load = useCallback(async () => {
-        if (!Number.isInteger(campaniaId) || campaniaId < 1) {
-            setLoadState({ status: "error", message: "La campaña no es válida." });
-            return;
-        }
+        if (!isValidCampaign) return;
         try {
-            const [campaign, relations] = await Promise.all([getCampana(campaniaId), getClientesNegocioCampana(campaniaId)]);
-            setClients(relations);
-            setLoadState({ status: "ready", campaign });
+            setClients(await getClientesNegocioCampana(campaniaId));
+            setLoadError(null);
             setActionError(undefined);
         } catch {
-            setLoadState({ status: "error", message: "No se pudieron cargar los clientes de esta campaña." });
+            setLoadError("No se pudieron cargar los clientes de esta campaña.");
+        } finally {
+            setIsLoading(false);
         }
-    }, [campaniaId]);
+    }, [campaniaId, isValidCampaign]);
+
+    const retry = () => {
+        setIsLoading(true);
+        void load();
+    };
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void load(); }, [load]);
 
-    const pageCount = Math.max(1, Math.ceil(clients.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
-    const visible = clients.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const { pageCount, currentPage, visible } = paginate(clients, page);
 
     const actionsFor = (row: ClienteNegocioCampana): { primary: RowAction[]; secondary: RowAction[] } => ({
         primary: [
@@ -94,31 +99,38 @@ export default function CampaignClientsPage() {
         }
     };
 
-    if (loadState.status !== "ready") return (
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-5 text-center">
-            {loadState.status === "loading" ? <><Spinner className="size-9 text-brand" /><p className="text-ink-muted">Cargando clientes...</p></> : <>
-                <TriangleAlert className="size-10 text-brand" aria-hidden="true" />
-                <h1 className="text-xl font-bold text-ink">Clientes no disponibles</h1>
-                <p role="alert" className="text-ink-muted">{loadState.message}</p>
-                <Button onClick={() => { setLoadState({ status: "loading" }); void load(); }}><RotateCw size={17} /> Reintentar</Button>
-            </>}
-        </div>
-    );
+    // El marco de la tabla se mantiene siempre; carga y error ocupan el lugar del estado vacío
+    const emptyState = isLoading
+        ? { icon: <Spinner className="size-7" />, title: "Cargando clientes", description: "Consultando los clientes vinculados a esta campaña.", action: undefined }
+        : loadError
+            ? { icon: <TriangleAlert size={28} strokeWidth={2} />, title: "No se pudieron cargar los clientes", description: loadError, action: isValidCampaign ? { label: "Reintentar", icon: <RotateCw size={18} strokeWidth={2.5} />, onClick: retry, tone: "secondary" as const } : undefined }
+            : { icon: <Users size={28} />, title: "Aún no hay clientes vinculados", description: "Esta campaña todavía no tiene clientes vinculados. Vincula el primero para comenzar.", action: { label: "Vincular cliente", icon: <Plus size={18} />, onClick: () => setLinkOpen(true) } };
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
-            <CampaignContextBanner campaign={loadState.campaign} caption="Clientes · gestión comercial" />
+            {campaign === undefined ? <ContextBannerPlaceholder /> : campaign && (
+                <CampaignContextBanner
+                    campaign={campaign}
+                    caption="Clientes · gestión comercial"
+                    stats={[{ label: plural(clients.length, "cliente vinculado", "clientes vinculados"), value: String(clients.length) }]}
+                />
+            )}
             <PageHeader icon={<Users size={24} strokeWidth={2.5} />} title="Gestión de Clientes" description="Vincula clientes y da seguimiento a sus requerimientos comerciales en esta campaña."
-                action={<Button size="xl" onClick={() => setLinkOpen(true)}><Link size={19} /> Vincular cliente</Button>} />
+                action={<Button size="xl" onClick={() => setLinkOpen(true)} disabled={!isValidCampaign}><Link size={19} /> Vincular cliente</Button>} />
 
-            {actionError && <p role="alert" className="mb-5 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm font-medium text-destructive">{actionError}</p>}
+            {actionError && (
+                <Alert variant="destructive" className="mb-6">
+                    <AlertCircle />
+                    <AlertDescription>{actionError}</AlertDescription>
+                </Alert>
+            )}
             <TableCard icon={<ContactRound size={24} strokeWidth={2.5} />} title="Clientes de la Campaña" description="Consulta los vínculos; los datos completos están en Ver detalles."
-                headerRight={<TableToolbar><TableCountPill icon={<Users size={16} className="text-brand" />} count={clients.length} label={clients.length === 1 ? "cliente" : "clientes"} /></TableToolbar>}
-                isEmpty={clients.length === 0}
-                emptyIcon={<Users size={28} />}
-                emptyTitle="Aún no hay clientes vinculados"
-                emptyDescription="Esta campaña todavía no tiene clientes vinculados. Vincula el primero para comenzar."
-                emptyAction={{ label: "Vincular cliente", icon: <Plus size={18} />, onClick: () => setLinkOpen(true) }}
+                headerRight={<TableToolbar><TableCountPill icon={<Users size={16} className="text-brand" />} count={clients.length} singular="cliente" plural="clientes" /></TableToolbar>}
+                isEmpty={isLoading || loadError !== null || clients.length === 0}
+                emptyIcon={emptyState.icon}
+                emptyTitle={emptyState.title}
+                emptyDescription={emptyState.description}
+                emptyAction={emptyState.action}
                 page={currentPage} pageCount={pageCount} onPageChange={setPage}>
                 <div className="flex flex-col gap-3 sm:hidden">
                     {visible.map((row) => <TableGridCard key={row.clienteNegocioCampanaId} accentColor="border-l-brand" icon={<Users size={18} />} title={clientName(row)} subtitle={clientType(row)} actions={<RowActions className="justify-center" {...actionsFor(row)} />}>
@@ -150,7 +162,7 @@ export default function CampaignClientsPage() {
                 </div>
             </TableCard>
 
-            <CampaignLinkClientModal open={linkOpen} onOpenChange={setLinkOpen} campaniaId={campaniaId} campaign={loadState.campaign} onSave={() => setLinkOpen(false)} />
+            <CampaignLinkClientModal open={linkOpen} onOpenChange={setLinkOpen} campaniaId={campaniaId} campaign={campaign ?? null} onSave={() => setLinkOpen(false)} />
             <CampaignClientRecordModal open={recordModal.open} mode={recordModal.mode} client={recordModal.client} campaniaId={campaniaId}
                 onOpenChange={(open) => setRecordModal((current) => ({ ...current, open }))}
                 onSaved={(updated) => {

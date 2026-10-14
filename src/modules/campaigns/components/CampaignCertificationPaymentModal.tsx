@@ -17,8 +17,7 @@ import {
     type PagoErrors,
     type PagoFormValues,
 } from "@/modules/campaigns/campaignCertificate.utils";
-
-const money = new Intl.NumberFormat("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/format";
 
 interface CampaignCertificationPaymentModalProps {
     open: boolean;
@@ -67,7 +66,7 @@ export default function CampaignCertificationPaymentModal({ open, onOpenChange, 
             icon={<Wallet size={22} strokeWidth={2} />}
             title="Registrar Pago"
             description={certificate.nombre}
-            className="sm:max-w-130"
+            size="sm"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
@@ -82,9 +81,9 @@ export default function CampaignCertificationPaymentModal({ open, onOpenChange, 
             <div className="flex flex-col gap-5">
                 <SummaryBar
                     items={[
-                        { label: "Costo", value: `${symbol} ${money.format(certificate.costo)}` },
-                        { label: "Pagado", value: `${symbol} ${money.format(getTotalPagado(certificate))}` },
-                        { label: "Saldo pendiente", value: `${symbol} ${money.format(balance)}`, tone: balance > 0 ? "highlight" : "brand" },
+                        { label: "Costo", value: `${symbol} ${formatMoney(certificate.costo)}` },
+                        { label: "Pagado", value: `${symbol} ${formatMoney(getTotalPagado(certificate))}` },
+                        { label: "Saldo pendiente", value: `${symbol} ${formatMoney(balance)}`, tone: balance > 0 ? "highlight" : "brand" },
                     ]}
                 />
 

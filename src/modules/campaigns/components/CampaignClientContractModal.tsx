@@ -61,7 +61,7 @@ export default function CampaignClientContractModal({ open, mode, contract, onOp
             icon={<FileSignature size={22} strokeWidth={2.25} />}
             title={viewOnly ? "Detalle del Contrato" : mode === "edit" ? "Editar Contrato" : "Registrar Contrato"}
             description={viewOnly ? "Consulta las condiciones comerciales acordadas." : "Registra las condiciones comerciales y adjunta el documento firmado."}
-            className="sm:max-w-190"
+            size="xl"
             footer={viewOnly ? (
                 <Button size="xl" onClick={() => onOpenChange(false)}>Cerrar</Button>
             ) : (

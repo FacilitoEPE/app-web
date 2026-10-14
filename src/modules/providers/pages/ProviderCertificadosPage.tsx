@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Plus, ShieldCheck, UserRound } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { Plus, ShieldCheck, UserRound } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Spinner } from "@/shared/components/ui/spinner";
 import PageHeader from "@/shared/layout/PageHeader";
 import ProviderContextBanner from "@/modules/providers/components/ProviderContextBanner";
 import ProviderCertificadosTable from "@/modules/providers/components/ProviderCertificadosTable";
@@ -12,6 +11,7 @@ import { getProveedor } from "@/modules/providers/api/proveedor.api";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
 import { addCertificado, updateCertificado, useProviderLocalData } from "@/modules/providers/providerLocalData.store";
 import type { CertificadoFormValues, CertificadoLocal } from "@/modules/providers/providerCertificado.utils";
+import { PageError, PageLoading } from "@/shared/components/PageState";
 
 const fullName = (provider: Proveedor) => `${provider.nombres} ${provider.apellido}`;
 
@@ -46,23 +46,17 @@ export default function ProviderCertificadosPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void loadProvider(); }, [loadProvider]);
 
-    if (isLoading) {
-        return (
-            <div role="status" className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-ink-muted">
-                <Spinner className="size-8 text-brand" />
-                <p className="text-[14px] font-medium">Cargando proveedor...</p>
-            </div>
-        );
-    }
+    if (isLoading) return <PageLoading label="Cargando proveedor..." />;
 
     if (!provider) {
         return (
-            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
-                <UserRound size={44} className="text-brand" aria-hidden="true" />
-                <h1 className="text-2xl font-bold text-ink">Proveedor no disponible</h1>
-                <p role="alert" className="text-ink-muted">{error}</p>
-                <Button nativeButton={false} render={<Link to="/proveedores" />}><ArrowLeft />Volver a proveedores</Button>
-            </div>
+            <PageError
+                icon={<UserRound />}
+                title="Proveedor no disponible"
+                message={error ?? "No se pudo cargar el proveedor."}
+                onRetry={() => { setIsLoading(true); void loadProvider(); }}
+                back={{ to: `/proveedores/${providerId}`, label: "Volver al proveedor" }}
+            />
         );
     }
 

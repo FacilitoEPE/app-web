@@ -1,3 +1,4 @@
+import { plural } from "@/shared/utils/plural";
 import { Truck } from "lucide-react";
 import CampaignContactsCard from "@/modules/campaigns/components/CampaignContactsCard";
 import { getGrowerTotals } from "@/modules/campaigns/campaignDetails.data";
@@ -7,7 +8,7 @@ import { formatCampaignNumber } from "@/modules/campaigns/campaignDetails.utils"
 export default function CampaignProvidersSummary({ providers, campaignName, onViewAll }: { providers: CampaignGrower[]; campaignName: string; onViewAll: () => void }) {
     const totals = getGrowerTotals(providers);
     return (
-        <CampaignContactsCard title="Proveedores" description={`${providers.length} proveedores vinculados · ${campaignName}`} icon={<Truck size={27} />} onViewAll={onViewAll} empty={!providers.length}
+        <CampaignContactsCard title="Proveedores" description={`${providers.length} ${plural(providers.length, "proveedor vinculado", "proveedores vinculados")} · ${campaignName}`} icon={<Truck size={27} />} onViewAll={onViewAll} empty={!providers.length}
             stats={[{ label: "Proveedores", value: providers.length }, { label: "Hectáreas totales", value: `${formatCampaignNumber(totals.hectares)} ha` }, { label: "Variedades", value: totals.varieties }]}>
             <p className="campaign-list-label">Principales proveedores</p>
             {providers.slice(0, 2).map((provider) => (

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Truck, Tractor, Scale, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import CampaignDirectoryModal from "@/modules/campaigns/components/CampaignDirectoryModal";
 import CampaignDirectoryTable, { DirectoryIdentity, DirectoryContact } from "@/modules/campaigns/components/CampaignDirectoryTable";
 import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
@@ -65,9 +66,10 @@ export default function CampaignManagementProvidersModal({ open, campaniaId, onO
             ]}
         >
             {loadError ? (
-                <p role="alert" className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-[13px] font-medium text-destructive">
-                    <AlertCircle size={16} className="shrink-0" /> {loadError}
-                </p>
+                <Alert variant="destructive">
+                    <AlertCircle />
+                    <AlertDescription>{loadError}</AlertDescription>
+                </Alert>
             ) : isLoading ? (
                 <p role="status" className="py-8 text-center text-sm text-ink-muted">Cargando proveedores...</p>
             ) : (

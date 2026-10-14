@@ -1,7 +1,6 @@
 import { LandPlot, Leaf, Ruler, ShieldCheck } from "lucide-react";
 import MetricCards, { type Metric } from "@/shared/components/MetricCards";
-
-const number = new Intl.NumberFormat("es-PE", { maximumFractionDigits: 2 });
+import { formatDecimal } from "@/shared/utils/format";
 
 interface ProviderMetricCardsProps {
     fincas: number;
@@ -16,8 +15,8 @@ export default function ProviderMetricCards({ fincas, totalHectares, cultivatedH
 
     const metrics: Metric[] = [
         { title: "Fincas registradas", value: String(fincas), unit: fincas === 1 ? "finca" : "fincas", description: "Lugares de cultivo del proveedor", icon: LandPlot },
-        { title: "Hectáreas totales", value: number.format(totalHectares), unit: "ha", description: "Suma de todas sus fincas", icon: Ruler },
-        { title: "Hectáreas de cultivo", value: number.format(cultivatedHectares), unit: "ha", description: totalHectares > 0 ? `${cultivatedShare}% del total registrado` : "Aún sin fincas registradas", icon: Leaf },
+        { title: "Hectáreas totales", value: formatDecimal(totalHectares), unit: "ha", description: "Suma de todas sus fincas", icon: Ruler },
+        { title: "Hectáreas de cultivo", value: formatDecimal(cultivatedHectares), unit: "ha", description: totalHectares > 0 ? `${cultivatedShare}% del total registrado` : "Aún sin fincas registradas", icon: Leaf },
         { title: "Certificados", value: String(certificates), unit: certificates === 1 ? "documento" : "documentos", description: "Certificados propios del proveedor", icon: ShieldCheck, warm: true },
     ];
 

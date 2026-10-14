@@ -13,14 +13,16 @@ interface FruitVarietyPickerProps {
     onChange: (next: CultivoFinca[]) => void;
     disabled?: boolean;
     invalid?: boolean;
+    /** Ayuda bajo el título de variedades; cambia según quién las tiene (la finca, el proveedor) */
+    varietiesHint?: string;
 }
 
 /**
  * Elige uno o varios cultivos y las variedades de cada uno, en dos columnas: las frutas del catálogo a la
  * izquierda (un clic la agrega y la deja activa; la X la quita) y, a la derecha, las variedades de la fruta
- * activa para marcar una o varias. Misma idea que el catálogo del formulario de proveedor.
+ * activa para marcar una o varias. Lo usan el formulario de finca y el de proveedor.
  */
-export default function FruitVarietyPicker({ fruits, value, onChange, disabled, invalid }: FruitVarietyPickerProps) {
+export default function FruitVarietyPicker({ fruits, value, onChange, disabled, invalid, varietiesHint = "Marca las que tiene esta finca" }: FruitVarietyPickerProps) {
     const [activeName, setActiveName] = useState<string>("");
 
     // La fruta activa es la que se tocó, si sigue agregada; si no, la primera agregada
@@ -102,7 +104,7 @@ export default function FruitVarietyPicker({ fruits, value, onChange, disabled, 
                         <div className="flex items-start justify-between gap-3 border-b border-border/50 pb-2">
                             <div>
                                 <h4 className="text-[13.5px] font-bold text-ink">Variedades de {active.nombre}</h4>
-                                <p className="text-[11.5px] text-ink-muted">Marca las que tiene esta finca</p>
+                                <p className="text-[11.5px] text-ink-muted">{varietiesHint}</p>
                             </div>
                             <Button
                                 type="button"

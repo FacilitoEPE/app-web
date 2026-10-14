@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, LandPlot, Plus, Trash2, UserRound } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { LandPlot, Plus, Trash2, UserRound } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Spinner } from "@/shared/components/ui/spinner";
 import PageHeader from "@/shared/layout/PageHeader";
 import ProviderFincasTable from "@/modules/providers/components/ProviderFincasTable";
 import ConfirmModal from "@/shared/components/ConfirmModal";
@@ -14,8 +13,9 @@ import { getProveedor } from "@/modules/providers/api/proveedor.api";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
 import { addFinca, removeFinca, updateFinca, useProviderLocalData } from "@/modules/providers/providerLocalData.store";
 import type { Finca } from "@/modules/providers/providerFinca.utils";
+import { PageError, PageLoading } from "@/shared/components/PageState";
+import { formatDecimal } from "@/shared/utils/format";
 
-const hectares = new Intl.NumberFormat("es-PE", { maximumFractionDigits: 2 });
 const fullName = (provider: Proveedor) => `${provider.nombres} ${provider.apellido}`;
 
 /** Gestión de las fincas de un proveedor: su lista y el registro de nuevas fincas. */
@@ -46,23 +46,17 @@ export default function ProviderFincasPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void loadProvider(); }, [loadProvider]);
 
-    if (isLoading) {
-        return (
-            <div role="status" className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-ink-muted">
-                <Spinner className="size-8 text-brand" />
-                <p className="text-[14px] font-medium">Cargando proveedor...</p>
-            </div>
-        );
-    }
+    if (isLoading) return <PageLoading label="Cargando proveedor..." />;
 
     if (!provider) {
         return (
-            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
-                <UserRound size={44} className="text-brand" aria-hidden="true" />
-                <h1 className="text-2xl font-bold text-ink">Proveedor no disponible</h1>
-                <p role="alert" className="text-ink-muted">{error}</p>
-                <Button nativeButton={false} render={<Link to="/proveedores" />}><ArrowLeft />Volver a proveedores</Button>
-            </div>
+            <PageError
+                icon={<UserRound />}
+                title="Proveedor no disponible"
+                message={error ?? "No se pudo cargar el proveedor."}
+                onRetry={() => { setIsLoading(true); void loadProvider(); }}
+                back={{ to: `/proveedores/${providerId}`, label: "Volver al proveedor" }}
+            />
         );
     }
 
@@ -103,8 +97,8 @@ function ProviderFincasView({ provider }: { provider: Proveedor }) {
                 caption="Fincas · cultivos y superficie"
                 stats={[
                     { label: providerFincas.length === 1 ? "finca" : "fincas", value: String(providerFincas.length) },
-                    { label: "ha totales", value: hectares.format(providerFincas.reduce((sum, finca) => sum + finca.haTotal, 0)) },
-                    { label: "ha en cultivo", value: hectares.format(providerFincas.reduce((sum, finca) => sum + finca.haCultivo, 0)) },
+                    { label: "ha totales", value: formatDecimal(providerFincas.reduce((sum, finca) => sum + finca.haTotal, 0)) },
+                    { label: "ha en cultivo", value: formatDecimal(providerFincas.reduce((sum, finca) => sum + finca.haCultivo, 0)) },
                 ]}
             />
 

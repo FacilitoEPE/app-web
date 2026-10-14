@@ -26,11 +26,11 @@ interface CampaignSuccessModalProps {
 
 /** Título y descripción por escenario: la campaña es el único flujo con tantos modos distintos de éxito */
 const COPY: Record<CampaignSuccessMode, { title: string; description: string }> = {
-    create: { title: "Campaña Registrada", description: "Se podra ver las campañas registradas en el inicio" },
+    create: { title: "Campaña Registrada", description: "Se podrá ver las campañas registradas en el inicio" },
     edit: { title: "Cambios Guardados", description: "Se actualizó correctamente" },
     provider: { title: "Proveedor Añadido a Campaña", description: "Se ha añadido el proveedor exitosamente a la campaña" },
     exam: { title: "Examen Registrado", description: "El examen de laboratorio del proveedor se registró correctamente." },
-    interview: { title: "Informe Registrado", description: "Se visualizara informe" },
+    interview: { title: "Entrevista Registrada", description: "La finca entrevistada ya aparece en la lista del productor." },
     client: { title: "Cliente vinculado", description: "El cliente ya aparece en la gestión de clientes de esta campaña." },
     contract: { title: "Contrato guardado", description: "El acuerdo comercial ya aparece en la gestión de contratos del cliente." },
     delivery: { title: "Entrega guardada", description: "La programación ya aparece en la gestión de entregas del contrato." },

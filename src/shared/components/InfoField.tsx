@@ -1,27 +1,44 @@
 import type { ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
+import type {  } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/** Etiqueta de un dato de solo lectura. Exportada para que los visualizadores (p. ej. `FileDropzone` en `readOnly`) se vean igual. */
+export const INFO_LABEL_CLASS = "text-[10px] font-bold uppercase tracking-wide text-ink-muted";
+
 interface InfoFieldProps {
-    label: string;
+    label: ReactNode;
     value: ReactNode;
     /** Unidad pegada al borde derecho, ej. "m", "ha", "/año" */
     suffix?: string;
+    /**
+     * "box" (por defecto): el valor en una caja de una línea, como un campo.
+     * "plain": el valor tal cual, sin caja — para lo que ya tiene su propia forma (un badge, píldoras, una lista).
+     */
+    variant?: "box" | "plain";
+    /** Texto largo (observaciones): la caja crece y respeta los saltos de línea en vez de cortar el texto */
+    multiline?: boolean;
     className?: string;
 }
 
 /**
- * Campo de solo lectura: etiqueta + valor en una caja. Para vistas de "ver detalles" que no son
- * formularios — nada de `<Input readOnly>` fingiendo ser un campo editable.
+ * Campo de solo lectura: etiqueta + valor. Para vistas de "ver detalles" que no son formularios — nada de
+ * `<Input readOnly>` fingiendo ser un campo editable, ni etiquetas en mayúsculas armadas a mano.
  */
-export function InfoField({ label, value, suffix, className }: InfoFieldProps) {
+export function InfoField({ label, value, suffix, variant = "box", multiline = false, className }: InfoFieldProps) {
     return (
         <div className={cn("flex min-w-0 flex-col gap-2", className)}>
-            <label className="text-[10px] font-bold uppercase tracking-wide text-ink-muted">{label}</label>
-            <div className="relative flex h-10 items-center rounded-lg border border-border/60 bg-card px-3 text-[13px] font-medium text-ink">
-                <span className="truncate">{value}</span>
-                {suffix && <span className="absolute right-3 text-xs font-bold text-ink-muted">{suffix}</span>}
-            </div>
+            <span className={INFO_LABEL_CLASS}>{label}</span>
+            {variant === "plain" ? (
+                <div className="min-w-0 text-[13px] font-medium text-ink">{value}</div>
+            ) : (
+                <div className={cn(
+                    "relative flex items-center rounded-lg border border-border/60 bg-card px-3 text-[13px] font-medium text-ink",
+                    multiline ? "min-h-10 py-2.5" : "h-10",
+                )}>
+                    <span className={multiline ? "whitespace-pre-wrap wrap-anywhere" : "truncate"}>{value}</span>
+                    {suffix && <span className="absolute right-3 text-xs font-bold text-ink-muted">{suffix}</span>}
+                </div>
+            )}
         </div>
     );
 }
@@ -56,69 +73,3 @@ export function SummaryBar({ items, className }: SummaryBarProps) {
     );
 }
 
-interface InfoSectionProps {
-    icon: LucideIcon;
-    title: string;
-    children: ReactNode;
-    className?: string;
-}
-
-/** Encabezado de sección (ícono + título en mayúsculas) para agrupar varios InfoField relacionados */
-export function InfoSection({ icon: Icon, title, children, className }: InfoSectionProps) {
-    return (
-        <div className={cn("flex flex-col gap-4", className)}>
-            <div className="flex items-center gap-2 text-brand">
-                <Icon size={18} strokeWidth={2.5} />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-brand">{title}</h3>
-            </div>
-            {children}
-        </div>
-    );
-}
-
-interface StatTileProps {
-    icon: LucideIcon;
-    label: string;
-    value: ReactNode;
-    /** Aclaración chica debajo del valor, ej. "de 245 ha en la finca" */
-    hint?: string;
-    className?: string;
-}
-
-/**
- * Cifra destacada con ícono, para el dato que sí vale la pena que salte a la vista
- * (en vez de otra caja igual a las demás en una grilla uniforme).
- */
-export function StatTile({ icon: Icon, label, value, hint, className }: StatTileProps) {
-    return (
-        <div className={cn("flex items-start gap-3 rounded-xl border border-border/60 bg-card px-3 py-3", className)}>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-surface" style={{ color: "var(--brand-gradient-mid)" }}>
-                <Icon size={17} strokeWidth={2.5} />
-            </span>
-            <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase leading-snug tracking-wide text-ink-muted">{label}</p>
-                <p className="truncate text-[18px] font-bold leading-tight text-ink">{value}</p>
-                {hint && <p className="text-[11px] leading-snug text-ink-muted">{hint}</p>}
-            </div>
-        </div>
-    );
-}
-
-interface LocationTrailProps {
-    parts: string[];
-    className?: string;
-}
-
-/** Departamento › Provincia › Distrito en una sola línea, en vez de tres cajas idénticas */
-export function LocationTrail({ parts, className }: LocationTrailProps) {
-    return (
-        <div className={cn("flex flex-wrap items-center gap-1.5 text-[13.5px] font-semibold text-ink", className)}>
-            {parts.map((part, index) => (
-                <span key={part} className="flex items-center gap-1.5">
-                    {index > 0 && <span className="text-ink-muted/50">›</span>}
-                    {part}
-                </span>
-            ))}
-        </div>
-    );
-}

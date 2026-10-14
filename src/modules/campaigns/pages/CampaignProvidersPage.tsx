@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { plural } from "@/shared/utils/plural";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Eye, Users, FlaskConical, Tractor, Truck, SearchX, ListFilter, Link, TriangleAlert, RotateCw, UserRoundCheck, Pencil } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -15,7 +16,6 @@ import {
 } from "@/shared/components/ui/table";
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
 import TableCard from "@/shared/components/TableCard";
-import { downloadCsv } from "@/shared/utils/downloadCsv";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
 import TableGridCard, { TableGridCardFields, TableGridCardField } from "@/shared/components/TableGridCard";
 import { TableToolbar, TableCountPill, TableExportMenu, TableViewToggle, type TableViewMode } from "@/shared/components/TableToolbar";
@@ -23,12 +23,15 @@ import PageHeader from "@/shared/layout/PageHeader";
 import CampaignLinkProviderModal from "@/modules/campaigns/components/CampaignLinkProviderModal";
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 
+import { ContextBannerPlaceholder } from "@/shared/components/ContextBanner";
+import CampaignContextBanner from "@/modules/campaigns/components/CampaignContextBanner";
+import { useCampaign } from "@/modules/campaigns/useCampaign";
 import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
 import type { TipoProveedorCampania } from "@/modules/campaigns/api/campania-proveedor.dto";
 import { formatCampaignNumber } from "@/modules/campaigns/campaignDetails.utils";
-
-const PAGE_SIZE = 8;
+import type { TableExport } from "@/shared/utils/exportTable";
+import { paginate } from "@/shared/utils/paginate";
 
 const PROVIDER_TABS: readonly SegmentedTabItem[] = [
     { id: "productor", label: "Productor", icon: Tractor },
@@ -53,7 +56,9 @@ export default function CampaignProvidersPage() {
     const campaniaId = Number(id);
     const isValidCampaign = Number.isInteger(campaniaId) && campaniaId > 0;
 
+    const campaign = useCampaign(campaniaId);
     const [activeTab, setActiveTab] = useState<TipoProveedorCampania>("productor");
+    const tabPicked = useRef(false);
     const [relations, setRelations] = useState<CampaniaProveedor[]>([]);
     const [isLoading, setIsLoading] = useState(isValidCampaign);
     const [loadError, setLoadError] = useState<string | null>(isValidCampaign ? null : "La campaña no es válida.");
@@ -70,6 +75,11 @@ export default function CampaignProvidersPage() {
         try {
             const data = await getCampaniaProveedoresByCampania(campaniaId);
             setRelations(data);
+            // Mientras el usuario no elija pestaña, se abre en la primera que tiene proveedores (no en una vacía)
+            if (!tabPicked.current) {
+                const withData = PROVIDER_TABS.find((tab) => data.some((row) => row.tipoProveedor === tab.id));
+                if (withData) setActiveTab(withData.id as TipoProveedorCampania);
+            }
             setLoadError(null);
         } catch {
             setLoadError("No se pudieron cargar los proveedores de la campaña.");
@@ -99,17 +109,15 @@ export default function CampaignProvidersPage() {
         });
     }, [relations, activeTab, search]);
 
-    /** Exporta los proveedores visibles (de la pestaña y filtros actuales) a CSV y lo descarga */
-    const handleExportCSV = () =>
-        downloadCsv(
-            "proveedores_campana.csv",
-            ["Nombre", "Documento", "Zona", "Tipo", "Cantidad (kg)", "MTD Ceratitis"],
-            filteredData.map((row) => [providerName(row), providerDocument(row), row.proveedor?.zona ?? "", TYPE_LABEL[row.tipoProveedor], String(row.cantidadProveedor), String(row.mtdCeratitis)]),
-        );
+    /** Lo que exporta la tabla: las filas visibles con los filtros aplicados */
+    const getExportData = (): TableExport => ({
+        filename: "proveedores_campana",
+        title: "Proveedores de la campaña",
+        header: ["Nombre", "Documento", "Zona", "Tipo", "Cantidad (kg)", "MTD Ceratitis"],
+        rows: filteredData.map((row) => [providerName(row), providerDocument(row), row.proveedor?.zona ?? "", TYPE_LABEL[row.tipoProveedor], String(row.cantidadProveedor), String(row.mtdCeratitis)]),
+    });
 
-    const pageCount = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
-    const visibleData = filteredData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const { pageCount, currentPage, visible: visibleData } = paginate(filteredData, page);
 
     const showSuccess = (mode: SuccessMode) => {
         setSuccessMode(mode);
@@ -163,6 +171,17 @@ export default function CampaignProvidersPage() {
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
+            {campaign === undefined ? <ContextBannerPlaceholder /> : campaign && (
+                <CampaignContextBanner
+                    campaign={campaign}
+                    caption="Proveedores · productores y acopiadores"
+                    stats={PROVIDER_TABS.map((tab) => {
+                        const count = relations.filter((row) => row.tipoProveedor === tab.id).length;
+                        return { label: plural(count, tab.label.toLowerCase(), `${tab.label.toLowerCase()}es`), value: String(count) };
+                    })}
+                />
+            )}
+
             <PageHeader
                 icon={<Users size={24} strokeWidth={2.5} />}
                 title="Proveedores de la Campaña"
@@ -174,16 +193,12 @@ export default function CampaignProvidersPage() {
                 }
             />
 
-            <div className="mb-8 flex flex-col gap-6">
-                <SegmentedTabs
-                    tabs={PROVIDER_TABS.map((tab) => ({ ...tab, count: relations.filter((row) => row.tipoProveedor === tab.id).length }))}
-                    value={activeTab}
-                    onChange={(val) => { setActiveTab(val as TipoProveedorCampania); setPage(1); }}
-                />
-                <h2 className="text-[16px] sm:text-[18px] font-bold text-ink">
-                    {activeTab === "productor" ? "Productores de la Campaña" : "Acopiadores de la Campaña"}
-                </h2>
-            </div>
+            <SegmentedTabs
+                tabs={PROVIDER_TABS.map((tab) => ({ ...tab, count: relations.filter((row) => row.tipoProveedor === tab.id).length }))}
+                value={activeTab}
+                onChange={(val) => { tabPicked.current = true; setActiveTab(val as TipoProveedorCampania); setPage(1); }}
+                className="mb-8"
+            />
 
             <FilterBar onClear={clearFilters} canClear={hasActiveFilters} className="mb-8">
                 <FilterSearch value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Buscar por nombre, documento o zona..." />
@@ -195,8 +210,8 @@ export default function CampaignProvidersPage() {
                 description="Gestiona, consulta y da seguimiento a los proveedores de esta campaña."
                 headerRight={
                     <TableToolbar>
-                        <TableCountPill icon={<Users size={16} strokeWidth={2.5} className="text-brand" />} count={filteredData.length} label="proveedores" />
-                        <TableExportMenu onExportExcel={handleExportCSV} onExportPdf={handleExportCSV} />
+                        <TableCountPill icon={<Users size={16} strokeWidth={2.5} className="text-brand" />} count={filteredData.length} singular="proveedor" plural="proveedores" />
+                        <TableExportMenu getData={getExportData} />
                         <TableViewToggle value={viewMode} onChange={setViewMode} />
                     </TableToolbar>
                 }

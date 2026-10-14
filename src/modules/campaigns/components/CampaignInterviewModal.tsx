@@ -149,7 +149,7 @@ export default function CampaignInterviewModal({
             icon={<ClipboardList size={22} strokeWidth={2} />}
             title={isViewOnly ? "Detalle de la entrevista" : isEditing ? "Editar entrevista" : "Registrar entrevista"}
             description={`Productor · ${providerName}`}
-            className="sm:max-w-225"
+            size="2xl"
             footer={isViewOnly ? undefined : (
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}><X size={18} /> Cancelar</Button>

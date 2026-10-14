@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Leaf, Sprout } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Pencil, Sprout } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/shared/components/ui/button";
-import { Spinner } from "@/shared/components/ui/spinner";
+import { PageError, PageLoading } from "@/shared/components/PageState";
+import PageHeader from "@/shared/layout/PageHeader";
 import { getCampana, getFrutaDerivadas } from "@/modules/campaigns/api/campaign.api";
 import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
 import { getClientesNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.api";
@@ -25,6 +26,8 @@ import CampaignProvidersSummary from "@/modules/campaigns/components/CampaignPro
 import CampaignClientsSummary from "@/modules/campaigns/components/CampaignClientsSummary";
 import CampaignCertificationsList from "@/modules/campaigns/components/CampaignCertificationsList";
 import CampaignBrandBanner from "@/modules/campaigns/components/CampaignBrandBanner";
+import CampaignFormModal from "@/modules/campaigns/components/CampaignFormModal";
+import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import CampaignManagementProvidersModal from "@/modules/campaigns/components/CampaignManagementProvidersModal";
 import "@/modules/campaigns/campaignDetails.css";
 
@@ -100,27 +103,20 @@ export default function CampaignDetailsPage() {
     const campaniaId = Number(id);
 
     if (!Number.isInteger(campaniaId) || campaniaId < 1) {
-        return <CampaignNotFound message="Campaña inválida" />;
+        return <PageError icon={<Sprout />} title="Campaña inválida" message="La campaña que buscas no está disponible." back={BACK_TO_CAMPAIGNS} />;
     }
 
     // Cambiar de campaña reinicia la carga, los modales y las secciones desplegadas
     return <CampaignDetailsView key={campaniaId} campaniaId={campaniaId} />;
 }
 
-function CampaignNotFound({ message }: { message: string }) {
-    return (
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
-            <Sprout size={44} className="text-brand" aria-hidden="true" />
-            <h1 className="text-2xl font-bold text-ink">{message}</h1>
-            <p className="text-ink-muted">La campaña que buscas no está disponible.</p>
-            <Button nativeButton={false} render={<Link to="/campaigns" />}><ArrowLeft />Volver a campañas</Button>
-        </div>
-    );
-}
+const BACK_TO_CAMPAIGNS = { to: "/campaigns", label: "Volver a campañas" };
 
 function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
     const [state, setState] = useState<LoadState>({ status: "loading" });
-    const [openModal, setOpenModal] = useState<"providers" | null>(null);
+    const [openModal, setOpenModal] = useState<"providers" | "edit" | null>(null);
+    const [successOpen, setSuccessOpen] = useState(false);
+    const [reloadKey, setReloadKey] = useState(0);
     const navigate = useNavigate();
     const certificados = useCampaignCertificates(campaniaId);
 
@@ -138,17 +134,17 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
             })
             .catch(() => { if (active) setState({ status: "error" }); });
         return () => { active = false; };
-    }, [campaniaId]);
+    }, [campaniaId, reloadKey]);
 
-    if (state.status === "loading") {
-        return (
-            <div role="status" className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-ink-muted">
-                <Spinner className="size-8 text-brand" />
-                <p className="text-[14px] font-medium">Cargando campaña...</p>
-            </div>
-        );
+    const retry = () => {
+        setState({ status: "loading" });
+        setReloadKey((key) => key + 1);
+    };
+
+    if (state.status === "loading") return <PageLoading label="Cargando campaña..." />;
+    if (state.status === "error") {
+        return <PageError icon={<Sprout />} title="No se pudo cargar la campaña" message="Verifica la conexión e inténtalo nuevamente." onRetry={retry} back={BACK_TO_CAMPAIGNS} />;
     }
-    if (state.status === "error") return <CampaignNotFound message="No se pudo cargar la campaña" />;
 
     const { campana, proveedores, clientes, derivadas } = state.data;
     const campaign = { ...toOverviewCampaign(campana), variedades: derivadas.map((derivada) => derivada.name) };
@@ -157,13 +153,12 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
     return (
         <div className="campaign-details px-4 py-5 sm:px-8 lg:px-14">
             <div className="campaign-details-inner">
-                <header className="campaign-page-heading">
-                    <div><h1>Detalle de Campaña</h1><p>Control y seguimiento integral de la campaña</p></div>
-                    <div className="campaign-heading-signature" aria-hidden="true">
-                        <span>Del campo al mundo <Leaf size={26} /></span>
-                        <div /><p>Productos que conectan personas</p>
-                    </div>
-                </header>
+                <PageHeader
+                    icon={<Sprout size={24} strokeWidth={2.5} />}
+                    title="Detalle de Campaña"
+                    description="Control y seguimiento integral de la campaña."
+                    action={<Button variant="outline" size="xl" onClick={() => setOpenModal("edit")}><Pencil size={19} strokeWidth={2.5} /> Editar campaña</Button>}
+                />
                 <div className="campaign-top-grid">
                     <CampaignOverviewCard campaign={campaign} duration={timing.duration} />
                     <CampaignMetricCards requirement={campana.requerimientoComercial} estimated={null} harvested={0} remaining={timing.remaining} hasEnded={timing.hasEnded} hasStarted={timing.hasStarted} />
@@ -182,6 +177,18 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                     </div>
                 </div>
                 <CampaignManagementProvidersModal open={openModal === "providers"} onOpenChange={(open) => setOpenModal(open ? "providers" : null)} campaniaId={campaniaId} />
+                <CampaignFormModal
+                    open={openModal === "edit"}
+                    onOpenChange={(open) => setOpenModal(open ? "edit" : null)}
+                    mode="edit"
+                    campaniaId={campaniaId}
+                    onSuccess={() => {
+                        setOpenModal(null);
+                        setSuccessOpen(true);
+                        setReloadKey((key) => key + 1);
+                    }}
+                />
+                <CampaignSuccessModal open={successOpen} onOpenChange={setSuccessOpen} mode="edit" />
             </div>
         </div>
     );

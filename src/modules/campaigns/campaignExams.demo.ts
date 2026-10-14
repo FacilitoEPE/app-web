@@ -1,4 +1,5 @@
 import type { ExamEstado, ExamResult, LocalExam } from "@/modules/campaigns/campaignExam";
+import { demoDate, demoPdf } from "@/shared/utils/demoData";
 
 /**
  * Exámenes de demostración SOLO para desarrollo: llenan la gestión y el detalle de los proveedores de ejemplo
@@ -40,27 +41,6 @@ const DEMO: Record<number, DemoExam[]> = {
     ],
 };
 
-const isoDaysAgo = (days: number) => {
-    const date = new Date();
-    date.setDate(date.getDate() - days);
-    return date.toISOString().slice(0, 10);
-};
-
-/** PDF mínimo válido de una página, para que la vista previa del documento muestre algo */
-function demoPdf(name: string): File {
-    const body = [
-        "%PDF-1.4",
-        "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj",
-        "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj",
-        "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 360 200]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj",
-        "4 0 obj<</Length 62>>stream\nBT /F1 16 Tf 24 100 Td (Informe de laboratorio de demostracion) Tj ET\nendstream endobj",
-        "5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj",
-        "trailer<</Root 1 0 R/Size 6>>",
-        "%%EOF",
-    ].join("\n");
-    return new File([body], `${name}.pdf`, { type: "application/pdf" });
-}
-
 export function createDemoExams(): { exams: Record<number, LocalExam[]>; nextId: number } {
     const exams: Record<number, LocalExam[]> = {};
     let id = 1;
@@ -74,13 +54,13 @@ export function createDemoExams(): { exams: Record<number, LocalExam[]>; nextId:
                 id: `local-${id++}`,
                 proveedorId,
                 tipoExamen: item.tipoExamen,
-                fecha: isoDaysAgo(item.daysAgo),
+                fecha: demoDate(-item.daysAgo),
                 identificacionMuestra: `MUESTRA-${proveedorId}${sampleNumber}`,
                 estado: item.estado,
-                fechaEnvioMuestra: shipped ? isoDaysAgo(item.daysAgo - (item.shippedAfter ?? 1)) : "",
+                fechaEnvioMuestra: shipped ? demoDate(-(item.daysAgo - (item.shippedAfter ?? 1))) : "",
                 resultado: item.resultado ?? "",
                 observacion: item.observacion ?? "",
-                archivo: item.estado === "resultado" ? demoPdf(`informe-${proveedorId}${sampleNumber}`) : null,
+                archivo: item.estado === "resultado" ? demoPdf(`informe-${proveedorId}${sampleNumber}`, "Informe de laboratorio de demostracion") : null,
             };
         });
     }

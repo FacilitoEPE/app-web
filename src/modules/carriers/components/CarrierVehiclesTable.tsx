@@ -10,8 +10,7 @@ import ConfirmModal from "@/shared/components/ConfirmModal";
 import SortableHead from "@/shared/components/SortableHead";
 import { nextSort, type SortState } from "@/shared/utils/tableSort";
 import { vehicleVolume, type Vehicle } from "@/modules/carriers/carriers.data";
-
-const PAGE_SIZE = 8;
+import { paginate } from "@/shared/utils/paginate";
 
 type SortKey = "volumen";
 
@@ -43,9 +42,7 @@ export default function CarrierVehiclesTable({ data, hasActiveFilters, onClearFi
         setSort((current) => nextSort(current, key));
     };
 
-    const pageCount = Math.max(1, Math.ceil(sortedData.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
-    const visibleData = sortedData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const { pageCount, currentPage, visible: visibleData } = paginate(sortedData, page);
 
     const getRowActions = (row: Vehicle): { primary: RowAction[] } => ({
         primary: [
@@ -64,7 +61,7 @@ export default function CarrierVehiclesTable({ data, hasActiveFilters, onClearFi
             description="Capacidad y dimensiones de los vehículos asociados a esta empresa."
             headerRight={
                 <TableToolbar>
-                    <TableCountPill icon={<Truck size={16} strokeWidth={2.5} className="text-brand" />} count={data.length} label="vehículos" />
+                    <TableCountPill icon={<Truck size={16} strokeWidth={2.5} className="text-brand" />} count={data.length} singular="vehículo" plural="vehículos" />
                 </TableToolbar>
             }
             isEmpty={visibleData.length === 0}

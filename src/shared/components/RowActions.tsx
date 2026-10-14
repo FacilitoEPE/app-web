@@ -38,8 +38,8 @@ export default function RowActions({ primary, secondary = [], align = "end", cla
                         className={cn(
                             "shrink-0 h-9 w-9 flex items-center justify-center rounded-lg text-ink-muted transition-all duration-300 hover:text-white hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm outline-none focus-visible:ring-2",
                             action.variant === "destructive"
-                                ? "hover:bg-destructive hover:shadow-[0_4px_12px_rgba(220,38,38,0.3)] focus-visible:ring-destructive/50"
-                                : "hover:bg-brand hover:shadow-[0_4px_12px_-2px_var(--brand-gradient-glow)] focus-visible:ring-brand/50"
+                                ? "hover:bg-destructive hover:shadow-danger focus-visible:ring-destructive/50"
+                                : "hover:bg-brand hover:shadow-glow focus-visible:ring-brand/50"
                         )}
                     >
                         {action.icon}
@@ -56,7 +56,7 @@ export default function RowActions({ primary, secondary = [], align = "end", cla
                         <Hint label="Más opciones">
                             <DropdownMenuTrigger
                                 aria-label="Más opciones"
-                                className="shrink-0 h-9 w-9 flex items-center justify-center rounded-lg text-ink-muted transition-all duration-300 hover:bg-brand hover:text-white hover:shadow-[0_4px_12px_-2px_var(--brand-gradient-glow)] hover:-translate-y-0.5 data-[state=open]:bg-brand data-[state=open]:text-white data-[state=open]:shadow-[0_4px_12px_-2px_var(--brand-gradient-glow)] active:translate-y-0 active:shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+                                className="shrink-0 h-9 w-9 flex items-center justify-center rounded-lg text-ink-muted transition-all duration-300 hover:bg-brand hover:text-white hover:shadow-glow hover:-translate-y-0.5 data-[state=open]:bg-brand data-[state=open]:text-white data-[state=open]:shadow-glow active:translate-y-0 active:shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
                             >
                                 <MoreVertical size={18} strokeWidth={2.5} />
                             </DropdownMenuTrigger>

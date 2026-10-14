@@ -33,7 +33,7 @@ export default function FilePreviewModal({ open, onOpenChange, file }: FilePrevi
             icon={<Eye size={22} strokeWidth={2} />}
             title="Vista Previa"
             description={file.size !== undefined ? `${file.name} (${formatFileSize(file.size)})` : file.name}
-            className="sm:max-w-190"
+            size="xl"
         >
             <div className={cn("w-full overflow-hidden rounded-xl border border-border bg-surface-page", !isPdf(file) && !isImage(file) && "flex min-h-[40vh] items-center justify-center p-6")}>
                 {isPdf(file) ? (

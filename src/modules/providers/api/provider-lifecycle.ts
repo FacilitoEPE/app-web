@@ -24,10 +24,3 @@ export function createProviderFormSession(provider: ProveedorDto | null = null) 
   };
 }
 
-export function createProviderDetailsSession() {
-  return {
-    provider: null as ProveedorDto | null,
-    error: null as string | null,
-    loading: true,
-  };
-}

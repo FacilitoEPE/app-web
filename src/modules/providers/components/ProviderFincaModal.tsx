@@ -72,7 +72,7 @@ export default function ProviderFincaModal({ open, onOpenChange, providerName, r
             icon={<LandPlot size={22} strokeWidth={2} />}
             title={isEdit ? "Editar finca" : "Registrar finca"}
             description={providerName}
-            className="sm:max-w-190"
+            size="xl"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>

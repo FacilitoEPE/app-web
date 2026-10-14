@@ -42,7 +42,7 @@ export default function CampaignCompleteAdvanceModal({ open, onOpenChange, payme
             icon={<Wallet size={22} strokeWidth={2} />}
             title="Completar Pago"
             description={payment ? `Cierra el saldo pendiente de ${payment.transportista}.` : "Cierra el saldo pendiente."}
-            className="sm:max-w-150"
+            size="md"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>

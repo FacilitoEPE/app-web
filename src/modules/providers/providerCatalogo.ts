@@ -13,9 +13,28 @@ export interface FrutaCatalogo {
 export const CATALOGO_FRUTAS: FrutaCatalogo[] = [
     { id: "mango", nombre: "Mango", variedades: ["Kent", "Edward", "Haden", "Tommy Atkins"] },
     { id: "uva", nombre: "Uva", variedades: ["Red Globe", "Crimson", "Autumn Royal", "Sweet Celebration"] },
-    { id: "arandano", nombre: "Arándano", variedades: ["Biloxi", "Ventura", "Emerald", "Rocio"] },
+    { id: "arandano", nombre: "Arándano", variedades: ["Biloxi", "Ventura", "Emerald", "Rocío"] },
     { id: "palta", nombre: "Palta", variedades: ["Hass", "Fuerte", "Zutano", "Ettinger"] },
 ];
 
-export const getVariedadesDeFruta = (nombreFruta: string) =>
-    CATALOGO_FRUTAS.find((fruta) => fruta.nombre === nombreFruta)?.variedades ?? [];
+/** Frutas que trabaja un proveedor, como las guarda su formulario: el id del catálogo y sus variedades */
+export interface FrutaSeleccionada {
+    frutaId: string;
+    variedades: string[];
+}
+
+/**
+ * El proveedor guarda cada fruta por su id del catálogo y `FruitVarietyPicker` trabaja con el nombre (igual que
+ * la finca). Estas dos funciones traducen entre ambas formas; una fruta que no está en el catálogo se descarta.
+ */
+export const toCultivos = (frutas: FrutaSeleccionada[]): { fruta: string; variedades: string[] }[] =>
+    frutas.flatMap(({ frutaId, variedades }) => {
+        const fruta = CATALOGO_FRUTAS.find((item) => item.id === frutaId);
+        return fruta ? [{ fruta: fruta.nombre, variedades }] : [];
+    });
+
+export const toFrutasProveedor = (cultivos: { fruta: string; variedades: string[] }[]): FrutaSeleccionada[] =>
+    cultivos.flatMap(({ fruta, variedades }) => {
+        const item = CATALOGO_FRUTAS.find((catalogo) => catalogo.nombre === fruta);
+        return item ? [{ frutaId: item.id, variedades }] : [];
+    });

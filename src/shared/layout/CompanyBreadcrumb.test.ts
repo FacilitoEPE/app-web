@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getBreadcrumbLevels } from "@/shared/layout/breadcrumbRoutes";
+import { getBreadcrumbLevels, getParentHref } from "@/shared/layout/breadcrumbRoutes";
 
 describe("getBreadcrumbLevels", () => {
     it("builds the root campaign hierarchy", () => {
@@ -93,11 +93,27 @@ describe("getBreadcrumbLevels", () => {
     });
 
     it.each([
-        ["/calidad", "Calidad"],
+        ["/calidad", "Cosecha y Control de Calidad"],
         ["/logistica-despacho", "Logística y Despacho"],
         ["/facturacion-cobros", "Facturación y Cobros"],
         ["/liquidacion-compra", "Liquidación de Compra"],
     ])("names the module route %s", (route, label) => {
         expect(getBreadcrumbLevels(route)).toEqual([{ label }]);
+    });
+});
+
+describe("getParentHref", () => {
+    it.each([
+        ["/campaigns", "/modules"],
+        ["/campaigns/12", "/campaigns"],
+        ["/campaigns/12/providers", "/campaigns/12"],
+        ["/campaigns/12/providers/5/exams", "/campaigns/12/providers/5"],
+        ["/campaigns/3/clients/8/contracts", "/campaigns/3/clients"],
+        ["/campaigns/3/clients/8/contracts/2/deliveries", "/campaigns/3/clients/8/contracts"],
+        ["/proveedores/3/fincas", "/proveedores/3"],
+        ["/transportistas/8", "/transportistas"],
+        ["/modules", "/modules"],
+    ])("from %s goes back to %s", (route, parent) => {
+        expect(getParentHref(route)).toBe(parent);
     });
 });

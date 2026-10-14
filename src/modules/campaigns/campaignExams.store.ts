@@ -51,12 +51,6 @@ export function removeExam(proveedorId: number, examId: string) {
     update({ ...byProvider, [proveedorId]: current.filter((exam) => exam.id !== examId) });
 }
 
-/** Vacía el almacén: solo para las pruebas. */
-export function resetExams() {
-    nextId = 1;
-    update({});
-}
-
 export function useProviderExams(proveedorId: number): LocalExam[] {
     const all = useSyncExternalStore(subscribe, () => byProvider);
     return all[proveedorId] ?? EMPTY;

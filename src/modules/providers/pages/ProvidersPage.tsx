@@ -4,13 +4,13 @@ import ProvidersTable from "@/modules/providers/components/ProvidersTable";
 import ProviderFormModal from "@/modules/providers/components/ProviderFormModal";
 import ProviderSuccessModal from "@/modules/providers/components/ProviderSuccessModal";
 import PageHeader from "@/shared/layout/PageHeader";
-import FilterBar, { FilterSearch } from "@/shared/components/FilterBar";
+import ProvidersFilters from "@/modules/providers/components/ProvidersFilters";
 import { Button } from "@/shared/components/ui/button";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { createProveedor, deleteProveedor, getProveedores, updateProveedor } from "@/modules/providers/api/proveedor.api";
 import type { ProveedorInput } from "@/modules/providers/api/proveedor.dto";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
-import { createInFlightGuard } from "@/modules/providers/api/proveedor-submission";
+import { createInFlightGuard } from "@/shared/utils/inFlightGuard";
 
 const byId = (left: Proveedor, right: Proveedor) => left.proveedorId - right.proveedorId;
 
@@ -96,9 +96,7 @@ export default function ProvidersPage() {
                 }
             />
 
-            <FilterBar onClear={() => setSearch("")} canClear={search !== ""} className="mb-8">
-                <FilterSearch value={search} onChange={setSearch} placeholder="Buscar por nombre, documento o zona..." />
-            </FilterBar>
+            <ProvidersFilters search={search} onSearchChange={setSearch} hasActiveFilters={search !== ""} onClear={() => setSearch("")} />
 
             {mutationError && (
                 <Alert variant="destructive" className="mb-6">

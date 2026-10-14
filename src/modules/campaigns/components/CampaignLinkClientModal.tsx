@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { CalendarRange, Link2, Save, X } from "lucide-react";
+import { Link2, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import ChipSelect from "@/shared/components/ChipSelect";
 import FileDropzone from "@/shared/components/FileDropzone";
 import FormField from "@/shared/components/FormField";
 import { InfoField } from "@/shared/components/InfoField";
 import InputField from "@/shared/components/InputField";
-import ModalSection from "@/shared/components/ModalSection";
 import { Button } from "@/shared/components/ui/button";
 import { Combobox } from "@/shared/components/ui/combobox";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -163,7 +162,7 @@ export default function CampaignLinkClientModal({ open, onOpenChange, onSave, ca
             icon={<Link2 size={22} strokeWidth={2.25} />}
             title="Vincular Cliente"
             description="Define la participación comercial del cliente dentro de esta campaña."
-            className="sm:max-w-215"
+            size="2xl"
             footer={(
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
@@ -210,32 +209,24 @@ export default function CampaignLinkClientModal({ open, onOpenChange, onSave, ca
                     <FormField error={errors.fichaTecnica} className="sm:col-span-2">
                         <FileDropzone label="Ficha técnica" variant="horizontal" required hint="PDF, Excel o imagen · Máx. 10 MB" file={fichaTecnica} onChange={(file) => { setFichaTecnica(file); setErrors((current) => ({ ...current, fichaTecnica: undefined })); setFormError(undefined); }} />
                     </FormField>
+
+                    <FormField label="Variedades requeridas" required error={errors.variedades} hint="Selecciona una o varias variedades de la fruta de esta campaña." className="sm:col-span-2">
+                        <ChipSelect
+                            ariaLabel="Variedades requeridas por el cliente"
+                            options={variedades.map((item) => ({ value: String(item.frutaDerivadaId), label: item.name }))}
+                            value={draft.variedades}
+                            onChange={(value) => update("variedades", value)}
+                            emptyMessage={selectedCampaign ? "Esta fruta todavía no tiene variedades registradas." : "Selecciona una campaña para ver sus variedades."}
+                        />
+                    </FormField>
+                    <InputField id="client-participation-destination" label="Destino solicitado" required placeholder="Ej. Países Bajos · Rotterdam" value={draft.destinoSolicitado} error={errors.destinoSolicitado} onChange={(value) => update("destinoSolicitado", value)} className="sm:col-span-2" />
+
+                    <InputField id="client-participation-from" label="Entrega desde" required type="date" value={draft.entregaDesde} error={errors.entregaDesde} onChange={(value) => update("entregaDesde", value)} />
+                    <InputField id="client-participation-to" label="Entrega hasta" required type="date" value={draft.entregaHasta} error={errors.entregaHasta} onChange={(value) => update("entregaHasta", value)} />
+                    <FormField id="client-participation-notes" label="Observaciones" optional className="sm:col-span-2">
+                        <Textarea id="client-participation-notes" className="min-h-20 resize-none" placeholder="Añade indicaciones comerciales relevantes..." value={draft.observaciones} onChange={(event) => update("observaciones", event.target.value)} />
+                    </FormField>
                 </div>
-
-                <ModalSection title="Requerimiento comercial" aside={draft.variedades.length > 0 ? `${draft.variedades.length} seleccionadas` : undefined}>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <FormField label="Variedades requeridas" required error={errors.variedades} hint="Selecciona una o varias variedades de la fruta de esta campaña." className="sm:col-span-2">
-                            <ChipSelect
-                                ariaLabel="Variedades requeridas por el cliente"
-                                options={variedades.map((item) => ({ value: String(item.frutaDerivadaId), label: item.name }))}
-                                value={draft.variedades}
-                                onChange={(value) => update("variedades", value)}
-                                emptyMessage={selectedCampaign ? "Esta fruta todavía no tiene variedades registradas." : "Selecciona una campaña para ver sus variedades."}
-                            />
-                        </FormField>
-                        <InputField id="client-participation-destination" label="Destino solicitado" required placeholder="Ej. Países Bajos · Rotterdam" value={draft.destinoSolicitado} error={errors.destinoSolicitado} onChange={(value) => update("destinoSolicitado", value)} className="sm:col-span-2" />
-                    </div>
-                </ModalSection>
-
-                <ModalSection title="Ventana de entrega" aside={<span className="inline-flex items-center gap-1.5"><CalendarRange size={14} /> Periodo solicitado</span>}>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <InputField id="client-participation-from" label="Desde" required type="date" value={draft.entregaDesde} error={errors.entregaDesde} onChange={(value) => update("entregaDesde", value)} />
-                        <InputField id="client-participation-to" label="Hasta" required type="date" value={draft.entregaHasta} error={errors.entregaHasta} onChange={(value) => update("entregaHasta", value)} />
-                        <FormField id="client-participation-notes" label="Observaciones" optional className="sm:col-span-2">
-                            <Textarea id="client-participation-notes" className="min-h-20 resize-none" placeholder="Añade indicaciones comerciales relevantes..." value={draft.observaciones} onChange={(event) => update("observaciones", event.target.value)} />
-                        </FormField>
-                    </div>
-                </ModalSection>
 
                 {formError && <FormField error={formError} />}
             </div>

@@ -17,7 +17,7 @@ export default function Hint({ label, side = "top", children }: HintProps) {
                 logramos que la flecha empate visualmente con el fondo gradiente. */}
             <TooltipContent
                 side={side}
-                className="font-semibold text-white border-0 shadow-[0_4px_12px_-2px_var(--brand-gradient-glow)] [background-image:var(--brand-gradient)] [--foreground:var(--brand-gradient-mid)]"
+                className="font-semibold text-white border-0 shadow-glow [background-image:var(--brand-gradient)] [--foreground:var(--brand-gradient-mid)]"
             >
                 {label}
             </TooltipContent>

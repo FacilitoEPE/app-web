@@ -8,7 +8,6 @@ import CarrierSuccessModal, { type CarrierSuccessMode } from "@/modules/carriers
 import PageHeader from "@/shared/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import { Spinner } from "@/shared/components/ui/spinner";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { createCarrier, deleteCarrier, getCarriers, updateCarrier, createVehicle, createDriver } from "@/modules/carriers/api/carrier.api";
 import type { Carrier } from "@/modules/carriers/carriers.data";
@@ -105,7 +104,7 @@ export default function CarriersPage() {
             <PageHeader
                 icon={<Truck size={24} strokeWidth={2.5} />}
                 title="Gestión de Transporte"
-                description={`${carriers.length} ${carriers.length === 1 ? "transportista registrado" : "transportistas registrados"}${selectedIds.size > 0 ? ` · ${selectedIds.size} seleccionados` : ""}`}
+                description="Coordina la flota y envía requerimientos a tus transportistas."
                 action={
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 [&>button]:w-full sm:[&>button]:w-auto">
                         <Button
@@ -135,12 +134,6 @@ export default function CarriersPage() {
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
-            {isLoading ? (
-                <div role="status" className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-10 text-ink-muted">
-                    <Spinner className="size-7 text-brand" />
-                    <p className="text-[14px] font-medium">Cargando transportistas...</p>
-                </div>
-            ) : <>
             <CarriersFilters
                 search={search}
                 onSearchChange={setSearch}
@@ -150,6 +143,7 @@ export default function CarriersPage() {
 
             <CarriersTable
                 data={filteredData}
+                isLoading={isLoading}
                 hasActiveFilters={hasActiveFilters}
                 onClearFilters={() => setSearch("")}
                 selectedIds={selectedIds}
@@ -160,7 +154,6 @@ export default function CarriersPage() {
                 onCreateVehicle={async (carrierId, values) => { await createVehicle(carrierId, values); await loadCarriers(); }}
                 onCreateDriver={async (carrierId, values) => { await createDriver(carrierId, values); await loadCarriers(); }}
             />
-            </>}
 
             <CarrierFormModal
                 open={isCreateModalOpen}

@@ -77,11 +77,12 @@ export default function ClientFormModal({
     return (
         <AppModal
             open={open}
-            onOpenChange={(next) => !(saving && !next) && onOpenChange(next)}
+            onOpenChange={onOpenChange}
+            busy={saving}
             icon={<UserPlus size={22} strokeWidth={2} />}
             title={isEdit ? "Editar cliente" : "Registrar cliente"}
             description={isEdit ? "Modifica los datos del cliente." : "Completa los datos para registrar un nuevo cliente."}
-            className="sm:max-w-162.5"
+            size="md"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)} disabled={saving}>

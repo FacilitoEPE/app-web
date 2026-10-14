@@ -156,11 +156,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
 
     const isLocked = isSaving || unresolvedProviderId !== null;
 
-    const handleOpenChange = (nextOpen: boolean) => {
-        if (!nextOpen && isSaving) return;
-        onOpenChange(nextOpen);
-    };
-
     const updateDraft = <K extends keyof DraftValues>(field: K, value: DraftValues[K]) => {
         setDraft((current) => ({ ...current, [field]: value }));
         setErrors((current) => ({ ...current, [field]: undefined }));
@@ -232,14 +227,15 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
     return (
         <AppModal
             open={open}
-            onOpenChange={handleOpenChange}
+            onOpenChange={onOpenChange}
+            busy={isSaving}
             icon={<Link2 size={22} strokeWidth={2} />}
             title={mode === "edit" ? "Editar Vínculo de Proveedor" : "Vincular Proveedor"}
             description={mode === "edit" ? "Modifica los datos del proveedor vinculado a esta campaña." : "Asocia un productor o acopiador a esta campaña. Los campos con * son obligatorios."}
-            className="sm:max-w-[800px]"
+            size="xl"
             footer={
                 <>
-                    <Button variant="outline" size="xl" onClick={() => handleOpenChange(false)} disabled={isSaving}>
+                    <Button variant="outline" size="xl" onClick={() => onOpenChange(false)} disabled={isSaving}>
                         <X size={20} strokeWidth={2.5} /> Cancelar
                     </Button>
                     <Button size="xl" onClick={handleSubmit} disabled={isLocked || isLoadingProviders || !campaniaId} aria-busy={isSaving}>

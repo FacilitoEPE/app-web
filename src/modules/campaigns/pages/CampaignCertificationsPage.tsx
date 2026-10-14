@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Eye, PackagePlus, Pencil, Plus, RotateCw, ShieldCheck, TriangleAlert, Users, Wallet } from "lucide-react";
+import { Eye, PackagePlus, Pencil, Plus, ShieldCheck, Users, Wallet } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Spinner } from "@/shared/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
@@ -35,9 +34,9 @@ import {
     getVigenciaAutomatica,
     type CertificadoCampanaLocal,
 } from "@/modules/campaigns/campaignCertificate.utils";
-
-const PAGE_SIZE = 8;
-const kilos = new Intl.NumberFormat("es-PE", { maximumFractionDigits: 3 });
+import { PageError, PageLoading } from "@/shared/components/PageState";
+import { formatKg } from "@/shared/utils/format";
+import { paginate } from "@/shared/utils/paginate";
 
 type LoadState = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; campaign: Campana };
 type Panel = "form" | "view" | "expansion" | "payment";
@@ -72,20 +71,9 @@ export default function CampaignCertificationsPage() {
     useEffect(() => { void load(); }, [load]);
 
     if (loadState.status !== "ready") {
-        return (
-            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-5 text-center">
-                {loadState.status === "loading" ? (
-                    <><Spinner className="size-9 text-brand" /><p className="text-ink-muted">Cargando certificaciones...</p></>
-                ) : (
-                    <>
-                        <TriangleAlert className="size-10 text-brand" aria-hidden="true" />
-                        <h1 className="text-xl font-bold text-ink">Certificaciones no disponibles</h1>
-                        <p role="alert" className="text-ink-muted">{loadState.message}</p>
-                        <Button onClick={() => void load()}><RotateCw size={17} /> Reintentar</Button>
-                    </>
-                )}
-            </div>
-        );
+        return loadState.status === "loading"
+            ? <PageLoading label="Cargando certificaciones..." />
+            : <PageError title="Certificaciones no disponibles" message={loadState.message} onRetry={() => void load()} back={{ to: `/campaigns/${campaniaId}`, label: "Volver a la campaña" }} />;
     }
 
     return <CertificationsView key={campaniaId} campaign={loadState.campaign} />;
@@ -108,9 +96,7 @@ function CertificationsView({ campaign }: { campaign: Campana }) {
         setSuccess({ open: true, mode });
     };
 
-    const pageCount = Math.max(1, Math.ceil(certificates.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
-    const visibleData = certificates.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const { pageCount, currentPage, visible: visibleData } = paginate(certificates, page);
 
     const getRowActions = (certificate: CertificadoCampanaLocal): { primary: RowAction[]; secondary: RowAction[] } => ({
         primary: [
@@ -140,7 +126,7 @@ function CertificationsView({ campaign }: { campaign: Campana }) {
                 description="Consulta el estado de cada certificación; el detalle completo está en Ver detalles."
                 headerRight={
                     <TableToolbar>
-                        <TableCountPill icon={<ShieldCheck size={16} strokeWidth={2.5} className="text-brand" />} count={certificates.length} label={certificates.length === 1 ? "certificación" : "certificaciones"} />
+                        <TableCountPill icon={<ShieldCheck size={16} strokeWidth={2.5} className="text-brand" />} count={certificates.length} singular="certificación" plural="certificaciones" />
                     </TableToolbar>
                 }
                 isEmpty={certificates.length === 0}
@@ -165,7 +151,7 @@ function CertificationsView({ campaign }: { campaign: Campana }) {
                         >
                             <TableGridCardFields>
                                 <TableGridCardField label="Vigencia" value={getVigenciaAutomatica(certificate.validoDesde, certificate.validoHasta)} />
-                                <TableGridCardField label="Total actual" value={`${kilos.format(getKilosTotales(certificate))} kg`} />
+                                <TableGridCardField label="Total actual" value={`${formatKg(getKilosTotales(certificate))} kg`} />
                                 <TableGridCardField label="Productores" value={String(certificate.productores.length)} />
                                 <TableGridCardField label="Trámite" value={getTramiteLabel(certificate.estadoTramite)} />
                                 <TableGridCardField label="Pago" value={getEstadoPago(certificate)} />
@@ -214,9 +200,9 @@ function CertificationsView({ campaign }: { campaign: Campana }) {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="text-[14px] font-bold tabular-nums text-ink">{kilos.format(getKilosTotales(certificate))} kg</span>
+                                            <span className="text-[14px] font-bold tabular-nums text-ink">{formatKg(getKilosTotales(certificate))} kg</span>
                                             <span className="mt-0.5 text-[12px] tabular-nums text-ink-muted">
-                                                {kilos.format(certificate.kilosIniciales)} inicial · +{kilos.format(getKilosAmpliados(certificate))}
+                                                {formatKg(certificate.kilosIniciales)} inicial · +{formatKg(getKilosAmpliados(certificate))}
                                             </span>
                                         </div>
                                     </TableCell>

@@ -12,7 +12,6 @@ import {
 import { Spinner } from "@/shared/components/ui/spinner";
 import TableCard from "@/shared/components/TableCard";
 import ConfirmModal from "@/shared/components/ConfirmModal";
-import { downloadCsv } from "@/shared/utils/downloadCsv";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
 import TableGridCard, { TableGridCardFields, TableGridCardField } from "@/shared/components/TableGridCard";
 import { TableToolbar, TableCountPill, TableExportMenu, TableViewToggle, type TableViewMode } from "@/shared/components/TableToolbar";
@@ -20,9 +19,9 @@ import RowActions, { type RowAction } from "@/shared/components/RowActions";
 import ProviderFormModal from "@/modules/providers/components/ProviderFormModal";
 import type { ProveedorInput } from "@/modules/providers/api/proveedor.dto";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
-import type { createInFlightGuard } from "@/modules/providers/api/proveedor-submission";
-
-const PAGE_SIZE = 8;
+import type { createInFlightGuard } from "@/shared/utils/inFlightGuard";
+import type { TableExport } from "@/shared/utils/exportTable";
+import { paginate } from "@/shared/utils/paginate";
 
 const fullName = (provider: Proveedor) => `${provider.nombres} ${provider.apellido}`;
 const documentLabel = (provider: Proveedor) => `${provider.tipoDocumento} ${provider.nmrDocumento}`;
@@ -46,19 +45,19 @@ export default function ProvidersTable({ data, isLoading, loadError, onRetry, ha
     // Se conserva el proveedor al cerrar para que los modales no se vacíen durante su animación de salida
     const [editing, setEditing] = useState<{ open: boolean; provider: Proveedor | null }>({ open: false, provider: null });
     const [deleting, setDeleting] = useState<{ open: boolean; provider: Proveedor | null }>({ open: false, provider: null });
-    /** Exporta los proveedores visibles a CSV y lo descarga */
-    const handleExportCSV = () =>
-        downloadCsv(
-            "proveedores.csv",
-            ["Nombre", "Documento", "Zona", "Teléfono", "Correo", "Código lugar de producción"],
-            data.map((row) => [fullName(row), documentLabel(row), row.zona, String(row.telefono), row.email, String(row.codigoLugarProduccion)]),
-        );
+    /** Lo que exporta la tabla: las filas visibles con los filtros aplicados */
+    const getExportData = (): TableExport => ({
+        filename: "proveedores",
+        title: "Proveedores",
+        header: ["Nombre", "Documento", "Zona", "Teléfono", "Correo", "Código lugar de producción"],
+        rows: data.map((row) => [fullName(row), documentLabel(row), row.zona, String(row.telefono), row.email, String(row.codigoLugarProduccion)]),
+    });
 
     /** Ver, editar y eliminar quedan siempre visibles: es el CRUD del proveedor; el resto va en el menú de 3 puntos */
     const getRowActions = (row: Proveedor): { primary: RowAction[]; secondary: RowAction[] } => ({
         primary: [
-            { label: "Editar", icon: <Pencil size={18} strokeWidth={2.5} />, onClick: () => setEditing({ open: true, provider: row }) },
             { label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: () => navigate(`/proveedores/${row.proveedorId}`) },
+            { label: "Editar", icon: <Pencil size={18} strokeWidth={2.5} />, onClick: () => setEditing({ open: true, provider: row }) },
             { label: "Eliminar", icon: <Trash2 size={18} strokeWidth={2.5} />, variant: "destructive", onClick: () => setDeleting({ open: true, provider: row }) },
         ],
         secondary: [
@@ -67,9 +66,7 @@ export default function ProvidersTable({ data, isLoading, loadError, onRetry, ha
         ],
     });
 
-    const pageCount = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
-    const visibleData = data.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const { pageCount, currentPage, visible: visibleData } = paginate(data, page);
 
     // El marco de la tabla se mantiene siempre; carga y error ocupan el lugar del estado vacío
     const emptyState = isLoading
@@ -100,8 +97,8 @@ export default function ProvidersTable({ data, isLoading, loadError, onRetry, ha
                 description="Gestiona, consulta y da seguimiento a todos tus proveedores registrados."
                 headerRight={
                     <TableToolbar>
-                        <TableCountPill icon={<Truck size={16} strokeWidth={2.5} className="text-brand" />} count={data.length} label="proveedores" />
-                        <TableExportMenu onExportExcel={handleExportCSV} onExportPdf={handleExportCSV} />
+                        <TableCountPill icon={<Truck size={16} strokeWidth={2.5} className="text-brand" />} count={data.length} singular="proveedor" plural="proveedores" />
+                        <TableExportMenu getData={getExportData} />
                         <TableViewToggle value={viewMode} onChange={setViewMode} />
                     </TableToolbar>
                 }

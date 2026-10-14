@@ -22,7 +22,7 @@ export default function CampaignPaymentDetailsModal({ open, onOpenChange, paymen
             icon={<Receipt size={22} strokeWidth={2} />}
             title="Detalles del Pago"
             description="Visualizando la información registrada del pago."
-            className="sm:max-w-130"
+            size="sm"
             footer={
                 <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={20} strokeWidth={2.5} /> Cerrar

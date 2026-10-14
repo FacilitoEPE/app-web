@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { format } from "date-fns";
-import { ClipboardList, FlaskConical, Layers, MapPin, RotateCw, Scale, TriangleAlert, UserRoundCheck } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Spinner } from "@/shared/components/ui/spinner";
+import { ClipboardList, FlaskConical, Layers, MapPin, Pencil, Scale, UserRoundCheck } from "lucide-react";
 import StatusBadge from "@/shared/components/StatusBadge";
 import LinkedCard, { LinkedRow } from "@/shared/components/LinkedCard";
 import MetricCards, { type Metric } from "@/shared/components/MetricCards";
 import PageHeader from "@/shared/layout/PageHeader";
+import { Button } from "@/shared/components/ui/button";
+import CampaignLinkProviderModal from "@/modules/campaigns/components/CampaignLinkProviderModal";
+import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import ProviderOverviewCard from "@/modules/providers/components/ProviderOverviewCard";
 import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
-import { parseFecha } from "@/modules/campaigns/api/fecha.util";
 import { examEstadoLabel, type LocalExam } from "@/modules/campaigns/campaignExam";
 import { useProviderExams } from "@/modules/campaigns/campaignExams.store";
 import { getCampaignInterviews } from "@/modules/campaigns/campaignInterview.utils";
 import { formatCampaignNumber } from "@/modules/campaigns/campaignDetails.utils";
 import { getExamenesProveedor } from "@/modules/providers/api/provider-subresources.api";
 import type { ExamenProveedorDto } from "@/modules/providers/api/provider-subresources.dto";
+import { PageError, PageLoading } from "@/shared/components/PageState";
+import { formatDisplayDate } from "@/shared/utils/format";
 
 /** Cuántas filas muestra cada resumen; el resto se ve en su vista de gestión */
 const PREVIEW_ROWS = 3;
@@ -26,12 +27,6 @@ type LoadState =
     | { status: "loading" }
     | { status: "error"; message: string }
     | { status: "ready"; relation: CampaniaProveedor };
-
-function displayDate(value: string) {
-    if (!value) return "—";
-    const date = parseFecha(value);
-    return Number.isNaN(date.getTime()) ? "—" : format(date, "dd/MM/yyyy");
-}
 
 /** Cada examen, sea local o del backend, con lo mínimo que muestra el resumen */
 interface ExamSummary {
@@ -73,13 +68,16 @@ export default function CampaignProviderDetailsPage() {
     const navigate = useNavigate();
     const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
     const [apiExams, setApiExams] = useState<ExamenProveedorDto[]>([]);
+    const [editing, setEditing] = useState(false);
+    const [successOpen, setSuccessOpen] = useState(false);
 
-    const load = useCallback(async () => {
+    /** `showLoading` en false recarga sin tapar la vista (p. ej. después de editar el vínculo) */
+    const load = useCallback(async (showLoading = true) => {
         if (!Number.isInteger(campaniaId) || campaniaId < 1 || !Number.isInteger(cxpId) || cxpId < 1) {
             setLoadState({ status: "error", message: "La campaña o el proveedor no son válidos." });
             return;
         }
-        setLoadState({ status: "loading" });
+        if (showLoading) setLoadState({ status: "loading" });
         try {
             const relations = await getCampaniaProveedoresByCampania(campaniaId);
             const relation = relations.find((item) => item.cxpId === cxpId);
@@ -104,23 +102,9 @@ export default function CampaignProviderDetailsPage() {
     const exams = useMemo<ExamSummary[]>(() => [...localExams.map(fromLocal), ...apiExams.map(fromApi)], [localExams, apiExams]);
 
     if (loadState.status !== "ready") {
-        return (
-            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-5 text-center">
-                {loadState.status === "loading" ? (
-                    <><Spinner className="size-9 text-brand" /><p className="text-ink-muted">Cargando detalle...</p></>
-                ) : (
-                    <>
-                        <TriangleAlert className="size-10 text-brand" aria-hidden="true" />
-                        <h1 className="text-xl font-bold text-ink">Detalle no disponible</h1>
-                        <p role="alert" className="text-ink-muted">{loadState.message}</p>
-                        <div className="flex gap-3">
-                            <Button variant="outline" onClick={() => navigate(`/campaigns/${campaniaId}/providers`)}>Volver a proveedores</Button>
-                            <Button onClick={() => void load()}><RotateCw size={17} /> Reintentar</Button>
-                        </div>
-                    </>
-                )}
-            </div>
-        );
+        return loadState.status === "loading"
+            ? <PageLoading label="Cargando detalle..." />
+            : <PageError title="Detalle no disponible" message={loadState.message} onRetry={() => void load()} back={{ to: `/campaigns/${campaniaId}/providers`, label: "Volver a proveedores" }} />;
     }
 
     const { relation } = loadState;
@@ -166,7 +150,7 @@ export default function CampaignProviderDetailsPage() {
                     key={exam.key}
                     icon={<FlaskConical size={16} strokeWidth={2.2} />}
                     title={exam.title}
-                    subtitle={`${exam.type} · ${displayDate(exam.date)}`}
+                    subtitle={`${exam.type} · ${formatDisplayDate(exam.date)}`}
                     trailing={<StatusBadge status={exam.status} />}
                 />
             ))}
@@ -212,6 +196,7 @@ export default function CampaignProviderDetailsPage() {
                 icon={<UserRoundCheck size={24} strokeWidth={2.5} />}
                 title={`Detalle de ${roleLabel}`}
                 description="Su participación en la campaña, sus exámenes y sus entrevistas."
+                action={<Button variant="outline" size="xl" onClick={() => setEditing(true)}><Pencil size={19} strokeWidth={2.5} /> Editar vínculo</Button>}
             />
 
             <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 lg:grid-cols-[1.95fr_1fr]">
@@ -227,6 +212,21 @@ export default function CampaignProviderDetailsPage() {
                 {examsCard}
                 {interviewsCard}
             </div>
+
+            <CampaignLinkProviderModal
+                mode="edit"
+                open={editing}
+                initialData={relation}
+                campaniaId={campaniaId}
+                onOpenChange={setEditing}
+                onSave={() => {
+                    setEditing(false);
+                    setSuccessOpen(true);
+                    void load(false);
+                }}
+                onRefresh={() => void load(false)}
+            />
+            <CampaignSuccessModal open={successOpen} onOpenChange={setSuccessOpen} mode="edit" />
         </div>
     );
 }

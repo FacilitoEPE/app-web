@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ProveedorDto } from "@/modules/providers/api/proveedor.dto";
-import { createProviderDetailsSession, createProviderFormSession } from "@/modules/providers/api/provider-lifecycle";
+import { createProviderFormSession } from "@/modules/providers/api/provider-lifecycle";
 
 const provider: ProveedorDto = {
   proveedorId: 7,
@@ -27,15 +27,5 @@ describe("provider dialog sessions", () => {
     expect(reopened.errors).toEqual({});
     expect(reopened.saveError).toBeNull();
     expect(reopened.errors).not.toBe(first.errors);
-  });
-
-  it("starts each detail request empty and loading instead of showing cached data", () => {
-    const previous = createProviderDetailsSession();
-    previous.provider = provider;
-    previous.loading = false;
-
-    const reopened = createProviderDetailsSession();
-
-    expect(reopened).toEqual({ provider: null, error: null, loading: true });
   });
 });

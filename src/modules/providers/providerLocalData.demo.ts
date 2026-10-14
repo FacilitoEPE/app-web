@@ -1,6 +1,7 @@
 import type { Finca } from "@/modules/providers/providerFinca.utils";
 import type { CertificadoLocal } from "@/modules/providers/providerCertificado.utils";
 import type { ProduccionProveedor } from "@/modules/providers/providerProduccion.utils";
+import { demoPdf } from "@/shared/utils/demoData";
 
 /**
  * Datos de demostración SOLO para desarrollo: llenan las vistas de fincas y certificados de los primeros
@@ -36,21 +37,6 @@ const PRODUCCION: ProduccionProveedor[] = [
     { estadoSanidad: "Sin registrar", frutas: [] },
     { estadoSanidad: "Registrado", frutas: [{ nombre: "Uva", variedades: ["Red Globe", "Crimson", "Autumn Royal", "Sweet Celebration"] }, { nombre: "Mango", variedades: ["Kent"] }, { nombre: "Palta", variedades: ["Hass"] }] },
 ];
-
-/** PDF mínimo válido de una página, para que la vista previa del documento muestre algo */
-function demoPdf(title: string): File {
-    const body = [
-        "%PDF-1.4",
-        "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj",
-        "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj",
-        "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 360 200]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj",
-        `4 0 obj<</Length 66>>stream\nBT /F1 16 Tf 24 100 Td (Documento de demostracion) Tj ET\nendstream endobj`,
-        "5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj",
-        "trailer<</Root 1 0 R/Size 6>>",
-        "%%EOF",
-    ].join("\n");
-    return new File([body], `${title}.pdf`, { type: "application/pdf" });
-}
 
 /** Cantidad de fincas por proveedor: cubre vacío, una sola, pocas y más de las que caben en la tarjeta */
 const FINCAS_PER_PROVIDER = [4, 1, 0, 2, 6, 3, 5];

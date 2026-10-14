@@ -9,7 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { deleteClienteNegocio, getClientesNegocio } from "@/modules/clients/api/cliente-negocio.api";
 import type { ClienteNegocio } from "@/modules/clients/api/cliente-negocio.mapper";
-import { createInFlightGuard } from "@/modules/clients/api/in-flight-guard";
+import { createInFlightGuard } from "@/shared/utils/inFlightGuard";
 
 export default function CommercialPlanningPage() {
     const [clients, setClients] = useState<ClienteNegocio[]>([]);
@@ -70,7 +70,7 @@ export default function CommercialPlanningPage() {
             await deleteClienteNegocio(client.clienteNegocioId);
             setClients((current) => current.filter((item) => item.clienteNegocioId !== client.clienteNegocioId));
         } catch {
-            setDeleteError(`No se pudo eliminar ${client.nombreEmpresa}. Puede tener contratos vinculados o haber ocurrido un error de conexión.`);
+            setDeleteError(`No se pudo eliminar ${client.nombreEmpresa}. Puede tener información vinculada o haber ocurrido un error de conexión.`);
         } finally {
             deleteGuard.current.release();
         }

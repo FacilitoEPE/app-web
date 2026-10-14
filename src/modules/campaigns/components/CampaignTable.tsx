@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { Pencil, Eye, Contact, Layers, Briefcase, ShieldCheck, Truck, Calendar, Package, ListFilter, TriangleAlert, RotateCw, SearchX } from "lucide-react";
+import { Pencil, Eye, Trash2, Contact, Layers, Briefcase, ShieldCheck, Truck, Calendar, Package, ListFilter, TriangleAlert, RotateCw, SearchX } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -19,15 +19,15 @@ import { TableToolbar, TableCountPill, TableExportMenu, TableViewToggle, type Ta
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
 import SortableHead from "@/shared/components/SortableHead";
 import { nextSort, type SortState } from "@/shared/utils/tableSort";
-import { downloadCsv } from "@/shared/utils/downloadCsv";
+import ConfirmModal from "@/shared/components/ConfirmModal";
 import CampaignFormModal from "@/modules/campaigns/components/CampaignFormModal";
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { CampanaEstado } from "@/modules/campaigns/api/campaign.dto";
 import { getCampaignFruitIcon } from "@/modules/campaigns/campaignFruit";
 import { formatCampaignNumber, getCampaignDurationLabel } from "@/modules/campaigns/campaignDetails.utils";
-
-const PAGE_SIZE = 8;
+import type { TableExport } from "@/shared/utils/exportTable";
+import { paginate } from "@/shared/utils/paginate";
 
 type SortKey = "nombre" | "inicio" | "kilos";
 
@@ -64,13 +64,17 @@ interface CampaignTableProps {
     onRetry: () => void;
     /** Se llama cuando una acción de la tabla cambia datos en el backend, para recargar la página */
     onChanged: () => void;
+    /** Elimina la campaña; la página muestra el error si el backend la rechaza (p. ej. por tener vínculos) */
+    onDelete: (campaign: Campana) => Promise<void>;
     hasActiveFilters: boolean;
     onClearFilters: () => void;
 }
 
-export default function CampaignTable({ data, isLoading, loadError, onRetry, onChanged, hasActiveFilters, onClearFilters }: CampaignTableProps) {
+export default function CampaignTable({ data, isLoading, loadError, onRetry, onChanged, onDelete, hasActiveFilters, onClearFilters }: CampaignTableProps) {
     const navigate = useNavigate();
     const [editingCampaignId, setEditingCampaignId] = useState<number | null>(null);
+    // Se conserva la campaña al cerrar para que el modal no se vacíe durante su animación de salida
+    const [deleting, setDeleting] = useState<{ open: boolean; campaign: Campana | null }>({ open: false, campaign: null });
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [sort, setSort] = useState<SortState<SortKey> | null>(null);
     const [page, setPage] = useState(1);
@@ -91,12 +95,12 @@ export default function CampaignTable({ data, isLoading, loadError, onRetry, onC
         setSort((current) => nextSort(current, key));
     };
 
-    /** Exporta las campañas visibles (pestaña, filtros y orden actuales) a CSV y lo descarga */
-    const handleExportCSV = () =>
-        downloadCsv(
-            "campanas_exportacion.csv",
-            ["Campaña", "Código", "Fruta", "Fecha Inicio", "Fecha Fin", "Periodo", "Kilos", "Estado"],
-            sortedData.map((row) => [
+    /** Lo que exporta la tabla: las filas visibles con los filtros aplicados */
+    const getExportData = (): TableExport => ({
+        filename: "campanas_exportacion",
+        title: "Campañas de exportación",
+        header: ["Campaña", "Código", "Fruta", "Fecha Inicio", "Fecha Fin", "Periodo", "Kilos", "Estado"],
+        rows: sortedData.map((row) => [
                 row.nombre,
                 campaignCode(row),
                 row.fruta?.name ?? "",
@@ -106,17 +110,19 @@ export default function CampaignTable({ data, isLoading, loadError, onRetry, onC
                 String(row.requerimientoComercial),
                 STATUS_LABEL[row.estado],
             ]),
-        );
+    });
 
-    /** Editar y Ver detalles quedan siempre visibles; el resto de acciones se agrupa en el menú de "más opciones" */
+    /** Ver detalles y Editar quedan siempre visibles (en el orden de todas las tablas); el resto va en "más opciones" */
     const getRowActions = (row: Campana) => {
         const primary: RowAction[] = [];
         const secondary: RowAction[] = [];
 
+        primary.push({ label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}`) });
         if (row.estado === "planificacion") {
             primary.push({ label: "Editar", icon: <Pencil size={18} strokeWidth={2.5} />, onClick: () => setEditingCampaignId(row.campaniaId) });
+            // Solo una campaña que aún no empieza se puede eliminar: las demás ya tienen operación registrada
+            primary.push({ label: "Eliminar", icon: <Trash2 size={18} strokeWidth={2.5} />, variant: "destructive", onClick: () => setDeleting({ open: true, campaign: row }) });
         }
-        primary.push({ label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}`) });
 
         if (row.estado === "planificacion" || row.estado === "en proceso") {
             secondary.push({ label: "Ver proveedores", icon: <Briefcase size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/providers`) });
@@ -136,9 +142,7 @@ export default function CampaignTable({ data, isLoading, loadError, onRetry, onC
 
     const showSuccess = () => setIsSuccessModalOpen(true);
 
-    const pageCount = Math.max(1, Math.ceil(sortedData.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
-    const visibleData = sortedData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const { pageCount, currentPage, visible: visibleData } = paginate(sortedData, page);
 
     // El marco de la tabla se mantiene siempre; carga y error ocupan el lugar del estado vacío
     const emptyState = isLoading
@@ -169,8 +173,8 @@ export default function CampaignTable({ data, isLoading, loadError, onRetry, onC
                 description="Gestiona, consulta y da seguimiento a todas tus campañas registradas."
                 headerRight={
                     <TableToolbar>
-                        <TableCountPill icon={<Layers size={16} strokeWidth={2.5} className="text-brand" />} count={sortedData.length} label="campañas" />
-                        <TableExportMenu onExportExcel={handleExportCSV} onExportPdf={handleExportCSV} />
+                        <TableCountPill icon={<Layers size={16} strokeWidth={2.5} className="text-brand" />} count={sortedData.length} singular="campaña" plural="campañas" />
+                        <TableExportMenu getData={getExportData} />
                         <TableViewToggle value={viewMode} onChange={setViewMode} />
                     </TableToolbar>
                 }
@@ -230,11 +234,11 @@ export default function CampaignTable({ data, isLoading, loadError, onRetry, onC
                         <Table className="table-fixed w-full">
                             <TableHeader className={TABLE_HEAD_BG}>
                                 <TableRow className="border-b border-border hover:bg-transparent">
-                                    <SortableHead label="Campaña" sortKey="nombre" sort={sort} onToggle={toggleSort} className="px-6 w-[30%]" />
+                                    <SortableHead label="Campaña" sortKey="nombre" sort={sort} onToggle={toggleSort} className="px-6" />
                                     <SortableHead label="Periodo" sortKey="inicio" sort={sort} onToggle={toggleSort} className="w-[25%]" />
                                     <SortableHead label="Req. Comercial" sortKey="kilos" sort={sort} onToggle={toggleSort} className="w-[15%]" />
                                     <TableHead className="text-ink font-semibold h-14 w-[15%] text-center">Estado</TableHead>
-                                    <TableHead className="text-ink font-semibold h-14 w-50 text-center px-6">Acciones</TableHead>
+                                    <TableHead className="text-ink font-semibold h-14 w-56 text-center px-6">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -295,6 +299,16 @@ export default function CampaignTable({ data, isLoading, loadError, onRetry, onC
                     showSuccess();
                     onChanged();
                 }}
+            />
+
+            <ConfirmModal
+                open={deleting.open}
+                onOpenChange={(open) => setDeleting((current) => ({ ...current, open }))}
+                icon={<Trash2 size={28} strokeWidth={2.25} />}
+                title="¿Eliminar campaña?"
+                description={<>Se eliminará <strong className="font-bold text-ink">{deleting.campaign?.nombre}</strong>. Esta acción no se puede deshacer.</>}
+                confirmLabel="Sí, eliminar"
+                onConfirm={() => { if (deleting.campaign) void onDelete(deleting.campaign); }}
             />
 
             <CampaignSuccessModal

@@ -1,19 +1,7 @@
+import { createInFlightGuard } from "@/shared/utils/inFlightGuard";
 import type { ProveedorFormValues, ProveedorInput } from "@/modules/providers/api/proveedor.dto";
 import type { ProveedorFieldErrors } from "@/modules/providers/api/proveedor.validation";
 import { toProveedorPayload } from "@/modules/providers/api/proveedor.validation";
-
-export function createInFlightGuard() {
-  let inFlight = false;
-  return {
-    get isInFlight() { return inFlight; },
-    acquire() {
-      if (inFlight) return false;
-      inFlight = true;
-      return true;
-    },
-    release() { inFlight = false; },
-  };
-}
 
 export type ProveedorSubmissionResult<T> =
   | { status: "invalid"; errors: ProveedorFieldErrors }

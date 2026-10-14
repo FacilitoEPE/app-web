@@ -1,10 +1,17 @@
 import { useSyncExternalStore } from "react";
 import { format } from "date-fns";
 import type { CampaignClientContractLocal, CampaignClientContractValues } from "@/modules/campaigns/campaignClientContract.utils";
+import { createDemoContracts } from "@/modules/campaigns/campaignClientContracts.demo";
 
-/** TODO(api): reemplazar este almacén en memoria por el servicio de contratos cliente-campaña. */
-let records: Record<string, CampaignClientContractLocal[]> = {};
-let nextId = 1;
+/**
+ * TODO(api): reemplazar este almacén en memoria por el servicio de contratos cliente-campaña.
+ *
+ * En desarrollo arranca con datos de demostración (`campaignClientContracts.demo.ts`); en producción y en las
+ * pruebas arranca vacío, sin simular respuestas del backend.
+ */
+const demo = import.meta.env.DEV && import.meta.env.MODE !== "test" ? createDemoContracts() : null;
+let records: Record<string, CampaignClientContractLocal[]> = demo?.records ?? {};
+let nextId = demo?.nextId ?? 1;
 const listeners = new Set<() => void>();
 const EMPTY: CampaignClientContractLocal[] = [];
 
@@ -55,8 +62,3 @@ export function deleteCampaignClientContract(campaniaId: number, clienteNegocioC
     emit();
 }
 
-export function resetCampaignClientContracts() {
-    records = {};
-    nextId = 1;
-    emit();
-}

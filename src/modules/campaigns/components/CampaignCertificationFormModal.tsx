@@ -5,7 +5,6 @@ import ChipSelect from "@/shared/components/ChipSelect";
 import FileDropzone from "@/shared/components/FileDropzone";
 import FormField from "@/shared/components/FormField";
 import InputField from "@/shared/components/InputField";
-import ModalSection from "@/shared/components/ModalSection";
 import StatusBadge from "@/shared/components/StatusBadge";
 import { Button } from "@/shared/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
@@ -143,7 +142,7 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
             icon={<ShieldCheck size={22} strokeWidth={2} />}
             title={isEdit ? "Editar Certificación" : "Registrar Certificación"}
             description={isEdit ? "Actualiza los datos, el trámite y la cobertura de la certificación." : "Registra la certificación de la campaña, su vigencia y los productores que cubre."}
-            className="sm:max-w-190"
+            size="xl"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
@@ -155,94 +154,80 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
                 </>
             }
         >
-            <div className="flex flex-col gap-6">
-                <ModalSection title="Datos de la certificación">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
-                        {selectField("tipo", "Tipo de certificación:", CERTIFICATION_TYPES.map((type) => ({ value: type, label: type })), "sm:col-span-2")}
-                        <InputField {...bind("nombre")} label="Nombre del certificado:" required maxLength={255} placeholder="Ej. GlobalGAP Mango 2026" className="sm:col-span-2" />
-                        <InputField {...bind("organismoEmisor")} label="Organismo emisor:" required maxLength={255} placeholder="Ej. SGS Perú" className="sm:col-span-2" />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
+                {selectField("tipo", "Tipo de certificación:", CERTIFICATION_TYPES.map((type) => ({ value: type, label: type })), "sm:col-span-2")}
+                <InputField {...bind("nombre")} label="Nombre del certificado:" required maxLength={255} placeholder="Ej. GlobalGAP Mango 2026" className="sm:col-span-2" />
+                <InputField {...bind("organismoEmisor")} label="Organismo emisor:" required maxLength={255} placeholder="Ej. SGS Perú" className="sm:col-span-2" />
 
-                        {isEdit ? (
-                            <>
-                                {/* El periodo y el estado que de él se deduce van juntos: el estado no se elige, se calcula */}
-                                <div className="grid grid-cols-1 gap-4 rounded-xl border border-border p-4 sm:col-span-4 sm:grid-cols-2">
-                                    <InputField {...bind("validoDesde")} type="date" label="Válido desde:" optional />
-                                    <InputField {...bind("validoHasta")} type="date" label="Válido hasta:" optional />
-                                    <p className="flex flex-wrap items-center gap-2 text-[12.5px] text-ink-muted sm:col-span-2">
-                                        Estado automático:
-                                        <StatusBadge status={vigencia} />
-                                    </p>
-                                </div>
-                                {selectField("estadoTramite", "Estado del trámite:", TRAMITE_OPTIONS, "sm:col-span-2")}
-                            </>
-                        ) : (
-                            <>
-                                <InputField {...bind("validoDesde")} type="date" label="Válido desde:" optional className="sm:col-span-3" />
-                                <InputField {...bind("validoHasta")} type="date" label="Válido hasta:" optional className="sm:col-span-3" />
-                            </>
-                        )}
-                    </div>
-                </ModalSection>
+                {isEdit ? (
+                    <>
+                        {/* El periodo y el estado que de él se deduce van juntos: el estado no se elige, se calcula */}
+                        <div className="grid grid-cols-1 gap-4 rounded-xl border border-border p-4 sm:col-span-4 sm:grid-cols-2">
+                            <InputField {...bind("validoDesde")} type="date" label="Válido desde:" optional />
+                            <InputField {...bind("validoHasta")} type="date" label="Válido hasta:" optional />
+                            <p className="flex flex-wrap items-center gap-2 text-[12.5px] text-ink-muted sm:col-span-2">
+                                Estado automático:
+                                <StatusBadge status={vigencia} />
+                            </p>
+                        </div>
+                        {selectField("estadoTramite", "Estado del trámite:", TRAMITE_OPTIONS, "sm:col-span-2")}
+                    </>
+                ) : (
+                    <>
+                        <InputField {...bind("validoDesde")} type="date" label="Válido desde:" optional className="sm:col-span-3" />
+                        <InputField {...bind("validoHasta")} type="date" label="Válido hasta:" optional className="sm:col-span-3" />
+                    </>
+                )}
+                {selectField("moneda", "Moneda:", MONEDA_OPTIONS, "sm:col-span-2")}
+                <InputField {...bind("costo")} label="Costo:" required leading={currencySymbol} step="0.01" min={0} placeholder="0.00" className="sm:col-span-2" />
+                <InputField {...bind("kilosIniciales")} label="Kilos iniciales:" optional unit="kg" step="0.001" min={0} placeholder="0" className="sm:col-span-2" />
 
-                <ModalSection title="Costo y cobertura">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
-                        {selectField("moneda", "Moneda:", MONEDA_OPTIONS, "sm:col-span-2")}
-                        <InputField {...bind("costo")} label="Costo:" required leading={currencySymbol} step="0.01" min={0} placeholder="0.00" className="sm:col-span-2" />
-                        <InputField {...bind("kilosIniciales")} label="Kilos iniciales:" optional unit="kg" step="0.001" min={0} placeholder="0" className="sm:col-span-2" />
+                <FormField
+                    label="Productores cubiertos:"
+                    optional
+                    hint={producers.length > 0 ? `${values.productores.length} de ${producers.length} seleccionados` : undefined}
+                    className="sm:col-span-6"
+                >
+                    <ChipSelect
+                        ariaLabel="Productores cubiertos por la certificación"
+                        options={producers.map((producer) => ({ value: producer.id, label: producer.nombre }))}
+                        value={values.productores}
+                        onChange={update("productores")}
+                        emptyMessage={isLoadingProducers ? "Cargando proveedores de la campaña…" : "Esta campaña todavía no tiene proveedores vinculados."}
+                    />
+                </FormField>
+                <FormField id="campaign-cert-observaciones" label="Observaciones:" optional className="sm:col-span-6">
+                    <Textarea
+                        id="campaign-cert-observaciones"
+                        className="min-h-20 resize-none"
+                        placeholder="Escribe aquí las observaciones..."
+                        value={values.observaciones}
+                        onChange={(event) => update("observaciones")(event.target.value)}
+                    />
+                </FormField>
 
-                        <FormField
-                            label="Productores cubiertos:"
-                            optional
-                            hint={producers.length > 0 ? `${values.productores.length} de ${producers.length} seleccionados` : undefined}
-                            className="sm:col-span-6"
-                        >
-                            <ChipSelect
-                                ariaLabel="Productores cubiertos por la certificación"
-                                options={producers.map((producer) => ({ value: producer.id, label: producer.nombre }))}
-                                value={values.productores}
-                                onChange={update("productores")}
-                                emptyMessage={isLoadingProducers ? "Cargando proveedores de la campaña…" : "Esta campaña todavía no tiene proveedores vinculados."}
-                            />
-                        </FormField>
-                    </div>
-                </ModalSection>
-
-                <ModalSection title="Documentos y notas">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
-                        <FormField id="campaign-cert-observaciones" label="Observaciones:" optional className="sm:col-span-6">
-                            <Textarea
-                                id="campaign-cert-observaciones"
-                                className="min-h-20 resize-none"
-                                placeholder="Escribe aquí las observaciones..."
-                                value={values.observaciones}
-                                onChange={(event) => update("observaciones")(event.target.value)}
-                            />
-                        </FormField>
-
-                        <FormField className="sm:col-span-3">
-                            <FileDropzone
-                                label="Documento del certificado"
-                                variant="horizontal"
-                                optional
-                                hint="PDF · Máx. 10 MB"
-                                file={certificateFile ?? certificate?.documento ?? null}
-                                replaceable={isEdit && certificate?.documento !== null}
-                                onChange={setCertificateFile}
-                            />
-                        </FormField>
-                        <FormField className="sm:col-span-3">
-                            <FileDropzone
-                                label="Documento de cotización"
-                                variant="horizontal"
-                                optional
-                                hint="PDF · Máx. 10 MB"
-                                file={quoteFile ?? certificate?.cotizacion ?? null}
-                                replaceable={isEdit && certificate?.cotizacion !== null}
-                                onChange={setQuoteFile}
-                            />
-                        </FormField>
-                    </div>
-                </ModalSection>
+                <FormField className="sm:col-span-3">
+                    <FileDropzone
+                        label="Documento del certificado"
+                        variant="horizontal"
+                        optional
+                        hint="PDF · Máx. 10 MB"
+                        file={certificateFile ?? certificate?.documento ?? null}
+                        replaceable={isEdit && certificate?.documento !== null}
+                        onChange={setCertificateFile}
+                    />
+                </FormField>
+                <FormField className="sm:col-span-3">
+                    <FileDropzone
+                        label="Documento de cotización"
+                        variant="horizontal"
+                        optional
+                        hint="PDF · Máx. 10 MB"
+                        file={quoteFile ?? certificate?.cotizacion ?? null}
+                        replaceable={isEdit && certificate?.cotizacion !== null}
+                        onChange={setQuoteFile}
+                    />
+                </FormField>
             </div>
         </AppModal>
     );

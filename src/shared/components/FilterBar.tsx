@@ -25,7 +25,7 @@ interface FilterBarProps {
  */
 export default function FilterBar({ children, onClear, canClear = true, className }: FilterBarProps) {
     return (
-        <Card className={cn("rounded-2xl border-border shadow-[0_2px_12px_rgb(0,0,0,0.03)]", className)}>
+        <Card className={cn("rounded-2xl border-border shadow-card", className)}>
             <CardContent className="flex flex-wrap items-center gap-3 p-3 lg:flex-nowrap">
                 <div className="flex shrink-0 items-center gap-3">
                     <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-brand-border bg-brand-surface" style={{ color: "var(--brand-gradient-mid)" }}>

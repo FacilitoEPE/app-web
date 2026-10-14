@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Award, CalendarCheck, FileText, LandPlot, MapPin, ShieldCheck, Sprout, UserRound } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Spinner } from "@/shared/components/ui/spinner";
+import { useNavigate, useParams } from "react-router-dom";
+import { Award, CalendarCheck, FileText, LandPlot, MapPin, Pencil, ShieldCheck, Sprout, UserRound } from "lucide-react";
 import PageHeader from "@/shared/layout/PageHeader";
 import ProviderOverviewCard from "@/modules/providers/components/ProviderOverviewCard";
 import ProviderMetricCards from "@/modules/providers/components/ProviderMetricCards";
 import ProviderProductionCard from "@/modules/providers/components/ProviderProductionCard";
 import LinkedCard, { LinkedRow } from "@/shared/components/LinkedCard";
-import { getProveedor } from "@/modules/providers/api/proveedor.api";
+import { getProveedor, updateProveedor } from "@/modules/providers/api/proveedor.api";
+import type { ProveedorInput } from "@/modules/providers/api/proveedor.dto";
+import { createInFlightGuard } from "@/shared/utils/inFlightGuard";
+import ProviderFormModal from "@/modules/providers/components/ProviderFormModal";
+import ProviderSuccessModal from "@/modules/providers/components/ProviderSuccessModal";
+import { Button } from "@/shared/components/ui/button";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
 import { useProviderLocalData } from "@/modules/providers/providerLocalData.store";
 import { displayCertificadoDate } from "@/modules/providers/providerCertificado.utils";
+import { PageError, PageLoading } from "@/shared/components/PageState";
+import { formatDecimal } from "@/shared/utils/format";
 
 /** Cuántas filas muestra cada resumen; el resto se ve en su vista de gestión */
 const PREVIEW_ROWS = 3;
-
-const hectares = new Intl.NumberFormat("es-PE", { maximumFractionDigits: 2 });
 
 /** "senasa-2026.pdf" → "PDF": la tarjeta muestra el tipo y deja el nombre completo para el tooltip */
 const fileExtension = (name: string) => (name.includes(".") ? name.split(".").pop()!.toUpperCase() : "ARCHIVO");
@@ -52,31 +55,35 @@ export default function ProviderDetailsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void loadProvider(); }, [loadProvider]);
 
-    if (isLoading) {
-        return (
-            <div role="status" className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-ink-muted">
-                <Spinner className="size-8 text-brand" />
-                <p className="text-[14px] font-medium">Cargando proveedor...</p>
-            </div>
-        );
-    }
+    if (isLoading) return <PageLoading label="Cargando proveedor..." />;
 
     if (!provider) {
         return (
-            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
-                <UserRound size={44} className="text-brand" aria-hidden="true" />
-                <h1 className="text-2xl font-bold text-ink">Proveedor no disponible</h1>
-                <p role="alert" className="text-ink-muted">{error}</p>
-                <Button nativeButton={false} render={<Link to="/proveedores" />}><ArrowLeft />Volver a proveedores</Button>
-            </div>
+            <PageError
+                icon={<UserRound />}
+                title="Proveedor no disponible"
+                message={error ?? "No se pudo cargar el proveedor."}
+                onRetry={() => { setIsLoading(true); void loadProvider(); }}
+                back={{ to: "/proveedores", label: "Volver a proveedores" }}
+            />
         );
     }
 
-    return <ProviderDetailsView key={provider.proveedorId} provider={provider} />;
+    return <ProviderDetailsView key={provider.proveedorId} provider={provider} onSaved={setProvider} />;
 }
 
-function ProviderDetailsView({ provider }: { provider: Proveedor }) {
+function ProviderDetailsView({ provider, onSaved }: { provider: Proveedor; onSaved: (provider: Proveedor) => void }) {
     const navigate = useNavigate();
+    const [editing, setEditing] = useState(false);
+    const [successOpen, setSuccessOpen] = useState(false);
+    const [mutationGuard] = useState(createInFlightGuard);
+
+    const saveProvider = async (_providerId: number | null, input: ProveedorInput) => {
+        const saved = await updateProveedor(provider.proveedorId, input);
+        onSaved(saved);
+        setSuccessOpen(true);
+        return saved;
+    };
     const { fincas, certificados, produccion } = useProviderLocalData();
     const providerFincas = fincas[provider.proveedorId] ?? [];
     const providerCertificates = certificados[provider.proveedorId] ?? [];
@@ -96,6 +103,7 @@ function ProviderDetailsView({ provider }: { provider: Proveedor }) {
                 icon={<UserRound size={24} strokeWidth={2.5} />}
                 title="Detalle de Proveedor"
                 description="Datos de registro, fincas y certificados del proveedor."
+                action={<Button variant="outline" size="xl" onClick={() => setEditing(true)}><Pencil size={19} strokeWidth={2.5} /> Editar proveedor</Button>}
             />
 
             <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 lg:grid-cols-[1.95fr_1fr]">
@@ -117,8 +125,8 @@ function ProviderDetailsView({ provider }: { provider: Proveedor }) {
                     onManage={goToFincas}
                     stats={[
                         { label: "Fincas", value: providerFincas.length },
-                        { label: "Hectáreas totales", value: `${hectares.format(totalHectares)} ha` },
-                        { label: "Hectáreas de cultivo", value: `${hectares.format(cultivatedHectares)} ha` },
+                        { label: "Hectáreas totales", value: `${formatDecimal(totalHectares)} ha` },
+                        { label: "Hectáreas de cultivo", value: `${formatDecimal(cultivatedHectares)} ha` },
                     ]}
                     isEmpty={providerFincas.length === 0}
                     emptyMessage="Este proveedor todavía no tiene fincas registradas."
@@ -133,8 +141,8 @@ function ProviderDetailsView({ provider }: { provider: Proveedor }) {
                             subtitle={`${finca.departamento} · ${finca.provincia} · ${finca.distrito}`}
                             trailing={
                                 <>
-                                    <p className="text-[13px] font-bold tabular-nums text-ink">{hectares.format(finca.haTotal)} ha</p>
-                                    <p className="text-[11px] tabular-nums text-ink-muted">{hectares.format(finca.haCultivo)} ha de cultivo</p>
+                                    <p className="text-[13px] font-bold tabular-nums text-ink">{formatDecimal(finca.haTotal)} ha</p>
+                                    <p className="text-[11px] tabular-nums text-ink-muted">{formatDecimal(finca.haCultivo)} ha de cultivo</p>
                                 </>
                             }
                         />
@@ -173,6 +181,16 @@ function ProviderDetailsView({ provider }: { provider: Proveedor }) {
                     </LinkedCard>
                 </div>
             </div>
+
+            <ProviderFormModal
+                open={editing}
+                onOpenChange={setEditing}
+                mode="edit"
+                provider={provider}
+                mutationGuard={mutationGuard}
+                onSave={saveProvider}
+            />
+            <ProviderSuccessModal open={successOpen} onOpenChange={setSuccessOpen} mode="edit" />
         </div>
     );
 }

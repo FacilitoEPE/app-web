@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
+import { sparklinePath } from "@/modules/campaigns/campaignStats.utils";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 
@@ -11,6 +12,8 @@ interface StatCardProps {
         direction: "up" | "down" | "neutral";
     };
     sparklineVariant?: "green" | "grey" | "yellow";
+    /** Serie de los últimos meses que dibuja la curva; sin ella no hay curva */
+    series?: number[];
     onClick?: () => void;
     active?: boolean;
 }
@@ -22,28 +25,14 @@ function TrendIcon({ direction, size }: { direction: "up" | "down" | "neutral"; 
     return <Minus size={size} strokeWidth={2.5} />;
 }
 
-/** Mini sparkline SVG decorativa para el fondo de la card */
-function Sparkline({ variant = "green" }: { variant?: "green" | "grey" | "yellow" }) {
-    const config = {
-        green: { 
-            stroke: "var(--brand)", 
-            fill: "var(--brand)",
-            path: "M 0 50 C 20 50, 30 35, 50 40 C 70 45, 90 15, 120 15"
-        },
-        grey: { 
-            stroke: "var(--status-neutral)",
-            fill: "var(--status-neutral)",
-            path: "M 0 50 C 40 50, 60 45, 80 45 C 100 45, 100 20, 120 20"
-        },
-        yellow: { 
-            stroke: "var(--status-highlight)",
-            fill: "var(--status-highlight)",
-            path: "M 0 45 C 30 45, 50 40, 70 40 C 90 40, 100 15, 120 15"
-        }
-    };
-    
-    const c = config[variant];
-    const fillPath = `${c.path} L 120 60 L 0 60 Z`;
+const SPARKLINE_COLOR = { green: "var(--brand)", grey: "var(--status-neutral)", yellow: "var(--status-highlight)" } as const;
+
+/** Curva de fondo de la card: la serie real de los últimos meses (ver `getCampaignMonthlySeries`) */
+function Sparkline({ series, variant = "green" }: { series: number[]; variant?: keyof typeof SPARKLINE_COLOR }) {
+    const gradientId = useId();
+    const path = sparklinePath(series);
+    if (!path) return null;
+    const color = SPARKLINE_COLOR[variant];
 
     return (
         <svg
@@ -51,20 +40,21 @@ function Sparkline({ variant = "green" }: { variant?: "green" | "grey" | "yellow
             viewBox="0 0 120 60"
             preserveAspectRatio="none"
             fill="none"
+            aria-hidden="true"
         >
             <defs>
-                <linearGradient id={`grad-${variant}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={c.fill} stopOpacity="0.35" />
-                    <stop offset="100%" stopColor={c.fill} stopOpacity="0" />
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+                    <stop offset="100%" stopColor={color} stopOpacity="0" />
                 </linearGradient>
             </defs>
-            <path d={fillPath} fill={`url(#grad-${variant})`} />
-            <path d={c.path} stroke={c.stroke} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path d={`${path} L 120 60 L 0 60 Z`} fill={`url(#${gradientId})`} />
+            <path d={path} stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
     );
 }
 
-export default function StatCard({ title, value, icon, trend, sparklineVariant = "green", onClick, active = false }: StatCardProps) {
+export default function StatCard({ title, value, icon, trend, sparklineVariant = "green", series, onClick, active = false }: StatCardProps) {
     const trendColor =
         trend?.direction === "down"
             ? "text-status-warning"
@@ -87,12 +77,12 @@ export default function StatCard({ title, value, icon, trend, sparklineVariant =
                     onClick?.();
                 }
             }}
-            className={`relative rounded-2xl border border-border shadow-[0_2px_12px_rgb(0,0,0,0.03)] h-33 sm:h-40 bg-card transition-all border-l-[3px] outline-none ${
+            className={`relative rounded-2xl border border-border shadow-card h-33 sm:h-40 bg-card transition-all border-l-[3px] outline-none ${
                 isInteractive ? "cursor-pointer focus-visible:ring-2 focus-visible:ring-brand/40" : ""
             } ${
                 active
-                    ? "border-l-brand shadow-[0_4px_20px_rgb(0,0,0,0.06)] ring-1 ring-brand/20"
-                    : "border-l-transparent hover:shadow-[0_4px_20px_rgb(0,0,0,0.06)] hover:-translate-y-0.5 hover:border-l-brand"
+                    ? "border-l-brand shadow-card-hover ring-1 ring-brand/20"
+                    : "border-l-transparent hover:shadow-card-hover hover:-translate-y-0.5 hover:border-l-brand"
             }`}
         >
             {/* MÓVIL: ícono y tendencia arriba, cifra y rótulo abajo. Con el rótulo
@@ -152,9 +142,9 @@ export default function StatCard({ title, value, icon, trend, sparklineVariant =
                 </div>
             </CardContent>
 
-            {/* Sparkline decorativa: en móvil la tarjeta es demasiado compacta y la
+            {/* Curva de los últimos meses (solo desde sm): en móvil la tarjeta es demasiado compacta y la
                 curva termina cruzando la cifra y la tendencia. */}
-            {trend && <Sparkline variant={sparklineVariant} />}
+            {series && <Sparkline series={series} variant={sparklineVariant} />}
         </Card>
     );
 }

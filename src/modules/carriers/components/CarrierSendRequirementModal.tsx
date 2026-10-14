@@ -73,7 +73,7 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
             icon={<Send size={22} strokeWidth={2} />}
             title="Enviar requerimiento"
             description="Comparte el requerimiento con las empresas seleccionadas."
-            className="sm:max-w-175"
+            size="lg"
             footer={
                 <>
                     <p className="hidden items-center gap-2 text-[13px] font-medium text-ink-muted sm:mr-auto sm:flex">
