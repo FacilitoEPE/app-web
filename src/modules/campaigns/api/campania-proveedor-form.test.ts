@@ -13,25 +13,56 @@ const producerDraft: CampaniaProveedorDraft = {
 };
 
 describe("campaign provider form contract", () => {
-  it("serializes all required fields", () => {
+  it("serializes all required fields with null for unprovided fields by default", () => {
     expect(toCreateCampaniaProveedorInput(4, producerDraft)).toEqual({
       campaniaId: 4,
       proveedorId: 17,
       tipoProveedor: "productor",
       cantidadProveedor: 12.5,
       mtdCeratitis: 0.375,
-      departamento: "-",
-      provincia: "-",
-      distrito: "-",
-      latitud: 0,
-      longitud: 0,
-      densidadPlantacion: 0,
-      distanciamiento: 0,
-      frecuenciaRiego: 0,
-      haTotalFinca: 0,
-      haCultivo: 0,
-      nombreAplicacion: "-",
-      aplicacionesAlAno: 0,
+      frutaConvencionalEstimado: null,
+      departamento: null,
+      provincia: null,
+      distrito: null,
+      latitud: null,
+      longitud: null,
+      densidadPlantacion: null,
+      distanciamiento: null,
+      frecuenciaRiego: null,
+      haTotalFinca: null,
+      haCultivo: null,
+      nombreAplicacion: null,
+      aplicacionesAlAno: null,
+    });
+  });
+
+  it("serializes provided optional fields properly", () => {
+    expect(
+      toCreateCampaniaProveedorInput(4, {
+        ...producerDraft,
+        frutaConvencionalEstimado: "500",
+        departamento: "  Piura  ",
+        latitud: -5.19,
+      }),
+    ).toEqual({
+      campaniaId: 4,
+      proveedorId: 17,
+      tipoProveedor: "productor",
+      cantidadProveedor: 12.5,
+      mtdCeratitis: 0.375,
+      frutaConvencionalEstimado: 500,
+      departamento: "Piura",
+      provincia: null,
+      distrito: null,
+      latitud: -5.19,
+      longitud: null,
+      densidadPlantacion: null,
+      distanciamiento: null,
+      frecuenciaRiego: null,
+      haTotalFinca: null,
+      haCultivo: null,
+      nombreAplicacion: null,
+      aplicacionesAlAno: null,
     });
   });
 

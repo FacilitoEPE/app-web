@@ -11,6 +11,18 @@ export interface CampaniaProveedorDto {
   mtdCeratitis: number;
   frutaConvencionalEstimado: number | null;
   tipoProveedor: TipoProveedorCampania;
+  departamento?: string | null;
+  provincia?: string | null;
+  distrito?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
+  densidadPlantacion?: number | null;
+  distanciamiento?: number | null;
+  frecuenciaRiego?: number | null;
+  haTotalFinca?: number | null;
+  haCultivo?: number | null;
+  nombreAplicacion?: string | null;
+  aplicacionesAlAno?: number | null;
 }
 
 export interface CreateCampaniaProveedorDto {
@@ -20,18 +32,18 @@ export interface CreateCampaniaProveedorDto {
   mtdCeratitis: number;
   frutaConvencionalEstimado?: number | null;
   tipoProveedor: TipoProveedorCampania;
-  departamento?: string;
-  provincia?: string;
-  distrito?: string;
-  latitud?: number;
-  longitud?: number;
-  densidadPlantacion?: number;
-  distanciamiento?: number;
-  frecuenciaRiego?: number;
-  haTotalFinca?: number;
-  haCultivo?: number;
-  nombreAplicacion?: string;
-  aplicacionesAlAno?: number;
+  departamento?: string | null;
+  provincia?: string | null;
+  distrito?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
+  densidadPlantacion?: number | null;
+  distanciamiento?: number | null;
+  frecuenciaRiego?: number | null;
+  haTotalFinca?: number | null;
+  haCultivo?: number | null;
+  nombreAplicacion?: string | null;
+  aplicacionesAlAno?: number | null;
 }
 
 export type UpdateCampaniaProveedorDto = Partial<

@@ -8,6 +8,19 @@ export interface CampaniaProveedorDraft {
   tipoProveedor: TipoProveedorCampania;
   cantidadProveedor: string;
   mtdCeratitis: string;
+  frutaConvencionalEstimado?: string | number | null;
+  departamento?: string | null;
+  provincia?: string | null;
+  distrito?: string | null;
+  latitud?: string | number | null;
+  longitud?: string | number | null;
+  densidadPlantacion?: string | number | null;
+  distanciamiento?: string | number | null;
+  frecuenciaRiego?: string | number | null;
+  haTotalFinca?: string | number | null;
+  haCultivo?: string | number | null;
+  nombreAplicacion?: string | null;
+  aplicacionesAlAno?: string | number | null;
 }
 
 export type CampaniaProveedorDraftErrors = Partial<
@@ -42,39 +55,42 @@ export function getCampaniaProveedorDraftErrors(
   return errors;
 }
 
+function parseOptionalNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+function parseOptionalString(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  const str = String(value).trim();
+  return str.length > 0 ? str : null;
+}
+
 export function toCreateCampaniaProveedorInput(
   campaniaId: number,
   draft: CampaniaProveedorDraft,
 ): CreateCampaniaProveedorDto {
-  const payload: CreateCampaniaProveedorDto = {
+  return {
     campaniaId,
     proveedorId: draft.proveedorId,
     tipoProveedor: draft.tipoProveedor,
     cantidadProveedor: Number(draft.cantidadProveedor),
     mtdCeratitis: Number(draft.mtdCeratitis),
+    frutaConvencionalEstimado: parseOptionalNumber(draft.frutaConvencionalEstimado),
+    departamento: parseOptionalString(draft.departamento),
+    provincia: parseOptionalString(draft.provincia),
+    distrito: parseOptionalString(draft.distrito),
+    latitud: parseOptionalNumber(draft.latitud),
+    longitud: parseOptionalNumber(draft.longitud),
+    densidadPlantacion: parseOptionalNumber(draft.densidadPlantacion),
+    distanciamiento: parseOptionalNumber(draft.distanciamiento),
+    frecuenciaRiego: parseOptionalNumber(draft.frecuenciaRiego),
+    haTotalFinca: parseOptionalNumber(draft.haTotalFinca),
+    haCultivo: parseOptionalNumber(draft.haCultivo),
+    nombreAplicacion: parseOptionalString(draft.nombreAplicacion),
+    aplicacionesAlAno: parseOptionalNumber(draft.aplicacionesAlAno),
   };
-
-  // TODO(api): El diseño actual eliminó estos campos del modal porque vienen de gestión.
-  // Sin embargo, el backend los sigue requiriendo para tipo "productor". 
-  // Inyectamos datos por defecto para permitir la prueba en local hasta que se actualice el endpoint.
-  if (draft.tipoProveedor === "productor") {
-    Object.assign(payload, {
-      departamento: "-",
-      provincia: "-",
-      distrito: "-",
-      latitud: 0,
-      longitud: 0,
-      densidadPlantacion: 0,
-      distanciamiento: 0,
-      frecuenciaRiego: 0,
-      haTotalFinca: 0,
-      haCultivo: 0,
-      nombreAplicacion: "-",
-      aplicacionesAlAno: 0,
-    });
-  }
-
-  return payload;
 }
 
 export function toUpdateCampaniaProveedorInput(
@@ -84,5 +100,18 @@ export function toUpdateCampaniaProveedorInput(
     tipoProveedor: draft.tipoProveedor,
     cantidadProveedor: Number(draft.cantidadProveedor),
     mtdCeratitis: Number(draft.mtdCeratitis),
+    frutaConvencionalEstimado: parseOptionalNumber(draft.frutaConvencionalEstimado),
+    departamento: parseOptionalString(draft.departamento),
+    provincia: parseOptionalString(draft.provincia),
+    distrito: parseOptionalString(draft.distrito),
+    latitud: parseOptionalNumber(draft.latitud),
+    longitud: parseOptionalNumber(draft.longitud),
+    densidadPlantacion: parseOptionalNumber(draft.densidadPlantacion),
+    distanciamiento: parseOptionalNumber(draft.distanciamiento),
+    frecuenciaRiego: parseOptionalNumber(draft.frecuenciaRiego),
+    haTotalFinca: parseOptionalNumber(draft.haTotalFinca),
+    haCultivo: parseOptionalNumber(draft.haCultivo),
+    nombreAplicacion: parseOptionalString(draft.nombreAplicacion),
+    aplicacionesAlAno: parseOptionalNumber(draft.aplicacionesAlAno),
   };
 }

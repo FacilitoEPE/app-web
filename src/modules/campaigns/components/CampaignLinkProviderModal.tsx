@@ -32,11 +32,26 @@ interface CampaignLinkProviderModalProps {
     initialData?: import("@/modules/campaigns/api/campania-proveedor.mapper").CampaniaProveedor | null;
 }
 
-type DraftField = Exclude<keyof CampaniaProveedorDraft, "proveedorId" | "tipoProveedor"> | "observacionesParticipacion" | "precioEstimado" | "moneda";
-type DraftValues = Record<Exclude<keyof CampaniaProveedorDraft, "proveedorId" | "tipoProveedor">, string> & {
+type DraftField = "cantidadProveedor" | "mtdCeratitis" | "observacionesParticipacion" | "precioEstimado" | "moneda";
+type DraftValues = {
+    cantidadProveedor: string;
+    mtdCeratitis: string;
     observacionesParticipacion: string;
     precioEstimado: string;
     moneda: string;
+    frutaConvencionalEstimado: number | null;
+    departamento: string | null;
+    provincia: string | null;
+    distrito: string | null;
+    latitud: number | null;
+    longitud: number | null;
+    densidadPlantacion: number | null;
+    distanciamiento: number | null;
+    frecuenciaRiego: number | null;
+    haTotalFinca: number | null;
+    haCultivo: number | null;
+    nombreAplicacion: string | null;
+    aplicacionesAlAno: number | null;
 };
 // type DraftErrors = CampaniaProveedorDraftErrors & Partial<Record<"proveedorId" | "frutaConvencional" | "observacionesParticipacion", string>>;
 
@@ -46,6 +61,19 @@ const EMPTY_DRAFT: DraftValues = {
     observacionesParticipacion: "",
     precioEstimado: "",
     moneda: "PEN",
+    frutaConvencionalEstimado: null,
+    departamento: null,
+    provincia: null,
+    distrito: null,
+    latitud: null,
+    longitud: null,
+    densidadPlantacion: null,
+    distanciamiento: null,
+    frecuenciaRiego: null,
+    haTotalFinca: null,
+    haCultivo: null,
+    nombreAplicacion: null,
+    aplicacionesAlAno: null,
 };
 
 const PROVIDER_TYPES = [
@@ -99,7 +127,19 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                 ...EMPTY_DRAFT,
                 cantidadProveedor: initialData.cantidadProveedor ? String(initialData.cantidadProveedor) : "",
                 mtdCeratitis: initialData.mtdCeratitis !== undefined && initialData.mtdCeratitis !== null ? String(initialData.mtdCeratitis) : "",
-                // TODO(api): Load new fields when they are available from backend
+                frutaConvencionalEstimado: initialData.frutaConvencionalEstimado ?? null,
+                departamento: initialData.departamento ?? null,
+                provincia: initialData.provincia ?? null,
+                distrito: initialData.distrito ?? null,
+                latitud: initialData.latitud ?? null,
+                longitud: initialData.longitud ?? null,
+                densidadPlantacion: initialData.densidadPlantacion ?? null,
+                distanciamiento: initialData.distanciamiento ?? null,
+                frecuenciaRiego: initialData.frecuenciaRiego ?? null,
+                haTotalFinca: initialData.haTotalFinca ?? null,
+                haCultivo: initialData.haCultivo ?? null,
+                nombreAplicacion: initialData.nombreAplicacion ?? null,
+                aplicacionesAlAno: initialData.aplicacionesAlAno ?? null,
             });
         } else {
             setProviderType("productor");
