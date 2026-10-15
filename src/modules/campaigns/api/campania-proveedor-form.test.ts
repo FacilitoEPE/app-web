@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getCampaniaProveedorDraftErrors,
   toCreateCampaniaProveedorInput,
+  toUpdateCampaniaProveedorInput,
   type CampaniaProveedorDraft,
 } from "@/modules/campaigns/api/campania-proveedor-form";
 
@@ -13,7 +14,7 @@ const producerDraft: CampaniaProveedorDraft = {
 };
 
 describe("campaign provider form contract", () => {
-  it("serializes all required fields with null for unprovided fields by default", () => {
+  it("serializes only API fields by default", () => {
     expect(toCreateCampaniaProveedorInput(4, producerDraft)).toEqual({
       campaniaId: 4,
       proveedorId: 17,
@@ -21,48 +22,52 @@ describe("campaign provider form contract", () => {
       cantidadProveedor: 12.5,
       mtdCeratitis: 0.375,
       frutaConvencionalEstimado: null,
-      departamento: null,
-      provincia: null,
-      distrito: null,
-      latitud: null,
-      longitud: null,
-      densidadPlantacion: null,
-      distanciamiento: null,
-      frecuenciaRiego: null,
-      haTotalFinca: null,
-      haCultivo: null,
-      nombreAplicacion: null,
-      aplicacionesAlAno: null,
     });
   });
 
-  it("serializes provided optional fields properly", () => {
-    expect(
-      toCreateCampaniaProveedorInput(4, {
-        ...producerDraft,
-        frutaConvencionalEstimado: "500",
-        departamento: "  Piura  ",
-        latitud: -5.19,
-      }),
-    ).toEqual({
+  it("omits legacy location and agronomic fields when serializing creation", () => {
+    const legacyDraft = {
+      ...producerDraft,
+      frutaConvencionalEstimado: "500",
+      departamento: "Piura",
+      provincia: "Piura",
+      distrito: "Tambo Grande",
+      latitud: -5.19,
+      longitud: -80.34,
+      densidadPlantacion: 400,
+      distanciamiento: 5,
+      frecuenciaRiego: 3,
+      haTotalFinca: 12,
+      haCultivo: 8,
+      nombreAplicacion: "Trampa Jackson",
+      aplicacionesAlAno: 6,
+    };
+
+    expect(toCreateCampaniaProveedorInput(4, legacyDraft)).toEqual({
       campaniaId: 4,
       proveedorId: 17,
       tipoProveedor: "productor",
       cantidadProveedor: 12.5,
       mtdCeratitis: 0.375,
       frutaConvencionalEstimado: 500,
-      departamento: "Piura",
-      provincia: null,
-      distrito: null,
-      latitud: -5.19,
-      longitud: null,
-      densidadPlantacion: null,
-      distanciamiento: null,
-      frecuenciaRiego: null,
-      haTotalFinca: null,
-      haCultivo: null,
-      nombreAplicacion: null,
-      aplicacionesAlAno: null,
+    });
+  });
+
+  it("serializes updates without legacy location and agronomic fields", () => {
+    expect(toUpdateCampaniaProveedorInput(producerDraft)).toEqual({
+      tipoProveedor: "productor",
+      cantidadProveedor: 12.5,
+      mtdCeratitis: 0.375,
+      frutaConvencionalEstimado: null,
+    });
+  });
+
+  it("includes fincaId when a caller supplies it", () => {
+    expect(
+      toCreateCampaniaProveedorInput(4, { ...producerDraft, fincaId: 23 }),
+    ).toMatchObject({ fincaId: 23 });
+    expect(toUpdateCampaniaProveedorInput({ ...producerDraft, fincaId: 23 })).toMatchObject({
+      fincaId: 23,
     });
   });
 

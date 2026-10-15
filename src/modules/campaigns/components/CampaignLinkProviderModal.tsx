@@ -128,18 +128,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                 cantidadProveedor: initialData.cantidadProveedor ? String(initialData.cantidadProveedor) : "",
                 mtdCeratitis: initialData.mtdCeratitis !== undefined && initialData.mtdCeratitis !== null ? String(initialData.mtdCeratitis) : "",
                 frutaConvencionalEstimado: initialData.frutaConvencionalEstimado ?? null,
-                departamento: initialData.departamento ?? null,
-                provincia: initialData.provincia ?? null,
-                distrito: initialData.distrito ?? null,
-                latitud: initialData.latitud ?? null,
-                longitud: initialData.longitud ?? null,
-                densidadPlantacion: initialData.densidadPlantacion ?? null,
-                distanciamiento: initialData.distanciamiento ?? null,
-                frecuenciaRiego: initialData.frecuenciaRiego ?? null,
-                haTotalFinca: initialData.haTotalFinca ?? null,
-                haCultivo: initialData.haCultivo ?? null,
-                nombreAplicacion: initialData.nombreAplicacion ?? null,
-                aplicacionesAlAno: initialData.aplicacionesAlAno ?? null,
             });
         } else {
             setProviderType("productor");

@@ -1,5 +1,11 @@
 # Reporte de conexión de vistas al backend — epe-web
 
+## Actualización 2026-10-14 — contrato de productor de campaña sin finca
+
+| Vista/componente | Estado — fecha | Alcance y operaciones |
+|---|---|---|
+| `CampaignLinkProviderModal` y operaciones de `campanias-proveedores` | **Parcial — 2026-10-14 / contrato de escritura alineado** | Los payloads de creación y actualización conservan `campaniaId`, `proveedorId`, `tipoProveedor`, `cantidadProveedor`, `mtdCeratitis` y `frutaConvencionalEstimado`; omiten los doce campos legacy de finca/perfil que el endpoint ya no almacena. Los DTO aceptan `fincaId` opcional para consumidores que ya tengan ese dato; esta vista no agrega selector ni consultas automáticas de fincas y su UI no cambia. Sigue pendiente que la gestión de entrevistas/fincas de campaña tenga APIs propias; el cambio no las conecta. |
+
 ## Actualización 2026-10-12 — registro único y rutas de módulos
 
 | Vista/componente | Estado — fecha | Alcance y operaciones |
