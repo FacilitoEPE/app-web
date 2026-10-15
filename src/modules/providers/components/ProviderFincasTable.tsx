@@ -7,12 +7,11 @@ import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components
 import TableGridCard, { TableGridCardField, TableGridCardFields } from "@/shared/components/TableGridCard";
 import { TableCountPill, TableToolbar } from "@/shared/components/TableToolbar";
 import type { Finca } from "@/modules/providers/providerFinca.utils";
+import { formatDecimal } from "@/shared/utils/format";
+import { paginate } from "@/shared/utils/paginate";
 
-const PAGE_SIZE = 8;
 /** Cuántas frutas o variedades se nombran en la fila; el resto se resume como "+N" y se ve en el detalle */
 const VISIBLE_ITEMS = 2;
-
-const hectares = new Intl.NumberFormat("es-PE", { maximumFractionDigits: 2 });
 
 /** Qué parte de la finca está en cultivo, en porcentaje entero */
 const cultivatedShare = (finca: Finca) => (finca.haTotal > 0 ? Math.round((finca.haCultivo / finca.haTotal) * 100) : 0);
@@ -27,7 +26,7 @@ const listWithRest = (items: string[]) =>
 function cultivoSummary(finca: Finca): { title: string; detail: string } | null {
     const cultivos = finca.cultivos ?? [];
     if (cultivos.length === 0) return null;
-    const edad = finca.edadCultivo === null || finca.edadCultivo === undefined ? "" : `${hectares.format(finca.edadCultivo)} ${finca.edadCultivo === 1 ? "año" : "años"}`;
+    const edad = finca.edadCultivo === null || finca.edadCultivo === undefined ? "" : `${formatDecimal(finca.edadCultivo)} ${finca.edadCultivo === 1 ? "año" : "años"}`;
     const totalVarieties = cultivos.reduce((sum, cultivo) => sum + cultivo.variedades.length, 0);
     const variedadesText = cultivos.length === 1
         ? listWithRest(cultivos[0].variedades)
@@ -55,10 +54,7 @@ interface ProviderFincasTableProps {
 export default function ProviderFincasTable({ fincas, onRegister, onView, onEdit, onDelete }: ProviderFincasTableProps) {
     const [page, setPage] = useState(1);
 
-    const pageCount = Math.max(1, Math.ceil(fincas.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
-    const offset = (currentPage - 1) * PAGE_SIZE;
-    const visibleData = fincas.slice(offset, offset + PAGE_SIZE);
+    const { pageCount, currentPage, offset, visible: visibleData } = paginate(fincas, page);
 
     const getRowActions = (finca: Finca, index: number): RowAction[] => [
         { label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: () => onView(finca, index) },
@@ -73,7 +69,7 @@ export default function ProviderFincasTable({ fincas, onRegister, onView, onEdit
             description="Fincas de cultivo registradas para este proveedor."
             headerRight={
                 <TableToolbar>
-                    <TableCountPill icon={<LandPlot size={16} strokeWidth={2.5} className="text-brand" />} count={fincas.length} label={fincas.length === 1 ? "finca" : "fincas"} />
+                    <TableCountPill icon={<LandPlot size={16} strokeWidth={2.5} className="text-brand" />} count={fincas.length} singular="finca" plural="fincas" />
                 </TableToolbar>
             }
             isEmpty={fincas.length === 0}
@@ -100,7 +96,7 @@ export default function ProviderFincasTable({ fincas, onRegister, onView, onEdit
                         >
                             <TableGridCardFields>
                                 <TableGridCardField label="Cultivo" value={cultivo ? `${cultivo.title} · ${cultivo.detail}` : "—"} />
-                                <TableGridCardField label="Superficie" value={`${hectares.format(finca.haTotal)} ha · ${cultivatedShare(finca)}% en cultivo`} />
+                                <TableGridCardField label="Superficie" value={`${formatDecimal(finca.haTotal)} ha · ${cultivatedShare(finca)}% en cultivo`} />
                             </TableGridCardFields>
                         </TableGridCard>
                     );
@@ -156,9 +152,9 @@ export default function ProviderFincasTable({ fincas, onRegister, onView, onEdit
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="text-[13.5px] font-bold leading-tight tabular-nums text-ink">{hectares.format(finca.haTotal)} ha</span>
+                                            <span className="text-[13.5px] font-bold leading-tight tabular-nums text-ink">{formatDecimal(finca.haTotal)} ha</span>
                                             <span className="mt-0.5 text-[12px] font-medium tabular-nums text-ink-muted">
-                                                {hectares.format(finca.haCultivo)} ha en cultivo · {cultivatedShare(finca)}%
+                                                {formatDecimal(finca.haCultivo)} ha en cultivo · {cultivatedShare(finca)}%
                                             </span>
                                         </div>
                                     </TableCell>

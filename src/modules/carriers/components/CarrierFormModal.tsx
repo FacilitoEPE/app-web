@@ -70,13 +70,14 @@ export default function CarrierFormModal({
     return (
         <AppModal
             open={open}
-            onOpenChange={(next) => !(saving && !next) && onOpenChange(next)}
+            onOpenChange={onOpenChange}
+            busy={saving}
             icon={isPrivado ? <UserRound size={22} strokeWidth={2} /> : <Building2 size={22} strokeWidth={2} />}
             title={isEdit ? "Editar transportista" : "Registrar transportista"}
             description={isEdit
                 ? "Modifica los datos del transportista."
                 : "Completa los datos para registrar un nuevo transportista."}
-            className="sm:max-w-170"
+            size="lg"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)} disabled={saving}>

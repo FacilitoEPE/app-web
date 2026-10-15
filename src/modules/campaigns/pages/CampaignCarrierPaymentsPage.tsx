@@ -1,4 +1,6 @@
+import { plural } from "@/shared/utils/plural";
 import { useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import { Wallet, Clock, TrendingUp, CheckCircle2, Banknote, Eye, Truck, ListFilter } from "lucide-react";
 import {
     Table,
@@ -15,10 +17,12 @@ import FilterBar, { FilterDateField, FilterSearch } from "@/shared/components/Fi
 import StatusBadge from "@/shared/components/StatusBadge";
 import RowActions from "@/shared/components/RowActions";
 import TableCard from "@/shared/components/TableCard";
-import { downloadCsv } from "@/shared/utils/downloadCsv";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
 import TableGridCard, { TableGridCardFields, TableGridCardField } from "@/shared/components/TableGridCard";
 import { TableToolbar, TableCountPill, TableExportMenu, TableViewToggle, type TableViewMode } from "@/shared/components/TableToolbar";
+import { ContextBannerPlaceholder } from "@/shared/components/ContextBanner";
+import CampaignContextBanner from "@/modules/campaigns/components/CampaignContextBanner";
+import { useCampaign } from "@/modules/campaigns/useCampaign";
 import CampaignRegisterPaymentModal from "@/modules/campaigns/components/CampaignRegisterPaymentModal";
 import CampaignAttachReceiptModal from "@/modules/campaigns/components/CampaignAttachReceiptModal";
 import CampaignCompleteAdvanceModal from "@/modules/campaigns/components/CampaignCompleteAdvanceModal";
@@ -32,8 +36,8 @@ import {
     isWithinDateRange,
     type PaymentDraft,
 } from "@/modules/campaigns/carrierPayments.utils";
-
-const PAGE_SIZE = 8;
+import type { TableExport } from "@/shared/utils/exportTable";
+import { paginate } from "@/shared/utils/paginate";
 
 /** Estados del pago, en el orden en que se muestran en el selector */
 const PAYMENT_STATUS_TABS: SegmentedTabItem[] = [
@@ -61,6 +65,13 @@ const STATUS_ACCENTS: Record<string, string> = {
     Realizados: "border-l-brand",
 };
 
+/** Cómo se lee cada estado en las píldoras del banner, según la cantidad */
+const STATUS_STAT_LABEL: Record<string, { one: string; other: string }> = {
+    Pendiente: { one: "pendiente", other: "pendientes" },
+    Adelanto: { one: "adelanto", other: "adelantos" },
+    Realizados: { one: "realizado", other: "realizados" },
+};
+
 /** Mismo acento que STATUS_ACCENTS, como color de fondo para la barra de la tabla desktop */
 const STATUS_ACCENT_BG: Record<string, string> = {
     Pendiente: "bg-status-highlight",
@@ -69,6 +80,8 @@ const STATUS_ACCENT_BG: Record<string, string> = {
 };
 
 export default function CampaignCarrierPaymentsPage() {
+    const { id } = useParams<{ id: string }>();
+    const campaign = useCampaign(Number(id));
     const [status, setStatus] = useState("Pendiente");
     const [search, setSearch] = useState("");
     const [startDate, setStartDate] = useState("");
@@ -137,16 +150,19 @@ export default function CampaignCarrierPaymentsPage() {
         showSuccess("advance");
     };
 
-    /** Exporta los pagos visibles (del estado y filtros actuales) a CSV y lo descarga */
-    const handleExportCSV = () =>
-        downloadCsv("pagos_transportista.csv", ["Transportista", "Cantidad", "Boleta", "Estado"], filteredPayments.map((payment) => [payment.transportista, payment.cantidad, payment.boleta ?? "Sin adjuntar", payment.estado]));
+    /** Lo que exporta la tabla: las filas visibles con los filtros aplicados */
+    const getExportData = (): TableExport => ({
+        filename: "pagos_transportista",
+        title: "Pagos a transportistas",
+        header: ["Transportista", "Cantidad", "Boleta", "Estado"],
+        rows: filteredPayments.map((payment) => [payment.transportista, payment.cantidad, payment.boleta ?? "Sin adjuntar", payment.estado]),
+    });
 
-    const pageCount = Math.max(1, Math.ceil(filteredPayments.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
-    const visibleData = filteredPayments.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const { pageCount, currentPage, visible: visibleData } = paginate(filteredPayments, page);
 
     const getRowActions = (payment: CarrierPayment) => ({
         primary: [
+            { label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: () => setViewing({ open: true, payment }) },
             // El billete solo aparece mientras queda algo por registrar: confirmar el pendiente o cerrar el adelanto.
             // En Realizados ya no hay nada que hacer, así que solo se queda "Ver detalles".
             ...(payment.estado === "Pendiente"
@@ -155,12 +171,19 @@ export default function CampaignCarrierPaymentsPage() {
             ...(payment.estado === "Adelanto"
                 ? [{ label: "Registrar pago", icon: <Banknote size={18} strokeWidth={2.5} />, onClick: () => setCompleting({ open: true, payment }) }]
                 : []),
-            { label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: () => setViewing({ open: true, payment }) },
         ],
     });
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
+            {campaign === undefined ? <ContextBannerPlaceholder /> : campaign && (
+                <CampaignContextBanner
+                    campaign={campaign}
+                    caption="Transporte · pagos a transportistas"
+                    stats={statusTabs.map((tab) => ({ label: plural(tab.count ?? 0, STATUS_STAT_LABEL[tab.id].one, STATUS_STAT_LABEL[tab.id].other), value: String(tab.count ?? 0) }))}
+                />
+            )}
+
             <PageHeader
                 icon={<Wallet size={24} strokeWidth={2.5} />}
                 title="Registro de pago al transportista"
@@ -186,8 +209,8 @@ export default function CampaignCarrierPaymentsPage() {
                 description="Gestiona y da seguimiento a los pagos de esta campaña."
                 headerRight={
                     <TableToolbar>
-                        <TableCountPill icon={<Wallet size={16} strokeWidth={2.5} className="text-brand" />} count={filteredPayments.length} label="pagos" />
-                        <TableExportMenu onExportExcel={handleExportCSV} onExportPdf={handleExportCSV} />
+                        <TableCountPill icon={<Wallet size={16} strokeWidth={2.5} className="text-brand" />} count={filteredPayments.length} singular="pago" plural="pagos" />
+                        <TableExportMenu getData={getExportData} />
                         <TableViewToggle value={viewMode} onChange={setViewMode} />
                     </TableToolbar>
                 }

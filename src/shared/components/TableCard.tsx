@@ -87,7 +87,7 @@ export default function TableCard({
     className,
 }: TableCardProps) {
     return (
-        <Card className={cn("rounded-2xl border-border shadow-[0_2px_12px_rgb(0,0,0,0.03)] overflow-hidden", className)}>
+        <Card className={cn("rounded-2xl border-border shadow-card overflow-hidden", className)}>
             <CardContent className="p-3 flex flex-col gap-5 sm:gap-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3 sm:gap-4 min-w-0">

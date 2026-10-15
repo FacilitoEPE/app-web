@@ -1,3 +1,4 @@
+import { plural } from "@/shared/utils/plural";
 import { Users } from "lucide-react";
 import CampaignContactsCard from "@/modules/campaigns/components/CampaignContactsCard";
 import type { CampaignClient } from "@/modules/campaigns/campaignDetails.data";
@@ -6,7 +7,7 @@ export default function CampaignClientsSummary({ clients, campaignName, onViewAl
     const activeCount = clients.filter((client) => client.status === "Activo").length;
     const mainClients = [...clients].sort((a, b) => b.orders - a.orders).slice(0, 2);
     return (
-        <CampaignContactsCard title="Clientes" description={`${clients.length} clientes registrados · ${campaignName}`} icon={<Users size={27} />} onViewAll={onViewAll} empty={!clients.length}
+        <CampaignContactsCard title="Clientes" description={`${clients.length} ${plural(clients.length, "cliente registrado", "clientes registrados")} · ${campaignName}`} icon={<Users size={27} />} onViewAll={onViewAll} empty={!clients.length}
             stats={[{ label: "Clientes", value: clients.length }, { label: "Activos", value: activeCount, tone: "green" }, { label: "Inactivos", value: clients.length - activeCount, tone: "red" }, { label: "Pedidos", value: clients.reduce((sum, client) => sum + client.orders, 0) }]}>
             <p className="campaign-list-label">Principales clientes</p>
             {mainClients.map((client) => (

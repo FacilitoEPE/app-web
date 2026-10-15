@@ -1,23 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Truck, UserRound, Building2, AlertCircle } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { Truck, UserRound, Building2, AlertCircle, Pencil } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Spinner } from "@/shared/components/ui/spinner";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import PageHeader from "@/shared/layout/PageHeader";
 import FilterBar, { FilterSearch } from "@/shared/components/FilterBar";
 import SegmentedTabs, { type SegmentedTabItem } from "@/shared/components/SegmentedTabs";
 import CarrierInfoCard from "@/modules/carriers/components/CarrierInfoCard";
+import CarrierMetricCards from "@/modules/carriers/components/CarrierMetricCards";
+import CarrierFormModal from "@/modules/carriers/components/CarrierFormModal";
 import CarrierVehiclesTable from "@/modules/carriers/components/CarrierVehiclesTable";
 import CarrierDriversTable from "@/modules/carriers/components/CarrierDriversTable";
 import CarrierVehicleModal from "@/modules/carriers/components/CarrierVehicleModal";
 import CarrierDriverModal from "@/modules/carriers/components/CarrierDriverModal";
 import CarrierSuccessModal, { type CarrierSuccessMode } from "@/modules/carriers/components/CarrierSuccessModal";
-import { createDriver, createVehicle, deleteDriver, deleteVehicle, getCarrier, updateDriver, updateVehicle } from "@/modules/carriers/api/carrier.api";
+import { createDriver, createVehicle, deleteDriver, deleteVehicle, getCarrier, updateCarrier, updateDriver, updateVehicle } from "@/modules/carriers/api/carrier.api";
 import type { Carrier, Driver, Vehicle } from "@/modules/carriers/carriers.data";
-import { useCarrierExtras } from "@/modules/carriers/carrierExtras.store";
-import { toCarrierProfile } from "@/modules/carriers/carrierProfile.utils";
+import { setCarrierExtras, useCarrierExtras } from "@/modules/carriers/carrierExtras.store";
+import { splitCarrierValues, toCarrierProfile, type CarrierFormValues } from "@/modules/carriers/carrierProfile.utils";
 import { toDriverInput, toVehicleInput, type DriverFormValues, type VehicleFormValues } from "@/modules/carriers/carrierRecords.utils";
+import { PageError, PageLoading } from "@/shared/components/PageState";
 
 type DetailTab = "vehiculos" | "choferes";
 const normalize = (value: string) => value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -50,22 +52,16 @@ export default function CarrierDetailsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void loadCarrier(); }, [loadCarrier]);
 
-    if (isLoading) {
-        return (
-            <div role="status" className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-ink-muted">
-                <Spinner className="size-8 text-brand" />
-                <p className="text-[14px] font-medium">Cargando empresa de transporte...</p>
-            </div>
-        );
-    }
+    if (isLoading) return <PageLoading label="Cargando empresa de transporte..." />;
     if (!carrier) {
         return (
-            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
-                <Building2 size={44} className="text-brand" aria-hidden="true" />
-                <h1 className="text-2xl font-bold text-ink">Empresa no disponible</h1>
-                <p role="alert" className="text-ink-muted">{error}</p>
-                <Button nativeButton={false} render={<Link to="/transportistas" />}><ArrowLeft />Volver a transporte</Button>
-            </div>
+            <PageError
+                icon={<Building2 />}
+                title="Empresa no disponible"
+                message={error ?? "No se pudo cargar la empresa de transporte."}
+                onRetry={() => { setIsLoading(true); void loadCarrier(); }}
+                back={{ to: "/transportistas", label: "Volver a transporte" }}
+            />
         );
     }
     return <CarrierDetailsView carrier={carrier} onRefresh={loadCarrier} />;
@@ -77,6 +73,7 @@ function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefres
     const [error, setError] = useState<string | null>(null);
     const [vehicleModal, setVehicleModal] = useState<{ open: boolean; editing: Vehicle | null }>({ open: false, editing: null });
     const [driverModal, setDriverModal] = useState<{ open: boolean; editing: Driver | null }>({ open: false, editing: null });
+    const [editingCarrier, setEditingCarrier] = useState(false);
     const [success, setSuccess] = useState<{ open: boolean; mode: CarrierSuccessMode }>({ open: false, mode: "vehicle-created" });
     const extras = useCarrierExtras();
     const profile = useMemo(() => toCarrierProfile(carrier, extras[carrier.id]), [carrier, extras]);
@@ -121,6 +118,15 @@ function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefres
         showSuccess(driverModal.editing ? "driver-updated" : "driver-created");
     }
 
+    async function saveCarrier(values: CarrierFormValues) {
+        const { input, extras: carrierExtras } = splitCarrierValues(values);
+        await updateCarrier(carrier.id, input);
+        setCarrierExtras(carrier.id, carrierExtras);
+        await onRefresh();
+        setEditingCarrier(false);
+        showSuccess("carrier-updated");
+    }
+
     async function removeVehicle(id: number) {
         try { await deleteVehicle(id); await onRefresh(); }
         catch { setError("No se puede eliminar el vehículo si el backend aún tiene asignaciones de transporte."); }
@@ -136,10 +142,15 @@ function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefres
                 icon={<Building2 size={24} strokeWidth={2.5} />}
                 title="Detalle de Transporte"
                 description="Datos del transportista, sus vehículos y sus choferes."
-                action={isVehicles ? (
-                    <Button size="xl" onClick={() => setVehicleModal({ open: true, editing: null })}><Truck size={20} strokeWidth={2.5} /> Registrar vehículo</Button>
-                ) : (
-                    <Button size="xl" onClick={() => setDriverModal({ open: true, editing: null })}><UserRound size={20} strokeWidth={2.5} /> Registrar chofer</Button>
+                action={(
+                    <>
+                        <Button variant="outline" size="xl" onClick={() => setEditingCarrier(true)}><Pencil size={19} strokeWidth={2.5} /> Editar transportista</Button>
+                        {isVehicles ? (
+                            <Button size="xl" onClick={() => setVehicleModal({ open: true, editing: null })}><Truck size={20} strokeWidth={2.5} /> Registrar vehículo</Button>
+                        ) : (
+                            <Button size="xl" onClick={() => setDriverModal({ open: true, editing: null })}><UserRound size={20} strokeWidth={2.5} /> Registrar chofer</Button>
+                        )}
+                    </>
                 )}
             />
             {error && (
@@ -148,10 +159,11 @@ function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefres
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
-            <div className="mb-8 flex flex-col gap-6">
-                <CarrierInfoCard carrier={profile} vehicleCount={carrierVehicles.length} driverCount={carrierDrivers.length} />
-                <SegmentedTabs tabs={tabs} value={activeTab} onChange={changeTab} />
+            <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 lg:grid-cols-[1.95fr_1fr]">
+                <CarrierInfoCard carrier={profile} />
+                <CarrierMetricCards vehicles={carrierVehicles} drivers={carrierDrivers.length} />
             </div>
+            <SegmentedTabs tabs={tabs} value={activeTab} onChange={changeTab} className="mt-8 mb-8" />
             <FilterBar onClear={clearFilters} canClear={hasActiveFilters} className="mb-8">
                 <FilterSearch value={search} onChange={setSearch} placeholder={isVehicles ? "Buscar placa..." : "Buscar chofer, correo o teléfono..."} />
             </FilterBar>
@@ -172,6 +184,7 @@ function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefres
             <CarrierDriverModal open={driverModal.open} onOpenChange={(open) => setDriverModal((current) => ({ ...current, open }))} carrier={carrier}
                 onSuccess={saveDriver} mode={driverModal.editing ? "edit" : "create"}
                 initialValues={driverModal.editing ? { nombre: driverModal.editing.nombre, telefono: driverModal.editing.telefono, correo: driverModal.editing.correo } : undefined} />
+            <CarrierFormModal open={editingCarrier} onOpenChange={setEditingCarrier} mode="edit" initialValues={profile} onSuccess={saveCarrier} />
             <CarrierSuccessModal open={success.open} onOpenChange={(open) => setSuccess((current) => ({ ...current, open }))} mode={success.mode} />
         </div>
     );

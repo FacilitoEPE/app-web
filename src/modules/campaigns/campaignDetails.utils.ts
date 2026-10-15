@@ -11,12 +11,6 @@ export function parseCampaignDate(value: string): number | null {
         ? timestamp : null;
 }
 
-/** Pasa una fecha de campaña (dd/mm/yyyy) al formato que pide `<input type="date">`. */
-export function toDateInputValue(value: string) {
-    const timestamp = parseCampaignDate(value);
-    return timestamp === null ? "" : new Date(timestamp).toISOString().slice(0, 10);
-}
-
 export function getCampaignTiming(start: string, end: string, now = new Date()) {
     const startDate = parseCampaignDate(start);
     const endDate = parseCampaignDate(end);

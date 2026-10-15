@@ -1,6 +1,6 @@
 import SuccessModal from "@/shared/components/SuccessModal";
 
-type ClientSuccessMode = "create" | "edit" | "contract";
+type ClientSuccessMode = "create" | "edit";
 
 interface ClientSuccessModalProps {
     open: boolean;
@@ -11,7 +11,6 @@ interface ClientSuccessModalProps {
 const COPY: Record<ClientSuccessMode, { title: string; description: string }> = {
     create: { title: "Cliente Registrado", description: "Se podrá ver los clientes registrados en el inicio" },
     edit: { title: "Cambios Guardados", description: "Los datos del cliente se actualizaron correctamente." },
-    contract: { title: "Contrato añadido", description: "El contrato se ha añadido exitosamente a la campaña." },
 };
 
 export default function ClientSuccessModal({ open, onOpenChange, mode = "create" }: ClientSuccessModalProps) {

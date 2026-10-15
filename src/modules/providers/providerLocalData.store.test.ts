@@ -6,11 +6,9 @@ import {
     updateFinca,
     getProviderLocalData,
     resetProviderLocalData,
-    saveDatosAgronomicos,
     updateCertificado,
 } from "@/modules/providers/providerLocalData.store";
 import type { Finca } from "@/modules/providers/providerFinca.utils";
-import type { DatosAgronomicos } from "@/modules/providers/providerAgronomico.utils";
 
 const finca = (nombre: string): Finca => ({
     nombre,
@@ -21,15 +19,6 @@ const finca = (nombre: string): Finca => ({
     longitud: null,
     haTotal: 10,
     haCultivo: 8,
-});
-
-const agronomicos = (nombre: string): DatosAgronomicos => ({
-    nombre,
-    densidadPlantacion: 250,
-    distanciamiento: 4,
-    frecuenciaRiego: 3,
-    nombreAplicacion: "Urea",
-    aplicacionesAlAno: 2,
 });
 
 describe("providerLocalData.store", () => {
@@ -44,12 +33,6 @@ describe("providerLocalData.store", () => {
         expect(fincas[2].map((item) => item.nombre)).toEqual(["Fundo C"]);
     });
 
-    it("reemplaza los datos agronómicos al guardar de nuevo", () => {
-        saveDatosAgronomicos(1, agronomicos("Plan 2026"));
-        saveDatosAgronomicos(1, agronomicos("Plan 2027"));
-        expect(getProviderLocalData().agronomicos[1].nombre).toBe("Plan 2027");
-    });
-
     it("entrega un estado nuevo en cada cambio, para que los componentes se actualicen", () => {
         const before = getProviderLocalData();
         addFinca(5, finca("Fundo Z"));
@@ -58,8 +41,8 @@ describe("providerLocalData.store", () => {
     });
 
     it("no mezcla datos entre proveedores", () => {
-        saveDatosAgronomicos(1, agronomicos("Plan 1"));
-        expect(getProviderLocalData().agronomicos[2]).toBeUndefined();
+        addFinca(1, finca("Fundo 1"));
+        expect(getProviderLocalData().fincas[2]).toBeUndefined();
     });
 
     it("edita y quita fincas por posición, sin tocar las demás ni otros proveedores", () => {

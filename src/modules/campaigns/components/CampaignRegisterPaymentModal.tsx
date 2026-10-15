@@ -83,7 +83,7 @@ export default function CampaignRegisterPaymentModal({ open, onOpenChange, onSav
             icon={<Banknote size={22} strokeWidth={2} />}
             title="Registrar Pago"
             description="Registra un pago al transportista. Los campos con * son obligatorios."
-            className="sm:max-w-150"
+            size="md"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>

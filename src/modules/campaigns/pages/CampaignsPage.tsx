@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Leaf, Sprout } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AlertCircle, Leaf, Sprout } from "lucide-react";
 import CampaignStatsOverview from "@/modules/campaigns/components/CampaignStatsOverview";
 import CampaignFilters from "@/modules/campaigns/components/CampaignFilters";
 import CampaignTable from "@/modules/campaigns/components/CampaignTable";
@@ -8,7 +8,9 @@ import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccess
 import CampaignStatusTabs from "@/modules/campaigns/components/CampaignStatusTabs";
 import PageHeader from "@/shared/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
-import { getCampanas } from "@/modules/campaigns/api/campaign.api";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
+import { deleteCampana, getCampanas } from "@/modules/campaigns/api/campaign.api";
+import { createInFlightGuard } from "@/shared/utils/inFlightGuard";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import { filterCampanas } from "@/modules/campaigns/campaignFilters.utils";
 
@@ -16,6 +18,8 @@ export default function CampaignsPage() {
     const [campaigns, setCampaigns] = useState<Campana[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+    const deleteGuard = useRef(createInFlightGuard());
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
@@ -58,6 +62,19 @@ export default function CampaignsPage() {
         [campaigns, search, startDate, endDate, status],
     );
 
+    const handleDelete = async (campaign: Campana) => {
+        if (!deleteGuard.current.acquire()) return;
+        setDeleteError(null);
+        try {
+            await deleteCampana(campaign.campaniaId);
+            setCampaigns((current) => current.filter((item) => item.campaniaId !== campaign.campaniaId));
+        } catch {
+            setDeleteError(`No se pudo eliminar ${campaign.nombre}. Puede tener proveedores o clientes vinculados, o haber ocurrido un error de conexión.`);
+        } finally {
+            deleteGuard.current.release();
+        }
+    };
+
     const handleCreateSuccess = () => {
         setIsCreateModalOpen(false);
         setIsSuccessModalOpen(true);
@@ -94,12 +111,20 @@ export default function CampaignsPage() {
                 onClear={clearFilters}
             />
 
+            {deleteError && (
+                <Alert variant="destructive" className="mb-6">
+                    <AlertCircle />
+                    <AlertDescription>{deleteError}</AlertDescription>
+                </Alert>
+            )}
+
             <CampaignTable
                 data={filteredData}
                 isLoading={isLoading}
                 loadError={loadError}
                 onRetry={retry}
                 onChanged={() => void loadCampaigns()}
+                onDelete={handleDelete}
                 hasActiveFilters={hasActiveFilters}
                 onClearFilters={clearFilters}
             />

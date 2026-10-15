@@ -122,11 +122,6 @@ export default function CampaignFormModal({
 
     const fruitName = (frutaId: number | null) => frutas.find((fruta) => fruta.frutaId === frutaId)?.name;
 
-    const handleOpenChange = (nextOpen: boolean) => {
-        if (!nextOpen && saving) return;
-        onOpenChange(nextOpen);
-    };
-
     const handleSubmit = async () => {
         if (saving || isLoading) return;
         const validation = campaignFormSchema.safeParse({ ...values, frutaId: values.frutaId ?? 0 });
@@ -164,17 +159,18 @@ export default function CampaignFormModal({
     return (
         <AppModal
             open={open}
-            onOpenChange={handleOpenChange}
+            onOpenChange={onOpenChange}
+            busy={saving}
             icon={<Sprout size={22} strokeWidth={2} />}
             title={isEdit ? "Editar Campaña" : "Nueva Campaña"}
             description={isEdit
                 ? "Modifica la información de la campaña existente."
                 : "Completa la información para registrar una nueva campaña."}
-            className="sm:max-w-[800px]"
+            size="xl"
             ready={!isLoading && !derivadasLoading}
             footer={
                 <>
-                    <Button variant="outline" size="xl" onClick={() => handleOpenChange(false)} disabled={saving}>
+                    <Button variant="outline" size="xl" onClick={() => onOpenChange(false)} disabled={saving}>
                         <X size={20} strokeWidth={2.5} /> Cancelar
                     </Button>
                     <Button size="xl" onClick={handleSubmit} disabled={saving || isLoading} aria-busy={saving}>

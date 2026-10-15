@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getCampaignTrend, getTrend } from "@/modules/campaigns/campaignStats.utils";
+import { getCampaignMonthlySeries, getCampaignTrend, getTrend, sparklinePath } from "@/modules/campaigns/campaignStats.utils";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 
 const campaign = (overrides: Partial<Campana>): Campana => ({
@@ -56,5 +56,31 @@ describe("getCampaignTrend", () => {
         ];
         const trend = getCampaignTrend(campaigns, now, (item) => item.estado === "terminado", (item) => item.fechaFin);
         expect(trend).toEqual({ value: "-50%", direction: "down" });
+    });
+});
+
+describe("getCampaignMonthlySeries", () => {
+    it("counts the last six months, oldest first, including the current one", () => {
+        const now = new Date(2026, 9, 20);
+        const campaigns = [
+            campaign({ campaniaId: 1, fechaInicio: new Date(2026, 9, 1) }),
+            campaign({ campaniaId: 2, fechaInicio: new Date(2026, 9, 15) }),
+            campaign({ campaniaId: 3, fechaInicio: new Date(2026, 7, 10) }),
+            campaign({ campaniaId: 4, fechaInicio: new Date(2026, 4, 10) }),
+            campaign({ campaniaId: 5, fechaInicio: new Date(2026, 3, 10) }),
+        ];
+        expect(getCampaignMonthlySeries(campaigns, now)).toEqual([1, 0, 0, 1, 0, 2]);
+    });
+});
+
+describe("sparklinePath", () => {
+    it("keeps an all-zero series as a flat line at the bottom", () => {
+        expect(sparklinePath([0, 0, 0])).toBe("M 0 54 C 30 54, 30 54, 60 54 C 90 54, 90 54, 120 54");
+    });
+
+    it("puts the highest value at the top margin", () => {
+        const path = sparklinePath([0, 2]);
+        expect(path.startsWith("M 0 54")).toBe(true);
+        expect(path.endsWith("120 10")).toBe(true);
     });
 });

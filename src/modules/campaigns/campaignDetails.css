@@ -23,26 +23,18 @@
 .campaign-details::before { top: -90px; left: -80px; transform: rotate(12deg); }
 .campaign-details::after { right: -66px; bottom: 0; transform: rotate(55deg); }
 .campaign-details-inner { width: 100%; }
-.campaign-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 19px; }
-.campaign-page-heading h1 { font-size: 25px; font-weight: 800; letter-spacing: -1px; line-height: 1.25; }
-.campaign-page-heading > div > p { margin-top: 3px; font-size: 12px; color: var(--ink-muted); font-weight: 500; }
-.campaign-heading-signature { display: flex; align-items: center; gap: 15px; width: 47%; color: #8d9c7d; }
-.campaign-heading-signature > span { display: flex; align-items: center; gap: 9px; flex-shrink: 0; font: italic 23px/1.3 "Segoe Script", "Bradley Hand", cursive; transform: rotate(-4deg); }
-.campaign-heading-signature svg { color: #a7c47e; fill: #a7c47e33; }
-.campaign-heading-signature > div { height: 1px; flex: 1; min-width: 16px; background: #bbd2a8; transform: rotate(-3deg); }
-.campaign-heading-signature > p { flex-shrink: 0; font-size: 10px !important; color: #8d9c7d !important; }
 .campaign-top-grid,
 .campaign-bottom-grid { display: grid; grid-template-columns: minmax(0, 1.95fr) minmax(0, 1fr); gap: 16px; }
 .campaign-bottom-grid { margin-top: 16px; align-items: start; }
 .campaign-main-column,
 .campaign-side-column { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.campaign-panel { gap: 0; min-width: 0; padding: 0; border: 1px solid var(--campaign-line); border-radius: 16px; background: var(--card); color: var(--ink); box-shadow: 0 4px 20px #2c491207; --tw-ring-shadow: 0 0 #0000; }
+.campaign-panel { gap: 0; min-width: 0; padding: 0; border: 1px solid var(--campaign-line); border-radius: 16px; background: var(--card); color: var(--ink); box-shadow: 0 4px 20px color-mix(in oklab, var(--brand) 3%, transparent); --tw-ring-shadow: 0 0 #0000; }
 .campaign-top-grid, .campaign-main-column, .campaign-side-column { animation: campaign-arrive 450ms ease-out both; }
 .campaign-main-column { animation-delay: 65ms; }
 .campaign-side-column { animation-delay: 120ms; }
 .campaign-overview { position: relative; min-height: 252px; background: linear-gradient(115deg, var(--card) 40%, color-mix(in oklab, var(--brand-surface) 45%, var(--card))); }
 .campaign-overview-copy { position: relative; z-index: 1; width: 57%; padding: 22px 18px 17px 22px; }
-.campaign-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #538443; }
+.campaign-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--brand); }
 .campaign-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 12px; margin-top: 3px; }
 .campaign-title-row h2 { font-size: clamp(22px, 2.05vw, 32px); font-weight: 800; letter-spacing: -1.15px; line-height: 1.25; overflow-wrap: anywhere; }
 .campaign-title-row [data-slot="badge"] { padding: 4px 10px; font-size: 10px; gap: 6px; }
@@ -55,51 +47,51 @@
 .campaign-dates dd { margin-top: 2px; font-size: 12px; font-weight: 750; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .campaign-varieties { margin-top: 10px; }
 .campaign-varieties > p { margin-bottom: 6px; font-size: 8px; font-weight: 600; text-transform: uppercase; color: var(--campaign-muted); }
-.campaign-chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; background: #eaf2e5; padding: 3px 10px; color: #3d6e28; font-size: 10px; font-weight: 600; line-height: 1.4; white-space: nowrap; }
+.campaign-chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; background: var(--brand-surface); padding: 3px 10px; color: var(--brand-dark); font-size: 10px; font-weight: 600; line-height: 1.4; white-space: nowrap; }
 .campaign-chip > span { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-.campaign-chip-purple { color: #8c58c0; background: #f5eefe; }
-.campaign-fruit-photo { position: absolute; right: 0; top: 0; width: 43%; height: 100%; overflow: hidden; border-radius: 60% 0 0 22% / 67% 0 0 33%; background: #dbe6c9; }
+.campaign-chip-purple { color: var(--status-neutral); background: var(--status-neutral-surface); }
+.campaign-fruit-photo { position: absolute; right: 0; top: 0; width: 43%; height: 100%; overflow: hidden; border-radius: 60% 0 0 22% / 67% 0 0 33%; background: var(--brand-surface); }
 .campaign-fruit-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 65% center; transition: transform 700ms cubic-bezier(.2,.6,.3,1); }
 .campaign-overview:hover .campaign-fruit-photo img { transform: scale(1.035); }
-.campaign-photo-shade { position: absolute; inset: 0; background: linear-gradient(30deg, #132b12a8, transparent 68%); }
-.campaign-photo-quote { position: absolute; left: 17%; bottom: 21px; max-width: 135px; color: white; font: italic 21px/1.25 "Segoe Script", "Bradley Hand", cursive; transform: rotate(-5deg); text-shadow: 0 1px 6px #0005; }
-.campaign-photo-quote > span { display: block; width: 42px; height: 2px; margin-top: 9px; background: #bbd279; }
+.campaign-photo-shade { position: absolute; inset: 0; background: linear-gradient(30deg, color-mix(in oklab, var(--ink) 66%, transparent), transparent 68%); }
+.campaign-photo-quote { position: absolute; left: 17%; bottom: 21px; max-width: 135px; color: white; font: italic 21px/1.25 "Segoe Script", "Bradley Hand", cursive; transform: rotate(-5deg); text-shadow: 0 1px 6px rgb(0 0 0 / 0.33); }
+.campaign-photo-quote > span { display: block; width: 42px; height: 2px; margin-top: 9px; background: color-mix(in oklab, var(--brand) 55%, white); }
 .campaign-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .campaign-metric { flex-direction: row; gap: 12px; align-items: flex-start; padding: 18px 15px; transition: transform 200ms ease, box-shadow 200ms ease; }
-.campaign-metric:hover { transform: translateY(-2px); box-shadow: 0 7px 22px #31581b10; }
-.campaign-icon-circle { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 38px; height: 38px; color: #387a24; border-radius: 50%; background: #edf4e8; }
+.campaign-metric:hover { transform: translateY(-2px); box-shadow: 0 7px 22px color-mix(in oklab, var(--brand) 6%, transparent); }
+.campaign-icon-circle { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 38px; height: 38px; color: var(--brand); border-radius: 50%; background: var(--brand-surface); }
 .campaign-metric h3 { margin-top: 4px; min-height: 27px; font-size: 10px; line-height: 1.45; font-weight: 700; }
 .campaign-metric-value { margin-top: 5px; font-size: 24px; line-height: 1.3; font-weight: 800; letter-spacing: -.7px; font-variant-numeric: tabular-nums; }
 .campaign-metric-value > span { font-size: 15px; font-weight: 700; letter-spacing: -.4px; }
 .campaign-metric-value.is-pending { color: var(--ink-muted); }
 .campaign-metric-description { margin-top: 5px; font-size: 9px; line-height: 1.5; color: var(--campaign-muted); }
-.campaign-metric-warm { border-color: #efe6ce; background: linear-gradient(130deg, #fff, #fcfbf7); }
-.campaign-metric-warm .campaign-icon-circle { color: #a0710e; background: #fff2cc; }
+.campaign-metric-warm { border-color: var(--status-highlight-border); background: linear-gradient(130deg, var(--card), var(--status-highlight-surface)); }
+.campaign-metric-warm .campaign-icon-circle { color: var(--status-highlight); background: var(--status-highlight-surface); }
 .campaign-section-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .campaign-section-heading h2 { font-size: 14px; line-height: 1.35; font-weight: 750; letter-spacing: -.35px; }
 .campaign-section-heading p { margin-top: 2px; color: var(--campaign-muted); font-size: 10px; line-height: 1.5; }
-.campaign-section-icon { color: #4d8e30; flex-shrink: 0; }
+.campaign-section-icon { color: var(--brand); flex-shrink: 0; }
 .campaign-section-icon > svg { display: block; }
 .campaign-harvest { padding: 20px; }
-.campaign-percentage { margin-left: auto; font-size: 29px; line-height: 1; font-weight: 800; letter-spacing: -1px; color: #245e24; font-variant-numeric: tabular-nums; }
+.campaign-percentage { margin-left: auto; font-size: 29px; line-height: 1; font-weight: 800; letter-spacing: -1px; color: var(--brand-dark); font-variant-numeric: tabular-nums; }
 .campaign-progress { margin-top: 17px; }
 .campaign-progress [data-slot="progress-track"] { height: 13px; background: var(--muted); }
-.campaign-progress [data-slot="progress-indicator"] { border-radius: 99px; background: linear-gradient(90deg, #78ae49, #3e7d2c); transition: width 700ms ease; }
+.campaign-progress [data-slot="progress-indicator"] { border-radius: 99px; background: var(--brand-gradient); transition: width 700ms ease; }
 .campaign-harvest-bottom { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: center; gap: 20px; margin-top: 13px; }
 .campaign-harvest-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .campaign-harvest-values > div + div { border-left: 1px solid var(--campaign-line); padding-left: 20px; }
 .campaign-harvest-values dd { font-size: 13px; font-weight: 750; font-variant-numeric: tabular-nums; }
 .campaign-harvest-values dt { margin-top: 1px; font-size: 10px; color: var(--campaign-muted); }
-.campaign-harvest-note { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 12px; background: #f4f8f1; }
+.campaign-harvest-note { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 12px; background: var(--brand-surface); }
 .campaign-harvest-note svg { color: var(--brand); flex-shrink: 0; }
-.campaign-harvest-note p { font-size: 10px; font-weight: 700; line-height: 1.4; color: #375838; }
+.campaign-harvest-note p { font-size: 10px; font-weight: 700; line-height: 1.4; color: var(--brand-dark); }
 .campaign-harvest-note span { display: block; margin-top: 3px; color: var(--campaign-muted); font-size: 10px; line-height: 1.6; }
 .campaign-contacts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .campaign-contacts { padding: 17px 18px 7px; }
 .campaign-contacts .campaign-section-heading { gap: 9px; }
 .campaign-contacts .campaign-section-heading p { font-size: 9px; }
-.campaign-view-all { border-radius: 99px; border-color: #e2eadd; background: #f4f8ef; padding-inline: 11px; font-size: 9px; font-weight: 650; color: #386529; }
-.campaign-view-all:hover { background: #e8f1df; }
+.campaign-view-all { border-radius: 99px; border-color: var(--brand-border); background: var(--brand-surface); padding-inline: 11px; font-size: 9px; font-weight: 650; color: var(--brand-dark); }
+.campaign-view-all:hover { background: color-mix(in oklab, var(--brand) 14%, var(--card)); }
 .campaign-view-all svg { transition: transform 180ms ease; }
 .campaign-view-all:hover svg { transform: translateX(2px); }
 .campaign-contact-stats { display: flex; padding-block: 17px 13px; margin-bottom: 3px; border-bottom: 1px solid var(--campaign-line); text-align: center; }
@@ -107,12 +99,12 @@
 .campaign-contact-stats > div + div { border-left: 1px solid var(--campaign-line); }
 .campaign-contact-stats dd { font-size: 15px; font-weight: 750; line-height: 1.4; font-variant-numeric: tabular-nums; }
 .campaign-contact-stats dt { font-size: 9px; color: var(--campaign-muted); }
-.campaign-stat-green { color: #3e842a; }
-.campaign-stat-red { color: #ce4242; }
+.campaign-stat-green { color: var(--brand); }
+.campaign-stat-red { color: var(--destructive); }
 .campaign-list-label { margin-block: 5px 2px; font-size: 9px; font-weight: 500; color: var(--campaign-muted); }
 .campaign-contact-row { display: flex; align-items: center; gap: 9px; padding-block: 9px; min-width: 0; }
 .campaign-contact-row + .campaign-contact-row { border-top: 1px solid var(--campaign-line); }
-.campaign-avatar { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 31px; height: 31px; border-radius: 50%; font-size: 11px; font-weight: 700; color: #396629; background: #edf4e7; }
+.campaign-avatar { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 31px; height: 31px; border-radius: 50%; font-size: 11px; font-weight: 700; color: var(--brand-dark); background: var(--brand-surface); }
 .campaign-contact-row h3 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; font-weight: 700; }
 .campaign-contact-row p { margin-top: 1px; font-size: 9px; color: var(--campaign-muted); }
 .campaign-provider-chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; max-width: 46%; }
@@ -140,21 +132,18 @@
 .campaign-cert-files li { display: flex; align-items: center; gap: 7px; color: var(--ink-body); font-size: 10px; overflow-wrap: anywhere; }
 .campaign-cert-files svg { flex-shrink: 0; }
 .campaign-cert-files > p { margin-top: 8px; font-size: 9px; color: var(--campaign-muted); }
-.campaign-brand-banner { position: relative; min-height: 135px; overflow: hidden; isolation: isolate; border-radius: 15px; background: linear-gradient(110deg, #edf3e4, #e6eedb); }
-.campaign-brand-banner::before { content: ""; position: absolute; width: 140px; height: 70px; top: -15px; left: 45%; border-radius: 0 100% 0 100%; background: #dae7cb; transform: rotate(24deg); }
+.campaign-brand-banner { position: relative; min-height: 135px; overflow: hidden; isolation: isolate; border-radius: 15px; background: linear-gradient(110deg, var(--brand-surface), color-mix(in oklab, var(--brand) 14%, var(--card))); }
+.campaign-brand-banner::before { content: ""; position: absolute; width: 140px; height: 70px; top: -15px; left: 45%; border-radius: 0 100% 0 100%; background: var(--brand-border); transform: rotate(24deg); }
 .campaign-brand-copy { position: relative; z-index: 1; padding: 17px 19px; }
-.campaign-brand-copy > svg { color: #75a733; fill: #75a73322; width: 23px; height: 23px; }
-.campaign-brand-copy > p { margin-top: 5px; color: #375c2e; font: italic 17px/1.3 "Segoe Script", "Bradley Hand", cursive; letter-spacing: -.5px; }
-.campaign-brand-copy > span { display: block; margin-top: 6px; font-size: 9px; color: #789369; }
+.campaign-brand-copy > svg { color: var(--brand); fill: color-mix(in oklab, var(--brand) 13%, transparent); width: 23px; height: 23px; }
+.campaign-brand-copy > p { margin-top: 5px; color: var(--brand-dark); font: italic 17px/1.3 "Segoe Script", "Bradley Hand", cursive; letter-spacing: -.5px; }
+.campaign-brand-copy > span { display: block; margin-top: 6px; font-size: 9px; color: var(--ink-muted); }
 .campaign-brand-banner > img { position: absolute; inset: 0 0 0 auto; width: 54%; height: 100%; object-fit: cover; object-position: 60% center; border-radius: 76% 0 0 0 / 100% 0 0 0; }
 .campaign-empty { padding: 20px 5px; color: var(--campaign-muted); font-size: 12px; line-height: 1.7; }
 .campaign-muted { color: var(--campaign-muted); }
 
 /* Modo oscuro: superficies y líneas ya salen de los tokens; aquí solo se aclaran los acentos de color
    (verdes, morado y cálido) que en claro son tonos oscuros sobre fondo pastel. */
-.dark .campaign-heading-signature,
-.dark .campaign-heading-signature > p { color: var(--ink-muted) !important; }
-.dark .campaign-heading-signature > div { background: var(--border); }
 .dark .campaign-eyebrow,
 .dark .campaign-section-icon,
 .dark .campaign-stat-green { color: #8cc65e; }
@@ -204,14 +193,9 @@
     .campaign-certification-toggle { gap: 8px; }
     .campaign-contacts { padding-inline: 14px; }
     .campaign-client-contact { display: none; }
-    .campaign-heading-signature { width: 46%; gap: 10px; }
-    .campaign-heading-signature > span { font-size: 20px; }
-    .campaign-heading-signature > p { font-size: 9px !important; }
 }
 @media (max-width: 1099px) {
     .campaign-top-grid, .campaign-bottom-grid { grid-template-columns: minmax(0, 1fr); }
-    .campaign-heading-signature { width: auto; }
-    .campaign-heading-signature > div, .campaign-heading-signature > p { display: none; }
     .campaign-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .campaign-metric { padding: 16px 12px; gap: 10px; }
     .campaign-metric .campaign-icon-circle { width: 33px; height: 33px; }
@@ -222,9 +206,6 @@
     .campaign-contact-row h3 { font-size: 11px; }
 }
 @media (max-width: 700px) {
-    .campaign-page-heading h1 { font-size: 23px; }
-    .campaign-page-heading > div > p { font-size: 11px; }
-    .campaign-heading-signature { display: none; }
     .campaign-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .campaign-metric { min-height: 116px; }
     .campaign-contacts-grid { grid-template-columns: minmax(0, 1fr); }

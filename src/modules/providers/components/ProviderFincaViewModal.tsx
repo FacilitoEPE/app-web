@@ -31,7 +31,7 @@ export default function ProviderFincaViewModal({ open, onOpenChange, providerNam
             icon={<LandPlot size={22} strokeWidth={2} />}
             title="Detalle de la finca"
             description={`${finca.nombre} · ${providerName}`}
-            className="sm:max-w-190"
+            size="xl"
             footer={
                 <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                     <X size={20} strokeWidth={2.5} /> Cerrar
@@ -67,11 +67,11 @@ export default function ProviderFincaViewModal({ open, onOpenChange, providerNam
                             suffix={finca.edadCultivo === null || finca.edadCultivo === undefined ? undefined : "años"}
                             className="sm:col-span-2"
                         />
-                        <div className="flex flex-col gap-2 sm:col-span-6">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-ink-muted">
-                                Cultivos{cultivos.length > 0 && <span className="ml-1.5 normal-case tracking-normal text-ink-muted/80">· {cultivos.length} {cultivos.length === 1 ? "fruta" : "frutas"}, {totalVariedades} {totalVariedades === 1 ? "variedad" : "variedades"}</span>}
-                            </p>
-                            {cultivos.length > 0 ? (
+                        <InfoField
+                            className="sm:col-span-6"
+                            variant="plain"
+                            label={<>Cultivos{cultivos.length > 0 && <span className="ml-1.5 normal-case tracking-normal text-ink-muted/80">· {cultivos.length} {cultivos.length === 1 ? "fruta" : "frutas"}, {totalVariedades} {totalVariedades === 1 ? "variedad" : "variedades"}</span>}</>}
+                            value={cultivos.length > 0 ? (
                                 <div className={cn("grid gap-3", cultivos.length > 1 && "sm:grid-cols-2")}>
                                     {cultivos.map((cultivo) => (
                                         <section key={cultivo.fruta} aria-label={`Cultivo ${cultivo.fruta}`} className="flex flex-col gap-2.5 rounded-xl border border-border/60 bg-card p-3.5">
@@ -95,9 +95,9 @@ export default function ProviderFincaViewModal({ open, onOpenChange, providerNam
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-[13px] text-ink-muted">Sin cultivos registrados.</p>
+                                <p className="text-ink-muted">Sin cultivos registrados.</p>
                             )}
-                        </div>
+                        />
                     </div>
                 </ModalSection>
             </div>

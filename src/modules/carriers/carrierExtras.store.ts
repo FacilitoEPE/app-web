@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { CarrierExtras } from "@/modules/carriers/carrierProfile.utils";
+import { createDemoCarrierExtras } from "@/modules/carriers/carrierExtras.demo";
 
 /**
  * Datos del transportista que todavía no tienen campo en el backend: tipo (público o privado), MTC, CGN,
@@ -9,8 +10,11 @@ import type { CarrierExtras } from "@/modules/carriers/carrierProfile.utils";
  * en un componente, para que sobrevivan al navegar entre la lista y el detalle. Cuando el backend los modele,
  * `setCarrierExtras` y `removeCarrierExtras` desaparecen y `CarrierDto` / `CarrierInput` de `carrier.api.ts`
  * pasan a llevarlos. Los modelos y validaciones están en `carrierProfile.utils.ts`.
+ *
+ * En desarrollo arranca con datos de demostración (`carrierExtras.demo.ts`); en producción y en las pruebas
+ * arranca vacío.
  */
-let data: Record<number, CarrierExtras> = {};
+let data: Record<number, CarrierExtras> = import.meta.env.DEV && import.meta.env.MODE !== "test" ? createDemoCarrierExtras() : {};
 const listeners = new Set<() => void>();
 
 function update(next: Record<number, CarrierExtras>) {
@@ -36,11 +40,6 @@ export function removeCarrierExtras(carrierId: number) {
     const next = { ...data };
     delete next[carrierId];
     update(next);
-}
-
-/** Vacía el almacén: solo para las pruebas. */
-export function resetCarrierExtras() {
-    update({});
 }
 
 export function useCarrierExtras(): Record<number, CarrierExtras> {

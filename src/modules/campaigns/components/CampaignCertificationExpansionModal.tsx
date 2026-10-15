@@ -14,8 +14,7 @@ import {
     type AmpliacionFormValues,
     type CertificadoCampanaLocal,
 } from "@/modules/campaigns/campaignCertificate.utils";
-
-const kilos = new Intl.NumberFormat("es-PE", { maximumFractionDigits: 3 });
+import { formatKg } from "@/shared/utils/format";
 
 interface CampaignCertificationExpansionModalProps {
     open: boolean;
@@ -57,7 +56,7 @@ export default function CampaignCertificationExpansionModal({ open, onOpenChange
             icon={<PackagePlus size={22} strokeWidth={2} />}
             title="Registrar Ampliación"
             description={certificate.nombre}
-            className="sm:max-w-130"
+            size="sm"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
@@ -72,9 +71,9 @@ export default function CampaignCertificationExpansionModal({ open, onOpenChange
             <div className="flex flex-col gap-5">
                 <SummaryBar
                     items={[
-                        { label: "Kilos iniciales", value: `${kilos.format(certificate.kilosIniciales)} kg` },
-                        { label: "Ampliaciones", value: `${kilos.format(getKilosAmpliados(certificate))} kg` },
-                        { label: "Total actual", value: `${kilos.format(getKilosTotales(certificate))} kg`, tone: "brand" },
+                        { label: "Kilos iniciales", value: `${formatKg(certificate.kilosIniciales)} kg` },
+                        { label: "Ampliaciones", value: `${formatKg(getKilosAmpliados(certificate))} kg` },
+                        { label: "Total actual", value: `${formatKg(getKilosTotales(certificate))} kg`, tone: "brand" },
                     ]}
                 />
 

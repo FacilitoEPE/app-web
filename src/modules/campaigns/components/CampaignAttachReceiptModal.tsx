@@ -42,7 +42,7 @@ export default function CampaignAttachReceiptModal({ open, onOpenChange, payment
             icon={<Paperclip size={22} strokeWidth={2} />}
             title="Adjuntar Boleta"
             description={payment ? `Confirma el pago pendiente de ${payment.transportista}.` : "Confirma el pago pendiente."}
-            className="sm:max-w-120"
+            size="sm"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>

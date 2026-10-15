@@ -24,7 +24,7 @@ export default function CampaignDirectoryModal({ open, onOpenChange, title, camp
     const visual = getCampaignFruitVisual(campaign.nombre, campaign.fruta?.name ?? "");
     const duration = differenceInDays(new Date(campaign.fechaFin), new Date(campaign.fechaInicio));
     return (
-        <AppModal open={open} onOpenChange={onOpenChange} title={title} description={description} icon={<Icon size={22} strokeWidth={2} />} className="sm:max-w-3xl">
+        <AppModal open={open} onOpenChange={onOpenChange} title={title} description={description} icon={<Icon size={22} strokeWidth={2} />} size="xl">
             <div className="relative mb-4 flex flex-wrap items-center gap-4 overflow-hidden rounded-2xl bg-brand-surface/70 p-4 sm:gap-6 sm:pr-40">
                 <img src={visual.image} alt="" className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-40 rounded-tl-[80px] object-cover sm:block" />
                 <div className="relative flex items-center gap-3">

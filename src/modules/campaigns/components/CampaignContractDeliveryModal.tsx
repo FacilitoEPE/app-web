@@ -50,7 +50,7 @@ export default function CampaignContractDeliveryModal({ open, delivery, onOpenCh
             icon={<PackageCheck size={22} strokeWidth={2.25} />}
             title={delivery ? "Editar Entrega" : "Registrar Entrega"}
             description="Programa la cantidad y el destino correspondiente a este contrato."
-            className="sm:max-w-175"
+            size="lg"
             footer={(
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}><X size={19} /> Cancelar</Button>

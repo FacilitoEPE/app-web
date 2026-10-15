@@ -3,6 +3,7 @@ import { FileText, Upload, Eye, X, Pencil, Image as ImageIcon } from "lucide-rea
 import FilePreviewModal from "@/shared/components/FilePreviewModal";
 import { formatFileSize, isImage, type FileSource, type StoredFile } from "@/shared/utils/fileSource";
 import Hint from "@/shared/components/Hint";
+import { INFO_LABEL_CLASS } from "@/shared/components/InfoField";
 import { cn } from "@/lib/utils";
 import { BRAND_ACTIVE_SURFACE } from "@/shared/styles/brandGradients";
 export type { StoredFile };
@@ -130,15 +131,20 @@ export default function FileDropzone({
     const FileIcon = file && isImage(file) ? ImageIcon : FileText;
 
     return (
-        <div className={cn("flex flex-col gap-2.5", className)}>
-            <label htmlFor={inputId} className={cn("text-[13px] font-semibold text-ink flex items-center gap-1.5 leading-snug", hideLabel && "sr-only")}>
-                <span>{label}{colonChar}</span>
-                {required && <span className="text-destructive font-bold">*</span>}
-                {optional && <span className="font-normal text-ink-muted/70 text-[11.5px] lowercase">(Opcional)</span>}
-            </label>
+        <div className={cn("flex flex-col", readOnly ? "gap-2" : "gap-2.5", className)}>
+            {/* Como visualizador es un dato más del detalle: misma etiqueta que InfoField */}
+            {readOnly ? (
+                <span className={cn(INFO_LABEL_CLASS, hideLabel && "sr-only")}>{label}</span>
+            ) : (
+                <label htmlFor={inputId} className={cn("text-[13px] font-semibold text-ink flex items-center gap-1.5 leading-snug", hideLabel && "sr-only")}>
+                    <span>{label}{colonChar}</span>
+                    {required && <span className="text-destructive font-bold">*</span>}
+                    {optional && <span className="font-normal text-ink-muted/70 text-[11.5px] lowercase">(Opcional)</span>}
+                </label>
+            )}
 
             {!file && readOnly ? (
-                <div className="flex h-11 items-center rounded-lg border border-border/60 bg-card px-3 text-[13px] font-medium text-ink-muted">Sin documento adjunto</div>
+                <div className="flex h-10 items-center rounded-lg border border-border/60 bg-card px-3 text-[13px] font-medium text-ink-muted">Sin documento adjunto</div>
             ) : !file ? (
                 isHorizontal ? (
                     <label

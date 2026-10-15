@@ -36,3 +36,38 @@ export function getCampaignTrend(
         countInMonth(campaigns, now, -1, referenceDate, matches),
     );
 }
+
+/**
+ * Serie de los últimos `months` meses (del más antiguo al actual) con cuántas campañas cumplen `matches` en cada
+ * mes, según la misma fecha de referencia que la tendencia. Es lo que dibuja la curva de cada tarjeta.
+ */
+export function getCampaignMonthlySeries(
+    campaigns: Campana[],
+    now: Date,
+    matches: (campaign: Campana) => boolean = () => true,
+    referenceDate: (campaign: Campana) => Date = (campaign) => campaign.fechaInicio,
+    months = 6,
+): number[] {
+    return Array.from({ length: months }, (_, index) => countInMonth(campaigns, now, index - (months - 1), referenceDate, matches));
+}
+
+/**
+ * Trazo SVG suave para una serie, en una caja de `width`×`height`. El valor más alto toca el margen superior;
+ * una serie toda en cero queda como una línea plana abajo (no inventa una subida).
+ */
+export function sparklinePath(series: number[], width = 120, height = 60, padTop = 10, padBottom = 6): string {
+    if (series.length === 0) return "";
+    const max = Math.max(...series, 0) || 1;
+    const step = series.length > 1 ? width / (series.length - 1) : 0;
+    const points = series.map((value, index) => ({
+        x: Math.round(index * step * 100) / 100,
+        y: Math.round((height - padBottom - (value / max) * (height - padTop - padBottom)) * 100) / 100,
+    }));
+    if (points.length === 1) return `M 0 ${points[0].y} L ${width} ${points[0].y}`;
+    return points.reduce((path, point, index) => {
+        if (index === 0) return `M ${point.x} ${point.y}`;
+        const previous = points[index - 1];
+        const midX = Math.round(((previous.x + point.x) / 2) * 100) / 100;
+        return `${path} C ${midX} ${previous.y}, ${midX} ${point.y}, ${point.x} ${point.y}`;
+    }, "");
+}

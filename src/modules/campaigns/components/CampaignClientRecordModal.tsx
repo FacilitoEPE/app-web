@@ -109,12 +109,13 @@ export default function CampaignClientRecordModal({ open, mode, client, campania
     return (
         <AppModal
             open={open}
-            onOpenChange={(next) => { if (!isSaving) onOpenChange(next); }}
+            onOpenChange={onOpenChange}
+            busy={isSaving}
             icon={viewOnly ? <Eye size={22} /> : <Pencil size={22} />}
-            title={viewOnly ? "Detalle del cliente vinculado" : "Editar vínculo con cliente"}
+            title={viewOnly ? "Detalle del vínculo" : "Editar vínculo con cliente"}
             description={`${name} · Campaña de exportación`}
-            className="sm:max-w-175"
-            footer={viewOnly ? <Button size="xl" onClick={() => onOpenChange(false)}>Cerrar</Button> : (
+            size="lg"
+            footer={viewOnly ? <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}><X size={20} strokeWidth={2.5} /> Cerrar</Button> : (
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)} disabled={isSaving}><X size={18} /> Cancelar</Button>
                     <Button size="xl" onClick={() => void save()} disabled={isSaving || !values} aria-busy={isSaving}><Save size={18} /> {isSaving ? "Guardando..." : "Guardar cambios"}</Button>
@@ -122,15 +123,12 @@ export default function CampaignClientRecordModal({ open, mode, client, campania
             )}
         >
             {client && (viewOnly ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                    <InfoField label="Empresa" value={name} />
-                    <InfoField label="Tipo de cliente" value={client.clienteNegocio?.tipoCliente ?? "—"} />
-                    <InfoField label="Contacto comercial" value={client.clienteNegocio?.nombreContacto ?? "—"} />
-                    <InfoField label="Correo corporativo" value={client.clienteNegocio?.correoCorporativo ?? "—"} />
+                // Solo los datos con los que se vinculó a la campaña; la ficha del cliente vive en Gestión comercial
+                <div className="grid gap-4 sm:grid-cols-3">
                     <InfoField label="Cantidad requerida" value={client.cantidadKg} suffix="kg" />
                     <InfoField label="Kilos acordados" value={client.kilosAcordados} suffix="kg" />
                     <InfoField label="Fecha de registro" value={format(client.fechaRegistro, "dd/MM/yyyy")} />
-                    <div className="grid gap-4 sm:col-span-2 sm:grid-cols-2">
+                    <div className="grid gap-4 sm:col-span-3 sm:grid-cols-2">
                         <FileDropzone label="Requerimientos" variant="horizontal" file={storedFile(client.documentoUrl, "Requerimientos del cliente")} readOnly onChange={() => undefined} />
                         <FileDropzone label="Ficha técnica" variant="horizontal" file={storedFile(client.fichaTecnicaUrl, "Ficha técnica del cliente")} readOnly onChange={() => undefined} />
                     </div>

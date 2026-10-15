@@ -6,7 +6,7 @@ export interface FrutaProveedor {
 
 /**
  * Información productiva del proveedor que muestra su detalle: estado de sanidad agraria y frutas con
- * sus variedades. Es de solo lectura y vive en el almacén local (ver `providerLocalData.store.ts`).
+ * sus variedades. La edita el formulario de proveedor y vive en el almacén local (ver `providerLocalData.store.ts`).
  */
 export interface ProduccionProveedor {
     /** "Sin registrar" | "Registrado" | "En proceso" (las opciones del formulario de proveedor) */

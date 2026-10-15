@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { createInFlightGuard, submitValidatedProveedor } from "@/modules/providers/api/proveedor-submission";
+import { submitValidatedProveedor } from "@/modules/providers/api/proveedor-submission";
+import { createInFlightGuard } from "@/shared/utils/inFlightGuard";
 import type { ProveedorFormValues } from "@/modules/providers/api/proveedor.dto";
 
 const validInput: ProveedorFormValues = {

@@ -9,8 +9,7 @@ import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components
 import TableGridCard, { TableGridCardField, TableGridCardFields } from "@/shared/components/TableGridCard";
 import { TableCountPill, TableToolbar } from "@/shared/components/TableToolbar";
 import { displayCertificadoDate, type CertificadoLocal } from "@/modules/providers/providerCertificado.utils";
-
-const PAGE_SIZE = 8;
+import { paginate } from "@/shared/utils/paginate";
 
 interface ProviderCertificadosTableProps {
     certificates: CertificadoLocal[];
@@ -26,9 +25,7 @@ export default function ProviderCertificadosTable({ certificates, onRegister, on
     const [preview, setPreview] = useState<{ open: boolean; certificate: CertificadoLocal | null }>({ open: false, certificate: null });
     const openDocument = (certificate: CertificadoLocal) => setPreview({ open: true, certificate });
 
-    const pageCount = Math.max(1, Math.ceil(certificates.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
-    const visibleData = certificates.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const { pageCount, currentPage, visible: visibleData } = paginate(certificates, page);
 
     const editAction = (certificate: CertificadoLocal): RowAction => ({ label: "Editar", icon: <Pencil size={18} strokeWidth={2.5} />, onClick: () => onEdit(certificate) });
 
@@ -39,7 +36,7 @@ export default function ProviderCertificadosTable({ certificates, onRegister, on
             description="Documentos propios del proveedor, separados de las certificaciones de campaña."
             headerRight={
                 <TableToolbar>
-                    <TableCountPill icon={<ShieldCheck size={16} strokeWidth={2.5} className="text-brand" />} count={certificates.length} label={certificates.length === 1 ? "certificado" : "certificados"} />
+                    <TableCountPill icon={<ShieldCheck size={16} strokeWidth={2.5} className="text-brand" />} count={certificates.length} singular="certificado" plural="certificados" />
                 </TableToolbar>
             }
             isEmpty={certificates.length === 0}

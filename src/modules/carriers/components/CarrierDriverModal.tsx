@@ -60,11 +60,12 @@ export default function CarrierDriverModal({ open, onOpenChange, onSuccess, carr
     return (
         <AppModal
             open={open}
-            onOpenChange={(next) => !(saving && !next) && onOpenChange(next)}
+            onOpenChange={onOpenChange}
+            busy={saving}
             icon={<UserRound size={22} strokeWidth={2} />}
             title={isEdit ? "Editar Chofer" : "Registrar Chofer"}
             description={`Chofer de ${carrier.nombre}.`}
-            className="sm:max-w-162.5"
+            size="md"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)} disabled={saving}>

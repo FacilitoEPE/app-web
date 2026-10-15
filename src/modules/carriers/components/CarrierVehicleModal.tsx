@@ -1,11 +1,9 @@
 import { X, Save, Truck } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FormField from "@/shared/components/FormField";
-import ModalSection from "@/shared/components/ModalSection";
 import { useModalForm } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import InputField from "@/shared/components/InputField";
-import { Separator } from "@/shared/components/ui/separator";
 import { Button } from "@/shared/components/ui/button";
 import type { Carrier } from "@/modules/carriers/carriers.data";
 import {
@@ -62,11 +60,12 @@ export default function CarrierVehicleModal({ open, onOpenChange, onSuccess, car
     return (
         <AppModal
             open={open}
-            onOpenChange={(next) => !(saving && !next) && onOpenChange(next)}
+            onOpenChange={onOpenChange}
+            busy={saving}
             icon={<Truck size={22} strokeWidth={2} />}
             title={isEdit ? "Editar Vehículo" : "Registrar Vehículo"}
             description={`Datos técnicos del vehículo de ${carrier.nombre}.`}
-            className="sm:max-w-175"
+            size="lg"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)} disabled={saving}>
@@ -78,43 +77,29 @@ export default function CarrierVehicleModal({ open, onOpenChange, onSuccess, car
                 </>
             }
         >
-            <div className="flex flex-col gap-6">
-                {Boolean(errors._form) && <FormField error={errors._form} />}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-6 sm:gap-5">
+                {Boolean(errors._form) && <FormField error={errors._form} className="sm:col-span-6" />}
 
-                <ModalSection title="Identificación">
-                    <InputField
-                        {...bind("placa")}
-                        label="Placa"
-                        placeholder="ABC-123"
-                        maxLength={8}
-                        onChange={(value) => {
-                            set("placa")(value.toUpperCase());
-                            clearError("placa");
-                        }}
-                        inputClassName="uppercase"
-                        className="sm:max-w-1/2"
-                    />
-                </ModalSection>
+                <InputField
+                    {...bind("placa")}
+                    label="Placa"
+                    placeholder="ABC-123"
+                    maxLength={8}
+                    onChange={(value) => {
+                        set("placa")(value.toUpperCase());
+                        clearError("placa");
+                    }}
+                    inputClassName="uppercase"
+                    className="sm:col-span-3"
+                />
+                <InputField {...bind("volumen")} label="Volumen" unit="m³" step="any" min={0} placeholder="0.00" className="sm:col-span-3" />
 
-                <Separator />
+                <InputField {...bind("ancho")} label="Ancho" unit="m" step="any" min={0} placeholder="0.00" className="sm:col-span-2" />
+                <InputField {...bind("altura")} label="Altura" unit="m" step="any" min={0} placeholder="0.00" className="sm:col-span-2" />
+                <InputField {...bind("profundidad")} label="Profundidad" unit="m" step="any" min={0} placeholder="0.00" className="sm:col-span-2" />
 
-                <ModalSection title="Dimensiones de la carga">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-                        <InputField {...bind("ancho")} label="Ancho" unit="m" step="any" min={0} placeholder="0.00" />
-                        <InputField {...bind("altura")} label="Altura" unit="m" step="any" min={0} placeholder="0.00" />
-                        <InputField {...bind("profundidad")} label="Profundidad" unit="m" step="any" min={0} placeholder="0.00" />
-                    </div>
-                </ModalSection>
-
-                <Separator />
-
-                <ModalSection title="Capacidad">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-                        <InputField {...bind("volumen")} label="Volumen" unit="m³" step="any" min={0} placeholder="0.00" />
-                        <InputField {...bind("pesoNeto")} label="Peso neto" unit="t" step="any" min={0} placeholder="0.00" />
-                        <InputField {...bind("pesoBruto")} label="Peso bruto" unit="t" step="any" min={0} placeholder="0.00" />
-                    </div>
-                </ModalSection>
+                <InputField {...bind("pesoNeto")} label="Peso neto" unit="t" step="any" min={0} placeholder="0.00" className="sm:col-span-3" />
+                <InputField {...bind("pesoBruto")} label="Peso bruto" unit="t" step="any" min={0} placeholder="0.00" className="sm:col-span-3" />
             </div>
         </AppModal>
     );

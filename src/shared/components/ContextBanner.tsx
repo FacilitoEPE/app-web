@@ -34,6 +34,13 @@ interface ContextBannerProps {
  * módulo lo alimenta con sus datos mediante un envoltorio fino (ver `CampaignContextBanner`,
  * `ProviderContextBanner`), para que todos compartan el mismo marco y ritmo visual.
  */
+/** Lugar reservado mientras llegan los datos del banner: mismo marco y alto, así la vista no salta al aparecer. */
+export function ContextBannerPlaceholder() {
+    return (
+        <div aria-hidden="true" className="mb-7 min-h-39 animate-pulse rounded-2xl border border-brand-border bg-linear-to-r from-brand-surface/70 via-card to-card dark:from-brand/15" />
+    );
+}
+
 export default function ContextBanner({ ariaLabel, eyebrow, title, titleAddon, meta = [], caption, stats = [], image }: ContextBannerProps) {
     return (
         <section aria-label={ariaLabel} className="relative isolate mb-7 min-h-39 overflow-hidden rounded-2xl border border-brand-border bg-card shadow-sm">

@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { format } from "date-fns";
-import { Eye, FlaskConical, Pencil, Plus, RotateCw, Trash2, TriangleAlert } from "lucide-react";
+import { Eye, FlaskConical, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Spinner } from "@/shared/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
 import TableCard from "@/shared/components/TableCard";
@@ -14,20 +12,20 @@ import StatusBadge from "@/shared/components/StatusBadge";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import PageHeader from "@/shared/layout/PageHeader";
 import type { StoredFile } from "@/shared/components/FileDropzone";
-import CampaignContextBanner from "@/modules/campaigns/components/CampaignContextBanner";
+import CampaignProviderContextBanner from "@/modules/campaigns/components/CampaignProviderContextBanner";
 import CampaignExamModal, { type ExamModalMode } from "@/modules/campaigns/components/CampaignExamModal";
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import { getCampana } from "@/modules/campaigns/api/campaign.api";
 import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
-import { parseFecha } from "@/modules/campaigns/api/fecha.util";
 import { examEstadoLabel, type ExamValues, type LocalExam } from "@/modules/campaigns/campaignExam";
 import { addExam, removeExam, updateExam, useProviderExams } from "@/modules/campaigns/campaignExams.store";
 import { getExamenesProveedor } from "@/modules/providers/api/provider-subresources.api";
 import type { ExamenProveedorDto } from "@/modules/providers/api/provider-subresources.dto";
-
-const PAGE_SIZE = 8;
+import { PageError, PageLoading } from "@/shared/components/PageState";
+import { formatDisplayDate } from "@/shared/utils/format";
+import { paginate } from "@/shared/utils/paginate";
 
 type LoadState =
     | { status: "loading" }
@@ -43,12 +41,6 @@ const CLOSED_MODAL: ModalState = { open: false, mode: "create", exam: null };
 const providerName = (relation: CampaniaProveedor) => relation.proveedor
     ? `${relation.proveedor.nombres} ${relation.proveedor.apellido}`.trim()
     : "Proveedor";
-
-function displayDate(value: string) {
-    if (!value) return "—";
-    const date = parseFecha(value);
-    return Number.isNaN(date.getTime()) ? "—" : format(date, "dd/MM/yyyy");
-}
 
 /** Con resultado, lo que importa es el resultado mismo; antes, la etapa en la que va el examen */
 const examStatus = (exam: LocalExam) =>
@@ -117,28 +109,15 @@ export default function CampaignExamsPage() {
     );
 
     if (loadState.status !== "ready") {
-        return (
-            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-5 text-center">
-                {loadState.status === "loading" ? (
-                    <><Spinner className="size-9 text-brand" /><p className="text-ink-muted">Cargando exámenes...</p></>
-                ) : (
-                    <>
-                        <TriangleAlert className="size-10 text-brand" aria-hidden="true" />
-                        <h1 className="text-xl font-bold text-ink">Exámenes no disponibles</h1>
-                        <p role="alert" className="text-ink-muted">{loadState.message}</p>
-                        <Button onClick={() => void load()}><RotateCw size={17} /> Reintentar</Button>
-                    </>
-                )}
-            </div>
-        );
+        return loadState.status === "loading"
+            ? <PageLoading label="Cargando exámenes..." />
+            : <PageError title="Exámenes no disponibles" message={loadState.message} onRetry={() => void load()} back={{ to: `/campaigns/${campaignId}/providers/${cxpId}`, label: "Volver al proveedor" }} />;
     }
 
     const { campaign, relation } = loadState;
     const name = providerName(relation);
 
-    const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
-    const visibleRows = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const { pageCount, currentPage, visible: visibleRows } = paginate(rows, page);
 
     const openCreate = () => setModal({ open: true, mode: "create", exam: null });
 
@@ -165,7 +144,12 @@ export default function CampaignExamsPage() {
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
-            <CampaignContextBanner campaign={campaign} caption={`Exámenes · ${name}`} />
+            <CampaignProviderContextBanner
+                campaign={campaign}
+                relation={relation}
+                caption="Exámenes · muestras de laboratorio"
+                stats={[{ label: rows.length === 1 ? "examen" : "exámenes", value: String(rows.length) }]}
+            />
 
             <PageHeader
                 icon={<FlaskConical size={24} strokeWidth={2.5} />}
@@ -180,7 +164,7 @@ export default function CampaignExamsPage() {
                 description="Análisis de laboratorio de este proveedor, del más reciente al más antiguo."
                 headerRight={
                     <TableToolbar>
-                        <TableCountPill icon={<FlaskConical size={16} strokeWidth={2.5} className="text-brand" />} count={rows.length} label={rows.length === 1 ? "examen" : "exámenes"} />
+                        <TableCountPill icon={<FlaskConical size={16} strokeWidth={2.5} className="text-brand" />} count={rows.length} singular="examen" plural="exámenes" />
                     </TableToolbar>
                 }
                 isEmpty={rows.length === 0}
@@ -205,7 +189,7 @@ export default function CampaignExamsPage() {
                         >
                             <TableGridCardFields>
                                 <TableGridCardField label="Estado" value={examStatus(exam)} />
-                                <TableGridCardField label="Fecha del examen" value={displayDate(exam.fecha)} />
+                                <TableGridCardField label="Fecha del examen" value={formatDisplayDate(exam.fecha)} />
                             </TableGridCardFields>
                         </TableGridCard>
                     ))}
@@ -231,8 +215,8 @@ export default function CampaignExamsPage() {
                                         <TableRowLead icon={<FlaskConical size={20} strokeWidth={2} />} title={exam.identificacionMuestra} subtitle={exam.fromApi ? "Registrado en el sistema" : undefined} />
                                     </TableCell>
                                     <TableCell className="font-medium text-ink-body">{exam.tipoExamen}</TableCell>
-                                    <TableCell className="font-medium text-ink-body">{displayDate(exam.fecha)}</TableCell>
-                                    <TableCell className="font-medium text-ink-body">{displayDate(exam.fechaEnvioMuestra)}</TableCell>
+                                    <TableCell className="font-medium text-ink-body">{formatDisplayDate(exam.fecha)}</TableCell>
+                                    <TableCell className="font-medium text-ink-body">{formatDisplayDate(exam.fechaEnvioMuestra)}</TableCell>
                                     <TableCell>
                                         <div className="flex justify-center"><StatusBadge status={examStatus(exam)} /></div>
                                     </TableCell>

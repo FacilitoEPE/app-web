@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { ClipboardList, Eye, LandPlot, MapPin, Pencil, Plus, RotateCw, TriangleAlert, UserRoundCheck } from "lucide-react";
+import { ClipboardList, Eye, LandPlot, MapPin, Pencil, Plus, UserRoundCheck } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent } from "@/shared/components/ui/card";
-import { Spinner } from "@/shared/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
 import TableCard from "@/shared/components/TableCard";
+import TableGridCard, { TableGridCardField, TableGridCardFields } from "@/shared/components/TableGridCard";
+import RowActions, { type RowAction } from "@/shared/components/RowActions";
 import { TableCountPill, TableToolbar } from "@/shared/components/TableToolbar";
 import PageHeader from "@/shared/layout/PageHeader";
-import CampaignContextBanner from "@/modules/campaigns/components/CampaignContextBanner";
+import CampaignProviderContextBanner from "@/modules/campaigns/components/CampaignProviderContextBanner";
+import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import CampaignInterviewModal, { type InterviewSubmission } from "@/modules/campaigns/components/CampaignInterviewModal";
 import { getCampana, getFrutas } from "@/modules/campaigns/api/campaign.api";
 import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
@@ -18,6 +19,8 @@ import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
 import { getCampaignInterviews, getNextCampaignFincaCode, saveCampaignInterview, type CampaignInterviewRecord } from "@/modules/campaigns/campaignInterview.utils";
 import { addFinca, useProviderLocalData } from "@/modules/providers/providerLocalData.store";
+import { PageError, PageLoading } from "@/shared/components/PageState";
+import { paginate } from "@/shared/utils/paginate";
 
 type LoadState =
     | { status: "loading" }
@@ -26,6 +29,8 @@ type LoadState =
 
 type ModalState = { open: boolean; mode: "create" | "edit" | "view"; record: CampaignInterviewRecord | null };
 const CLOSED_MODAL: ModalState = { open: false, mode: "create", record: null };
+const locationOf = (record: CampaignInterviewRecord) =>
+    [record.values.distrito, record.values.provincia, record.values.departamento].filter(Boolean).join(", ") || "—";
 
 const providerName = (relation: CampaniaProveedor) => relation.proveedor
     ? `${relation.proveedor.nombres} ${relation.proveedor.apellido}`.trim()
@@ -39,6 +44,8 @@ export default function CampaignInterviewsPage() {
     const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
     const [records, setRecords] = useState<CampaignInterviewRecord[]>(() => getCampaignInterviews(cxpId));
     const [modal, setModal] = useState<ModalState>(CLOSED_MODAL);
+    const [success, setSuccess] = useState<{ open: boolean; mode: "interview" | "edit" }>({ open: false, mode: "interview" });
+    const [page, setPage] = useState(1);
     const { fincas } = useProviderLocalData();
 
     const load = useCallback(async () => {
@@ -81,30 +88,30 @@ export default function CampaignInterviewsPage() {
         if (newFinca) addFinca(loadState.relation.proveedorId, newFinca);
         setRecords(nextRecords);
         setModal((current) => ({ ...current, open: false }));
+        setSuccess({ open: true, mode: modal.mode === "edit" ? "edit" : "interview" });
     };
 
     if (loadState.status !== "ready") {
-        return (
-            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-5 text-center">
-                {loadState.status === "loading" ? (
-                    <><Spinner className="size-9 text-brand" /><p className="text-ink-muted">Cargando entrevistas...</p></>
-                ) : (
-                    <>
-                        <TriangleAlert className="size-10 text-brand" aria-hidden="true" />
-                        <h1 className="text-xl font-bold text-ink">Entrevistas no disponibles</h1>
-                        <p role="alert" className="text-ink-muted">{loadState.message}</p>
-                        <Button onClick={() => void load()}><RotateCw size={17} /> Reintentar</Button>
-                    </>
-                )}
-            </div>
-        );
+        return loadState.status === "loading"
+            ? <PageLoading label="Cargando entrevistas..." />
+            : <PageError title="Entrevistas no disponibles" message={loadState.message} onRetry={() => void load()} back={{ to: `/campaigns/${campaignId}/providers/${cxpId}`, label: "Volver al proveedor" }} />;
     }
 
     const { campaign, relation, fruitName } = loadState;
     const name = providerName(relation);
+    const { pageCount, currentPage, visible } = paginate(records, page);
+    const actionsFor = (record: CampaignInterviewRecord): RowAction[] => [
+        { label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: () => setModal({ open: true, mode: "view", record }) },
+        { label: "Editar", icon: <Pencil size={18} strokeWidth={2.5} />, onClick: () => setModal({ open: true, mode: "edit", record }) },
+    ];
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
-            <CampaignContextBanner campaign={campaign} />
+            <CampaignProviderContextBanner
+                campaign={campaign}
+                relation={relation}
+                caption="Entrevistas · fincas y datos agronómicos"
+                stats={[{ label: records.length === 1 ? "entrevista" : "entrevistas", value: String(records.length) }]}
+            />
 
             <PageHeader
                 icon={<UserRoundCheck size={24} />}
@@ -117,61 +124,69 @@ export default function CampaignInterviewsPage() {
                 icon={<LandPlot size={24} strokeWidth={2.2} />}
                 title="Fincas entrevistadas"
                 description="Registros ordenados por fecha y hora de incorporación."
-                headerRight={<TableToolbar><TableCountPill icon={<UserRoundCheck size={16} strokeWidth={2.5} className="text-brand" />} count={records.length} label={records.length === 1 ? "entrevista" : "entrevistas"} /></TableToolbar>}
+                headerRight={<TableToolbar><TableCountPill icon={<UserRoundCheck size={16} strokeWidth={2.5} className="text-brand" />} count={records.length} singular="entrevista" plural="entrevistas" /></TableToolbar>}
                 isEmpty={records.length === 0}
                 emptyIcon={<ClipboardList size={28} />}
                 emptyTitle="Aún no hay entrevistas"
                 emptyDescription="Registra la primera entrevista para consultar aquí sus datos agronómicos."
                 emptyAction={{ label: "Registrar entrevista", icon: <Plus size={18} />, onClick: () => setModal({ open: true, mode: "create", record: null }) }}
-                page={1}
-                pageCount={1}
-                onPageChange={() => {}}
+                page={currentPage}
+                pageCount={pageCount}
+                onPageChange={setPage}
             >
-                <div className="grid gap-3 md:hidden">
-                    {records.map((record) => (
-                        <Card key={record.id} className="rounded-xl border border-border py-0">
-                            <CardContent className="flex items-start justify-between gap-4 p-4">
-                                <div className="min-w-0">
-                                    <p className="font-bold text-ink">{record.values.fincaNombre}</p>
-                                    <p className="mt-1 text-xs text-ink-muted">{format(new Date(record.createdAt), "dd/MM/yyyy · HH:mm")}</p>
-                                    <p className="mt-1 text-xs font-bold text-brand">{record.codigoFyv}</p>
-                                    <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-body"><MapPin size={13} />{[record.values.distrito, record.values.provincia, record.values.departamento].filter(Boolean).join(", ")}</p>
-                                    <p className="mt-1 text-xs text-ink-body">{record.values.haCultivo} ha de cultivo</p>
-                                </div>
-                                <div className="flex shrink-0 gap-1">
-                                    <Button variant="ghost" size="icon" aria-label={`Ver entrevista de ${record.values.fincaNombre}`} onClick={() => setModal({ open: true, mode: "view", record })}><Eye size={17} /></Button>
-                                    <Button variant="ghost" size="icon" aria-label={`Editar entrevista de ${record.values.fincaNombre}`} onClick={() => setModal({ open: true, mode: "edit", record })}><Pencil size={16} /></Button>
-                                </div>
-                            </CardContent>
-                        </Card>
+                {/* Móvil en tarjetas; desde md, tabla */}
+                <div className="flex flex-col gap-3 md:hidden">
+                    {visible.map((record) => (
+                        <TableGridCard
+                            key={record.id}
+                            accentColor="border-l-brand"
+                            icon={<LandPlot size={18} strokeWidth={2} />}
+                            title={record.values.fincaNombre}
+                            subtitle={record.codigoFyv}
+                            actions={<RowActions primary={actionsFor(record)} />}
+                        >
+                            <TableGridCardFields>
+                                <TableGridCardField label="Registro" value={format(new Date(record.createdAt), "dd/MM/yyyy · HH:mm")} />
+                                <TableGridCardField label="Ubicación" value={locationOf(record)} />
+                                <TableGridCardField label="Cultivo" value={`${record.values.haCultivo} ha`} />
+                            </TableGridCardFields>
+                        </TableGridCard>
                     ))}
                 </div>
                 <div className="hidden overflow-hidden rounded-xl border border-border md:block">
                     <Table>
                         <TableHeader className={TABLE_HEAD_BG}>
-                            <TableRow className="border-border hover:bg-transparent">
+                            <TableRow className="border-b border-border hover:bg-transparent">
                                 <TableHead className="h-14 px-6 font-semibold text-ink">Finca</TableHead>
-                                <TableHead className="font-semibold text-ink">Fecha de registro</TableHead>
-                                <TableHead className="font-semibold text-ink">Código FYV</TableHead>
-                                <TableHead className="font-semibold text-ink">Ubicación</TableHead>
-                                <TableHead className="font-semibold text-ink">Cultivo</TableHead>
-                                <TableHead className="font-semibold text-ink">Datos agronómicos</TableHead>
-                                <TableHead className="w-32 text-center font-semibold text-ink">Acciones</TableHead>
+                                <TableHead className="h-14 font-semibold text-ink">Registro</TableHead>
+                                <TableHead className="h-14 font-semibold text-ink">Ubicación</TableHead>
+                                <TableHead className="h-14 font-semibold text-ink">Cultivo</TableHead>
+                                <TableHead className="h-14 w-32 px-6 text-center font-semibold text-ink">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {records.map((record) => (
-                                <TableRow key={record.id} className="border-border">
-                                    <TableCell className="relative h-19 px-6"><TableRowAccent color="bg-brand" /><TableRowLead icon={<LandPlot size={18} />} title={record.values.fincaNombre} /></TableCell>
-                                    <TableCell className="whitespace-nowrap text-ink-body">{format(new Date(record.createdAt), "dd/MM/yyyy · HH:mm")}</TableCell>
-                                    <TableCell className="whitespace-nowrap font-semibold text-brand">{record.codigoFyv}</TableCell>
-                                    <TableCell className="text-ink-body">{[record.values.distrito, record.values.provincia, record.values.departamento].filter(Boolean).join(", ")}</TableCell>
-                                    <TableCell className="whitespace-nowrap font-semibold text-ink">{record.values.haCultivo} ha</TableCell>
-                                    <TableCell className="text-ink-body">{record.values.densidadPlantacion} plantas/ha · {record.values.frecuenciaRiego} riegos/día</TableCell>
-                                    <TableCell><div className="flex justify-center gap-1">
-                                        <Button variant="ghost" size="icon" aria-label={`Ver entrevista de ${record.values.fincaNombre}`} onClick={() => setModal({ open: true, mode: "view", record })}><Eye size={18} /></Button>
-                                        <Button variant="ghost" size="icon" aria-label={`Editar entrevista de ${record.values.fincaNombre}`} onClick={() => setModal({ open: true, mode: "edit", record })}><Pencil size={17} /></Button>
-                                    </div></TableCell>
+                            {visible.map((record) => (
+                                <TableRow key={record.id} className="border-b border-border transition-colors hover:bg-surface-page/60">
+                                    <TableCell className="relative h-20 px-6">
+                                        <TableRowAccent color="bg-brand" />
+                                        <TableRowLead icon={<LandPlot size={18} />} title={record.values.fincaNombre} subtitle={record.codigoFyv} />
+                                    </TableCell>
+                                    <TableCell className="whitespace-nowrap font-medium text-ink-body">{format(new Date(record.createdAt), "dd/MM/yyyy · HH:mm")}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2 font-medium text-ink-body">
+                                            <MapPin size={16} className="shrink-0 text-ink-muted" />
+                                            <span>{locationOf(record)}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="font-bold tabular-nums text-ink">{record.values.haCultivo} ha</span>
+                                            <span className="mt-0.5 text-[12px] font-medium text-ink-muted">{record.values.densidadPlantacion} plantas/ha · {record.values.frecuenciaRiego} riegos/día</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="px-6">
+                                        <RowActions primary={actionsFor(record)} className="justify-center text-ink-muted" />
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -190,6 +205,8 @@ export default function CampaignInterviewsPage() {
                 isViewOnly={modal.mode === "view"}
                 onSave={handleSave}
             />
+
+            <CampaignSuccessModal open={success.open} onOpenChange={(open) => setSuccess((current) => ({ ...current, open }))} mode={success.mode} />
         </div>
     );
 }

@@ -66,7 +66,7 @@ export default function ProviderCertificadoModal({ open, onOpenChange, providerN
             icon={<ShieldCheck size={22} strokeWidth={2} />}
             title={isEdit ? "Editar certificado" : "Registrar certificado"}
             description={providerName}
-            className="sm:max-w-160"
+            size="md"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>

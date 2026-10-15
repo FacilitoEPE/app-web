@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import StatCard from "@/modules/campaigns/components/StatCard";
 import { CalendarDays, FileCheck, ClipboardList, CalendarClock } from "lucide-react";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
-import { getCampaignTrend, type StatTrend } from "@/modules/campaigns/campaignStats.utils";
+import { getCampaignMonthlySeries, getCampaignTrend, type StatTrend } from "@/modules/campaigns/campaignStats.utils";
 
 interface StatDefinition {
     title: string;
@@ -46,6 +46,7 @@ export default function CampaignStatsOverview({ campaigns, isLoading }: Campaign
                         icon={stat.icon}
                         trend={trend}
                         sparklineVariant={stat.sparklineVariant}
+                        series={isLoading ? undefined : getCampaignMonthlySeries(campaigns, now, stat.matches, stat.referenceDate)}
                     />
                 );
             })}

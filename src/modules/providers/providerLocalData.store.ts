@@ -1,6 +1,5 @@
 import { useSyncExternalStore } from "react";
 import type { Finca } from "@/modules/providers/providerFinca.utils";
-import type { DatosAgronomicos } from "@/modules/providers/providerAgronomico.utils";
 import type { CertificadoFormValues, CertificadoLocal } from "@/modules/providers/providerCertificado.utils";
 import type { ProduccionProveedor } from "@/modules/providers/providerProduccion.utils";
 import { createDemoProviderData } from "@/modules/providers/providerLocalData.demo";
@@ -12,15 +11,14 @@ import { createDemoProviderData } from "@/modules/providers/providerLocalData.de
  * TODO(api): se guardan en memoria por id de proveedor (se pierden al recargar la página) y viven acá, y no
  * dentro de un componente, para que sobrevivan al navegar entre la lista de proveedores y la gestión de
  * fincas. Cuando existan los servicios, este es el único archivo a reemplazar: `addFinca`, `updateFinca`, `removeFinca`,
- * `saveDatosAgronomicos`, `addCertificado` y `updateCertificado` pasan a llamar a la API, y `useProviderLocalData` a leer lo que ella devuelva.
- * Los modelos y validaciones están en `providerFinca.utils.ts`, `providerAgronomico.utils.ts` y
+ * `saveProduccion`, `addCertificado` y `updateCertificado` pasan a llamar a la API, y `useProviderLocalData` a leer lo que ella devuelva.
+ * Los modelos y validaciones están en `providerFinca.utils.ts` y
  * `providerCertificado.utils.ts`.
  */
 interface ProviderLocalData {
     fincas: Record<number, Finca[]>;
-    agronomicos: Record<number, DatosAgronomicos>;
     certificados: Record<number, CertificadoLocal[]>;
-    /** Estado de sanidad y frutas del proveedor: de solo lectura, sin formulario que lo modifique todavía */
+    /** Estado de sanidad y frutas del proveedor: las edita el formulario de proveedor (ver ) */
     produccion: Record<number, ProduccionProveedor>;
 }
 
@@ -33,7 +31,6 @@ const demo = useDemoData ? createDemoProviderData() : null;
 
 let data: ProviderLocalData = {
     fincas: demo?.fincas ?? {},
-    agronomicos: {},
     certificados: demo?.certificados ?? {},
     produccion: demo?.produccion ?? {},
 };
@@ -50,6 +47,11 @@ function subscribe(listener: () => void) {
     return () => {
         listeners.delete(listener);
     };
+}
+
+/** Guarda el estado de sanidad y las frutas que el formulario de proveedor registró. */
+export function saveProduccion(providerId: number, produccion: ProduccionProveedor) {
+    update({ ...data, produccion: { ...data.produccion, [providerId]: produccion } });
 }
 
 /** Agrega una finca al proveedor, al final de su lista. */
@@ -69,11 +71,6 @@ export function removeFinca(providerId: number, index: number) {
     const current = data.fincas[providerId] ?? [];
     if (index < 0 || index >= current.length) return;
     update({ ...data, fincas: { ...data.fincas, [providerId]: current.filter((_, position) => position !== index) } });
-}
-
-/** Guarda los datos agronómicos del proveedor: reemplaza los anteriores, si los había. */
-export function saveDatosAgronomicos(providerId: number, datos: DatosAgronomicos) {
-    update({ ...data, agronomicos: { ...data.agronomicos, [providerId]: datos } });
 }
 
 /** Registra un certificado al proveedor; el más reciente queda primero. */
@@ -102,7 +99,7 @@ export function updateCertificado(providerId: number, certificadoId: number, val
 /** Deja el almacén vacío. Solo lo usan las pruebas. */
 export function resetProviderLocalData() {
     nextCertificadoId = 1;
-    update({ fincas: {}, agronomicos: {}, certificados: {}, produccion: {} });
+    update({ fincas: {}, certificados: {}, produccion: {} });
 }
 
 /** Lectura puntual del estado actual, fuera de un componente. */
