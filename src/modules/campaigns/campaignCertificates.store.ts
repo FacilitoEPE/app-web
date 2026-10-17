@@ -69,10 +69,10 @@ function toLocal(id: number, values: CertificadoCampanaFormValues, productores: 
     };
 }
 
-/** Registra una certificación en la campaña; la más reciente queda primero. */
+/** Registra la única certificación de la campaña. */
 export function addCampaignCertificate(campaniaId: number, values: CertificadoCampanaFormValues, productores: ProductorCubierto[], archivos: CertificadoArchivos) {
     const certificate: CertificadoCampanaLocal = { ...toLocal(nextId++, values, productores, archivos), ampliaciones: [], pagos: [] };
-    update({ ...byCampaign, [campaniaId]: [certificate, ...(byCampaign[campaniaId] ?? EMPTY)] });
+    update({ ...byCampaign, [campaniaId]: [certificate] });
 }
 
 /** Edita los datos de una certificación; sin archivo nuevo conserva el documento y la cotización actuales. */

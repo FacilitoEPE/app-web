@@ -32,15 +32,15 @@ const noFiles = { documento: null, cotizacion: null };
 describe("campaignCertificates.store", () => {
     beforeEach(() => resetCampaignCertificates());
 
-    it("registra por campaña, con la más reciente primero y los textos recortados", () => {
+    it("registra una única certificación por campaña con los textos recortados", () => {
         addCampaignCertificate(1, values({ nombre: "Primera" }), [], noFiles);
-        addCampaignCertificate(1, values({ nombre: " Segunda " }), [{ id: "9", nombre: "María" }], noFiles);
+        addCampaignCertificate(1, values({ nombre: " Segunda ", kilosIniciales: "3500" }), [{ id: "9", nombre: "María", kilos: 3500 }], noFiles);
         addCampaignCertificate(2, values({ nombre: "Otra campaña" }), [], noFiles);
 
         const campaign1 = getCampaignCertificates(1);
-        expect(campaign1.map((item) => item.nombre)).toEqual(["Segunda", "Primera"]);
-        expect(campaign1[0].productores).toEqual([{ id: "9", nombre: "María" }]);
-        expect(campaign1[0]).toMatchObject({ costo: 1000, kilosIniciales: 500, ampliaciones: [], pagos: [] });
+        expect(campaign1.map((item) => item.nombre)).toEqual(["Segunda"]);
+        expect(campaign1[0].productores).toEqual([{ id: "9", nombre: "María", kilos: 3500 }]);
+        expect(campaign1[0]).toMatchObject({ costo: 1000, kilosIniciales: 3500, ampliaciones: [], pagos: [] });
         expect(getCampaignCertificates(2)).toHaveLength(1);
     });
 

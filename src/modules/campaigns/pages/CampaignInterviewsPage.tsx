@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { ClipboardList, Eye, LandPlot, MapPin, Pencil, Plus, UserRoundCheck } from "lucide-react";
+import { ClipboardList, Eye, LandPlot, MapPin, Link2, Pencil, UserRoundCheck } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
@@ -117,7 +117,7 @@ export default function CampaignInterviewsPage() {
                 icon={<UserRoundCheck size={24} />}
                 title={`Entrevistas de ${name}`}
                 description="Registra y consulta los datos de las fincas entrevistadas en esta campaña."
-                action={<Button size="xl" onClick={() => setModal({ open: true, mode: "create", record: null })}><Plus size={19} /> Registrar entrevista</Button>}
+                action={<Button size="xl" onClick={() => setModal({ open: true, mode: "create", record: null })}><Link2 size={19} strokeWidth={2.5} /> Vincular finca</Button>}
             />
 
             <TableCard
@@ -129,7 +129,7 @@ export default function CampaignInterviewsPage() {
                 emptyIcon={<ClipboardList size={28} />}
                 emptyTitle="Aún no hay entrevistas"
                 emptyDescription="Registra la primera entrevista para consultar aquí sus datos agronómicos."
-                emptyAction={{ label: "Registrar entrevista", icon: <Plus size={18} />, onClick: () => setModal({ open: true, mode: "create", record: null }) }}
+                emptyAction={{ label: "Vincular finca", icon: <Link2 size={18} strokeWidth={2.5} />, onClick: () => setModal({ open: true, mode: "create", record: null }) }}
                 page={currentPage}
                 pageCount={pageCount}
                 onPageChange={setPage}

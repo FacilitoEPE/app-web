@@ -122,7 +122,7 @@ export default function CampaignProviderDetailsPage() {
 
     const metrics: Metric[] = [
         { title: "Cantidad estimada", value: formatCampaignNumber(Number(relation.cantidadProveedor)), unit: "kg", description: "Lo que se espera recibir de este proveedor", icon: Scale },
-        { title: "MTD Ceratitis", value: formatCampaignNumber(Number(relation.mtdCeratitis)), unit: "", description: "Medida de control de la campaña", icon: Layers },
+        { title: "MTD Ceratitis", value: relation.mtdCeratitis != null ? formatCampaignNumber(Number(relation.mtdCeratitis)) : "—", unit: "", description: "Medida de control de la campaña", icon: Layers },
         { title: "Exámenes", value: String(exams.length), unit: exams.length === 1 ? "examen" : "exámenes", description: exams.length === 0 ? "Aún sin exámenes registrados" : `${withResult} con resultado · ${pending} en seguimiento`, icon: FlaskConical },
         isProducer
             ? { title: "Fincas entrevistadas", value: String(interviews.length), unit: interviews.length === 1 ? "finca" : "fincas", description: interviews.length === 0 ? "Aún sin entrevistas registradas" : `${formatCampaignNumber(interviewedHectares)} ha de cultivo`, icon: UserRoundCheck, warm: true }
@@ -173,7 +173,7 @@ export default function CampaignProviderDetailsPage() {
             ]}
             isEmpty={interviews.length === 0}
             emptyMessage="Aún no se registró ninguna entrevista de este productor. Las fincas de la campaña salen de ellas."
-            emptyActionLabel="Registrar entrevista"
+            emptyActionLabel="Vincular finca"
         >
             {interviews.slice(0, PREVIEW_ROWS).map((record) => (
                 <LinkedRow

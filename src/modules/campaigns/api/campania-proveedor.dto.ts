@@ -9,7 +9,7 @@ export interface CampaniaProveedorDto {
   proveedorId: number;
   fincaId?: number | null;
   cantidadProveedor: number;
-  mtdCeratitis: number;
+  mtdCeratitis?: number | null;
   frutaConvencionalEstimado: number | null;
   tipoProveedor: TipoProveedorCampania;
 }
@@ -19,7 +19,7 @@ export interface CreateCampaniaProveedorDto {
   proveedorId: number;
   fincaId?: number | null;
   cantidadProveedor: number;
-  mtdCeratitis: number;
+  mtdCeratitis?: number;
   frutaConvencionalEstimado?: number | null;
   tipoProveedor: TipoProveedorCampania;
 }

@@ -84,7 +84,7 @@ export default function CampaignManagementProvidersModal({ open, campaniaId, onO
                         cells: [
                             <DirectoryIdentity name={providerName(relation)} subtitle={`${TIPO_LABEL[relation.tipoProveedor] ?? relation.tipoProveedor} · ${relation.proveedor?.zona || "—"}`} index={index} />,
                             <strong className="whitespace-nowrap text-ink">{formatCampaignNumber(Number(relation.cantidadProveedor))} kg</strong>,
-                            <span className="font-semibold text-ink-body">{formatCampaignNumber(Number(relation.mtdCeratitis))}</span>,
+                            <span className="font-semibold text-ink-body">{relation.mtdCeratitis != null ? formatCampaignNumber(Number(relation.mtdCeratitis)) : "—"}</span>,
                             <DirectoryContact
                                 name={relation.proveedor?.email || providerName(relation)}
                                 value={relation.proveedor?.telefono ? String(relation.proveedor.telefono) : "—"}

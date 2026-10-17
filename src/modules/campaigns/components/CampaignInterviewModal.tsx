@@ -147,13 +147,13 @@ export default function CampaignInterviewModal({
             open={open}
             onOpenChange={onOpenChange}
             icon={<ClipboardList size={22} strokeWidth={2} />}
-            title={isViewOnly ? "Detalle de la entrevista" : isEditing ? "Editar entrevista" : "Registrar entrevista"}
+            title={isViewOnly ? "Detalle de la entrevista" : isEditing ? "Editar entrevista" : "Vincular finca"}
             description={`Productor · ${providerName}`}
             size="2xl"
             footer={isViewOnly ? undefined : (
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}><X size={18} /> Cancelar</Button>
-                    <Button size="xl" onClick={handleSave}><Save size={18} /> {isEditing ? "Guardar cambios" : "Guardar entrevista"}</Button>
+                    <Button size="xl" onClick={handleSave}><Save size={18} /> {isEditing ? "Guardar cambios" : "Vincular finca"}</Button>
                 </>
             )}
         >

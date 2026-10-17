@@ -113,8 +113,8 @@ export default function CampaignProvidersPage() {
     const getExportData = (): TableExport => ({
         filename: "proveedores_campana",
         title: "Proveedores de la campaña",
-        header: ["Nombre", "Documento", "Zona", "Tipo", "Cantidad (kg)", "MTD Ceratitis"],
-        rows: filteredData.map((row) => [providerName(row), providerDocument(row), row.proveedor?.zona ?? "", TYPE_LABEL[row.tipoProveedor], String(row.cantidadProveedor), String(row.mtdCeratitis)]),
+        header: ["Nombre", "Documento", "Zona", "Tipo", "Cantidad (kg)"],
+        rows: filteredData.map((row) => [providerName(row), providerDocument(row), row.proveedor?.zona ?? "", TYPE_LABEL[row.tipoProveedor], String(row.cantidadProveedor)]),
     });
 
     const { pageCount, currentPage, visible: visibleData } = paginate(filteredData, page);

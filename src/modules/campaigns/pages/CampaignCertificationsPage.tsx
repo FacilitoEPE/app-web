@@ -117,7 +117,13 @@ function CertificationsView({ campaign }: { campaign: Campana }) {
                 icon={<ShieldCheck size={24} strokeWidth={2.5} />}
                 title="Gestión de Certificaciones"
                 description="Registra las certificaciones de la campaña y da seguimiento a su vigencia, kilos y pagos."
-                action={<Button size="xl" onClick={() => openPanel("form")}><Plus size={20} strokeWidth={2.5} /> Registrar certificación</Button>}
+                action={
+                    certificates.length === 0 ? (
+                        <Button size="xl" onClick={() => openPanel("form")}>
+                            <Plus size={20} strokeWidth={2.5} /> Registrar certificación
+                        </Button>
+                    ) : undefined
+                }
             />
 
             <TableCard

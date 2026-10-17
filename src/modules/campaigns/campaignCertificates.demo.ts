@@ -22,8 +22,8 @@ const SEEDS: Seed[] = [
     {
         tipo: "Global GAP", nombre: "GlobalGAP Mango 2026", organismoEmisor: "SGS Perú",
         validoDesde: demoDate(-120), validoHasta: demoDate(240), estadoTramite: "certificado",
-        moneda: "USD", costo: 2400, kilosIniciales: 12000,
-        productores: [{ id: "1", nombre: "José Luis Ramos Quispe" }, { id: "2", nombre: "María Gonzales" }],
+        moneda: "USD", costo: 2400, kilosIniciales: 2500,
+        productores: [{ id: "1", nombre: "José Luis Ramos Quispe" }],
         observaciones: "Cubre los lotes de exportación a Europa.",
         documento: demoPdf("globalgap-mango-2026.pdf"), cotizacion: demoPdf("cotizacion-sgs.pdf"),
         ampliaciones: [3000, 1500], pagos: [1200, 1200],
@@ -31,7 +31,7 @@ const SEEDS: Seed[] = [
     {
         tipo: "Orgánico USDA", nombre: "Certificación Orgánica Uva Red Globe de Exportación", organismoEmisor: "Control Union",
         validoDesde: demoDate(-340), validoHasta: demoDate(18), estadoTramite: "certificado",
-        moneda: "USD", costo: 3150.5, kilosIniciales: 8000,
+        moneda: "USD", costo: 3150.5, kilosIniciales: 2500,
         productores: [{ id: "1", nombre: "José Luis Ramos Quispe" }],
         observaciones: "", documento: demoPdf("organico-usda.pdf"), cotizacion: null,
         ampliaciones: [], pagos: [1500],
@@ -39,19 +39,16 @@ const SEEDS: Seed[] = [
     {
         tipo: "Fairtrade", nombre: "Fairtrade Arándano", organismoEmisor: "FLOCERT",
         validoDesde: demoDate(30), validoHasta: demoDate(395), estadoTramite: "en tramite",
-        moneda: "EUR", costo: 1800, kilosIniciales: 0,
-        productores: [
-            { id: "2", nombre: "María Gonzales" }, { id: "3", nombre: "María Elena Flores Vega" },
-            { id: "1", nombre: "José Luis Ramos Quispe" }, { id: "4", nombre: "Pedro Castillo" },
-        ],
+        moneda: "EUR", costo: 1800, kilosIniciales: 2500,
+        productores: [{ id: "1", nombre: "José Luis Ramos Quispe" }],
         observaciones: "Trámite iniciado, a la espera de la auditoría.", documento: null, cotizacion: demoPdf("cotizacion-flocert.pdf"),
         ampliaciones: [], pagos: [],
     },
     {
         tipo: "Rainforest Alliance", nombre: "Rainforest Palta Hass", organismoEmisor: "NSF",
         validoDesde: demoDate(-500), validoHasta: demoDate(-20), estadoTramite: "observado",
-        moneda: "PEN", costo: 5200, kilosIniciales: 20000,
-        productores: [{ id: "3", nombre: "María Elena Flores Vega" }, { id: "4", nombre: "Pedro Castillo" }],
+        moneda: "PEN", costo: 5200, kilosIniciales: 2500,
+        productores: [{ id: "1", nombre: "José Luis Ramos Quispe" }],
         observaciones: "Observaciones por levantar en el plan de manejo.", documento: demoPdf("rainforest-palta.pdf"), cotizacion: null,
         ampliaciones: [2500], pagos: [5200],
     },
@@ -64,8 +61,8 @@ const SEEDS: Seed[] = [
     },
 ];
 
-/** Cantidad de certificaciones por campaña: vacío, una sola, varias y todas */
-const PER_CAMPAIGN = [3, 1, 0, 5, 2, 4];
+/** Como máximo una sola certificación por campaña (1 o 0 para probar estado vacío) */
+const PER_CAMPAIGN = [1, 1, 0, 1, 0, 1];
 
 export function createDemoCampaignCertificates(): Record<number, CertificadoCampanaLocal[]> {
     const result: Record<number, CertificadoCampanaLocal[]> = {};

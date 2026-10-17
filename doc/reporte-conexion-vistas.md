@@ -1,5 +1,12 @@
 # Reporte de conexión de vistas al backend — epe-web
 
+## Actualización 2026-10-16 — certificación única y cálculo automático de kilos iniciales
+
+| Vista/componente | Estado — fecha | Alcance y operaciones |
+|---|---|---|
+| `CampaignCertificationsPage` y `CampaignCertificationFormModal` | **Parcial — 2026-10-16 / certificación única y cálculo de kilos** | Se limitó a un máximo de 1 certificación por campaña: el botón «Registrar certificación» se oculta apenas exista una registrada y solo permite editar la existente. En el modal, los «Kilos iniciales» se convirtieron en un campo de solo lectura calculado automáticamente a partir de la suma de kilos estimados (`cantidadProveedor`) de los productores seleccionados, recalculándose dinámicamente si se agregan o quitan productores. |
+| `CampaignLinkProviderModal` y operaciones de `campanias-proveedores` | **Parcial — 2026-10-16 / campo mtdCeratitis retirado** | Se retiró el campo `mtdCeratitis` del modal de vinculación de proveedores (`CampaignLinkProviderModal`) y de sus validaciones obligatorias, ya que el dato no vendrá del backend. Los DTO y mapeos de creación/actualización tratan `mtdCeratitis` como opcional. Se retiró la columna de la exportación de proveedores y se protegieron las lecturas en vistas de detalle y directorios. Sigue pendiente la gestión de entrevistas/fincas con APIs propias. |
+
 ## Actualización 2026-10-14 — contrato de productor de campaña sin finca
 
 | Vista/componente | Estado — fecha | Alcance y operaciones |

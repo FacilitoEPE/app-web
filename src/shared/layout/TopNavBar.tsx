@@ -8,12 +8,12 @@ import {
 } from "@/shared/components/ui/dropdown-menu";
 import LogoEmpresaOnly from "@/assets/image/logo_empresa_only.webp";
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import ModuleLauncher from "@/shared/layout/ModuleLauncher";
 import Hint from "@/shared/components/Hint";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import { BRAND_ACTIVE_SURFACE } from "@/shared/styles/brandGradients";
-import { getParentHref } from "@/shared/layout/breadcrumbRoutes";
+import { useGoBack } from "@/shared/hooks/useGoBack";
 import CompanyBreadcrumb from "@/shared/layout/CompanyBreadcrumb";
 import ThemeToggle from "@/shared/components/ThemeToggle";
 import NotificationsMenu from "@/shared/layout/NotificationsMenu";
@@ -24,8 +24,8 @@ interface TopNavBarProps {
 }
 
 export default function TopNavBar({ onLogout }: TopNavBarProps) {
-    const navigate = useNavigate();
     const location = useLocation();
+    const goBack = useGoBack();
     const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const isRoot = location.pathname === '/modules' || location.pathname === '/';
@@ -42,8 +42,8 @@ export default function TopNavBar({ onLogout }: TopNavBarProps) {
                 >
                     <Hint label="Regresar" side="bottom">
                         <button
-                            // Vuelve a la vista anterior de la escalera (la misma que enlaza el breadcrumb)
-                            onClick={() => navigate(getParentHref(location.pathname))}
+                            // Vuelve a la vista de la que se vino; sin historial, sube un nivel (ver useGoBack)
+                            onClick={goBack}
                             className="text-ink-muted hover:text-brand transition-all flex items-center justify-center shrink-0 w-8 h-8 rounded-full hover:bg-muted mr-1 sm:mr-4 active:scale-95"
                             aria-label="Regresar"
                         >
@@ -52,7 +52,8 @@ export default function TopNavBar({ onLogout }: TopNavBarProps) {
                     </Hint>
                 </div>
 
-                <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+                {/* La marca lleva al selector de módulos, como el ícono de inicio del breadcrumb */}
+                <Link to="/modules" aria-label="Ir al selector de módulos" className="flex items-center gap-2.5 sm:gap-4 min-w-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
                     <img src={LogoEmpresaOnly} alt="Agro Exportaciones Logo" className="h-8 sm:h-10 w-auto object-contain shrink-0" />
                     {/* Línea divisoria verde como en el login */}
                     <div className="hidden min-[420px]:block h-8 sm:h-10 w-0.5 bg-brand shrink-0 rounded-full"></div>
@@ -65,7 +66,7 @@ export default function TopNavBar({ onLogout }: TopNavBarProps) {
                         </span>
                         <span className="hidden sm:block text-[7px] md:text-[8px] tracking-[0.2em] font-bold text-brand mt-1.5">CULTIVANDO CONFIANZA</span>
                     </div>
-                </div>
+                </Link>
             </div>
             <CompanyBreadcrumb />
 

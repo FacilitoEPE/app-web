@@ -32,10 +32,9 @@ interface CampaignLinkProviderModalProps {
     initialData?: import("@/modules/campaigns/api/campania-proveedor.mapper").CampaniaProveedor | null;
 }
 
-type DraftField = "cantidadProveedor" | "mtdCeratitis" | "observacionesParticipacion" | "precioEstimado" | "moneda";
+type DraftField = "cantidadProveedor" | "observacionesParticipacion" | "precioEstimado" | "moneda";
 type DraftValues = {
     cantidadProveedor: string;
-    mtdCeratitis: string;
     observacionesParticipacion: string;
     precioEstimado: string;
     moneda: string;
@@ -57,7 +56,6 @@ type DraftValues = {
 
 const EMPTY_DRAFT: DraftValues = {
     cantidadProveedor: "",
-    mtdCeratitis: "",
     observacionesParticipacion: "",
     precioEstimado: "",
     moneda: "PEN",
@@ -126,7 +124,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
             setDraft({
                 ...EMPTY_DRAFT,
                 cantidadProveedor: initialData.cantidadProveedor ? String(initialData.cantidadProveedor) : "",
-                mtdCeratitis: initialData.mtdCeratitis !== undefined && initialData.mtdCeratitis !== null ? String(initialData.mtdCeratitis) : "",
                 frutaConvencionalEstimado: initialData.frutaConvencionalEstimado ?? null,
             });
         } else {
@@ -297,11 +294,10 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                             }}
                         />
                     </FormField>
-                    {renderField({ field: "cantidadProveedor", label: "Cantidad del proveedor estimada", step: "0.001", placeholder: "Ej. 2500", suffix: "KG" })}
+                    {renderField({ field: "cantidadProveedor", label: "Cantidad de kilos estimados", step: "0.001", placeholder: "Ej. 2500", suffix: "KG" })}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-                    {renderField({ field: "mtdCeratitis", label: "MTD Ceratitis", step: "0.001", placeholder: "Ej. 0.05" })}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     {renderField({ field: "precioEstimado", label: "Precio estimado o acordado", step: "0.01", placeholder: "Ej. 1.50" })}
                     <FormField label="Moneda" required>
                         <Combobox

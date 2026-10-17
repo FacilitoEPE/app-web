@@ -35,7 +35,7 @@ Todo lo transversal / no-dominio vive aquí:
     - Sombras: `shadow-card`, `shadow-card-hover`, `shadow-glow` y `shadow-danger` (tokens de `index.css`); no escribir sombras con valores sueltos.
     - Acciones de fila, siempre en este orden: Ver detalles · Editar · Eliminar/Desvincular; lo demás va en "más opciones".
     - Exportar: `TableExportMenu getData={…}` con un `TableExport` (`shared/utils/exportTable.ts`): Excel baja un CSV y PDF abre la impresión con la tabla formateada.
-    - Breadcrumb y botón "Regresar" son independientes (ambos en `shared/layout/breadcrumbRoutes.ts`): el breadcrumb muestra la ruta de la vista actual (`getBreadcrumbLevels`), y "Regresar" sube un nivel por vez por la escalera de vistas, pasando por los detalles (`getParentHref`). No se unifican. Una vista nueva se agrega en los dos.
+    - Breadcrumb y botón "Regresar" son independientes (ambos en `shared/layout/breadcrumbRoutes.ts`). El breadcrumb muestra la ruta de la vista actual (`getBreadcrumbLevels`). "Regresar" (`useGoBack`) vuelve a la vista de la que realmente se vino —la lista, el detalle o una notificación—; solo si se entró directo a la URL, sin historial, sube un nivel por la escalera `getParentHref` (reemplazando la entrada del historial, para no hacer bucles). Una vista nueva se agrega en el breadcrumb y en la escalera.
 - `shared/layout/` — chrome de la app: `Sidebar.tsx`, `TopNavBar.tsx`, `DashboardLayout.tsx`, `NotificationsMenu.tsx` (notificaciones, almacén en `shared/notifications/`) y `SettingsModal.tsx` (preferencias del equipo).
 
 ## Gestor de paquetes

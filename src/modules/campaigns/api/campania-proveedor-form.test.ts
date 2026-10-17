@@ -10,7 +10,6 @@ const producerDraft: CampaniaProveedorDraft = {
   proveedorId: 17,
   tipoProveedor: "productor",
   cantidadProveedor: "12.5",
-  mtdCeratitis: "0.375",
 };
 
 describe("campaign provider form contract", () => {
@@ -20,7 +19,6 @@ describe("campaign provider form contract", () => {
       proveedorId: 17,
       tipoProveedor: "productor",
       cantidadProveedor: 12.5,
-      mtdCeratitis: 0.375,
       frutaConvencionalEstimado: null,
     });
   });
@@ -48,7 +46,6 @@ describe("campaign provider form contract", () => {
       proveedorId: 17,
       tipoProveedor: "productor",
       cantidadProveedor: 12.5,
-      mtdCeratitis: 0.375,
       frutaConvencionalEstimado: 500,
     });
   });
@@ -57,7 +54,6 @@ describe("campaign provider form contract", () => {
     expect(toUpdateCampaniaProveedorInput(producerDraft)).toEqual({
       tipoProveedor: "productor",
       cantidadProveedor: 12.5,
-      mtdCeratitis: 0.375,
       frutaConvencionalEstimado: null,
     });
   });
@@ -71,17 +67,25 @@ describe("campaign provider form contract", () => {
     });
   });
 
-  it("reports missing, negative, and out-of-range values", () => {
+  it("includes optional mtdCeratitis when supplied", () => {
+    expect(
+      toCreateCampaniaProveedorInput(4, { ...producerDraft, mtdCeratitis: "0.05" }),
+    ).toMatchObject({ mtdCeratitis: 0.05 });
+    expect(
+      toUpdateCampaniaProveedorInput({ ...producerDraft, mtdCeratitis: "0.05" }),
+    ).toMatchObject({ mtdCeratitis: 0.05 });
+  });
+
+  it("reports missing and negative quantity values", () => {
     const errors = getCampaniaProveedorDraftErrors({
       ...producerDraft,
-      mtdCeratitis: "",
       cantidadProveedor: "-1",
     });
 
     expect(errors).toMatchObject({
       cantidadProveedor: expect.any(String),
-      mtdCeratitis: expect.any(String),
     });
+    expect(errors.mtdCeratitis).toBeUndefined();
   });
 });
 

@@ -7,7 +7,7 @@ export interface CampaniaProveedorDraft {
   proveedorId: number;
   tipoProveedor: TipoProveedorCampania;
   cantidadProveedor: string;
-  mtdCeratitis: string;
+  mtdCeratitis?: string;
   fincaId?: number | null;
   frutaConvencionalEstimado?: string | number | null;
 }
@@ -30,15 +30,9 @@ export function getCampaniaProveedorDraftErrors(
 ): CampaniaProveedorDraftErrors {
   const errors: CampaniaProveedorDraftErrors = {};
   const quantity = parseNonNegative(draft.cantidadProveedor, 3);
-  const mtd = parseNonNegative(draft.mtdCeratitis, 3);
 
   if (quantity === null) {
     errors.cantidadProveedor = "La cantidad debe ser un número no negativo con hasta 3 decimales.";
-  }
-  if (mtd === null) {
-    errors.mtdCeratitis = "El MTD debe ser un número no negativo con hasta 3 decimales.";
-  } else if (mtd > 0.05) {
-    errors.mtdCeratitis = "El MTD Ceratitis no puede superar el valor de 0.05.";
   }
 
   return errors;
@@ -60,7 +54,9 @@ export function toCreateCampaniaProveedorInput(
     ...(draft.fincaId == null ? {} : { fincaId: draft.fincaId }),
     tipoProveedor: draft.tipoProveedor,
     cantidadProveedor: Number(draft.cantidadProveedor),
-    mtdCeratitis: Number(draft.mtdCeratitis),
+    ...(draft.mtdCeratitis != null && draft.mtdCeratitis !== ""
+      ? { mtdCeratitis: Number(draft.mtdCeratitis) }
+      : {}),
     frutaConvencionalEstimado: parseOptionalNumber(draft.frutaConvencionalEstimado),
   };
 }
@@ -72,7 +68,9 @@ export function toUpdateCampaniaProveedorInput(
     tipoProveedor: draft.tipoProveedor,
     ...(draft.fincaId == null ? {} : { fincaId: draft.fincaId }),
     cantidadProveedor: Number(draft.cantidadProveedor),
-    mtdCeratitis: Number(draft.mtdCeratitis),
+    ...(draft.mtdCeratitis != null && draft.mtdCeratitis !== ""
+      ? { mtdCeratitis: Number(draft.mtdCeratitis) }
+      : {}),
     frutaConvencionalEstimado: parseOptionalNumber(draft.frutaConvencionalEstimado),
   };
 }

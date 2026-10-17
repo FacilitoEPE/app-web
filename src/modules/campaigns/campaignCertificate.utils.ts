@@ -107,6 +107,7 @@ export function validateCertificadoCampana(values: CertificadoCampanaFormValues)
 export interface ProductorCubierto {
     id: string;
     nombre: string;
+    kilos?: number;
 }
 
 export interface AmpliacionCertificado {
