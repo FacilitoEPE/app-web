@@ -21,15 +21,15 @@ export default function ModuleCard({
       type="button"
       onClick={onClick}
       aria-label={`Ingresar a ${title}`}
-      className="group relative flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-card text-left shadow-[0_3px_14px_rgb(0,0,0,0.06)] transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_14px_35px_rgb(0,0,0,0.12)] focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-page [--card-gutter:1rem] [--card-icon-size:3.5rem] sm:[--card-gutter:1.25rem] dark:shadow-[0_4px_18px_rgb(0,0,0,0.28)] dark:hover:shadow-[0_16px_38px_rgb(0,0,0,0.42)]"
+      className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-card text-left shadow-[0_3px_14px_rgb(0,0,0,0.06)] transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-brand-border hover:shadow-[0_14px_35px_rgb(0,0,0,0.12)] focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-page [--card-gutter:0.875rem] sm:[--card-gutter:1.125rem] [--card-icon-size:2.85rem] sm:[--card-icon-size:3.15rem] dark:shadow-[0_4px_18px_rgb(0,0,0,0.28)] dark:hover:shadow-[0_16px_38px_rgb(0,0,0,0.42)]"
     >
       {/* Efecto de iluminación (Shimmer on hover) */}
       <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
         <div className="absolute top-0 left-[-150%] h-full w-full skew-x-[-25deg] bg-linear-to-r from-transparent via-white/45 to-transparent transition-all duration-1000 ease-in-out group-hover:left-[150%] dark:via-white/[0.05]"></div>
       </div>
 
-      {/* Imagen protagonista */}
-      <div className="relative h-[58%] min-h-36 w-full shrink-0 overflow-hidden bg-muted">
+      {/* Imagen protagonista con altura proporcional */}
+      <div className="relative h-[50%] w-full shrink-0 overflow-hidden bg-muted">
         <img
           src={image}
           alt=""
@@ -54,25 +54,25 @@ export default function ModuleCard({
       </div>
 
       {/* Panel de información unido al borde ondulado de la imagen */}
-      <div className="relative z-10 flex min-h-0 flex-1 items-start gap-4 px-(--card-gutter) pb-4 pt-3.5">
+      <div className="relative z-10 flex min-h-0 flex-1 items-start gap-3 sm:gap-3.5 px-(--card-gutter) pb-3 sm:pb-3.5 pt-2 sm:pt-2.5">
         <span
-          className="relative -mt-4 flex size-(--card-icon-size) shrink-0 items-center justify-center rounded-full bg-brand-border/80 text-brand-dark transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105 dark:bg-brand/35 dark:text-ink"
+          className="relative -mt-4.5 sm:-mt-5 flex size-(--card-icon-size) shrink-0 items-center justify-center rounded-full bg-module-card-icon-bg text-module-card-icon-fg border border-module-card-icon-border transition-all duration-300 group-hover:-translate-y-0.5 group-hover:scale-105 shadow-xs"
           aria-hidden="true"
         >
           {icon}
         </span>
 
         <span className="relative flex min-w-0 flex-1 self-stretch flex-col">
-          <span className="mb-1 text-[15px] font-bold leading-tight text-ink sm:text-base xl:text-[17px]">
+          <span className="text-[14px] sm:text-[14.5px] xl:text-[15px] font-bold leading-snug text-ink group-hover:text-brand transition-colors line-clamp-1">
             {title}
           </span>
-          <span className="line-clamp-2 min-h-[2.7em] text-[11.5px] leading-[1.35] text-ink-muted sm:text-xs">
+          <span className="mt-1 text-[11.5px] sm:text-[12px] leading-[1.35] text-ink-muted line-clamp-2">
             {description}
           </span>
-          <span className="mt-auto flex items-center gap-1 pt-1.5 text-xs font-bold text-brand sm:text-[12.5px]">
+          <span className="mt-auto flex items-center gap-1.5 pt-1 text-xs font-bold text-module-card-icon-fg group-hover:text-brand transition-colors">
             Ingresar
             <ArrowRight
-              size={14}
+              size={13}
               className="transition-transform duration-300 group-hover:translate-x-1"
               aria-hidden="true"
             />

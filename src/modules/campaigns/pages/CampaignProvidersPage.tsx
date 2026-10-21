@@ -1,5 +1,5 @@
 import { plural } from "@/shared/utils/plural";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Eye, Users, FlaskConical, Tractor, Truck, SearchX, ListFilter, Link, TriangleAlert, RotateCw, UserRoundCheck, Pencil } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -57,8 +57,12 @@ export default function CampaignProvidersPage() {
     const isValidCampaign = Number.isInteger(campaniaId) && campaniaId > 0;
 
     const campaign = useCampaign(campaniaId);
-    const [activeTab, setActiveTab] = useState<TipoProveedorCampania>("productor");
-    const tabPicked = useRef(false);
+    // En ejecución solo se vinculan acopiadores: el tipo no se pregunta y se abre en esa pestaña
+    const lockedType: TipoProveedorCampania | undefined = campaign?.estado === "en proceso" ? "acopio" : undefined;
+    // Pestaña elegida por la persona; mientras no elija, la de ejecución o la primera que tiene proveedores
+    const [pickedTab, setPickedTab] = useState<TipoProveedorCampania | null>(null);
+    const [firstTabWithData, setFirstTabWithData] = useState<TipoProveedorCampania>("productor");
+    const activeTab = pickedTab ?? lockedType ?? firstTabWithData;
     const [relations, setRelations] = useState<CampaniaProveedor[]>([]);
     const [isLoading, setIsLoading] = useState(isValidCampaign);
     const [loadError, setLoadError] = useState<string | null>(isValidCampaign ? null : "La campaña no es válida.");
@@ -76,10 +80,8 @@ export default function CampaignProvidersPage() {
             const data = await getCampaniaProveedoresByCampania(campaniaId);
             setRelations(data);
             // Mientras el usuario no elija pestaña, se abre en la primera que tiene proveedores (no en una vacía)
-            if (!tabPicked.current) {
-                const withData = PROVIDER_TABS.find((tab) => data.some((row) => row.tipoProveedor === tab.id));
-                if (withData) setActiveTab(withData.id as TipoProveedorCampania);
-            }
+            const withData = PROVIDER_TABS.find((tab) => data.some((row) => row.tipoProveedor === tab.id));
+            if (withData) setFirstTabWithData(withData.id as TipoProveedorCampania);
             setLoadError(null);
         } catch {
             setLoadError("No se pudieron cargar los proveedores de la campaña.");
@@ -185,10 +187,10 @@ export default function CampaignProvidersPage() {
             <PageHeader
                 icon={<Users size={24} strokeWidth={2.5} />}
                 title="Proveedores de la Campaña"
-                description="Gestiona los productores y acopiadores vinculados a esta campaña."
+                description={lockedType ? "Gestiona los proveedores de esta campaña; en ejecución solo se vinculan acopiadores." : "Gestiona los productores y acopiadores vinculados a esta campaña."}
                 action={
                     <Button size="xl" onClick={() => setIsLinkModalOpen(true)} disabled={!isValidCampaign}>
-                        <Link size={20} strokeWidth={2.5} /> Vincular proveedor
+                        <Link size={20} strokeWidth={2.5} /> {lockedType ? "Vincular acopiador" : "Vincular proveedor"}
                     </Button>
                 }
             />
@@ -196,7 +198,7 @@ export default function CampaignProvidersPage() {
             <SegmentedTabs
                 tabs={PROVIDER_TABS.map((tab) => ({ ...tab, count: relations.filter((row) => row.tipoProveedor === tab.id).length }))}
                 value={activeTab}
-                onChange={(val) => { tabPicked.current = true; setActiveTab(val as TipoProveedorCampania); setPage(1); }}
+                onChange={(val) => { setPickedTab(val as TipoProveedorCampania); setPage(1); }}
                 className="mb-8"
             />
 
@@ -278,6 +280,7 @@ export default function CampaignProvidersPage() {
 
             <CampaignLinkProviderModal
                 mode="create"
+                lockedType={lockedType}
                 open={isLinkModalOpen}
                 campaniaId={isValidCampaign ? campaniaId : null}
                 onOpenChange={setIsLinkModalOpen}
@@ -291,6 +294,7 @@ export default function CampaignProvidersPage() {
 
             <CampaignLinkProviderModal
                 mode="edit"
+                lockedType={lockedType}
                 open={editModal.open}
                 initialData={editModal.relation}
                 campaniaId={isValidCampaign ? campaniaId : null}

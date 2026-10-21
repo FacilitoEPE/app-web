@@ -19,6 +19,7 @@ import {
 } from "@/modules/campaigns/api/campania-proveedor-form";
 import { createCampaniaProveedorSubmissionController } from "@/modules/campaigns/api/campania-proveedor-submission";
 import { fetchCampaignProviderOptions } from "@/modules/campaigns/api/campaign-provider-options";
+import { MONEDA_OPTIONS, getMonedaSymbol } from "@/modules/campaigns/campaignCertificate.utils";
 
 interface CampaignLinkProviderModalProps {
     open: boolean;
@@ -29,6 +30,8 @@ interface CampaignLinkProviderModalProps {
     /** Se llama cuando el resultado quedó incierto y conviene recargar la lista de la página */
     onRefresh?: () => void;
     mode?: "create" | "edit";
+    /** Tipo fijo del proveedor: no se pregunta (en una campaña en ejecución solo se vinculan acopiadores) */
+    lockedType?: TipoProveedorCampania;
     initialData?: import("@/modules/campaigns/api/campania-proveedor.mapper").CampaniaProveedor | null;
 }
 
@@ -79,7 +82,7 @@ const PROVIDER_TYPES = [
     { label: "Acopiador", value: "acopio" },
 ];
 /** Vincula un proveedor por vez: se valida, se guarda y el backend confirma antes de mostrar éxito. */
-export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChange, onSave, onRefresh, mode = "create", initialData }: CampaignLinkProviderModalProps) {
+export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChange, onSave, onRefresh, mode = "create", lockedType, initialData }: CampaignLinkProviderModalProps) {
     const [providerType, setProviderType] = useState<TipoProveedorCampania>("productor");
     const [selectedProvider, setSelectedProvider] = useState("");
     const [draft, setDraft] = useState<DraftValues>(EMPTY_DRAFT);
@@ -127,7 +130,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                 frutaConvencionalEstimado: initialData.frutaConvencionalEstimado ?? null,
             });
         } else {
-            setProviderType("productor");
+            setProviderType(lockedType ?? "productor");
             setSelectedProvider("");
             setDraft(EMPTY_DRAFT);
         }
@@ -177,7 +180,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
         // Solo reinicia al abrir (o al cambiar de campaña): si dependiera de `mode`/`initialData`, cualquier render del
         // padre con un objeto nuevo borraría lo que el usuario ya escribió.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, campaniaId, controller]);
+    }, [open, campaniaId, controller, lockedType]);
 
     const isLocked = isSaving || unresolvedProviderId !== null;
 
@@ -232,7 +235,23 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
         .filter((provider) => !linkedIds.has(provider.proveedorId))
         .map((provider) => ({ value: String(provider.proveedorId), label: `${provider.nombres} ${provider.apellido}` }));
 
-    const renderField = ({ field, label, step, placeholder, suffix }: { field: DraftField; label: string; step?: string; placeholder?: string; suffix?: string }) => (
+    const currencySymbol = getMonedaSymbol(draft.moneda);
+
+    const renderField = ({
+        field,
+        label,
+        step,
+        placeholder,
+        suffix,
+        leading,
+    }: {
+        field: DraftField;
+        label: string;
+        step?: string;
+        placeholder?: string;
+        suffix?: string;
+        leading?: string;
+    }) => (
         <InputField
             key={field}
             id={`link-provider-${field}`}
@@ -244,6 +263,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
             step={step}
             min={0}
             unit={suffix}
+            leading={leading}
             required
             disabled={isLocked}
         />
@@ -255,8 +275,8 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
             onOpenChange={onOpenChange}
             busy={isSaving}
             icon={<Link2 size={22} strokeWidth={2} />}
-            title={mode === "edit" ? "Editar Vínculo de Proveedor" : "Vincular Proveedor"}
-            description={mode === "edit" ? "Modifica los datos del proveedor vinculado a esta campaña." : "Asocia un productor o acopiador a esta campaña. Los campos con * son obligatorios."}
+            title={mode === "edit" ? "Editar Vínculo de Proveedor" : lockedType === "acopio" ? "Vincular Acopiador" : "Vincular Proveedor"}
+            description={mode === "edit" ? "Modifica los datos del proveedor vinculado a esta campaña." : (lockedType === "acopio" ? "Asocia un acopiador a esta campaña. Los campos con * son obligatorios." : "Asocia un productor o acopiador a esta campaña. Los campos con * son obligatorios.")}
             size="xl"
             footer={
                 <>
@@ -264,7 +284,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                         <X size={20} strokeWidth={2.5} /> Cancelar
                     </Button>
                     <Button size="xl" onClick={handleSubmit} disabled={isLocked || isLoadingProviders || !campaniaId} aria-busy={isSaving}>
-                        <Link2 size={20} strokeWidth={2.5} /> {isSaving ? "Guardando..." : mode === "edit" ? "Guardar cambios" : "Vincular proveedor"}
+                        <Link2 size={20} strokeWidth={2.5} /> {isSaving ? "Guardando..." : mode === "edit" ? "Guardar cambios" : lockedType === "acopio" ? "Vincular acopiador" : "Vincular proveedor"}
                     </Button>
                 </>
             }
@@ -283,28 +303,33 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                 </FormField>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                    <FormField label="Tipo de Proveedor:">
-                        <SegmentedControl
-                            options={PROVIDER_TYPES}
-                            value={providerType}
-                            onChange={(value) => {
-                                setProviderType(value as TipoProveedorCampania);
-                                setErrors({});
-                                setFormError(null);
-                            }}
-                        />
-                    </FormField>
-                    {renderField({ field: "cantidadProveedor", label: "Cantidad de kilos estimados", step: "0.001", placeholder: "Ej. 2500", suffix: "KG" })}
+                    {!lockedType && (
+                        <FormField label="Tipo de Proveedor:">
+                            <SegmentedControl
+                                options={PROVIDER_TYPES}
+                                value={providerType}
+                                onChange={(value) => {
+                                    setProviderType(value as TipoProveedorCampania);
+                                    setErrors({});
+                                    setFormError(null);
+                                }}
+                            />
+                        </FormField>
+                    )}
+                    <div className={lockedType ? "sm:col-span-2" : undefined}>
+                        {renderField({ field: "cantidadProveedor", label: "Cantidad de kilos estimados", step: "0.001", placeholder: "Ej. 2500", suffix: "KG" })}
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                    {renderField({ field: "precioEstimado", label: "Precio estimado o acordado", step: "0.01", placeholder: "Ej. 1.50" })}
+                    {renderField({ field: "precioEstimado", label: "Precio estimado o acordado", step: "0.01", placeholder: "0.00", leading: currencySymbol })}
                     <FormField label="Moneda" required>
                         <Combobox
-                            options={[{ label: "PEN", value: "PEN" }, { label: "USD", value: "USD" }]}
+                            options={MONEDA_OPTIONS}
                             value={draft.moneda}
                             onChange={(value) => updateDraft("moneda", value)}
                             disabled={isLocked}
+                            placeholder="Seleccionar moneda"
                         />
                     </FormField>
                 </div>

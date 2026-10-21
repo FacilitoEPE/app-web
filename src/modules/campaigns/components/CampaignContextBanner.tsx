@@ -8,7 +8,7 @@ import { getCampaignFruitVisual } from "@/modules/campaigns/campaignFruit";
 
 const campaignStatus: Record<Campana["estado"], string> = {
     planificacion: "Planificado",
-    "en proceso": "En proceso",
+    "en proceso": "En ejecución",
     terminado: "Terminado",
 };
 

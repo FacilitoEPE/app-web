@@ -1,5 +1,15 @@
 # Reporte de conexión de vistas al backend — epe-web
 
+## Actualización 2026-10-17 — transportistas por campaña con acuerdo de pago (reemplaza «Pagos a transportistas»)
+
+| Vista/componente | Estado — fecha | Alcance y operaciones |
+|---|---|---|
+| `CampaignCarriersPage` (`/campaigns/:id/carriers`) y modales `CampaignLinkCarrierModal`, `CampaignCarrierAgreementModal`, `CampaignCarrierDetailsModal` | **Parcial — 2026-10-17 / solo local, API faltante** | Los transportistas se leen de Gestión de Transporte (`GET /empresas-transporte-externo`, conectado). El vínculo transportista–campaña, su cotización y el acuerdo de pago (pago único o con adelanto; registrar, editar, marcar saldo como pagado y consulta) viven en estado local en memoria (`campaignCarriers.store.ts`, `// TODO(api)`) porque el backend aún no tiene servicio de transportistas por campaña. Con datos de demostración solo en desarrollo (`campaignCarriers.demo.ts`). El pago efectivo se registra en Liquidación de compra (fuera de esta vista). |
+| `CampaignDeliveriesPage` (`/campaigns/:id/deliveries`) y modales `CampaignDeliveryCoordinationModal`, `CampaignDeliveryDetailsModal` | **Parcial — 2026-10-19 / solo local, API faltante** | Lista las entregas programadas en los contratos de los clientes de la campaña (`campaignContractDeliveries.store.ts`, local) y permite completar y editar su coordinación: transportista vinculado, camión y chofer (de Gestión de Transporte, conectado), proveedores de la campaña (`GET /campanias-proveedores/campania/:id`) con al menos una finca cada uno (fincas locales, `providerLocalData.store.ts`), fechas del viaje, condiciones de la carga y observaciones. La coordinación se guarda en memoria (`// TODO(api)`), con datos de demostración solo en desarrollo. |
+| `CampaignWeeklyDeliveryProgramPage` | **Sin cambios — 2026-10-19 / requiere definición** | Solo existen la ruta, el archivo y la opción del menú; sin diseño ni datos hasta que gestión defina la vista. |
+| `CampaignCarrierPaymentsPage` y sus modales de pago (registrar pago, adjuntar boleta, completar adelanto, detalle) | **Retirada — 2026-10-17** | Se eliminaron por decisión de gestión: el pago al transportista ya no se registra en la campaña; se maneja como acuerdo de pago por transportista vinculado. Las entradas anteriores se conservan abajo como historial. |
+| Datos de demostración de Gestión de Transporte | **Nota — 2026-10-17** | En la BD de desarrollo local se crearon por la API 4 transportistas de ejemplo (SUTRIMEX, FIXGROM, TRANSPACK y el independiente José Ramírez, ids 2–5), con vehículos y choferes. El backend actual exige RUC de 11 dígitos incluso para el independiente (se usó un RUC de persona natural). Tipo, MTC y ubicación siguen en `carrierExtras.demo.ts` (solo desarrollo). |
+
 ## Actualización 2026-10-16 — certificación única y cálculo automático de kilos iniciales
 
 | Vista/componente | Estado — fecha | Alcance y operaciones |

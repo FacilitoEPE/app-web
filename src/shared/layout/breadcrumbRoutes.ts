@@ -31,11 +31,15 @@ export function getBreadcrumbLevels(pathname: string): BreadcrumbLevel[] {
             ? "Proveedores"
             : segments[2] === "clients"
                 ? "Clientes"
-            : segments[2] === "carrier-payments"
-                ? "Pagos a transportistas"
-                : segments[2] === "certifications"
-                    ? "Certificaciones"
-                    : "Detalle";
+            : segments[2] === "carriers"
+                ? "Transportistas"
+                : segments[2] === "deliveries"
+                    ? "Entregas"
+                    : segments[2] === "weekly-delivery-program"
+                        ? "Programa semanal de entregas"
+                        : segments[2] === "certifications"
+                            ? "Certificaciones"
+                            : "Detalle";
 
         levels.push({ 
             label: campaignSection,
@@ -76,7 +80,9 @@ const BACK_LADDER: string[][] = [
     ["campaigns", ":x", "clients", ":x", "contracts"],
     ["campaigns", ":x", "clients", ":x", "contracts", ":x", "deliveries"],
     ["campaigns", ":x", "certifications"],
-    ["campaigns", ":x", "carrier-payments"],
+    ["campaigns", ":x", "carriers"],
+    ["campaigns", ":x", "deliveries"],
+    ["campaigns", ":x", "weekly-delivery-program"],
     ["proveedores", ":x"],
     ["proveedores", ":x", "fincas"],
     ["proveedores", ":x", "certificados"],

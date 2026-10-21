@@ -17,6 +17,9 @@
     --color-brand-dark: var(--brand-dark);
     --color-brand-surface: var(--brand-surface);
     --color-brand-border: var(--brand-border);
+    --color-module-card-icon-bg: var(--module-card-icon-bg);
+    --color-module-card-icon-fg: var(--module-card-icon-fg);
+    --color-module-card-icon-border: var(--module-card-icon-border);
     --color-ink: var(--ink);
     --color-ink-body: var(--ink-body);
     --color-ink-muted: var(--ink-muted);
@@ -81,6 +84,10 @@
     --brand-dark: #1b4322;
     --brand-surface: #EBF3EC;
     --brand-border: #d2e5d5;
+    /* Tokens dedicados para iconos de portada de módulos (calibrados con la referencia visual) */
+    --module-card-icon-bg: #EAF4EB;
+    --module-card-icon-fg: #4F9E32;
+    --module-card-icon-border: #DAEADA;
     /* Mismo degradado que BRAND_ACTIVE_SURFACE (shared/styles/brandGradients.ts) usa en los botones,
        expuesto como variable para que cualquier hover/estado activo jale este único color en vez de
        inventar un hex propio. */
@@ -137,6 +144,9 @@
     --brand-dark: #ededed;
     --brand-surface: color-mix(in oklab, var(--brand) 13%, #1a1a1d);
     --brand-border: color-mix(in oklab, var(--brand) 28%, #1a1a1d);
+    --module-card-icon-bg: color-mix(in oklab, var(--brand) 16%, #19191c);
+    --module-card-icon-fg: #6fae3f;
+    --module-card-icon-border: color-mix(in oklab, var(--brand) 26%, #19191c);
     --ink: #ededed;
     --ink-body: #b4b4b9;
     --ink-muted: #8b8b93;

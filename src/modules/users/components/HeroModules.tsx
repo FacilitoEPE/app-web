@@ -8,9 +8,9 @@ const PHOTO_WIDTH = "67%";
 
 export default function HeroModules() {
   return (
-    /* Alto en % del área disponible: el hero cede espacio al grid en pantallas
-       bajas, así todo entra sin scroll sin depender de un alto fijo en px. */
-    <section className="relative h-auto w-full shrink-0 overflow-hidden py-7 lg:h-[27.5%] lg:py-0">
+    /* Alto compacto y proporcional: el hero ya no ocupa un alto excesivo fijo
+       y cede espacio limpio a la cuadrícula de módulos en cualquier pantalla. */
+    <section className="relative w-full shrink-0 overflow-hidden py-5 sm:py-6 lg:h-[165px] xl:h-[185px] lg:py-0">
       {/* Foto. El borde curvo se recorta por CSS (no viene incrustado en el asset),
           así la altura del hero y la forma de la curva se ajustan por separado.
           En móvil se oculta: el recorte curvo y el 67% de ancho dejarían el texto
@@ -26,13 +26,7 @@ export default function HeroModules() {
         />
       </div>
 
-      {/* Línea decorativa: el mismo borde, corrido 14px a la izquierda.
-          `h-full` es obligatorio: el <svg> es un elemento reemplazado y con solo
-          el ancho fijado toma el ratio intrínseco del viewBox (1:1), quedando de
-          1013px de alto en vez de los 271 del hero.
-          `preserveAspectRatio="none"` deja que el path 0..1 se estire igual que el
-          clip-path, y `vectorEffect="non-scaling-stroke"` evita que ese estirado
-          deforme el grosor del trazo. */}
+      {/* Línea decorativa: el mismo borde, corrido 14px a la izquierda. */}
       <svg
         className="hidden lg:block absolute inset-y-0 right-0 h-full z-10 pointer-events-none -translate-x-[14px]"
         style={{ width: PHOTO_WIDTH }}
@@ -50,29 +44,25 @@ export default function HeroModules() {
         />
       </svg>
 
-      {/* Lema. Antes venía incrustado en la foto; como asset aparte se puede
-          reubicar y escalar sin volver a exportar la imagen de fondo. */}
-      {/* Lema decorativo: se omite en móvil, donde compite con el título por el
-          poco ancho disponible sin aportar información. */}
+      {/* Lema decorativo a la derecha */}
       <img
         src={HeroPhraseImg}
         alt="Del campo al mundo. Frutas que conectan futuros."
-        className="hidden lg:block absolute right-4 top-1/2 -translate-y-1/2 z-10 h-[115%] w-auto object-contain pointer-events-none"
+        className="hidden lg:block absolute right-4 top-1/2 -translate-y-1/2 z-10 h-[88%] xl:h-[92%] w-auto object-contain pointer-events-none"
       />
 
-      {/* Columna de textos */}
-      <div className="relative z-20 h-full flex flex-col justify-center px-4 sm:px-8 lg:px-0 lg:pl-16 max-w-full lg:max-w-[35%] xl:max-w-[38%]">
-        <div className="flex items-center gap-2 mb-2 lg:mb-3">
-          <Sparkles size={16} className="text-brand shrink-0" strokeWidth={2} />
-          <span className="text-[12px] font-medium tracking-[0.15em] sm:text-[14px] sm:tracking-[0.2em] md:text-[15px] md:tracking-[0.25em] xl:text-[16px]">
+      {/* Columna de textos: ancho suficiente para que el título no se quiebre en 3 líneas */}
+      <div className="relative z-20 h-full flex flex-col justify-center px-4 sm:px-8 lg:px-0 lg:pl-12 xl:pl-14 max-w-full lg:max-w-[48%] xl:max-w-[46%]">
+        <div className="flex items-center gap-2 mb-1.5 lg:mb-2">
+          <Sparkles size={15} className="text-brand shrink-0" strokeWidth={2} />
+          <span className="text-[11px] font-medium tracking-[0.15em] sm:text-[13px] sm:tracking-[0.2em] md:text-[14px] md:tracking-[0.25em] xl:text-[15px] uppercase text-ink-muted">
             Bienvenido a tu
           </span>
         </div>
 
-        <h1 className="text-balance text-[28px] font-semibold leading-[1.1] tracking-tight text-brand-dark sm:text-4xl lg:text-[38px] lg:leading-[1.05] xl:text-[46px]">
-          Centro de operaciones
-          <br />
-          <span className="text-brand font-medium">Agro F.V.</span>
+        <h1 className="text-[24px] font-semibold leading-[1.12] tracking-tight text-brand-dark sm:text-3xl lg:text-[32px] xl:text-[36px]">
+          <span className="block whitespace-nowrap">Centro de operaciones</span>
+          <span className="block text-brand font-medium">Agro F.V.</span>
         </h1>
       </div>
     </section>

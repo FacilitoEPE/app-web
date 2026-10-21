@@ -22,19 +22,13 @@ import CarrierSuccessModal, { type CarrierSuccessMode } from "./CarrierSuccessMo
 import CarrierFormModal from "./CarrierFormModal";
 import CarrierVehicleModal from "./CarrierVehicleModal";
 import CarrierDriverModal from "./CarrierDriverModal";
-import { CARRIER_TIPOS, type CarrierFormValues, type CarrierProfile } from "@/modules/carriers/carrierProfile.utils";
+import { CARRIER_TIPOS, carrierIdentification, type CarrierFormValues, type CarrierProfile } from "@/modules/carriers/carrierProfile.utils";
 import { toDriverInput, toVehicleInput } from "@/modules/carriers/carrierRecords.utils";
 import type { DriverInput, VehicleInput } from "@/modules/carriers/api/carrier.api";
 import type { DriverFormValues } from "./CarrierDriverModal";
 import type { VehicleFormValues } from "./CarrierVehicleModal";
 import type { TableExport } from "@/shared/utils/exportTable";
 import { paginate } from "@/shared/utils/paginate";
-
-/** Documento que identifica al transportista: el RUC de la empresa o el documento de identidad del independiente */
-function identification(row: CarrierProfile): string {
-    if (row.tipo === "privado") return row.documento ? `Documento ${row.documento}` : row.ruc ? `RUC ${row.ruc}` : "Sin documento";
-    return row.ruc ? `RUC ${row.ruc}` : "Sin RUC";
-}
 
 /** Ciudad y departamento, para tarjetas y exportación */
 const locationOf = (row: CarrierProfile) => [row.ciudad, row.departamento].filter(Boolean).join(", ");
@@ -64,7 +58,7 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
         filename: "transportistas",
         title: "Transportistas",
         header: ["Transportista", "Tipo", "Identificación", "MTC", "Teléfono", "Correo", "Ubicación"],
-        rows: data.map((row) => [row.nombre, CARRIER_TIPOS[row.tipo].label, identification(row), row.mtc, row.numero, row.correo, locationOf(row)]),
+        rows: data.map((row) => [row.nombre, CARRIER_TIPOS[row.tipo].label, carrierIdentification(row), row.mtc, row.numero, row.correo, locationOf(row)]),
     });
     const [editingCarrierId, setEditingCarrierId] = useState<number | null>(null);
     const [vehicleCarrierId, setVehicleCarrierId] = useState<number | null>(null);
@@ -185,7 +179,7 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
                                         <TableRowLead
                                             icon={row.tipo === "privado" ? <UserRound size={20} strokeWidth={2} /> : <Building2 size={20} strokeWidth={2} />}
                                             title={row.nombre}
-                                            subtitle={identification(row)}
+                                            subtitle={carrierIdentification(row)}
                                         />
                                     </TableCell>
                                     <TableCell>

@@ -6,13 +6,13 @@ export default function ModulesGrid() {
   const navigate = useNavigate();
 
   return (
-    <div className="grid w-full flex-1 auto-rows-[260px] grid-cols-1 content-start gap-4 px-4 py-4 sm:auto-rows-[270px] sm:grid-cols-2 sm:gap-5 sm:px-8 lg:grid-cols-3 lg:px-14 xl:grid-cols-4">
+    <div className="grid w-full auto-rows-[225px] sm:auto-rows-[235px] xl:auto-rows-[240px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-5 xl:gap-6 px-4 sm:px-8 lg:px-12 xl:px-14 py-2 sm:py-3 my-auto">
       {navigationItems.map((module) => (
         <ModuleCard
           key={module.id}
           title={module.title}
           description={module.description}
-          icon={<module.icon size={28} strokeWidth={1.5} />}
+          icon={<module.icon size={25} strokeWidth={1.85} />}
           image={module.image}
           onClick={() => navigate(module.url)}
         />

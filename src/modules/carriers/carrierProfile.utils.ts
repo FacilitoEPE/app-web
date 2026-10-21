@@ -145,6 +145,12 @@ export function toCarrierProfile(carrier: Carrier, extras: CarrierExtras | undef
     return { ...carrier, ...EMPTY_CARRIER_EXTRAS, ...extras };
 }
 
+/** Documento que identifica al transportista: el RUC de la empresa o el documento de identidad del independiente */
+export function carrierIdentification(carrier: Pick<CarrierProfile, "tipo" | "documento" | "ruc">): string {
+    if (carrier.tipo === "privado") return carrier.documento ? `Documento ${carrier.documento}` : carrier.ruc ? `RUC ${carrier.ruc}` : "Sin documento";
+    return carrier.ruc ? `RUC ${carrier.ruc}` : "Sin RUC";
+}
+
 /** Ubicación en una línea: "Ciudad, Provincia, Departamento"; vacía si no se registró. */
 export function carrierLocation(carrier: Pick<CarrierExtras, "ciudad" | "provincia" | "departamento">): string {
     return [carrier.ciudad, carrier.provincia, carrier.departamento].filter(Boolean).join(", ");

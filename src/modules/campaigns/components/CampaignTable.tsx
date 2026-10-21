@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { Pencil, Eye, Trash2, Contact, Layers, Briefcase, ShieldCheck, Truck, Calendar, Package, ListFilter, TriangleAlert, RotateCw, SearchX } from "lucide-react";
+import { Pencil, Eye, Trash2, Contact, Layers, Briefcase, ShieldCheck, Truck, Calendar, CalendarRange, Package, PackageCheck, ListFilter, TriangleAlert, RotateCw, SearchX } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -34,7 +34,7 @@ type SortKey = "nombre" | "inicio" | "kilos";
 /** Texto visible de cada estado del backend */
 const STATUS_LABEL: Record<CampanaEstado, string> = {
     planificacion: "Planificado",
-    "en proceso": "En proceso",
+    "en proceso": "En ejecución",
     terminado: "Terminado",
 };
 
@@ -124,17 +124,19 @@ export default function CampaignTable({ data, isLoading, loadError, onRetry, onC
             primary.push({ label: "Eliminar", icon: <Trash2 size={18} strokeWidth={2.5} />, variant: "destructive", onClick: () => setDeleting({ open: true, campaign: row }) });
         }
 
-        if (row.estado === "planificacion" || row.estado === "en proceso") {
-            secondary.push({ label: "Ver proveedores", icon: <Briefcase size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/providers`) });
-        }
         if (row.estado === "planificacion") {
+            secondary.push({ label: "Ver proveedores", icon: <Briefcase size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/providers`) });
             secondary.push({ label: "Vincular clientes", icon: <Contact size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/clients`) });
             // Las certificaciones solo tienen sentido mientras la campaña se está planificando
             secondary.push({ label: "Gestionar certificaciones", icon: <ShieldCheck size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/certifications`) });
         }
-        // Los pagos al transportista solo aplican una vez que la campaña está en proceso
+        // Transporte y entregas solo aplican una vez que la campaña está en ejecución; los proveedores se siguen
+        // gestionando, pero ahí solo se vinculan acopiadores
         if (row.estado === "en proceso") {
-            secondary.push({ label: "Transportista", icon: <Truck size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/carrier-payments`) });
+            secondary.push({ label: "Ver proveedores", icon: <Briefcase size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/providers`) });
+            secondary.push({ label: "Transportistas", icon: <Truck size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/carriers`) });
+            secondary.push({ label: "Entregas", icon: <PackageCheck size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/deliveries`) });
+            secondary.push({ label: "Programa semanal de entregas", icon: <CalendarRange size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/weekly-delivery-program`) });
         }
 
         return { primary, secondary };

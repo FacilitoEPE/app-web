@@ -53,7 +53,7 @@ const emptyDraft = (clienteNegocioId = ""): ClientParticipationDraft => ({
 
 const CAMPAIGN_STATUS_LABEL: Record<string, string> = {
     planificacion: "Planificada",
-    "en proceso": "En proceso",
+    "en proceso": "En ejecución",
     terminado: "Terminada",
 };
 

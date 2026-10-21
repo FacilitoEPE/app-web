@@ -39,7 +39,7 @@ function toOverviewCampaign(campana: Campana): Campaign {
         inicio: format(campana.fechaInicio, "dd/MM/yyyy"),
         fin: format(campana.fechaFin, "dd/MM/yyyy"),
         kilos: String(campana.requerimientoComercial),
-        estado: campana.estado === "planificacion" ? "Planificado" : campana.estado === "en proceso" ? "En proceso" : "Terminado",
+        estado: campana.estado === "planificacion" ? "Planificado" : campana.estado === "en proceso" ? "En ejecución" : "Terminado",
         fruta: campana.fruta?.name,
         variedades: [],
     };

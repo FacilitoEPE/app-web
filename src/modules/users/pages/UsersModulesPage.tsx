@@ -20,7 +20,7 @@ export default function UsersModulesPage() {
         ></div>
       </div>
 
-      <div className="relative z-10 w-full min-h-full lg:h-full flex flex-col overflow-visible lg:overflow-hidden">
+      <div className="relative z-10 w-full min-h-full flex flex-col justify-between">
         <HeroModules />
         <ModulesGrid />
         <ModulesFooter />

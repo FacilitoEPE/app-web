@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import type { CampaignContractDeliveryLocal, CampaignContractDeliveryValues } from "@/modules/campaigns/campaignContractDelivery.utils";
+import type { CampaignContractDeliveryLocal, CampaignContractDeliveryValues, DeliveryCoordination } from "@/modules/campaigns/campaignContractDelivery.utils";
 import { createDemoDeliveries } from "@/modules/campaigns/campaignClientContracts.demo";
 
 /**
@@ -23,6 +23,18 @@ export function useCampaignContractDeliveries(campaniaId: number, relationId: nu
     return useSyncExternalStore(subscribe, () => records[key] ?? EMPTY);
 }
 
+/** Todas las entregas del almacén (`campaña:vínculo:contrato` → entregas); la lista de la campaña la arma `listCampaignDeliveries`. */
+export function useCampaignDeliveryRecords() {
+    return useSyncExternalStore(subscribe, () => records);
+}
+
+/** Guarda la coordinación de una entrega; si ya tenía una, la reemplaza. */
+export function saveCampaignDeliveryCoordination(campaniaId: number, relationId: number, contractId: number, deliveryId: number, coordination: DeliveryCoordination) {
+    const key = keyOf(campaniaId, relationId, contractId);
+    records = { ...records, [key]: (records[key] ?? EMPTY).map((item) => item.id === deliveryId ? { ...item, coordinacion: coordination } : item) };
+    emit();
+}
+
 export function addCampaignContractDelivery(campaniaId: number, relationId: number, contractId: number, values: CampaignContractDeliveryValues) {
     const key = keyOf(campaniaId, relationId, contractId);
     const delivery: CampaignContractDeliveryLocal = {
@@ -31,6 +43,7 @@ export function addCampaignContractDelivery(campaniaId: number, relationId: numb
         kilosProgramados: Number(values.kilosProgramados),
         destino: values.destino.trim(),
         observaciones: values.observaciones.trim(),
+        coordinacion: null,
     };
     records = { ...records, [key]: [delivery, ...(records[key] ?? EMPTY)] };
     emit();

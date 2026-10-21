@@ -1,5 +1,5 @@
 import type { CampaignClientContractLocal } from "@/modules/campaigns/campaignClientContract.utils";
-import type { CampaignContractDeliveryLocal } from "@/modules/campaigns/campaignContractDelivery.utils";
+import type { CampaignContractDeliveryLocal, DeliveryCoordination } from "@/modules/campaigns/campaignContractDelivery.utils";
 import { demoDate, demoPdf } from "@/shared/utils/demoData";
 
 /**
@@ -32,7 +32,21 @@ const CONTRACTS: Record<string, ContractSeed[]> = {
     ],
 };
 
-type DeliverySeed = Omit<CampaignContractDeliveryLocal, "fecha"> & { inDays: number };
+type DeliverySeed = Omit<CampaignContractDeliveryLocal, "fecha" | "coordinacion"> & { inDays: number };
+
+/**
+ * Coordinación de algunas entregas de la campaña 1 (las demás quedan por completar). Los ids son los de los
+ * transportistas de ejemplo de Gestión de Transporte y los de los proveedores de la campaña; las fincas, las que
+ * trae `providerLocalData.demo.ts` para cada proveedor.
+ */
+type CoordinationSeed = Omit<DeliveryCoordination, "fechaInicio" | "fechaFin"> & { startIn: number; endIn: number };
+
+const COORDINATIONS: Record<number, CoordinationSeed> = {
+    1: { carrierId: 2, vehicleId: 2, driverId: 2, proveedores: [{ proveedorId: 1, fincas: ["Fundo La Esperanza de San Miguel del Faique"] }, { proveedorId: 2, fincas: ["Fundo San Pedro"] }], startIn: 4, endIn: 5, condicionesCarga: "Fruta protegida, bultos identificados y recojo coordinado.", observaciones: "" },
+    2: { carrierId: 2, vehicleId: 3, driverId: 2, proveedores: [{ proveedorId: 1, fincas: ["Fundo San Pedro", "Fundo El Mirador"] }], startIn: 18, endIn: 19, condicionesCarga: "", observaciones: "Confirmar el horario de recojo un día antes." },
+    4: { carrierId: 1, vehicleId: 1, driverId: 1, proveedores: [{ proveedorId: 2, fincas: ["Fundo San Pedro"] }], startIn: -4, endIn: -3, condicionesCarga: "Cajas de 4 kg en palets.", observaciones: "" },
+    5: { carrierId: 3, vehicleId: 4, driverId: 3, proveedores: [{ proveedorId: 1, fincas: ["Fundo Santa Rosa"] }], startIn: 1, endIn: 2, condicionesCarga: "", observaciones: "" },
+};
 
 /** Entregas por contrato (`campaña:vínculo:contrato`). El contrato 6 queda sin entregas a propósito. */
 const DELIVERIES: Record<string, DeliverySeed[]> = {
@@ -76,7 +90,9 @@ export function createDemoDeliveries(): { records: Record<string, CampaignContra
     for (const [key, seeds] of Object.entries(DELIVERIES)) {
         records[key] = seeds.map(({ inDays, ...delivery }) => {
             maxId = Math.max(maxId, delivery.id);
-            return { ...delivery, fecha: demoDate(inDays) };
+            const seed = COORDINATIONS[delivery.id];
+            const coordinacion = seed ? { carrierId: seed.carrierId, vehicleId: seed.vehicleId, driverId: seed.driverId, proveedores: seed.proveedores, fechaInicio: demoDate(seed.startIn), fechaFin: demoDate(seed.endIn), condicionesCarga: seed.condicionesCarga, observaciones: seed.observaciones } : null;
+            return { ...delivery, fecha: demoDate(inDays), coordinacion };
         });
     }
     return { records, nextId: maxId + 1 };

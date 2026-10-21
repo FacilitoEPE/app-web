@@ -24,6 +24,11 @@ export function useCampaignClientContracts(campaniaId: number, clienteNegocioCam
     return useSyncExternalStore(subscribe, () => records[key] ?? EMPTY);
 }
 
+/** Todos los contratos del almacén (`campaña:vínculo` → contratos), para las vistas que cruzan clientes de una campaña. */
+export function useCampaignContractRecords() {
+    return useSyncExternalStore(subscribe, () => records);
+}
+
 export function addCampaignClientContract(campaniaId: number, clienteNegocioCampanaId: number, values: CampaignClientContractValues, archivo: File) {
     const key = keyOf(campaniaId, clienteNegocioCampanaId);
     const contract: CampaignClientContractLocal = {

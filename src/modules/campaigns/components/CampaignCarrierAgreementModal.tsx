@@ -1,0 +1,193 @@
+import { useState } from "react";
+import { Save, Wallet, X } from "lucide-react";
+import AppModal from "@/shared/components/AppModal";
+import FileDropzone from "@/shared/components/FileDropzone";
+import FormField from "@/shared/components/FormField";
+import { InfoField, SummaryBar } from "@/shared/components/InfoField";
+import InputField from "@/shared/components/InputField";
+import SegmentedControl from "@/shared/components/SegmentedControl";
+import StatusBadge from "@/shared/components/StatusBadge";
+import { Button } from "@/shared/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { useModalForm, useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { formatDisplayDate, formatMoney } from "@/shared/utils/format";
+import { MONEDA_OPTIONS, getMonedaSymbol } from "@/modules/campaigns/campaignCertificate.utils";
+import {
+    PAYMENT_TYPES,
+    getAgreementBalance,
+    getAgreementStatus,
+    toAgreementValues,
+    validateAgreement,
+    type AgreementErrors,
+    type AgreementFormValues,
+    type CarrierPaymentAgreement,
+    type PaymentType,
+} from "@/modules/campaigns/campaignCarrier.utils";
+
+export type AgreementModalMode = "create" | "edit" | "view";
+
+interface CampaignCarrierAgreementModalProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    /** "create" registra el acuerdo; "edit" lo modifica mientras tenga saldo pendiente; "view" lo muestra cerrado */
+    mode: AgreementModalMode;
+    carrierName: string;
+    campaignName: string;
+    agreement: CarrierPaymentAgreement | null;
+    onSave: (values: AgreementFormValues, boleta: File | null) => void;
+}
+
+const TITLES: Record<AgreementModalMode, string> = {
+    create: "Registrar acuerdo de pago",
+    edit: "Editar acuerdo de pago",
+    view: "Acuerdo de pago",
+};
+
+/**
+ * Acuerdo de pago con un transportista para la campaña: se paga de una vez ("Pago único") o en dos partes ("Con
+ * adelanto"). Son condiciones acordadas; el pago efectivo se registra en Liquidación de compra. Un acuerdo cerrado
+ * (pago único o saldo ya pagado) solo se consulta.
+ */
+export default function CampaignCarrierAgreementModal({ open, onOpenChange, mode, carrierName, campaignName, agreement, onSave }: CampaignCarrierAgreementModalProps) {
+    const isView = mode === "view";
+    const [values, , set] = useModalForm<AgreementFormValues>(open, toAgreementValues(agreement));
+    const [boleta, setBoleta] = useState<File | null>(agreement?.boleta ?? null);
+    const [errors, setErrors] = useState<AgreementErrors>({});
+
+    useResetOnToggle(open, () => {
+        setErrors({});
+        setBoleta(agreement?.boleta ?? null);
+    });
+
+    const update = <K extends keyof AgreementFormValues>(field: K, value: AgreementFormValues[K]) => {
+        set(field)(value);
+        setErrors((current) => ({ ...current, [field]: undefined }));
+    };
+
+    const handleSave = () => {
+        const next = validateAgreement(values);
+        if (Object.keys(next).length > 0) {
+            setErrors(next);
+            return;
+        }
+        onSave(values, boleta);
+    };
+
+    const symbol = getMonedaSymbol(isView && agreement ? agreement.moneda : values.moneda);
+    const isAdvance = values.tipo === "adelanto";
+    const total = Number(values.total);
+    const advance = Number(values.adelanto);
+    const showSummary = isAdvance && total > 0 && advance > 0;
+
+    const bind = (field: keyof AgreementFormValues) => ({
+        id: `carrier-agreement-${field}`,
+        required: true,
+        value: values[field],
+        error: errors[field],
+        onChange: (next: string) => update(field, next as never),
+    });
+
+    return (
+        <AppModal
+            open={open}
+            onOpenChange={onOpenChange}
+            icon={<Wallet size={22} strokeWidth={2} />}
+            title={TITLES[mode]}
+            description={`${carrierName} · ${campaignName}`}
+            size="md"
+            footer={
+                isView ? (
+                    <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
+                        <X size={20} strokeWidth={2.5} /> Cerrar
+                    </Button>
+                ) : (
+                    <>
+                        <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
+                            <X size={20} strokeWidth={2.5} /> Cancelar
+                        </Button>
+                        <Button size="xl" onClick={handleSave}>
+                            <Save size={20} strokeWidth={2.5} /> {mode === "edit" ? "Guardar cambios" : "Guardar acuerdo"}
+                        </Button>
+                    </>
+                )
+            }
+        >
+            {isView && agreement ? (
+                <div className="flex flex-col gap-5">
+                    <SummaryBar
+                        items={
+                            agreement.tipo === "adelanto" && agreement.adelanto !== null
+                                ? [
+                                    { label: "Total", value: `${symbol} ${formatMoney(agreement.total)}` },
+                                    { label: "Adelanto", value: `${symbol} ${formatMoney(agreement.adelanto)}` },
+                                    { label: "Saldo", value: `${symbol} ${formatMoney(getAgreementBalance(agreement.total, agreement.adelanto))}`, tone: agreement.saldoPagado ? "brand" : "highlight" },
+                                ]
+                                : [{ label: "Total acordado", value: `${symbol} ${formatMoney(agreement.total)}`, tone: "brand" }]
+                        }
+                    />
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <InfoField label="Tipo de pago" value={PAYMENT_TYPES.find((type) => type.value === agreement.tipo)?.label} />
+                        <InfoField label="Estado" variant="plain" value={<StatusBadge status={getAgreementStatus(agreement)} />} />
+                        {agreement.tipo === "adelanto" && <InfoField label="Fecha del adelanto" value={formatDisplayDate(agreement.fechaAdelanto)} />}
+                        <InfoField label={agreement.tipo === "adelanto" ? "Fecha del saldo" : "Fecha de pago"} value={formatDisplayDate(agreement.fechaPago)} />
+                    </div>
+                    <FileDropzone label="Boleta o recibo" variant="horizontal" hasColon={false} file={agreement.boleta} readOnly onChange={() => undefined} />
+                </div>
+            ) : (
+                <div className="flex flex-col gap-5">
+                    <p className="text-[12.5px] leading-relaxed text-ink-muted">
+                        Estas condiciones se consultarán al liquidar al transportista. El pago efectivo se registra en Liquidación de compra.
+                    </p>
+
+                    <FormField label="Tipo de pago" required hint={PAYMENT_TYPES.find((type) => type.value === values.tipo)?.hint}>
+                        <SegmentedControl options={PAYMENT_TYPES} value={values.tipo} onChange={(next) => update("tipo", next as PaymentType)} />
+                    </FormField>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <FormField id="carrier-agreement-moneda" label="Moneda" required error={errors.moneda}>
+                            <Select items={MONEDA_OPTIONS} value={values.moneda || null} onValueChange={(next) => update("moneda", (next as string | null) ?? "")}>
+                                <SelectTrigger id="carrier-agreement-moneda" className="w-full" aria-invalid={errors.moneda ? true : undefined}>
+                                    <SelectValue placeholder="Seleccionar" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {MONEDA_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </FormField>
+                        <InputField {...bind("total")} label="Cantidad total" leading={symbol} step="0.01" min={0} placeholder="0.00" />
+
+                        {isAdvance && (
+                            <>
+                                <InputField {...bind("adelanto")} label="Monto del adelanto" leading={symbol} step="0.01" min={0} placeholder="0.00" />
+                                <InputField {...bind("fechaAdelanto")} type="date" label="Fecha del adelanto" />
+                            </>
+                        )}
+                        <InputField {...bind("fechaPago")} type="date" label={isAdvance ? "Fecha del saldo" : "Fecha de pago"} className={isAdvance ? undefined : "sm:col-span-2"} />
+                    </div>
+
+                    {showSummary && (
+                        <SummaryBar
+                            items={[
+                                { label: "Total", value: `${symbol} ${formatMoney(total)}` },
+                                { label: "Adelanto", value: `${symbol} ${formatMoney(advance)}` },
+                                { label: "Saldo", value: `${symbol} ${formatMoney(getAgreementBalance(total, advance))}`, tone: "highlight" },
+                            ]}
+                        />
+                    )}
+
+                    <FormField>
+                        <FileDropzone
+                            label="Boleta o recibo"
+                            variant="horizontal"
+                            optional
+                            hint="PDF o Imagen · Máx. 10 MB"
+                            file={boleta}
+                            replaceable={mode === "edit" && agreement?.boleta != null}
+                            onChange={setBoleta}
+                        />
+                    </FormField>
+                </div>
+            )}
+        </AppModal>
+    );
+}

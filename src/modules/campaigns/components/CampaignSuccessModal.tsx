@@ -12,9 +12,10 @@ type CampaignSuccessMode =
     | "certification"
     | "expansion"
     | "certificationPayment"
-    | "payment"
-    | "receipt"
-    | "advance";
+    | "carrier"
+    | "carrierAgreement"
+    | "carrierSettled"
+    | "deliveryCoordination";
 
 interface CampaignSuccessModalProps {
     open: boolean;
@@ -37,9 +38,10 @@ const COPY: Record<CampaignSuccessMode, { title: string; description: string }> 
     certification: { title: "Certificación guardada", description: "Los cambios de la certificación de campaña se guardaron correctamente." },
     expansion: { title: "Ampliación Registrada", description: "Los kilos adicionales se sumaron correctamente a la certificación." },
     certificationPayment: { title: "Pago Registrado", description: "El pago de la certificación se registró correctamente." },
-    payment: { title: "Pago Registrado", description: "Se ha registrado el pago al transportista exitosamente" },
-    receipt: { title: "Boleta Adjuntada", description: "Se ha adjuntado la boleta de pago exitosamente" },
-    advance: { title: "Pago Completado", description: "Se ha cerrado el saldo pendiente del adelanto exitosamente" },
+    carrier: { title: "Transportista vinculado", description: "El transportista ya aparece en la gestión de transportistas de esta campaña." },
+    carrierAgreement: { title: "Acuerdo guardado", description: "El acuerdo de pago con el transportista se guardó correctamente." },
+    carrierSettled: { title: "Saldo pagado", description: "El acuerdo quedó cerrado: ahora solo se puede consultar." },
+    deliveryCoordination: { title: "Entrega actualizada", description: "Los datos de la entrega se guardaron correctamente." },
 };
 
 export default function CampaignSuccessModal({ open, onOpenChange, mode = "create", primaryAction }: CampaignSuccessModalProps) {

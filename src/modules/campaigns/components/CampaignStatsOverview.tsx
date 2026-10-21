@@ -19,7 +19,7 @@ const endDate = (campaign: Campana) => campaign.fechaFin;
 const STATS: readonly StatDefinition[] = [
     { title: "N° Campañas", icon: <CalendarDays size={28} strokeWidth={2} />, matches: () => true, referenceDate: startDate, sparklineVariant: "green" },
     { title: "Campañas Completadas", icon: <FileCheck size={28} strokeWidth={2} />, matches: (c) => c.estado === "terminado", referenceDate: endDate, sparklineVariant: "green" },
-    { title: "Campañas en Proceso", icon: <ClipboardList size={28} strokeWidth={2} />, matches: (c) => c.estado === "en proceso", referenceDate: startDate, sparklineVariant: "grey" },
+    { title: "Campañas en Ejecución", icon: <ClipboardList size={28} strokeWidth={2} />, matches: (c) => c.estado === "en proceso", referenceDate: startDate, sparklineVariant: "grey" },
     { title: "Campañas Programadas", icon: <CalendarClock size={28} strokeWidth={2} />, matches: (c) => c.estado === "planificacion", referenceDate: startDate, sparklineVariant: "yellow" },
 ];
 

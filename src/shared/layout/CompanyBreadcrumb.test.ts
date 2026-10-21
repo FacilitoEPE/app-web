@@ -50,6 +50,17 @@ describe("getBreadcrumbLevels", () => {
         ]);
     });
 
+    it.each([
+        ["/campaigns/3/carriers", "Transportistas"],
+        ["/campaigns/3/deliveries", "Entregas"],
+        ["/campaigns/3/weekly-delivery-program", "Programa semanal de entregas"],
+    ])("names the campaign view %s", (route, label) => {
+        expect(getBreadcrumbLevels(route)).toEqual([
+            { label: "Campañas", href: "/campaigns" },
+            { label },
+        ]);
+    });
+
     it("names the clients management view of a campaign", () => {
         expect(getBreadcrumbLevels("/campaigns/3/clients")).toEqual([
             { label: "Campañas", href: "/campaigns" },
@@ -107,6 +118,8 @@ describe("getParentHref", () => {
         ["/campaigns", "/modules"],
         ["/campaigns/12", "/campaigns"],
         ["/campaigns/12/providers", "/campaigns/12"],
+        ["/campaigns/12/carriers", "/campaigns/12"],
+        ["/campaigns/12/weekly-delivery-program", "/campaigns/12"],
         ["/campaigns/12/providers/5/exams", "/campaigns/12/providers/5"],
         ["/campaigns/3/clients/8/contracts", "/campaigns/3/clients"],
         ["/campaigns/3/clients/8/contracts/2/deliveries", "/campaigns/3/clients/8/contracts"],
