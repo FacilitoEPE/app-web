@@ -1,5 +1,11 @@
 # Reporte de conexión de vistas al backend — epe-web
 
+## Actualización 2026-10-21 — nuevo módulo de Cosecha y Control de Calidad
+
+| Vista/componente | Estado — fecha | Alcance y operaciones |
+|---|---|---|
+| `QualityPage` (`/calidad`) y modales `QualityAddCampaignModal` | **Parcial — 2026-10-21 / solo local, API faltante** | Implementación del módulo de Cosecha y Control de Calidad en alta fidelidad. Dispone de selector segmentado entre alcances **Exportador** e **Industria**, filtros por Campaña, Estado de campaña y búsqueda, y tabla con ordenación, paginación y exportación (CSV y PDF). Acciones contextuales por alcance: para Exportador incluye «Análisis y revisión», «Carga» y «Guías de remisión»; para Industria incluye «Carga» y «Guías de remisión». Los registros y vinculaciones viven en memoria (`quality.store.ts`, `// TODO(api)`) con datos de demostración solo en desarrollo (`quality.demo.ts`). Las acciones individuales quedan declaradas listas para conectar vistas y modales una vez detalladas por producto. |
+
 ## Actualización 2026-10-17 — transportistas por campaña con acuerdo de pago (reemplaza «Pagos a transportistas»)
 
 | Vista/componente | Estado — fecha | Alcance y operaciones |

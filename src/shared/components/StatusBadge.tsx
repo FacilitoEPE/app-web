@@ -37,6 +37,7 @@ const STATUS_TONES: Record<string, StatusTone> = {
     vencida: "danger",
     rechazado: "danger",
     terminado: "neutral",
+    finalizado: "neutral",
     inactivo: "neutral",
 };
 
