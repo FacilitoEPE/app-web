@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "BRANCH=$(git -C \"D:/upeu/proyecto-carrera/app/epe-web\" branch --show-current 2>/dev/null); CTX=\"Rama actual: ${BRANCH}.\"; if [ \"$BRANCH\" = \"developer\" ]; then CTX=\"$CTX Rama developer detectada: revisa doc/reporte-conexion-vistas.md y doc/entidades-vistas.md para identificar que vistas/documentos quedaron pendientes de avanzar y priorizar continuarlos.\"; fi; printf '{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"%s\"}}' \"$CTX\"",
+            "command": "BRANCH=$(git -C \"D:/upeu/proyecto-carrera/app/epe-web\" branch --show-current 2>/dev/null); CTX=\"Rama actual: ${BRANCH}.\"; if [ \"$BRANCH\" = \"developer\" ]; then CTX=\"$CTX Rama developer detectada: revisa docs/integration-status.md para identificar que vistas/contratos quedaron pendientes de avanzar y priorizar continuarlos.\"; fi; printf '{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"%s\"}}' \"$CTX\"",
             "statusMessage": "Detectando rama actual de epe-web..."
           }
         ]
