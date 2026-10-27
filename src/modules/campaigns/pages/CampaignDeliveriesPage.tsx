@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Eye, ListFilter, PackageCheck, Pencil, RotateCw, SearchX, TriangleAlert } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { CalendarRange, Eye, ListFilter, PackageCheck, Pencil, RotateCw, SearchX, Sprout, TriangleAlert } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
@@ -59,6 +59,7 @@ export default function CampaignDeliveriesPage() {
     const contractRecords = useCampaignContractRecords();
     const links = useCampaignCarriers(campaniaId);
     const { fincas } = useProviderLocalData();
+    const navigate = useNavigate();
 
     const [data, setData] = useState<LoadedData>({ relations: [], campaignProviders: [], carriers: [] });
     const [isLoading, setIsLoading] = useState(isValidCampaign);
@@ -88,7 +89,6 @@ export default function CampaignDeliveriesPage() {
         }
     }, [campaniaId, isValidCampaign]);
 
-    // Carga inicial desde la API: el estado se actualiza al resolverse la petición.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void load(); }, [load]);
 
@@ -111,7 +111,6 @@ export default function CampaignDeliveriesPage() {
         return names;
     }, [entries, contractRecords, campaniaId]);
 
-    // Solo los transportistas vinculados a la campaña pueden llevar una entrega
     const linkedCarriers = useMemo(
         () => links.flatMap((link) => data.carriers.find((carrier) => carrier.id === link.carrierId) ?? []),
         [links, data.carriers],
@@ -132,6 +131,7 @@ export default function CampaignDeliveriesPage() {
 
     const entryClient = (entry: CampaignDeliveryEntry) => clientNames[entry.relationId] ?? "Cliente no disponible";
     const entryContract = (entry: CampaignDeliveryEntry) => contractNames[entry.key] ?? "";
+    const entryVariety = (entry: CampaignDeliveryEntry) => entry.delivery.variedad ?? "Kent";
     const carrierCaption = (entry: CampaignDeliveryEntry): string | null => {
         const assigned = entry.delivery.coordinacion;
         if (!assigned) return null;
@@ -143,7 +143,7 @@ export default function CampaignDeliveriesPage() {
     const hasActiveFilters = search !== "";
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase();
-        return entries.filter((entry) => `${clientNames[entry.relationId] ?? ""} ${contractNames[entry.key] ?? ""} ${entry.delivery.destino}`.toLowerCase().includes(query));
+        return entries.filter((entry) => `${clientNames[entry.relationId] ?? ""} ${contractNames[entry.key] ?? ""} ${entry.delivery.destino} ${entryVariety(entry)}`.toLowerCase().includes(query));
     }, [entries, search, clientNames, contractNames]);
     const { pageCount, currentPage, visible } = paginate(filtered, page);
 
@@ -152,10 +152,11 @@ export default function CampaignDeliveriesPage() {
     const getExportData = (): TableExport => ({
         filename: "entregas_campana",
         title: "Entregas de la campaña",
-        header: ["Cliente", "Contrato", "Fecha programada", "Kilos", "Destino", "Coordinación", "Transportista"],
+        header: ["Cliente", "Contrato", "Variedad", "Fecha programada", "Kilos", "Destino", "Coordinación", "Transportista"],
         rows: filtered.map((entry) => [
             entryClient(entry),
             entryContract(entry),
+            entryVariety(entry),
             formatDisplayDate(entry.delivery.fecha),
             formatKg(entry.delivery.kilosProgramados),
             entry.delivery.destino,
@@ -181,7 +182,6 @@ export default function CampaignDeliveriesPage() {
         );
     };
 
-    // El marco de la tabla se mantiene siempre; carga y error ocupan el lugar del estado vacío
     const emptyState = isLoading
         ? { icon: <Spinner className="size-7" />, title: "Cargando entregas", description: "Consultando las entregas de la campaña.", action: undefined }
         : loadError
@@ -228,14 +228,19 @@ export default function CampaignDeliveriesPage() {
                 title="Entregas de la Campaña"
                 description="Completa el transporte, los proveedores y las fincas de las entregas programadas en Gestión Comercial."
                 action={
-                    <Button size="xl" onClick={() => setCoordination({ open: true, entry: null })} disabled={!isValidCampaign || isLoading || entries.length === 0}>
-                        <PackageCheck size={20} strokeWidth={2.5} /> Completar datos de entrega
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        <Button variant="outline" size="xl" onClick={() => navigate(`/campaigns/${campaniaId}/weekly-program`)} disabled={!isValidCampaign}>
+                            <CalendarRange size={19} strokeWidth={2.3} /> Programa semanal
+                        </Button>
+                        <Button size="xl" onClick={() => setCoordination({ open: true, entry: null })} disabled={!isValidCampaign || isLoading || entries.length === 0}>
+                            <PackageCheck size={20} strokeWidth={2.5} /> Completar datos de entrega
+                        </Button>
+                    </div>
                 }
             />
 
             <FilterBar onClear={() => setSearch("")} canClear={hasActiveFilters} className="mb-8">
-                <FilterSearch value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Buscar por cliente, contrato o destino..." />
+                <FilterSearch value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Buscar por cliente, contrato, variedad o destino..." />
             </FilterBar>
 
             <TableCard
@@ -258,7 +263,6 @@ export default function CampaignDeliveriesPage() {
                 pageCount={pageCount}
                 onPageChange={setPage}
             >
-                {/* Móvil siempre en tarjetas; en desktop, tarjetas en grilla solo si se elige esa vista */}
                 <div className={`flex flex-col gap-3 ${viewMode === "grid" ? "sm:grid sm:grid-cols-2 lg:grid-cols-3" : "sm:hidden"}`}>
                     {visible.map((entry) => (
                         <TableGridCard
@@ -270,6 +274,7 @@ export default function CampaignDeliveriesPage() {
                             actions={<RowActions {...getRowActions(entry)} />}
                         >
                             <TableGridCardFields>
+                                <TableGridCardField label="Variedad" value={entryVariety(entry)} />
                                 <TableGridCardField label="Fecha programada" value={formatDisplayDate(entry.delivery.fecha)} />
                                 <TableGridCardField label="Kilos" value={`${formatKg(entry.delivery.kilosProgramados)} kg`} />
                                 <TableGridCardField label="Destino" value={entry.delivery.destino} />
@@ -285,6 +290,7 @@ export default function CampaignDeliveriesPage() {
                             <TableHeader className={TABLE_HEAD_BG}>
                                 <TableRow className="border-b border-border hover:bg-transparent">
                                     <TableHead className="h-14 px-6 font-semibold text-ink">Cliente / contrato</TableHead>
+                                    <TableHead className="h-14 font-semibold text-ink">Variedad</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Fecha programada</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Kilos</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Destino</TableHead>
@@ -298,6 +304,12 @@ export default function CampaignDeliveriesPage() {
                                         <TableCell className="relative h-20 px-6">
                                             <TableRowAccent color="bg-brand" />
                                             <TableRowLead icon={<PackageCheck size={18} />} title={entryClient(entry)} subtitle={entryContract(entry)} />
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="inline-flex items-center gap-1.5 rounded-md bg-brand/10 px-2.5 py-1 text-[12px] font-semibold text-brand">
+                                                <Sprout size={13} strokeWidth={2.2} />
+                                                {entryVariety(entry)}
+                                            </span>
                                         </TableCell>
                                         <TableCell className="whitespace-nowrap font-medium text-ink-body">{formatDisplayDate(entry.delivery.fecha)}</TableCell>
                                         <TableCell className="whitespace-nowrap font-medium tabular-nums text-ink-body">{formatKg(entry.delivery.kilosProgramados)} kg</TableCell>

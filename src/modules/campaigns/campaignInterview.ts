@@ -19,6 +19,11 @@ export interface InterviewValues {
     distrito: string;
     latitud: string;
     longitud: string;
+    /** Campos técnicos opcionales de evaluación de campo */
+    estimacionCosechaKg?: string;
+    estadoFitosanitario?: string;
+    accesoVial?: string;
+    evidenciaNombre?: string;
 }
 
 export type InterviewField = keyof InterviewValues;
@@ -65,4 +70,3 @@ export function validateInterviewAgronomics(values: InterviewAgronomicValues): I
 const isBlank = (value: string) => value.trim() === "";
 const isNonNegative = (value: string) => !isBlank(value) && Number.isFinite(Number(value)) && Number(value) >= 0;
 const isNonNegativeInteger = (value: string) => isNonNegative(value) && Number.isInteger(Number(value));
-

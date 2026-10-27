@@ -6,6 +6,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Spinner } from "@/shared/components/ui/spinner";
 import FilterBar, { FilterSearch } from "@/shared/components/FilterBar";
 import SegmentedTabs, { type SegmentedTabItem } from "@/shared/components/SegmentedTabs";
+import StatusBadge from "@/shared/components/StatusBadge";
 import {
   Table,
   TableBody,
@@ -30,6 +31,8 @@ import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campan
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
 import type { TipoProveedorCampania } from "@/modules/campaigns/api/campania-proveedor.dto";
 import { formatCampaignNumber } from "@/modules/campaigns/campaignDetails.utils";
+import { getCampaignInterviews } from "@/modules/campaigns/campaignInterview.utils";
+import { useProviderLocalData } from "@/modules/providers/providerLocalData.store";
 import type { TableExport } from "@/shared/utils/exportTable";
 import { paginate } from "@/shared/utils/paginate";
 
@@ -57,9 +60,9 @@ export default function CampaignProvidersPage() {
     const isValidCampaign = Number.isInteger(campaniaId) && campaniaId > 0;
 
     const campaign = useCampaign(campaniaId);
+    const { fincas: providerFincas } = useProviderLocalData();
     // En ejecución solo se vinculan acopiadores: el tipo no se pregunta y se abre en esa pestaña
     const lockedType: TipoProveedorCampania | undefined = campaign?.estado === "en proceso" ? "acopio" : undefined;
-    // Pestaña elegida por la persona; mientras no elija, la de ejecución o la primera que tiene proveedores
     const [pickedTab, setPickedTab] = useState<TipoProveedorCampania | null>(null);
     const [firstTabWithData, setFirstTabWithData] = useState<TipoProveedorCampania>("productor");
     const activeTab = pickedTab ?? lockedType ?? firstTabWithData;
@@ -79,7 +82,6 @@ export default function CampaignProvidersPage() {
         try {
             const data = await getCampaniaProveedoresByCampania(campaniaId);
             setRelations(data);
-            // Mientras el usuario no elija pestaña, se abre en la primera que tiene proveedores (no en una vacía)
             const withData = PROVIDER_TABS.find((tab) => data.some((row) => row.tipoProveedor === tab.id));
             if (withData) setFirstTabWithData(withData.id as TipoProveedorCampania);
             setLoadError(null);
@@ -90,7 +92,6 @@ export default function CampaignProvidersPage() {
         }
     }, [campaniaId, isValidCampaign]);
 
-    // Carga inicial desde la API: el estado se actualiza al resolverse la petición.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void loadRelations(); }, [loadRelations]);
 
@@ -111,12 +112,31 @@ export default function CampaignProvidersPage() {
         });
     }, [relations, activeTab, search]);
 
-    /** Lo que exporta la tabla: las filas visibles con los filtros aplicados */
+    const evaluationSummary = (row: CampaniaProveedor) => {
+        if (row.tipoProveedor === "productor") {
+            const interviews = getCampaignInterviews(row.cxpId);
+            const registeredFincas = providerFincas[row.proveedorId] ?? [];
+            const status = interviews.length > 0 ? "Aprobado" : "Pendiente";
+            const caption = `${interviews.length} ${interviews.length === 1 ? "finca entrevistada" : "fincas entrevistadas"} · ${registeredFincas.length} en padrón`;
+            return { status, caption };
+        }
+        const mtd = row.mtdCeratitis != null ? `MTD ${formatCampaignNumber(Number(row.mtdCeratitis))}` : "MTD en evaluación";
+        const status = row.mtdCeratitis != null ? "Activo" : "En proceso";
+        return { status, caption: mtd };
+    };
+
     const getExportData = (): TableExport => ({
         filename: "proveedores_campana",
         title: "Proveedores de la campaña",
-        header: ["Nombre", "Documento", "Zona", "Tipo", "Cantidad (kg)"],
-        rows: filteredData.map((row) => [providerName(row), providerDocument(row), row.proveedor?.zona ?? "", TYPE_LABEL[row.tipoProveedor], String(row.cantidadProveedor)]),
+        header: ["Nombre", "Documento", "Zona", "Tipo", "Cantidad (kg)", "Evaluación"],
+        rows: filteredData.map((row) => [
+            providerName(row),
+            providerDocument(row),
+            row.proveedor?.zona ?? "",
+            TYPE_LABEL[row.tipoProveedor],
+            String(row.cantidadProveedor),
+            evaluationSummary(row).caption,
+        ]),
     });
 
     const { pageCount, currentPage, visible: visibleData } = paginate(filteredData, page);
@@ -130,7 +150,6 @@ export default function CampaignProvidersPage() {
 
     const navigate = useNavigate();
 
-    /** Ver detalles y examen aplican a todos; entrevista solo a productores */
     const getRowActions = (row: CampaniaProveedor): { primary: RowAction[]; secondary: RowAction[] } => ({
         primary: [
             { label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${campaniaId}/providers/${row.cxpId}`) },
@@ -150,7 +169,6 @@ export default function CampaignProvidersPage() {
     const iconFor = (row: CampaniaProveedor, size: number) =>
         row.tipoProveedor === "productor" ? <Tractor size={size} strokeWidth={2} /> : <Truck size={size} strokeWidth={2} />;
 
-    // El marco de la tabla se mantiene siempre; carga y error ocupan el lugar del estado vacío
     const emptyState = isLoading
         ? { icon: <Spinner className="size-7" />, title: "Cargando proveedores", description: "Consultando los proveedores vinculados a esta campaña.", action: undefined }
         : loadError
@@ -226,23 +244,27 @@ export default function CampaignProvidersPage() {
                 pageCount={pageCount}
                 onPageChange={setPage}
             >
-                {/* Móvil siempre en tarjetas; en desktop, tarjetas en grilla solo si se elige esa vista */}
                 <div className={`flex flex-col gap-3 ${viewMode === "grid" ? "sm:grid sm:grid-cols-2 lg:grid-cols-3" : "sm:hidden"}`}>
-                    {visibleData.map((row) => (
-                        <TableGridCard
-                            key={row.cxpId}
-                            accentColor={row.tipoProveedor === "productor" ? "border-l-brand" : "border-l-status-neutral"}
-                            icon={iconFor(row, 18)}
-                            title={providerName(row)}
-                            subtitle={providerDocument(row)}
-                            actions={<RowActions className="justify-center" {...getRowActions(row)} />}
-                        >
-                            <TableGridCardFields>
-                                <TableGridCardField label="Zona" value={row.proveedor?.zona || "—"} />
-                                <TableGridCardField label="Cantidad" value={`${formatCampaignNumber(Number(row.cantidadProveedor))} kg`} />
-                            </TableGridCardFields>
-                        </TableGridCard>
-                    ))}
+                    {visibleData.map((row) => {
+                        const evalInfo = evaluationSummary(row);
+                        return (
+                            <TableGridCard
+                                key={row.cxpId}
+                                accentColor={row.tipoProveedor === "productor" ? "border-l-brand" : "border-l-status-neutral"}
+                                icon={iconFor(row, 18)}
+                                title={providerName(row)}
+                                subtitle={providerDocument(row)}
+                                badge={<StatusBadge status={evalInfo.status} />}
+                                actions={<RowActions className="justify-center" {...getRowActions(row)} />}
+                            >
+                                <TableGridCardFields>
+                                    <TableGridCardField label="Zona" value={row.proveedor?.zona || "—"} />
+                                    <TableGridCardField label="Cantidad" value={`${formatCampaignNumber(Number(row.cantidadProveedor))} kg`} />
+                                    <TableGridCardField label="Fincas / Evaluación" value={evalInfo.caption} />
+                                </TableGridCardFields>
+                            </TableGridCard>
+                        );
+                    })}
                 </div>
 
                 {viewMode === "table" && (
@@ -254,24 +276,34 @@ export default function CampaignProvidersPage() {
                                     <TableHead className="text-ink font-semibold h-14">Zona</TableHead>
                                     <TableHead className="text-ink font-semibold h-14">Tipo de Proveedor</TableHead>
                                     <TableHead className="text-ink font-semibold h-14">Cantidad estimada</TableHead>
+                                    <TableHead className="text-ink font-semibold h-14">Fincas / Evaluación</TableHead>
                                     <TableHead className="text-ink font-semibold h-14 text-center px-6 w-36">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {visibleData.map((row) => (
-                                    <TableRow key={row.cxpId} className="border-b border-border hover:bg-surface-page/60">
-                                        <TableCell className="h-20 px-6 relative">
-                                            <TableRowAccent color={accentFor(row)} />
-                                            <TableRowLead icon={iconFor(row, 18)} title={providerName(row)} subtitle={providerDocument(row)} />
-                                        </TableCell>
-                                        <TableCell className="text-ink-body font-medium">{row.proveedor?.zona || "—"}</TableCell>
-                                        <TableCell className="text-ink-body font-medium">{TYPE_LABEL[row.tipoProveedor]}</TableCell>
-                                        <TableCell className="text-ink-body font-medium">{formatCampaignNumber(Number(row.cantidadProveedor))} kg</TableCell>
-                                        <TableCell className="px-6">
-                                            <RowActions className="justify-center text-ink-muted" {...getRowActions(row)} />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                {visibleData.map((row) => {
+                                    const evalInfo = evaluationSummary(row);
+                                    return (
+                                        <TableRow key={row.cxpId} className="border-b border-border hover:bg-surface-page/60">
+                                            <TableCell className="h-20 px-6 relative">
+                                                <TableRowAccent color={accentFor(row)} />
+                                                <TableRowLead icon={iconFor(row, 18)} title={providerName(row)} subtitle={providerDocument(row)} />
+                                            </TableCell>
+                                            <TableCell className="text-ink-body font-medium">{row.proveedor?.zona || "—"}</TableCell>
+                                            <TableCell className="text-ink-body font-medium">{TYPE_LABEL[row.tipoProveedor]}</TableCell>
+                                            <TableCell className="text-ink-body font-medium">{formatCampaignNumber(Number(row.cantidadProveedor))} kg</TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col items-start gap-1">
+                                                    <StatusBadge status={evalInfo.status} />
+                                                    <span className="text-[11.5px] font-medium text-ink-muted">{evalInfo.caption}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="px-6">
+                                                <RowActions className="justify-center text-ink-muted" {...getRowActions(row)} />
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </div>

@@ -12,6 +12,7 @@ const ROOT_ROUTES: Record<string, string> = {
     "logistica-despacho": "Logística y Despacho",
     "facturacion-cobros": "Facturación y Cobros",
     "liquidacion-compra": "Liquidación de Compra",
+    chofer: "Portal Móvil del Chofer",
 };
 
 /** Muestra la ruta de la vista actual (módulo › sección › vista). No es la escalera de "Regresar": esa es `getParentHref`. */

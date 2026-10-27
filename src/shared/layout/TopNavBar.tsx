@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut, Settings, User, ArrowLeft } from "lucide-react";
+import { ChevronDown, LogOut, Settings, Truck, User, ArrowLeft } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -8,7 +8,7 @@ import {
 } from "@/shared/components/ui/dropdown-menu";
 import LogoEmpresaOnly from "@/assets/image/logo_empresa_only.webp";
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ModuleLauncher from "@/shared/layout/ModuleLauncher";
 import Hint from "@/shared/components/Hint";
 import ConfirmModal from "@/shared/components/ConfirmModal";
@@ -25,6 +25,7 @@ interface TopNavBarProps {
 
 export default function TopNavBar({ onLogout }: TopNavBarProps) {
     const location = useLocation();
+    const navigate = useNavigate();
     const goBack = useGoBack();
     const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -96,6 +97,10 @@ export default function TopNavBar({ onLogout }: TopNavBarProps) {
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent align="end" sideOffset={8} className="w-56 p-1.5">
+                        <DropdownMenuItem className="gap-3 px-3 py-2.5 text-[13px] font-medium text-ink-body" onClick={() => navigate("/chofer")}>
+                            <Truck size={16} className="text-brand" />
+                            Portal Móvil del Chofer
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="gap-3 px-3 py-2.5 text-[13px] font-medium text-ink-body" onClick={() => setIsSettingsOpen(true)}>
                             <Settings size={16} />
                             Configuración

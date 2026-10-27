@@ -23,6 +23,7 @@ import CarrierFormModal from "./CarrierFormModal";
 import CarrierVehicleModal from "./CarrierVehicleModal";
 import CarrierDriverModal from "./CarrierDriverModal";
 import { CARRIER_TIPOS, carrierIdentification, type CarrierFormValues, type CarrierProfile } from "@/modules/carriers/carrierProfile.utils";
+import { useCarrierQuotations } from "@/modules/carriers/carrierQuotations.store";
 import { toDriverInput, toVehicleInput } from "@/modules/carriers/carrierRecords.utils";
 import type { DriverInput, VehicleInput } from "@/modules/carriers/api/carrier.api";
 import type { DriverFormValues } from "./CarrierDriverModal";
@@ -30,12 +31,10 @@ import type { VehicleFormValues } from "./CarrierVehicleModal";
 import type { TableExport } from "@/shared/utils/exportTable";
 import { paginate } from "@/shared/utils/paginate";
 
-/** Ciudad y departamento, para tarjetas y exportación */
 const locationOf = (row: CarrierProfile) => [row.ciudad, row.departamento].filter(Boolean).join(", ");
 
 interface CarriersTableProps {
     data: CarrierProfile[];
-    /** Mientras carga, la tabla mantiene su marco y muestra el aviso en lugar de las filas */
     isLoading: boolean;
     hasActiveFilters: boolean;
     onClearFilters: () => void;
@@ -50,26 +49,43 @@ interface CarriersTableProps {
 
 export default function CarriersTable({ data, isLoading, hasActiveFilters, onClearFilters, selectedIds, onToggleRow, onToggleAll, onDelete, onUpdateCarrier, onCreateVehicle, onCreateDriver }: CarriersTableProps) {
     const navigate = useNavigate();
+    const quotations = useCarrierQuotations();
     const [page, setPage] = useState(1);
     const [viewMode, setViewMode] = useState<TableViewMode>("table");
 
-    /** Lo que exporta la tabla: las filas visibles con los filtros aplicados */
+    const fleetSummary = (row: CarrierProfile) => {
+        const vCount = row.vehiculos.length;
+        const dCount = row.choferes.length;
+        const qCount = quotations.filter((q) => q.carrierId === row.id).length;
+        return {
+            fleetLabel: `${vCount} ${vCount === 1 ? "vehículo" : "vehículos"} · ${dCount} ${dCount === 1 ? "chofer" : "choferes"}`,
+            quotesLabel: `${qCount} ${qCount === 1 ? "cotización" : "cotizaciones"}`,
+        };
+    };
+
     const getExportData = (): TableExport => ({
         filename: "transportistas",
         title: "Transportistas",
-        header: ["Transportista", "Tipo", "Identificación", "MTC", "Teléfono", "Correo", "Ubicación"],
-        rows: data.map((row) => [row.nombre, CARRIER_TIPOS[row.tipo].label, carrierIdentification(row), row.mtc, row.numero, row.correo, locationOf(row)]),
+        header: ["Transportista", "Tipo", "Identificación", "MTC", "Flota y Choferes", "Teléfono", "Correo", "Ubicación"],
+        rows: data.map((row) => [
+            row.nombre,
+            CARRIER_TIPOS[row.tipo].label,
+            carrierIdentification(row),
+            row.mtc,
+            fleetSummary(row).fleetLabel,
+            row.numero,
+            row.correo,
+            locationOf(row),
+        ]),
     });
     const [editingCarrierId, setEditingCarrierId] = useState<number | null>(null);
     const [vehicleCarrierId, setVehicleCarrierId] = useState<number | null>(null);
     const [driverCarrierId, setDriverCarrierId] = useState<number | null>(null);
-    // La empresa a eliminar se guarda completa: al confirmar desaparece de `data` y el texto no debe vaciarse mientras el modal se cierra
     const [deleting, setDeleting] = useState<{ open: boolean; carrier: CarrierProfile | null }>({ open: false, carrier: null });
     const [success, setSuccess] = useState<{ open: boolean; mode: CarrierSuccessMode }>({ open: false, mode: "carrier-updated" });
 
     const showSuccess = (mode: CarrierSuccessMode) => setSuccess({ open: true, mode });
 
-    /** Ver y editar quedan siempre visibles; registrar vehículo/chofer y eliminar se agrupan en "más opciones" */
     const getRowActions = (row: CarrierProfile): { primary: RowAction[]; secondary: RowAction[] } => {
         const primary: RowAction[] = [
             { label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: () => navigate(`/transportistas/${row.id}`) },
@@ -124,28 +140,31 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
                 pageCount={pageCount}
                 onPageChange={setPage}
             >
-                {/* Móvil siempre en tarjetas; en desktop, tarjetas en grilla solo si se elige esa vista */}
                 <div className={`flex flex-col gap-3 ${viewMode === "grid" ? "sm:grid sm:grid-cols-2 lg:grid-cols-3" : "sm:hidden"}`}>
-                    {visibleData.map((row) => (
-                        <TableGridCard
-                            key={row.id}
-                            icon={row.tipo === "privado" ? <UserRound size={18} strokeWidth={2} /> : <Building2 size={18} strokeWidth={2} />}
-                            title={
-                                <span className="flex items-center gap-2">
-                                    <Checkbox checked={selectedIds.has(row.id)} onCheckedChange={() => onToggleRow(row.id)} aria-label={`Seleccionar ${row.nombre}`} />
-                                    {row.nombre}
-                                </span>
-                            }
-                            subtitle={CARRIER_TIPOS[row.tipo].label}
-                            actions={<RowActions {...getRowActions(row)} />}
-                        >
-                            <TableGridCardFields>
-                                <TableGridCardField label="MTC" value={row.mtc || "—"} />
-                                <TableGridCardField label="Teléfono" value={row.numero || "—"} />
-                                <TableGridCardField label="Ubicación" value={locationOf(row) || "—"} />
-                            </TableGridCardFields>
-                        </TableGridCard>
-                    ))}
+                    {visibleData.map((row) => {
+                        const fInfo = fleetSummary(row);
+                        return (
+                            <TableGridCard
+                                key={row.id}
+                                icon={row.tipo === "privado" ? <UserRound size={18} strokeWidth={2} /> : <Building2 size={18} strokeWidth={2} />}
+                                title={
+                                    <span className="flex items-center gap-2">
+                                        <Checkbox checked={selectedIds.has(row.id)} onCheckedChange={() => onToggleRow(row.id)} aria-label={`Seleccionar ${row.nombre}`} />
+                                        {row.nombre}
+                                    </span>
+                                }
+                                subtitle={CARRIER_TIPOS[row.tipo].label}
+                                actions={<RowActions {...getRowActions(row)} />}
+                            >
+                                <TableGridCardFields>
+                                    <TableGridCardField label="MTC" value={row.mtc || "—"} />
+                                    <TableGridCardField label="Flota" value={fInfo.fleetLabel} />
+                                    <TableGridCardField label="Teléfono" value={row.numero || "—"} />
+                                    <TableGridCardField label="Ubicación" value={locationOf(row) || "—"} />
+                                </TableGridCardFields>
+                            </TableGridCard>
+                        );
+                    })}
                 </div>
 
                 {viewMode === "table" && (
@@ -164,56 +183,66 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
                                 <TableHead className="text-ink font-semibold h-14">Transportista</TableHead>
                                 <TableHead className="text-ink font-semibold h-14">Tipo</TableHead>
                                 <TableHead className="text-ink font-semibold h-14">MTC</TableHead>
+                                <TableHead className="text-ink font-semibold h-14">Flota y Choferes</TableHead>
                                 <TableHead className="text-ink font-semibold h-14">Contacto</TableHead>
                                 <TableHead className="text-ink font-semibold h-14">Ubicación</TableHead>
                                 <TableHead className="text-ink font-semibold h-14 text-center px-6 w-40">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {visibleData.map((row) => (
-                                <TableRow key={row.id} className="border-b border-border hover:bg-surface-page/60 transition-colors">
-                                    <TableCell className="px-6">
-                                        <Checkbox checked={selectedIds.has(row.id)} onCheckedChange={() => onToggleRow(row.id)} aria-label={`Seleccionar ${row.nombre}`} />
-                                    </TableCell>
-                                    <TableCell className="h-20">
-                                        <TableRowLead
-                                            icon={row.tipo === "privado" ? <UserRound size={20} strokeWidth={2} /> : <Building2 size={20} strokeWidth={2} />}
-                                            title={row.nombre}
-                                            subtitle={carrierIdentification(row)}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant={row.tipo === "privado" ? "outline" : "brand"} className="h-6 px-2.5 text-[12px] font-semibold">
-                                            {CARRIER_TIPOS[row.tipo].short}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-ink-body font-medium">{row.mtc || <span className="text-ink-muted">—</span>}</TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-col">
-                                            <span className="text-[13.5px] font-semibold leading-tight text-ink-body">{row.numero || "—"}</span>
-                                            {row.correo && (
-                                                <a href={`mailto:${row.correo}`} className="mt-0.5 truncate text-[12px] font-medium text-brand hover:underline">{row.correo}</a>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        {row.ciudad ? (
-                                            <div className="flex items-start gap-2">
-                                                <MapPin size={16} className="mt-0.5 shrink-0 text-ink-muted" />
-                                                <div className="flex flex-col">
-                                                    <span className="text-[13.5px] font-semibold leading-tight text-ink-body">{row.ciudad}</span>
-                                                    <span className="mt-0.5 text-[12px] font-medium text-ink-muted">{row.provincia} · {row.departamento}</span>
-                                                </div>
+                            {visibleData.map((row) => {
+                                const fInfo = fleetSummary(row);
+                                return (
+                                    <TableRow key={row.id} className="border-b border-border hover:bg-surface-page/60 transition-colors">
+                                        <TableCell className="px-6">
+                                            <Checkbox checked={selectedIds.has(row.id)} onCheckedChange={() => onToggleRow(row.id)} aria-label={`Seleccionar ${row.nombre}`} />
+                                        </TableCell>
+                                        <TableCell className="h-20">
+                                            <TableRowLead
+                                                icon={row.tipo === "privado" ? <UserRound size={20} strokeWidth={2} /> : <Building2 size={20} strokeWidth={2} />}
+                                                title={row.nombre}
+                                                subtitle={carrierIdentification(row)}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={row.tipo === "privado" ? "outline" : "brand"} className="h-6 px-2.5 text-[12px] font-semibold">
+                                                {CARRIER_TIPOS[row.tipo].short}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-ink-body font-medium">{row.mtc || <span className="text-ink-muted">—</span>}</TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-col">
+                                                <span className="text-[13px] font-semibold text-ink">{fInfo.fleetLabel}</span>
+                                                <span className="mt-0.5 text-[11.5px] font-medium text-ink-muted">{fInfo.quotesLabel}</span>
                                             </div>
-                                        ) : (
-                                            <span className="text-ink-muted">—</span>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="px-6">
-                                        <RowActions {...getRowActions(row)} className="justify-center" />
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-col">
+                                                <span className="text-[13.5px] font-semibold leading-tight text-ink-body">{row.numero || "—"}</span>
+                                                {row.correo && (
+                                                    <a href={`mailto:${row.correo}`} className="mt-0.5 truncate text-[12px] font-medium text-brand hover:underline">{row.correo}</a>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            {row.ciudad ? (
+                                                <div className="flex items-start gap-2">
+                                                    <MapPin size={16} className="mt-0.5 shrink-0 text-ink-muted" />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[13.5px] font-semibold leading-tight text-ink-body">{row.ciudad}</span>
+                                                        <span className="mt-0.5 text-[12px] font-medium text-ink-muted">{row.provincia} · {row.departamento}</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-ink-muted">—</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="px-6">
+                                            <RowActions {...getRowActions(row)} className="justify-center" />
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
                         </TableBody>
                     </Table>
                 </div>

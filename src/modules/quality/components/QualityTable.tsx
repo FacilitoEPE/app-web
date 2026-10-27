@@ -33,10 +33,11 @@ import {
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
 import SortableHead from "@/shared/components/SortableHead";
 import { nextSort, type SortState } from "@/shared/utils/tableSort";
-import { formatDisplayDate } from "@/shared/utils/format";
+import { formatDisplayDate, formatKg } from "@/shared/utils/format";
 import { paginate } from "@/shared/utils/paginate";
 import type { TableExport } from "@/shared/utils/exportTable";
 import { getCampaignFruitIcon } from "@/modules/campaigns/campaignFruit";
+import { useQualityDeliveryLoads } from "@/modules/quality/qualityOperations.store";
 import type { QualityCampaign, QualityScope } from "@/modules/quality/quality.utils";
 
 type SortKey = "nombre" | "fruta" | "inicio";
@@ -63,6 +64,22 @@ export default function QualityTable({
     const [sort, setSort] = useState<SortState<SortKey> | null>(null);
     const [page, setPage] = useState(1);
     const [viewMode, setViewMode] = useState<TableViewMode>("table");
+    const qualityLoads = useQualityDeliveryLoads();
+
+    const campaignMetricsFor = (row: QualityCampaign) => {
+        const cLoads = qualityLoads.filter((item) => item.campaniaId === row.id && item.scope === scope);
+        const cGuidesCount = cLoads.reduce((sum, item) => sum + item.guiasRemision.length, 0);
+        const totalKg = cLoads.reduce(
+            (sum, item) => sum + item.proveedoresCarga.reduce((acc, p) => acc + p.kilosCargados, 0),
+            0,
+        );
+        const approvedCount = cLoads.filter((item) => item.estadoRevision === "Aprobada para cosecha").length;
+        return {
+            reviewsLabel: scope === "exportador" ? `${approvedCount}/${cLoads.length} aprobadas` : "Ingreso directo",
+            loadsLabel: `${cLoads.length} ${cLoads.length === 1 ? "carga" : "cargas"} · ${formatKg(totalKg)} kg`,
+            guidesLabel: `${cGuidesCount} ${cGuidesCount === 1 ? "guía SUNAT" : "guías SUNAT"}`,
+        };
+    };
 
     const sortedData = useMemo(() => {
         if (!sort) return data;
@@ -82,20 +99,31 @@ export default function QualityTable({
     const getExportData = (): TableExport => ({
         filename: `cosecha_control_calidad_${scope}`,
         title: `Cosecha y Control de Calidad — ${scope === "exportador" ? "Exportador" : "Industria"}`,
-        header: ["Campaña", "Fruta", "Inicio", "Fin", "Estado de campaña"],
-        rows: sortedData.map((row) => [
-            row.nombre,
-            row.fruta,
-            formatDisplayDate(row.fechaInicio),
-            formatDisplayDate(row.fechaFin),
-            row.estado,
-        ]),
+        header: ["Campaña", "Fruta", "Inicio", "Fin", "Cosecha / Cargas", "Guías SUNAT", "Estado de campaña"],
+        rows: sortedData.map((row) => {
+            const m = campaignMetricsFor(row);
+            return [
+                row.nombre,
+                row.fruta,
+                formatDisplayDate(row.fechaInicio),
+                formatDisplayDate(row.fechaFin),
+                m.loadsLabel,
+                m.guidesLabel,
+                row.estado,
+            ];
+        }),
     });
 
     const getRowActions = (row: QualityCampaign): { primary: RowAction[]; secondary: RowAction[] } => {
         const primary: RowAction[] = [
             {
-                label: "Ver detalles",
+                label: "Abrir espacio de calidad",
+                icon: <ClipboardCheck size={18} strokeWidth={2.2} />,
+                variant: "brand",
+                onClick: () => onSelectAction(scope === "exportador" ? "analisis" : "carga", row),
+            },
+            {
+                label: "Ver campaña",
                 icon: <Eye size={18} strokeWidth={2.2} />,
                 onClick: () => onViewDetails(row),
             },
@@ -175,6 +203,7 @@ export default function QualityTable({
             <div className={`flex flex-col gap-3 ${viewMode === "grid" ? "sm:grid sm:grid-cols-2 lg:grid-cols-3" : "sm:hidden"}`}>
                 {visibleData.map((row) => {
                     const FruitIcon = getCampaignFruitIcon(row.nombre, row.fruta) || Sprout;
+                    const m = campaignMetricsFor(row);
                     return (
                         <TableGridCard
                             key={row.id}
@@ -193,6 +222,10 @@ export default function QualityTable({
                                             {formatDisplayDate(row.fechaInicio)} → {formatDisplayDate(row.fechaFin)}
                                         </span>
                                     </div>
+                                </div>
+                                <div className="flex items-center justify-between border-t border-border pt-2 text-[12px]">
+                                    <span className="font-semibold text-ink">{m.loadsLabel}</span>
+                                    <span className="font-medium text-ink-muted">{m.guidesLabel}</span>
                                 </div>
                             </div>
                         </TableGridCard>
@@ -224,9 +257,15 @@ export default function QualityTable({
                                 onToggle={toggleSort}
                             />
                             <TableHead className="h-14 font-semibold text-ink">
+                                {scope === "exportador" ? "Revisión MTD / Cargas" : "Cargas Industria"}
+                            </TableHead>
+                            <TableHead className="h-14 font-semibold text-ink">
+                                Guías SUNAT
+                            </TableHead>
+                            <TableHead className="h-14 font-semibold text-ink">
                                 Estado de campaña
                             </TableHead>
-                            <TableHead className="h-14 w-40 px-6 text-center font-semibold text-ink">
+                            <TableHead className="h-14 w-44 px-6 text-center font-semibold text-ink">
                                 Acciones
                             </TableHead>
                         </TableRow>
@@ -234,6 +273,7 @@ export default function QualityTable({
                     <TableBody>
                         {visibleData.map((row) => {
                             const FruitIcon = getCampaignFruitIcon(row.nombre, row.fruta) || Sprout;
+                            const m = campaignMetricsFor(row);
                             return (
                                 <TableRow key={row.id} className="border-b border-border hover:bg-surface-page/60 transition-colors">
                                     <TableCell className="h-20">
@@ -247,6 +287,15 @@ export default function QualityTable({
                                     </TableCell>
                                     <TableCell className="font-medium text-ink-body tabular-nums">
                                         {formatDisplayDate(row.fechaInicio)} → {formatDisplayDate(row.fechaFin)}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="text-[13px] font-semibold text-ink">{m.loadsLabel}</span>
+                                            <span className="mt-0.5 text-[11.5px] font-medium text-ink-muted">{m.reviewsLabel}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="font-medium text-ink-body">
+                                        {m.guidesLabel}
                                     </TableCell>
                                     <TableCell>
                                         <StatusBadge status={row.estado} />

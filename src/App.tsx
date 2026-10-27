@@ -28,6 +28,7 @@ import QualityPage from '@/modules/quality/pages/QualityPage'
 import LogisticsPage from '@/modules/logistics/pages/LogisticsPage'
 import BillingPage from '@/modules/billing/pages/BillingPage'
 import PurchaseSettlementPage from '@/modules/purchase-settlement/pages/PurchaseSettlementPage'
+import DriverPortalPage from '@/modules/driver-portal/pages/DriverPortalPage'
 import DashboardLayout from '@/shared/layout/DashboardLayout'
 import OfflinePage from '@/shared/components/OfflinePage'
 import WelcomeSplash from '@/shared/components/WelcomeSplash'
@@ -60,6 +61,7 @@ const ProtectedLayout = ({ isAuthenticated, onLogout }: { isAuthenticated: boole
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const [loginTarget, setLoginTarget] = useState<'/modules' | '/chofer'>('/modules')
   const [isOnline, setIsOnline] = useState(() => navigator.onLine)
   const [justReconnected, setJustReconnected] = useState(false)
   // La bienvenida solo se muestra tras un inicio de sesión real, no al recargar con la sesión guardada
@@ -88,12 +90,19 @@ function App() {
   const handleLogin = () => {
     // Se llama desde el clic de "Confirmar": es el gesto que el navegador exige para dejar sonar la intro
     unlockSplashAudio()
+    setLoginTarget('/modules')
     setShowWelcome(true)
+    setIsAuthenticated(true)
+    void saveSession({ authenticated: true, savedAt: Date.now() })
+  }
+  const handleDriverLogin = () => {
+    setLoginTarget('/chofer')
     setIsAuthenticated(true)
     void saveSession({ authenticated: true, savedAt: Date.now() })
   }
   const handleLogout = () => {
     setIsAuthenticated(false)
+    setLoginTarget('/modules')
     void clearSession()
   };
 
@@ -105,11 +114,12 @@ function App() {
       <Routes>
         <Route 
           path="/login" 
-          element={!isAuthenticated ? <AdminLoginPage onLogin={handleLogin} /> : <Navigate to="/modules" />} 
+          element={!isAuthenticated ? <AdminLoginPage onLogin={handleLogin} onDriverLogin={handleDriverLogin} /> : <Navigate to={loginTarget} />} 
         />
         
         <Route element={<ProtectedLayout isAuthenticated={isAuthenticated} onLogout={handleLogout} />}>
           <Route path="/modules" element={<UsersModulesPage />} />
+          <Route path="/chofer" element={<DriverPortalPage onLogout={handleLogout} />} />
           <Route path="/campaigns" element={<CampaignsPage />} />
           <Route path="/campaigns/:id" element={<CampaignDetailsPage />} />
           <Route path="/campaigns/:id/providers" element={<CampaignProvidersPage />} />

@@ -43,6 +43,7 @@ export function addCampaignContractDelivery(campaniaId: number, relationId: numb
         kilosProgramados: Number(values.kilosProgramados),
         destino: values.destino.trim(),
         observaciones: values.observaciones.trim(),
+        variedad: values.variedad || "Kent",
         coordinacion: null,
     };
     records = { ...records, [key]: [delivery, ...(records[key] ?? EMPTY)] };
@@ -57,6 +58,7 @@ export function updateCampaignContractDelivery(campaniaId: number, relationId: n
         kilosProgramados: Number(values.kilosProgramados),
         destino: values.destino.trim(),
         observaciones: values.observaciones.trim(),
+        variedad: values.variedad || item.variedad || "Kent",
     } : item) };
     emit();
 }
@@ -66,4 +68,3 @@ export function deleteCampaignContractDelivery(campaniaId: number, relationId: n
     records = { ...records, [key]: (records[key] ?? EMPTY).filter((item) => item.id !== deliveryId) };
     emit();
 }
-

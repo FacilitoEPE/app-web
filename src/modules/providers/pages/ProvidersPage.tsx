@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Truck, UserPlus, AlertCircle } from "lucide-react";
+import { Truck, UserPlus, AlertCircle, LandPlot, ShieldCheck, Sprout, Users } from "lucide-react";
 import ProvidersTable from "@/modules/providers/components/ProvidersTable";
 import ProviderFormModal from "@/modules/providers/components/ProviderFormModal";
 import ProviderSuccessModal from "@/modules/providers/components/ProviderSuccessModal";
 import PageHeader from "@/shared/layout/PageHeader";
+import MetricCards, { type Metric } from "@/shared/components/MetricCards";
 import ProvidersFilters from "@/modules/providers/components/ProvidersFilters";
 import { Button } from "@/shared/components/ui/button";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { createProveedor, deleteProveedor, getProveedores, updateProveedor } from "@/modules/providers/api/proveedor.api";
 import type { ProveedorInput } from "@/modules/providers/api/proveedor.dto";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
+import { useProviderLocalData } from "@/modules/providers/providerLocalData.store";
+import { formatDecimal } from "@/shared/utils/format";
 import { createInFlightGuard } from "@/shared/utils/inFlightGuard";
 
 const byId = (left: Proveedor, right: Proveedor) => left.proveedorId - right.proveedorId;
@@ -22,11 +25,11 @@ export default function ProvidersPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [success, setSuccess] = useState<{ open: boolean; mode: "create" | "edit" }>({ open: false, mode: "create" });
     const [search, setSearch] = useState("");
-    // Un único bloqueo para crear, editar y eliminar: nunca corren dos escrituras a la vez
+    const [zoneFilter, setZoneFilter] = useState("all");
     const [mutationGuard] = useState(createInFlightGuard);
     const loadSequence = useRef(0);
+    const { fincas, certificados } = useProviderLocalData();
 
-    /** Solo la última carga pedida actualiza la lista, así una respuesta lenta no pisa una más nueva */
     const loadProviders = useCallback(async () => {
         const request = ++loadSequence.current;
         try {
@@ -41,7 +44,6 @@ export default function ProvidersPage() {
         }
     }, []);
 
-    // Carga inicial desde la API: el estado se actualiza al resolverse la petición.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void loadProviders(); }, [loadProviders]);
 
@@ -50,15 +52,64 @@ export default function ProvidersPage() {
         void loadProviders();
     };
 
+    const zoneOptions = useMemo(() => {
+        const unique = Array.from(new Set(providers.map((item) => item.zona).filter(Boolean)));
+        return unique.sort((a, b) => a.localeCompare(b, "es")).map((zone) => ({ value: zone, label: zone }));
+    }, [providers]);
+
+    const hasActiveFilters = search !== "" || zoneFilter !== "all";
+    const clearFilters = () => {
+        setSearch("");
+        setZoneFilter("all");
+    };
+
     const filteredProviders = useMemo(() => {
         const query = search.trim().toLocaleLowerCase();
-        if (!query) return providers;
-        return providers.filter((provider) =>
-            `${provider.nombres} ${provider.apellido} ${provider.tipoDocumento} ${provider.nmrDocumento} ${provider.email} ${provider.zona}`
+        return providers.filter((provider) => {
+            if (zoneFilter !== "all" && provider.zona !== zoneFilter) return false;
+            if (!query) return true;
+            return `${provider.nombres} ${provider.apellido} ${provider.tipoDocumento} ${provider.nmrDocumento} ${provider.email} ${provider.zona}`
                 .toLocaleLowerCase()
-                .includes(query),
-        );
-    }, [providers, search]);
+                .includes(query);
+        });
+    }, [providers, search, zoneFilter]);
+
+    const summaryMetrics = useMemo<Metric[]>(() => {
+        const allFincas = Object.values(fincas).flat();
+        const totalHaCultivo = allFincas.reduce((sum, item) => sum + item.haCultivo, 0);
+        const totalCerts = Object.values(certificados).flat().length;
+        return [
+            {
+                title: "Proveedores",
+                value: String(providers.length),
+                unit: providers.length === 1 ? "registrado" : "registrados",
+                description: "Padrón activo de productores y acopiadores",
+                icon: Users,
+            },
+            {
+                title: "Fincas",
+                value: String(allFincas.length),
+                unit: allFincas.length === 1 ? "parcela" : "parcelas",
+                description: "Parcelas y fundos empadronados",
+                icon: LandPlot,
+            },
+            {
+                title: "Superficie cultivo",
+                value: formatDecimal(totalHaCultivo),
+                unit: "ha",
+                description: "Hectáreas productivas declaradas",
+                icon: Sprout,
+                warm: true,
+            },
+            {
+                title: "Certificados",
+                value: String(totalCerts),
+                unit: totalCerts === 1 ? "documento" : "documentos",
+                description: "SENASA, GlobalG.A.P. y orgánicos",
+                icon: ShieldCheck,
+            },
+        ];
+    }, [providers.length, fincas, certificados]);
 
     const saveProvider = async (providerId: number | null, input: ProveedorInput) => {
         setMutationError(null);
@@ -96,7 +147,19 @@ export default function ProvidersPage() {
                 }
             />
 
-            <ProvidersFilters search={search} onSearchChange={setSearch} hasActiveFilters={search !== ""} onClear={() => setSearch("")} />
+            <div className="mb-8">
+                <MetricCards metrics={summaryMetrics} label="Resumen del padrón de proveedores" />
+            </div>
+
+            <ProvidersFilters
+                search={search}
+                onSearchChange={setSearch}
+                zoneFilter={zoneFilter}
+                onZoneFilterChange={setZoneFilter}
+                zoneOptions={zoneOptions}
+                hasActiveFilters={hasActiveFilters}
+                onClear={clearFilters}
+            />
 
             {mutationError && (
                 <Alert variant="destructive" className="mb-6">
@@ -110,8 +173,8 @@ export default function ProvidersPage() {
                 isLoading={isLoading}
                 loadError={loadError}
                 onRetry={retry}
-                hasActiveFilters={search !== ""}
-                onClearFilters={() => setSearch("")}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={clearFilters}
                 mutationGuard={mutationGuard}
                 onSave={saveProvider}
                 onDelete={removeProvider}

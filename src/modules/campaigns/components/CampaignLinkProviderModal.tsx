@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Link2 } from "lucide-react";
+import { X, Link2, LandPlot, Sprout } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import InputField from "@/shared/components/InputField";
 import SegmentedControl from "@/shared/components/SegmentedControl";
@@ -9,6 +9,7 @@ import { Combobox } from "@/shared/components/ui/combobox";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { getProveedores } from "@/modules/providers/api/proveedor.api";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
+import { useProviderLocalData } from "@/modules/providers/providerLocalData.store";
 import { createCampaniaProveedor, getCampaniaProveedoresByCampania, updateCampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.api";
 import type { TipoProveedorCampania } from "@/modules/campaigns/api/campania-proveedor.dto";
 import {
@@ -55,7 +56,6 @@ type DraftValues = {
     nombreAplicacion: string | null;
     aplicacionesAlAno: number | null;
 };
-// type DraftErrors = CampaniaProveedorDraftErrors & Partial<Record<"proveedorId" | "frutaConvencional" | "observacionesParticipacion", string>>;
 
 const EMPTY_DRAFT: DraftValues = {
     cantidadProveedor: "",
@@ -81,12 +81,16 @@ const PROVIDER_TYPES = [
     { label: "Productor", value: "productor" },
     { label: "Acopiador", value: "acopio" },
 ];
+
+const VARIEDAD_OPTIONS = ["Kent", "Edward", "Keitt", "Hass", "Ataulfo"] as const;
+
 /** Vincula un proveedor por vez: se valida, se guarda y el backend confirma antes de mostrar éxito. */
 export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChange, onSave, onRefresh, mode = "create", lockedType, initialData }: CampaignLinkProviderModalProps) {
     const [providerType, setProviderType] = useState<TipoProveedorCampania>("productor");
     const [selectedProvider, setSelectedProvider] = useState("");
     const [draft, setDraft] = useState<DraftValues>(EMPTY_DRAFT);
-    // const [errors, setErrors] = useState<DraftErrors>({});
+    const [selectedVariedades, setSelectedVariedades] = useState<string[]>(["Kent"]);
+    const [selectedFincas, setSelectedFincas] = useState<string[]>([]);
     const [errors, setErrors] = useState<Partial<Record<keyof DraftValues, string>> & { proveedorId?: string }>({});
     const [formError, setFormError] = useState<string | null>(null);
     const [proveedores, setProveedores] = useState<Proveedor[]>([]);
@@ -98,6 +102,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
     const unresolvedRef = useRef<number | null>(null);
     const onSaveRef = useRef(onSave);
     const onRefreshRef = useRef(onRefresh);
+    const { fincas: allFincas } = useProviderLocalData();
 
     useEffect(() => {
         onSaveRef.current = onSave;
@@ -119,7 +124,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
         if (!open) return;
         let active = true;
 
-        // El formulario se reinicia al abrir: es sincronizar el estado local con el vínculo que se va a editar.
         if (mode === "edit" && initialData) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setProviderType(initialData.tipoProveedor);
@@ -129,10 +133,14 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                 cantidadProveedor: initialData.cantidadProveedor ? String(initialData.cantidadProveedor) : "",
                 frutaConvencionalEstimado: initialData.frutaConvencionalEstimado ?? null,
             });
+            setSelectedVariedades(["Kent"]);
+            setSelectedFincas((allFincas[initialData.proveedorId] ?? []).map((f) => f.nombre));
         } else {
             setProviderType(lockedType ?? "productor");
             setSelectedProvider("");
             setDraft(EMPTY_DRAFT);
+            setSelectedVariedades(["Kent"]);
+            setSelectedFincas([]);
         }
 
         setErrors({});
@@ -166,7 +174,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                     }
                     markUnresolved(null);
                     if (result.status === "complete") {
-                        // El vínculo anterior sí se guardó: se informa como éxito sin volver a enviarlo
                         onSaveRef.current?.();
                     } else {
                         onRefreshRef.current?.();
@@ -177,12 +184,28 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
 
         void Promise.all(requests).finally(() => { if (active) setIsLoadingProviders(false); });
         return () => { active = false; };
-        // Solo reinicia al abrir (o al cambiar de campaña): si dependiera de `mode`/`initialData`, cualquier render del
-        // padre con un objeto nuevo borraría lo que el usuario ya escribió.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, campaniaId, controller, lockedType]);
 
     const isLocked = isSaving || unresolvedProviderId !== null;
+    const activeProviderId = selectedProvider ? Number(selectedProvider) : (mode === "edit" && initialData ? initialData.proveedorId : 0);
+    const providerFincas = activeProviderId ? (allFincas[activeProviderId] ?? []) : [];
+
+    const toggleVariedad = (variedad: string) => {
+        setSelectedVariedades((current) =>
+            current.includes(variedad)
+                ? current.length > 1 ? current.filter((item) => item !== variedad) : current
+                : [...current, variedad],
+        );
+    };
+
+    const toggleFinca = (fincaNombre: string) => {
+        setSelectedFincas((current) =>
+            current.includes(fincaNombre)
+                ? current.filter((item) => item !== fincaNombre)
+                : [...current, fincaNombre],
+        );
+    };
 
     const updateDraft = <K extends keyof DraftValues>(field: K, value: DraftValues[K]) => {
         setDraft((current) => ({ ...current, [field]: value }));
@@ -290,12 +313,16 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
             }
         >
             <div className="flex flex-col gap-6">
-                
                 <FormField label="Seleccionar Proveedor:" required error={errors.proveedorId}>
                     <Combobox
                         options={mode === "edit" && initialData && initialData.proveedor ? [{ value: String(initialData.proveedorId), label: `${initialData.proveedor.nombres} ${initialData.proveedor.apellido}` }] : providerOptions}
                         value={selectedProvider}
-                        onChange={(value) => { setSelectedProvider(value); setErrors((current) => ({ ...current, proveedorId: undefined })); }}
+                        onChange={(value) => {
+                            setSelectedProvider(value);
+                            setErrors((current) => ({ ...current, proveedorId: undefined }));
+                            const fList = allFincas[Number(value)] ?? [];
+                            setSelectedFincas(fList.map((f) => f.nombre));
+                        }}
                         placeholder={isLoadingProviders ? "Cargando proveedores..." : "Buscar proveedor, fruta o variedad..."}
                         emptyMessage="No hay proveedores disponibles para vincular"
                         disabled={isLoadingProviders || isLocked || mode === "edit"}
@@ -321,6 +348,21 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                     </div>
                 </div>
 
+                {providerType === "acopio" && (
+                    <InputField
+                        id="link-provider-fruta-convencional"
+                        label="Fruta convencional estimada (Acopio)"
+                        value={draft.frutaConvencionalEstimado === null ? "" : String(draft.frutaConvencionalEstimado)}
+                        onChange={(val) => updateDraft("frutaConvencionalEstimado", val.trim() === "" ? null : Number(val))}
+                        placeholder="Ej. 1500"
+                        step="0.001"
+                        min={0}
+                        unit="KG"
+                        optional
+                        disabled={isLocked}
+                    />
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     {renderField({ field: "precioEstimado", label: "Precio estimado o acordado", step: "0.01", placeholder: "0.00", leading: currencySymbol })}
                     <FormField label="Moneda" required>
@@ -334,9 +376,68 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                     </FormField>
                 </div>
 
+                <FormField label="Variedades comprometidas en campaña" hint="Selecciona las variedades que aportará el proveedor en esta campaña.">
+                    <div className="flex flex-wrap gap-2">
+                        {VARIEDAD_OPTIONS.map((variedad) => {
+                            const active = selectedVariedades.includes(variedad);
+                            return (
+                                <button
+                                    key={variedad}
+                                    type="button"
+                                    disabled={isLocked}
+                                    onClick={() => toggleVariedad(variedad)}
+                                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${
+                                        active
+                                            ? "border-brand bg-brand/10 text-brand"
+                                            : "border-border bg-surface-page/50 text-ink-muted hover:text-ink"
+                                    }`}
+                                >
+                                    <Sprout size={14} strokeWidth={2.2} />
+                                    {variedad}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </FormField>
+
+                {providerType === "productor" && activeProviderId > 0 && (
+                    <FormField
+                        label="Fincas participantes del productor"
+                        hint={providerFincas.length === 0 ? "Este productor aún no tiene fincas en su padrón; podrás vincularlas desde Entrevistas." : "Marca las fincas que participarán en esta campaña."}
+                    >
+                        {providerFincas.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                                {providerFincas.map((finca) => {
+                                    const active = selectedFincas.includes(finca.nombre);
+                                    return (
+                                        <button
+                                            key={finca.nombre}
+                                            type="button"
+                                            disabled={isLocked}
+                                            onClick={() => toggleFinca(finca.nombre)}
+                                            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${
+                                                active
+                                                    ? "border-brand bg-brand/10 text-brand"
+                                                    : "border-border bg-surface-page/50 text-ink-muted hover:text-ink"
+                                            }`}
+                                        >
+                                            <LandPlot size={14} strokeWidth={2.2} />
+                                            {finca.nombre} ({finca.haCultivo} ha)
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="rounded-xl border border-dashed border-border bg-surface-page/40 px-3.5 py-2.5 text-[12.5px] text-ink-muted">
+                                Sin fincas registradas en el padrón del productor.
+                            </div>
+                        )}
+                    </FormField>
+                )}
+
                 <FormField label="Observaciones de Participación">
-                    <Textarea 
-                        className="min-h-24 resize-none" 
+                    <Textarea
+                        className="min-h-24 resize-none"
                         placeholder="Escribe aquí las observaciones..."
                         value={draft.observacionesParticipacion}
                         onChange={(e) => updateDraft("observacionesParticipacion", e.target.value)}
@@ -345,7 +446,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                 </FormField>
             </div>
 
-            {/* Error general del formulario (no de un campo); solo se dibuja si existe */}
             {formError && <FormField error={formError} className="mt-6" />}
         </AppModal>
     );

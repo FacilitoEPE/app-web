@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Pencil, Sprout } from "lucide-react";
+import { CalendarRange, ClipboardCheck, FileSpreadsheet, PackageCheck, Pencil, Receipt, Sprout, Truck } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/shared/components/ui/button";
 import { PageError, PageLoading } from "@/shared/components/PageState";
+import LinkedCard, { LinkedRow } from "@/shared/components/LinkedCard";
+import StatusBadge from "@/shared/components/StatusBadge";
+import { SummaryBar } from "@/shared/components/InfoField";
 import PageHeader from "@/shared/layout/PageHeader";
 import { getCampana, getFrutaDerivadas } from "@/modules/campaigns/api/campaign.api";
 import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
@@ -13,9 +16,13 @@ import type { FrutaDerivadaDto } from "@/modules/campaigns/api/campaign.dto";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
 import type { ClienteNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.mapper";
 
-import { getCampaignTiming } from "@/modules/campaigns/campaignDetails.utils";
+import { formatCampaignNumber, getCampaignTiming } from "@/modules/campaigns/campaignDetails.utils";
 import { useCampaignCertificates } from "@/modules/campaigns/campaignCertificates.store";
 import { getVigenciaAutomatica, type CertificadoCampanaLocal } from "@/modules/campaigns/campaignCertificate.utils";
+import { useCampaignCarriers } from "@/modules/campaigns/campaignCarriers.store";
+import { useCampaignDeliveryRecords } from "@/modules/campaigns/campaignContractDeliveries.store";
+import { listCampaignDeliveries } from "@/modules/campaigns/campaignDeliveryCoordination.utils";
+import { useQualityDeliveryLoads } from "@/modules/quality/qualityOperations.store";
 import type { Campaign } from "@/modules/campaigns/campaigns.data";
 import type { CampaignGrower, CampaignClient, CampaignCertification } from "@/modules/campaigns/campaignDetails.data";
 
@@ -31,7 +38,6 @@ import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccess
 import CampaignManagementProvidersModal from "@/modules/campaigns/components/CampaignManagementProvidersModal";
 import "@/modules/campaigns/campaignDetails.css";
 
-// Adaptadores: llevan los datos de la API a la forma que reciben las tarjetas del diseño
 function toOverviewCampaign(campana: Campana): Campaign {
     return {
         id: campana.campaniaId,
@@ -45,7 +51,6 @@ function toOverviewCampaign(campana: Campana): Campaign {
     };
 }
 
-// La relación campaña-proveedor no devuelve hectáreas ni variedades: se dejan en 0/vacío en vez de inventarlas
 function toProviderSummaries(proveedores: CampaniaProveedor[]): CampaignGrower[] {
     return proveedores.map((relation) => {
         const name = relation.proveedor ? `${relation.proveedor.nombres} ${relation.proveedor.apellido}` : "Proveedor";
@@ -63,7 +68,6 @@ function toProviderSummaries(proveedores: CampaniaProveedor[]): CampaignGrower[]
 
 const TIPO_CLIENTE_LABEL: Record<string, string> = { exportador: "Exportador", industria: "Industria" };
 
-// La API no registra pedidos ni estado del cliente en la campaña: pedidos en 0 y todos se consideran activos
 function toClientSummaries(clientes: ClienteNegocioCampana[]): CampaignClient[] {
     return clientes.map((relation) => ({
         id: relation.clienteNegocioCampanaId,
@@ -76,14 +80,12 @@ function toClientSummaries(clientes: ClienteNegocioCampana[]): CampaignClient[] 
     }));
 }
 
-// Las certificaciones salen del almacén local de la gestión de certificaciones (ver campaignCertificates.store.ts)
 function toCertificationItems(certificados: CertificadoCampanaLocal[]): CampaignCertification[] {
     return certificados.map((certificado) => ({
         id: certificado.id,
         name: certificado.nombre,
         files: [certificado.documento?.name, certificado.cotizacion?.name].filter((name): name is string => Boolean(name)),
         expires: certificado.validoHasta ? certificado.validoHasta.split("-").reverse().join("/") : "",
-        // El mismo estado que la tabla de gestión: incluye "Por iniciar" y "Sin fechas completas"
         status: getVigenciaAutomatica(certificado.validoDesde, certificado.validoHasta),
         icon: "leaf",
     }));
@@ -106,7 +108,6 @@ export default function CampaignDetailsPage() {
         return <PageError icon={<Sprout />} title="Campaña inválida" message="La campaña que buscas no está disponible." back={BACK_TO_CAMPAIGNS} />;
     }
 
-    // Cambiar de campaña reinicia la carga, los modales y las secciones desplegadas
     return <CampaignDetailsView key={campaniaId} campaniaId={campaniaId} />;
 }
 
@@ -119,12 +120,14 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
     const [reloadKey, setReloadKey] = useState(0);
     const navigate = useNavigate();
     const certificados = useCampaignCertificates(campaniaId);
+    const carrierLinks = useCampaignCarriers(campaniaId);
+    const deliveryRecords = useCampaignDeliveryRecords();
+    const qualityLoads = useQualityDeliveryLoads();
 
     useEffect(() => {
         let active = true;
         Promise.all([
             getCampana(campaniaId),
-            // Proveedores y clientes son secciones secundarias: si fallan, la campaña igual se muestra
             getCampaniaProveedoresByCampania(campaniaId).catch(() => []),
             getClientesNegocioCampana(campaniaId).catch(() => []),
         ])
@@ -150,6 +153,17 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
     const campaign = { ...toOverviewCampaign(campana), variedades: derivadas.map((derivada) => derivada.name) };
     const timing = getCampaignTiming(campaign.inicio, campaign.fin);
 
+    const estimatedKg = proveedores.reduce((sum, item) => sum + (Number(item.cantidadProveedor) || 0), 0);
+    const campaignLoads = qualityLoads.filter((load) => load.campaniaId === campaniaId);
+    const harvestedKg = campaignLoads.reduce(
+        (sum, load) => sum + load.proveedoresCarga.reduce((acc, p) => acc + p.kilosCargados, 0),
+        0,
+    );
+    const campaignDeliveries = listCampaignDeliveries(deliveryRecords, campaniaId);
+    const scheduledKg = campaignDeliveries.reduce((sum, item) => sum + item.delivery.kilosProgramados, 0);
+    const coordinatedCount = campaignDeliveries.filter((item) => Boolean(item.delivery.coordinacion)).length;
+    const campaignGuidesCount = campaignLoads.reduce((sum, load) => sum + load.guiasRemision.length, 0);
+
     return (
         <div className="campaign-details px-4 py-5 sm:px-8 lg:px-14">
             <div className="campaign-details-inner">
@@ -157,15 +171,24 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                     icon={<Sprout size={24} strokeWidth={2.5} />}
                     title="Detalle de Campaña"
                     description="Control y seguimiento integral de la campaña."
-                    action={<Button variant="outline" size="xl" onClick={() => setOpenModal("edit")}><Pencil size={19} strokeWidth={2.5} /> Editar campaña</Button>}
+                    action={
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            <Button variant="outline" size="xl" onClick={() => navigate(`/campaigns/${campaniaId}/weekly-program`)}>
+                                <CalendarRange size={19} strokeWidth={2.3} /> Programa semanal
+                            </Button>
+                            <Button variant="outline" size="xl" onClick={() => setOpenModal("edit")}>
+                                <Pencil size={19} strokeWidth={2.5} /> Editar campaña
+                            </Button>
+                        </div>
+                    }
                 />
                 <div className="campaign-top-grid">
                     <CampaignOverviewCard campaign={campaign} duration={timing.duration} />
-                    <CampaignMetricCards requirement={campana.requerimientoComercial} estimated={null} harvested={0} remaining={timing.remaining} hasEnded={timing.hasEnded} hasStarted={timing.hasStarted} />
+                    <CampaignMetricCards requirement={campana.requerimientoComercial} estimated={estimatedKg > 0 ? estimatedKg : null} harvested={harvestedKg} remaining={timing.remaining} hasEnded={timing.hasEnded} hasStarted={timing.hasStarted} />
                 </div>
                 <div className="campaign-bottom-grid">
                     <div className="campaign-main-column">
-                        <CampaignHarvestCard harvested={0} estimated={null} />
+                        <CampaignHarvestCard harvested={harvestedKg} estimated={estimatedKg > 0 ? estimatedKg : null} />
                         <div className="campaign-contacts-grid">
                             <CampaignProvidersSummary providers={toProviderSummaries(proveedores)} campaignName={campana.nombre} onViewAll={() => setOpenModal("providers")} />
                             <CampaignClientsSummary clients={toClientSummaries(clientes)} campaignName={campana.nombre} onViewAll={() => navigate(`/campaigns/${campaniaId}/clients`)} />
@@ -176,6 +199,117 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                         <CampaignBrandBanner />
                     </div>
                 </div>
+
+                <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <LinkedCard
+                        icon={<PackageCheck size={22} strokeWidth={2.2} />}
+                        title="Flujo Operativo, Cosecha y Logística"
+                        description="Seguimiento de entregas programadas, programa semanal, cargas y transporte de la campaña."
+                        manageLabel="Ver entregas"
+                        onManage={() => navigate(`/campaigns/${campaniaId}/deliveries`)}
+                        stats={[
+                            { label: "Entregas prog.", value: campaignDeliveries.length },
+                            { label: "Coordinadas", value: `${coordinatedCount}/${campaignDeliveries.length}` },
+                            { label: "Cargas en campo", value: campaignLoads.length },
+                            { label: "Guías SUNAT", value: campaignGuidesCount },
+                        ]}
+                        isEmpty={false}
+                        emptyMessage=""
+                        emptyActionLabel=""
+                    >
+                        <SummaryBar
+                            items={[
+                                { label: "Meta comercial", value: `${formatCampaignNumber(Number(campana.requerimientoComercial))} kg`, tone: "brand" },
+                                { label: "Programado contratos", value: `${formatCampaignNumber(scheduledKg)} kg` },
+                                { label: "Cosechado neto", value: `${formatCampaignNumber(harvestedKg)} kg`, tone: "highlight" },
+                            ]}
+                        />
+                        <LinkedRow
+                            icon={<CalendarRange size={16} strokeWidth={2.2} />}
+                            title="Programa Semanal de Entregas"
+                            subtitle="Consolidado semanal por cliente, variedad y proveedor asignado"
+                            trailing={
+                                <Button variant="outline" size="sm" onClick={() => navigate(`/campaigns/${campaniaId}/weekly-program`)}>
+                                    Abrir programa
+                                </Button>
+                            }
+                        />
+                        <LinkedRow
+                            icon={<ClipboardCheck size={16} strokeWidth={2.2} />}
+                            title="Cosecha y Control de Calidad"
+                            subtitle={`${campaignLoads.length} cargas registradas · ${campaignGuidesCount} guías de remisión emitidas`}
+                            trailing={
+                                <Button variant="outline" size="sm" onClick={() => navigate("/control-calidad")}>
+                                    Ir a calidad
+                                </Button>
+                            }
+                        />
+                        <LinkedRow
+                            icon={<Truck size={16} strokeWidth={2.2} />}
+                            title="Transportistas de la Campaña"
+                            subtitle={`${carrierLinks.length} transportistas vinculados para despacho`}
+                            trailing={
+                                <Button variant="outline" size="sm" onClick={() => navigate(`/campaigns/${campaniaId}/carriers`)}>
+                                    Gestionar flota
+                                </Button>
+                            }
+                        />
+                    </LinkedCard>
+
+                    <LinkedCard
+                        icon={<Receipt size={22} strokeWidth={2.2} />}
+                        title="Cierre Financiero y Liquidaciones"
+                        description="Acceso directo a la facturación de clientes, liquidación de compra a productores y pagos de flete."
+                        manageLabel="Ir a Facturación"
+                        onManage={() => navigate("/facturacion")}
+                        stats={[
+                            { label: "Clientes activos", value: clientes.length },
+                            { label: "Proveedores", value: proveedores.length },
+                            { label: "Acuerdos flete", value: carrierLinks.filter((item) => item.acuerdo !== null).length },
+                        ]}
+                        isEmpty={false}
+                        emptyMessage=""
+                        emptyActionLabel=""
+                    >
+                        <LinkedRow
+                            icon={<Receipt size={16} strokeWidth={2.2} />}
+                            title="Facturación y Cobranza (Clientes)"
+                            subtitle="Emisión de facturas comerciales, letras, detracciones y vouchers de cobro"
+                            trailing={
+                                <div className="flex items-center gap-2">
+                                    <StatusBadge status={clientes.length > 0 ? "Activo" : "Pendiente"} />
+                                    <Button variant="outline" size="sm" onClick={() => navigate("/facturacion")}>
+                                        Ver facturas
+                                    </Button>
+                                </div>
+                            }
+                        />
+                        <LinkedRow
+                            icon={<FileSpreadsheet size={16} strokeWidth={2.2} />}
+                            title="Liquidación de Compra (Proveedores)"
+                            subtitle="Valorización por calibre/categoría, descuentos por adelantos y liquidaciones SUNAT"
+                            trailing={
+                                <div className="flex items-center gap-2">
+                                    <StatusBadge status={proveedores.length > 0 ? "En proceso" : "Pendiente"} />
+                                    <Button variant="outline" size="sm" onClick={() => navigate("/liquidacion-compra")}>
+                                        Ver liquidaciones
+                                    </Button>
+                                </div>
+                            }
+                        />
+                        <LinkedRow
+                            icon={<Truck size={16} strokeWidth={2.2} />}
+                            title="Monitoreo Logístico y Despacho"
+                            subtitle="Control de las 10 etapas de despacho, pesos en balanza y conformidad en destino"
+                            trailing={
+                                <Button variant="outline" size="sm" onClick={() => navigate("/logistica-despacho")}>
+                                    Ver despachos
+                                </Button>
+                            }
+                        />
+                    </LinkedCard>
+                </div>
+
                 <CampaignManagementProvidersModal open={openModal === "providers"} onOpenChange={(open) => setOpenModal(open ? "providers" : null)} campaniaId={campaniaId} />
                 <CampaignFormModal
                     open={openModal === "edit"}

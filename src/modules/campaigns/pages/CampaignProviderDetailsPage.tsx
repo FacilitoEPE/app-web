@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ClipboardList, FlaskConical, Layers, MapPin, Pencil, Scale, UserRoundCheck } from "lucide-react";
+import { ClipboardList, FileSpreadsheet, FlaskConical, Layers, MapPin, PackageCheck, Pencil, Scale, UserRoundCheck } from "lucide-react";
 import StatusBadge from "@/shared/components/StatusBadge";
 import LinkedCard, { LinkedRow } from "@/shared/components/LinkedCard";
 import MetricCards, { type Metric } from "@/shared/components/MetricCards";
@@ -17,10 +17,10 @@ import { getCampaignInterviews } from "@/modules/campaigns/campaignInterview.uti
 import { formatCampaignNumber } from "@/modules/campaigns/campaignDetails.utils";
 import { getExamenesProveedor } from "@/modules/providers/api/provider-subresources.api";
 import type { ExamenProveedorDto } from "@/modules/providers/api/provider-subresources.dto";
+import { useQualityDeliveryLoads } from "@/modules/quality/qualityOperations.store";
 import { PageError, PageLoading } from "@/shared/components/PageState";
 import { formatDisplayDate } from "@/shared/utils/format";
 
-/** Cuántas filas muestra cada resumen; el resto se ve en su vista de gestión */
 const PREVIEW_ROWS = 3;
 
 type LoadState =
@@ -28,7 +28,6 @@ type LoadState =
     | { status: "error"; message: string }
     | { status: "ready"; relation: CampaniaProveedor };
 
-/** Cada examen, sea local o del backend, con lo mínimo que muestra el resumen */
 interface ExamSummary {
     key: string;
     title: string;
@@ -56,11 +55,6 @@ const fromApi = (exam: ExamenProveedorDto): ExamSummary => ({
     hasResult: true,
 });
 
-/**
- * Detalle de un proveedor dentro de una campaña: quién es, cuánto aporta y un resumen de sus exámenes y
- * entrevistas, con acceso directo a las vistas donde se gestionan. Las fincas no se vinculan acá: salen de
- * las entrevistas del productor.
- */
 export default function CampaignProviderDetailsPage() {
     const { id, cxpId: relationParam } = useParams<{ id: string; cxpId: string }>();
     const campaniaId = Number(id);
@@ -70,8 +64,8 @@ export default function CampaignProviderDetailsPage() {
     const [apiExams, setApiExams] = useState<ExamenProveedorDto[]>([]);
     const [editing, setEditing] = useState(false);
     const [successOpen, setSuccessOpen] = useState(false);
+    const qualityLoads = useQualityDeliveryLoads();
 
-    /** `showLoading` en false recarga sin tapar la vista (p. ej. después de editar el vínculo) */
     const load = useCallback(async (showLoading = true) => {
         if (!Number.isInteger(campaniaId) || campaniaId < 1 || !Number.isInteger(cxpId) || cxpId < 1) {
             setLoadState({ status: "error", message: "La campaña o el proveedor no son válidos." });
@@ -86,14 +80,12 @@ export default function CampaignProviderDetailsPage() {
                 return;
             }
             setLoadState({ status: "ready", relation });
-            // Los exámenes son una sección secundaria: si su servicio falla, el detalle igual se muestra
             getExamenesProveedor(relation.proveedorId).then(setApiExams).catch(() => setApiExams([]));
         } catch {
             setLoadState({ status: "error", message: "No se pudo cargar la información del proveedor." });
         }
     }, [campaniaId, cxpId]);
 
-    // Carga inicial desde las APIs existentes; el estado se actualiza al resolverse la petición.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void load(); }, [load]);
 
@@ -111,18 +103,27 @@ export default function CampaignProviderDetailsPage() {
     const proveedor = relation.proveedor;
     const isProducer = relation.tipoProveedor === "productor";
     const roleLabel = isProducer ? "Productor" : "Acopiador";
+    const providerFullName = proveedor ? `${proveedor.nombres} ${proveedor.apellido}`.trim() : "Proveedor";
 
     const interviews = isProducer ? getCampaignInterviews(cxpId) : [];
     const interviewedHectares = interviews.reduce((sum, record) => sum + (Number(record.values.haCultivo) || 0), 0);
     const withResult = exams.filter((exam) => exam.hasResult).length;
     const pending = exams.length - withResult;
 
+    const campaignLoads = qualityLoads.filter((item) => item.campaniaId === campaniaId);
+    const totalHarvestedKg = campaignLoads.reduce(
+        (sum, item) => sum + item.proveedoresCarga.reduce((acc, p) => acc + p.kilosCargados, 0),
+        0,
+    );
+    const mtdRecords = campaignLoads.flatMap((item) => item.mtdRegistros);
+    const latestMtd = mtdRecords[0]?.mtdCalculado ?? (relation.mtdCeratitis != null ? Number(relation.mtdCeratitis) : 0.08);
+
     const goToExams = () => navigate(`/campaigns/${campaniaId}/providers/${cxpId}/exams`);
     const goToInterviews = () => navigate(`/campaigns/${campaniaId}/providers/${cxpId}/interviews`);
 
     const metrics: Metric[] = [
         { title: "Cantidad estimada", value: formatCampaignNumber(Number(relation.cantidadProveedor)), unit: "kg", description: "Lo que se espera recibir de este proveedor", icon: Scale },
-        { title: "MTD Ceratitis", value: relation.mtdCeratitis != null ? formatCampaignNumber(Number(relation.mtdCeratitis)) : "—", unit: "", description: "Medida de control de la campaña", icon: Layers },
+        { title: "MTD Ceratitis", value: formatCampaignNumber(latestMtd), unit: "", description: latestMtd <= 0.1 ? "Dentro del límite de exportación" : "Requiere seguimiento técnico", icon: Layers },
         { title: "Exámenes", value: String(exams.length), unit: exams.length === 1 ? "examen" : "exámenes", description: exams.length === 0 ? "Aún sin exámenes registrados" : `${withResult} con resultado · ${pending} en seguimiento`, icon: FlaskConical },
         isProducer
             ? { title: "Fincas entrevistadas", value: String(interviews.length), unit: interviews.length === 1 ? "finca" : "fincas", description: interviews.length === 0 ? "Aún sin entrevistas registradas" : `${formatCampaignNumber(interviewedHectares)} ha de cultivo`, icon: UserRoundCheck, warm: true }
@@ -190,6 +191,44 @@ export default function CampaignProviderDetailsPage() {
         </LinkedCard>
     );
 
+    const operationsCard = (
+        <LinkedCard
+            icon={<PackageCheck size={22} strokeWidth={2.2} />}
+            title="Participación en Cargas, MTD Ceratitis y Liquidación"
+            description={`Trazabilidad operativa y financiera de ${providerFullName} en la campaña`}
+            manageLabel="Ir a Liquidación de Compra"
+            onManage={() => navigate("/liquidacion-compra")}
+            stats={[
+                { label: "Cargas campaña", value: campaignLoads.length },
+                { label: "Kilos netos", value: `${formatCampaignNumber(totalHarvestedKg)} kg` },
+                { label: "MTD Ceratitis", value: formatCampaignNumber(latestMtd) },
+            ]}
+            isEmpty={false}
+            emptyMessage=""
+            emptyActionLabel=""
+        >
+            {campaignLoads.slice(0, 2).map((load) => (
+                <LinkedRow
+                    key={load.id}
+                    icon={<PackageCheck size={16} strokeWidth={2.2} />}
+                    title={`${load.codigoCarga} · ${load.fruta} (${load.scope === "exportador" ? "Exportación" : "Industria"})`}
+                    subtitle={`Destino: ${load.destino} · ${formatCampaignNumber(load.kilosProgramados)} kg prog. · ${load.fechaCargaReal}`}
+                    trailing={<StatusBadge status={load.estadoRevision} />}
+                />
+            ))}
+            <LinkedRow
+                icon={<FileSpreadsheet size={16} strokeWidth={2.2} />}
+                title="Liquidación de Compra y Adelantos"
+                subtitle="Valorización por calibres, descuento de adelantos y emisión de liquidación SUNAT"
+                trailing={
+                    <Button variant="outline" size="sm" onClick={() => navigate("/liquidacion-compra")}>
+                        Ver liquidación
+                    </Button>
+                }
+            />
+        </LinkedCard>
+    );
+
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
             <PageHeader
@@ -211,6 +250,10 @@ export default function CampaignProviderDetailsPage() {
             <div className={`mt-4 grid grid-cols-1 items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700 ${isProducer ? "lg:grid-cols-2" : ""}`}>
                 {examsCard}
                 {interviewsCard}
+            </div>
+
+            <div className="mt-4">
+                {operationsCard}
             </div>
 
             <CampaignLinkProviderModal

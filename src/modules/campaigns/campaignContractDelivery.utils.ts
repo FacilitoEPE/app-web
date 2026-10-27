@@ -3,6 +3,7 @@ export interface CampaignContractDeliveryValues {
     kilosProgramados: string;
     destino: string;
     observaciones: string;
+    variedad?: string;
 }
 
 export type CampaignContractDeliveryErrors = Partial<Record<keyof CampaignContractDeliveryValues, string>>;
@@ -31,6 +32,7 @@ export interface CampaignContractDeliveryLocal {
     kilosProgramados: number;
     destino: string;
     observaciones: string;
+    variedad?: string;
     /** `null` mientras la entrega no se haya coordinado */
     coordinacion: DeliveryCoordination | null;
 }
@@ -57,6 +59,6 @@ export function deliveryToValues(delivery: CampaignContractDeliveryLocal): Campa
         kilosProgramados: String(delivery.kilosProgramados),
         destino: delivery.destino,
         observaciones: delivery.observaciones,
+        variedad: delivery.variedad ?? "Kent",
     };
 }
-

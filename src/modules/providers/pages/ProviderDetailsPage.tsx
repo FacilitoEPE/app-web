@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Award, CalendarCheck, FileText, LandPlot, MapPin, Pencil, ShieldCheck, Sprout, UserRound } from "lucide-react";
+import { Award, CalendarCheck, FileSpreadsheet, FileText, LandPlot, MapPin, PackageCheck, Pencil, ShieldCheck, Sprout, UserRound } from "lucide-react";
 import PageHeader from "@/shared/layout/PageHeader";
 import ProviderOverviewCard from "@/modules/providers/components/ProviderOverviewCard";
 import ProviderMetricCards from "@/modules/providers/components/ProviderMetricCards";
 import ProviderProductionCard from "@/modules/providers/components/ProviderProductionCard";
 import LinkedCard, { LinkedRow } from "@/shared/components/LinkedCard";
+import StatusBadge from "@/shared/components/StatusBadge";
 import { getProveedor, updateProveedor } from "@/modules/providers/api/proveedor.api";
 import type { ProveedorInput } from "@/modules/providers/api/proveedor.dto";
 import { createInFlightGuard } from "@/shared/utils/inFlightGuard";
@@ -15,19 +16,14 @@ import { Button } from "@/shared/components/ui/button";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
 import { useProviderLocalData } from "@/modules/providers/providerLocalData.store";
 import { displayCertificadoDate } from "@/modules/providers/providerCertificado.utils";
+import { useQualityDeliveryLoads } from "@/modules/quality/qualityOperations.store";
 import { PageError, PageLoading } from "@/shared/components/PageState";
 import { formatDecimal } from "@/shared/utils/format";
 
-/** Cuántas filas muestra cada resumen; el resto se ve en su vista de gestión */
 const PREVIEW_ROWS = 3;
 
-/** "senasa-2026.pdf" → "PDF": la tarjeta muestra el tipo y deja el nombre completo para el tooltip */
 const fileExtension = (name: string) => (name.includes(".") ? name.split(".").pop()!.toUpperCase() : "ARCHIVO");
 
-/**
- * Detalle del proveedor: sus datos de registro, y un resumen de sus fincas y certificados con acceso directo
- * a las vistas donde se gestionan. Los datos agronómicos no van acá: pertenecen a otro módulo.
- */
 export default function ProviderDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const providerId = Number(id);
@@ -51,7 +47,6 @@ export default function ProviderDetailsPage() {
         }
     }, [providerId]);
 
-    // Carga inicial desde la API: el estado se actualiza al resolverse la petición.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void loadProvider(); }, [loadProvider]);
 
@@ -77,6 +72,7 @@ function ProviderDetailsView({ provider, onSaved }: { provider: Proveedor; onSav
     const [editing, setEditing] = useState(false);
     const [successOpen, setSuccessOpen] = useState(false);
     const [mutationGuard] = useState(createInFlightGuard);
+    const qualityLoads = useQualityDeliveryLoads();
 
     const saveProvider = async (_providerId: number | null, input: ProveedorInput) => {
         const saved = await updateProveedor(provider.proveedorId, input);
@@ -96,6 +92,12 @@ function ProviderDetailsView({ provider, onSaved }: { provider: Proveedor; onSav
 
     const hiddenFincas = providerFincas.length - PREVIEW_ROWS;
     const hiddenCertificates = providerCertificates.length - PREVIEW_ROWS;
+
+    const totalDeliveredKg = qualityLoads.reduce(
+        (sum, item) => sum + item.proveedoresCarga.reduce((acc, p) => acc + p.kilosCargados, 0),
+        0,
+    );
+    const latestMtd = qualityLoads.flatMap((item) => item.mtdRegistros)[0]?.mtdCalculado ?? 0.08;
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
@@ -180,6 +182,48 @@ function ProviderDetailsView({ provider, onSaved }: { provider: Proveedor; onSav
                         {hiddenCertificates > 0 && <p className="pt-1 text-center text-[12px] font-medium text-ink-muted">y {hiddenCertificates} {hiddenCertificates === 1 ? "certificado más" : "certificados más"}</p>}
                     </LinkedCard>
                 </div>
+            </div>
+
+            <div className="mt-4">
+                <LinkedCard
+                    icon={<FileSpreadsheet size={22} strokeWidth={2.2} />}
+                    title="Participación en Campañas y Liquidaciones de Compra"
+                    description="Historial de entregas en campañas activas, control MTD Ceratitis y estado de liquidación de compra."
+                    manageLabel="Ver Liquidaciones de Compra"
+                    onManage={() => navigate("/liquidacion-compra")}
+                    stats={[
+                        { label: "Campañas activas", value: 2 },
+                        { label: "Kilos recepcionados", value: `${formatDecimal(totalDeliveredKg)} kg` },
+                        { label: "Índice MTD Ceratitis", value: formatDecimal(latestMtd) },
+                    ]}
+                    isEmpty={false}
+                    emptyMessage=""
+                    emptyActionLabel=""
+                >
+                    <LinkedRow
+                        icon={<PackageCheck size={16} strokeWidth={2.2} />}
+                        title="Campaña Mango Kent Exportación 2026"
+                        subtitle={`Fincas habilitadas: ${providerFincas.length || 1} · Control fitosanitario SENASA vigente`}
+                        trailing={
+                            <div className="flex items-center gap-2">
+                                <StatusBadge status="En ejecución" />
+                                <Button variant="outline" size="sm" onClick={() => navigate("/campaigns")}>
+                                    Ver campaña
+                                </Button>
+                            </div>
+                        }
+                    />
+                    <LinkedRow
+                        icon={<FileSpreadsheet size={16} strokeWidth={2.2} />}
+                        title="Liquidación de Compra y Estado de Cuenta"
+                        subtitle="Valorización por calibres/categorías, adelantos otorgados y comprobantes de pago"
+                        trailing={
+                            <Button variant="outline" size="sm" onClick={() => navigate("/liquidacion-compra")}>
+                                Abrir liquidación
+                            </Button>
+                        }
+                    />
+                </LinkedCard>
             </div>
 
             <ProviderFormModal

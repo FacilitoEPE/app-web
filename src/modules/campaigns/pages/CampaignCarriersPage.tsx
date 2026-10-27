@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Eye, Link2, Link2Off, ListFilter, Pencil, RotateCw, SearchX, Truck, TriangleAlert, Wallet, CircleCheck } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Eye, FileText, Link2, Link2Off, ListFilter, Pencil, RotateCw, SearchX, Truck, TriangleAlert, Wallet, CircleCheck } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Spinner } from "@/shared/components/ui/spinner";
@@ -21,7 +21,8 @@ import { plural } from "@/shared/utils/plural";
 import type { TableExport } from "@/shared/utils/exportTable";
 import { getCarriers } from "@/modules/carriers/api/carrier.api";
 import { useCarrierExtras } from "@/modules/carriers/carrierExtras.store";
-import { CARRIER_TIPOS, carrierIdentification, carrierLocation, toCarrierProfile, type CarrierProfile } from "@/modules/carriers/carrierProfile.utils";
+import { useCarrierQuotations } from "@/modules/carriers/carrierQuotations.store";
+import { CARRIER_TIPOS, carrierIdentification, toCarrierProfile, type CarrierProfile } from "@/modules/carriers/carrierProfile.utils";
 import type { Carrier } from "@/modules/carriers/carriers.data";
 import CampaignCarrierAgreementModal, { type AgreementModalMode } from "@/modules/campaigns/components/CampaignCarrierAgreementModal";
 import CampaignCarrierDetailsModal from "@/modules/campaigns/components/CampaignCarrierDetailsModal";
@@ -55,7 +56,6 @@ type AgreementState = { open: boolean; mode: AgreementModalMode; row: Row | null
 
 const rowName = (row: Row) => row.carrier?.nombre ?? "Transportista no disponible";
 
-/** Lo que acompaña al estado del acuerdo en la tabla: cuánto falta, o cuánto se acordó */
 function agreementCaption(link: CampaignCarrierLink): string | null {
     const agreement = link.acuerdo;
     if (!agreement) return null;
@@ -74,6 +74,8 @@ export default function CampaignCarriersPage() {
     const campaign = useCampaign(campaniaId);
     const links = useCampaignCarriers(campaniaId);
     const extras = useCarrierExtras();
+    const quotations = useCarrierQuotations();
+    const navigate = useNavigate();
 
     const [carriers, setCarriers] = useState<Carrier[]>([]);
     const [isLoading, setIsLoading] = useState(isValidCampaign);
@@ -102,7 +104,6 @@ export default function CampaignCarriersPage() {
         }
     }, [isValidCampaign]);
 
-    // Carga inicial desde la API: el estado se actualiza al resolverse la petición.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void load(); }, [load]);
 
@@ -127,26 +128,45 @@ export default function CampaignCarriersPage() {
 
     const withoutAgreement = rows.filter((row) => row.link.acuerdo === null).length;
 
+    const quotationInfoFor = (row: Row) => {
+        const match = quotations.find((q) => q.carrierId === row.link.carrierId && q.campaniaId === campaniaId)
+            ?? quotations.find((q) => q.carrierId === row.link.carrierId);
+        if (match) {
+            return {
+                unitAndDriver: `${match.vehiculoAsignadoPlaca || "Por asignar"} · ${match.choferAsignadoNombre || "Chofer pendiente"}`,
+                quoteLabel: `${match.codigo} · ${match.montoCotizadoPen !== null ? `S/ ${formatMoney(match.montoCotizadoPen)}` : "En evaluación"}`,
+                status: match.estado,
+            };
+        }
+        const firstVeh = row.carrier?.vehiculos[0];
+        const firstDrv = row.carrier?.choferes[0];
+        return {
+            unitAndDriver: [firstVeh?.placa, firstDrv?.nombre].filter(Boolean).join(" · ") || "Flota disponible",
+            quoteLabel: row.link.cotizacion.name,
+            status: "Recibida",
+        };
+    };
+
     const getExportData = (): TableExport => ({
         filename: "transportistas_campana",
         title: "Transportistas de la campaña",
-        header: ["Transportista", "Tipo", "Documento", "Teléfono", "Correo", "Ubicación", "Fecha de vinculación", "Acuerdo de pago"],
+        header: ["Transportista", "Tipo", "Documento", "Teléfono", "Unidad / Chofer", "Fecha de vinculación", "Acuerdo de pago"],
         rows: filtered.map((row) => [
             rowName(row),
             row.carrier ? CARRIER_TIPOS[row.carrier.tipo].short : "",
             row.carrier ? carrierIdentification(row.carrier) : "",
             row.carrier?.numero ?? "",
-            row.carrier?.correo ?? "",
-            row.carrier ? carrierLocation(row.carrier) : "",
+            quotationInfoFor(row).unitAndDriver,
             formatDisplayDate(row.link.fechaVinculacion),
             getAgreementStatus(row.link.acuerdo),
         ]),
     });
 
-    /** Ver detalles y Desvincular siempre visibles; lo del acuerdo de pago va en "más opciones" según su estado */
     const getRowActions = (row: Row): { primary: RowAction[]; secondary: RowAction[] } => {
         const { acuerdo } = row.link;
-        const secondary: RowAction[] = [];
+        const secondary: RowAction[] = [
+            { label: "Requerimientos y cotizaciones", icon: <FileText size={16} strokeWidth={2.5} />, onClick: () => navigate("/transportistas") },
+        ];
         if (!acuerdo) {
             secondary.push({ label: "Registrar acuerdo de pago", icon: <Wallet size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setAgreement({ open: true, mode: "create", row }) });
         } else if (isAgreementClosed(acuerdo)) {
@@ -164,7 +184,6 @@ export default function CampaignCarriersPage() {
         };
     };
 
-    // El marco de la tabla se mantiene siempre; carga y error ocupan el lugar del estado vacío
     const emptyState = isLoading
         ? { icon: <Spinner className="size-7" />, title: "Cargando transportistas", description: "Consultando los transportistas de la campaña.", action: undefined }
         : loadError
@@ -223,11 +242,16 @@ export default function CampaignCarriersPage() {
             <PageHeader
                 icon={<Truck size={24} strokeWidth={2.5} />}
                 title="Transportistas de la Campaña"
-                description="Vincula transportistas y registra el acuerdo de pago de cada uno."
+                description="Vincula transportistas, consulta sus cotizaciones y registra el acuerdo de pago de cada uno."
                 action={
-                    <Button size="xl" onClick={() => setLinkOpen(true)} disabled={!isValidCampaign}>
-                        <Link2 size={20} strokeWidth={2.5} /> Vincular transportista
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        <Button variant="outline" size="xl" onClick={() => navigate("/transportistas")}>
+                            <FileText size={19} strokeWidth={2.3} /> Cotizaciones globales
+                        </Button>
+                        <Button size="xl" onClick={() => setLinkOpen(true)} disabled={!isValidCampaign}>
+                            <Link2 size={20} strokeWidth={2.5} /> Vincular transportista
+                        </Button>
+                    </div>
                 }
             />
 
@@ -238,7 +262,7 @@ export default function CampaignCarriersPage() {
             <TableCard
                 icon={<Truck size={24} strokeWidth={2.5} />}
                 title="Transportistas Vinculados"
-                description="Consulta los vínculos; los datos completos están en Ver detalles."
+                description="Consulta los vínculos, unidades asignadas y acuerdos; los datos completos están en Ver detalles."
                 headerRight={
                     <TableToolbar>
                         <TableCountPill icon={<Truck size={16} strokeWidth={2.5} className="text-brand" />} count={filtered.length} singular="transportista" plural="transportistas" />
@@ -255,25 +279,27 @@ export default function CampaignCarriersPage() {
                 pageCount={pageCount}
                 onPageChange={setPage}
             >
-                {/* Móvil siempre en tarjetas; en desktop, tarjetas en grilla solo si se elige esa vista */}
                 <div className={`flex flex-col gap-3 ${viewMode === "grid" ? "sm:grid sm:grid-cols-2 lg:grid-cols-3" : "sm:hidden"}`}>
-                    {visible.map((row) => (
-                        <TableGridCard
-                            key={row.link.id}
-                            accentColor="border-l-brand"
-                            icon={<Truck size={18} strokeWidth={2} />}
-                            title={rowName(row)}
-                            subtitle={row.carrier ? carrierIdentification(row.carrier) : "—"}
-                            actions={<RowActions {...getRowActions(row)} />}
-                        >
-                            <TableGridCardFields>
-                                <TableGridCardField label="Tipo" value={row.carrier ? CARRIER_TIPOS[row.carrier.tipo].short : "—"} />
-                                <TableGridCardField label="Teléfono" value={row.carrier?.numero || "—"} />
-                                <TableGridCardField label="Vinculado" value={formatDisplayDate(row.link.fechaVinculacion)} />
-                                <TableGridCardField label="Acuerdo de pago" value={agreementCell(row)} />
-                            </TableGridCardFields>
-                        </TableGridCard>
-                    ))}
+                    {visible.map((row) => {
+                        const qInfo = quotationInfoFor(row);
+                        return (
+                            <TableGridCard
+                                key={row.link.id}
+                                accentColor="border-l-brand"
+                                icon={<Truck size={18} strokeWidth={2} />}
+                                title={rowName(row)}
+                                subtitle={row.carrier ? carrierIdentification(row.carrier) : "—"}
+                                actions={<RowActions {...getRowActions(row)} />}
+                            >
+                                <TableGridCardFields>
+                                    <TableGridCardField label="Tipo" value={row.carrier ? CARRIER_TIPOS[row.carrier.tipo].short : "—"} />
+                                    <TableGridCardField label="Unidad / Chofer" value={qInfo.unitAndDriver} />
+                                    <TableGridCardField label="Vinculado" value={formatDisplayDate(row.link.fechaVinculacion)} />
+                                    <TableGridCardField label="Acuerdo de pago" value={agreementCell(row)} />
+                                </TableGridCardFields>
+                            </TableGridCard>
+                        );
+                    })}
                 </div>
 
                 {viewMode === "table" && (
@@ -284,32 +310,42 @@ export default function CampaignCarriersPage() {
                                     <TableHead className="h-14 px-6 font-semibold text-ink">Transportista</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Tipo</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Contacto</TableHead>
+                                    <TableHead className="h-14 font-semibold text-ink">Cotización / Unidad</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Vinculado</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Acuerdo de pago</TableHead>
                                     <TableHead className="h-14 w-44 px-6 text-center font-semibold text-ink">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {visible.map((row) => (
-                                    <TableRow key={row.link.id} className="border-b border-border transition-colors hover:bg-surface-page/60">
-                                        <TableCell className="relative h-20 px-6">
-                                            <TableRowAccent color="bg-brand" />
-                                            <TableRowLead icon={<Truck size={18} />} title={rowName(row)} subtitle={row.carrier ? carrierIdentification(row.carrier) : undefined} />
-                                        </TableCell>
-                                        <TableCell>{tipoBadge(row)}</TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="text-[13.5px] font-semibold tabular-nums leading-tight text-ink-body">{row.carrier?.numero || "—"}</span>
-                                                <span className="mt-0.5 text-[12px] font-medium text-ink-muted">{row.carrier?.correo || "—"}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="whitespace-nowrap font-medium text-ink-body">{formatDisplayDate(row.link.fechaVinculacion)}</TableCell>
-                                        <TableCell>{agreementCell(row)}</TableCell>
-                                        <TableCell className="px-6">
-                                            <RowActions {...getRowActions(row)} className="justify-center text-ink-muted" />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                {visible.map((row) => {
+                                    const qInfo = quotationInfoFor(row);
+                                    return (
+                                        <TableRow key={row.link.id} className="border-b border-border transition-colors hover:bg-surface-page/60">
+                                            <TableCell className="relative h-20 px-6">
+                                                <TableRowAccent color="bg-brand" />
+                                                <TableRowLead icon={<Truck size={18} />} title={rowName(row)} subtitle={row.carrier ? carrierIdentification(row.carrier) : undefined} />
+                                            </TableCell>
+                                            <TableCell>{tipoBadge(row)}</TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[13.5px] font-semibold tabular-nums leading-tight text-ink-body">{row.carrier?.numero || "—"}</span>
+                                                    <span className="mt-0.5 text-[12px] font-medium text-ink-muted">{row.carrier?.correo || "—"}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[13px] font-semibold text-ink">{qInfo.unitAndDriver}</span>
+                                                    <span className="mt-0.5 text-[11.5px] font-medium text-ink-muted">{qInfo.quoteLabel}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap font-medium text-ink-body">{formatDisplayDate(row.link.fechaVinculacion)}</TableCell>
+                                            <TableCell>{agreementCell(row)}</TableCell>
+                                            <TableCell className="px-6">
+                                                <RowActions {...getRowActions(row)} className="justify-center text-ink-muted" />
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </div>

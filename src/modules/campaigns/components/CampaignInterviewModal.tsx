@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { ClipboardList, LandPlot, Save, Sprout, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
+import FileDropzone from "@/shared/components/FileDropzone";
+import type { FileSource } from "@/shared/utils/fileSource";
 import FormField from "@/shared/components/FormField";
 import InputField from "@/shared/components/InputField";
 import { InfoField } from "@/shared/components/InfoField";
 import ModalSection from "@/shared/components/ModalSection";
+import SegmentedControl from "@/shared/components/SegmentedControl";
 import SegmentedTabs, { type SegmentedTabItem } from "@/shared/components/SegmentedTabs";
 import { Button } from "@/shared/components/ui/button";
 import { Combobox } from "@/shared/components/ui/combobox";
@@ -31,6 +34,18 @@ import { getAvailableInterviewFincas, toInterviewValues, type CampaignInterviewR
 const FINCA_TABS: readonly SegmentedTabItem[] = [
     { id: "existing", label: "Finca existente", icon: LandPlot },
     { id: "new", label: "Nueva finca", icon: Sprout },
+];
+
+const FITO_OPTIONS = [
+    { label: "Óptimo", value: "Óptimo" },
+    { label: "En observación", value: "En observación" },
+    { label: "Con restricción", value: "Con restricción" },
+];
+
+const ACCESO_VIAL_OPTIONS = [
+    { label: "Apto camión T3S3", value: "Apto camión T3S3" },
+    { label: "Solo camión mediano", value: "Solo camión mediano" },
+    { label: "Requiere acopio externo", value: "Requiere acopio externo" },
 ];
 
 export interface InterviewSubmission {
@@ -61,6 +76,13 @@ export default function CampaignInterviewModal({
     const [fincaErrors, setFincaErrors] = useState<FincaErrors>({});
     const [agronomicErrors, setAgronomicErrors] = useState<InterviewAgronomicErrors>({});
     const [submitError, setSubmitError] = useState<string>();
+    const [estimacionCosechaKg, setEstimacionCosechaKg] = useState(initialRecord?.values.estimacionCosechaKg ?? "");
+    const [estadoFitosanitario, setEstadoFitosanitario] = useState(initialRecord?.values.estadoFitosanitario ?? "Óptimo");
+    const [accesoVial, setAccesoVial] = useState(initialRecord?.values.accesoVial ?? "Apto camión T3S3");
+    const [evidenciaFile, setEvidenciaFile] = useState<FileSource | null>(
+        initialRecord?.values.evidenciaNombre ? { name: initialRecord.values.evidenciaNombre, url: "" } : null,
+    );
+
     const [newFinca, , setFincaField] = useModalForm<FincaFormValues>(open, EMPTY_FINCA);
     const [agronomic, , setAgronomicField] = useModalForm<InterviewAgronomicValues>(
         open,
@@ -74,6 +96,10 @@ export default function CampaignInterviewModal({
         setFincaErrors({});
         setAgronomicErrors({});
         setSubmitError(undefined);
+        setEstimacionCosechaKg(initialRecord?.values.estimacionCosechaKg ?? "");
+        setEstadoFitosanitario(initialRecord?.values.estadoFitosanitario ?? "Óptimo");
+        setAccesoVial(initialRecord?.values.accesoVial ?? "Apto camión T3S3");
+        setEvidenciaFile(initialRecord?.values.evidenciaNombre ? { name: initialRecord.values.evidenciaNombre, url: "" } : null);
     });
 
     const isEditing = initialRecord !== undefined && initialRecord !== null;
@@ -136,7 +162,17 @@ export default function CampaignInterviewModal({
 
         if (!finca || Object.keys(nextAgronomicErrors).length > 0) return;
         try {
-            onSave({ values: toInterviewValues(finca, agronomic), newFinca: !isEditing && fincaMode === "new" ? finca : undefined });
+            const baseValues = toInterviewValues(finca, agronomic);
+            onSave({
+                values: {
+                    ...baseValues,
+                    estimacionCosechaKg: estimacionCosechaKg.trim() || undefined,
+                    estadoFitosanitario,
+                    accesoVial,
+                    evidenciaNombre: evidenciaFile?.name,
+                },
+                newFinca: !isEditing && fincaMode === "new" ? finca : undefined,
+            });
         } catch (error) {
             setSubmitError(error instanceof Error ? error.message : "No se pudo guardar la entrevista. Inténtalo otra vez.");
         }
@@ -215,6 +251,55 @@ export default function CampaignInterviewModal({
                         )}
                     </ModalSection>
                 </div>
+
+                <ModalSection title="Evaluación técnica de campo y acceso logístico" aside="Opcional">
+                    {isViewOnly ? (
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <InfoField label="Estimación cosecha en campo" value={estimacionCosechaKg || "—"} suffix={estimacionCosechaKg ? "kg" : undefined} />
+                            <InfoField label="Estado fitosanitario" value={estadoFitosanitario || "Óptimo"} />
+                            <InfoField label="Acceso vial para camión" value={accesoVial || "Apto camión T3S3"} />
+                            {evidenciaFile && <InfoField label="Ficha / evidencia técnica" value={evidenciaFile.name} className="sm:col-span-3" />}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <InputField
+                                id="interview-estimacion-kg"
+                                label="Estimación de cosecha en campo"
+                                value={estimacionCosechaKg}
+                                onChange={setEstimacionCosechaKg}
+                                placeholder="Ej. 18500"
+                                step="0.01"
+                                unit="kg"
+                                optional
+                            />
+                            <FormField label="Acceso vial para unidad de carga">
+                                <Combobox
+                                    options={ACCESO_VIAL_OPTIONS}
+                                    value={accesoVial}
+                                    onChange={setAccesoVial}
+                                    placeholder="Seleccionar acceso vial"
+                                />
+                            </FormField>
+                            <FormField label="Estado fitosanitario del huerto" className="sm:col-span-2">
+                                <SegmentedControl
+                                    options={FITO_OPTIONS}
+                                    value={estadoFitosanitario}
+                                    onChange={setEstadoFitosanitario}
+                                />
+                            </FormField>
+                            <div className="sm:col-span-2">
+                                <FileDropzone
+                                    label="Ficha técnica o evidencia fotográfica de campo"
+                                    optional
+                                    file={evidenciaFile}
+                                    onChange={setEvidenciaFile}
+                                    hint="PDF, JPG o PNG (máx. 10 MB)"
+                                />
+                            </div>
+                        </div>
+                    )}
+                </ModalSection>
+
                 <FormField error={submitError} />
             </div>
         </AppModal>

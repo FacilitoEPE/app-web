@@ -5,6 +5,7 @@ import { ClipboardList, Eye, LandPlot, MapPin, Link2, Pencil, UserRoundCheck } f
 import { Button } from "@/shared/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
+import StatusBadge from "@/shared/components/StatusBadge";
 import TableCard from "@/shared/components/TableCard";
 import TableGridCard, { TableGridCardField, TableGridCardFields } from "@/shared/components/TableGridCard";
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
@@ -18,6 +19,7 @@ import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campan
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
 import { getCampaignInterviews, getNextCampaignFincaCode, saveCampaignInterview, type CampaignInterviewRecord } from "@/modules/campaigns/campaignInterview.utils";
+import { formatCampaignNumber } from "@/modules/campaigns/campaignDetails.utils";
 import { addFinca, useProviderLocalData } from "@/modules/providers/providerLocalData.store";
 import { PageError, PageLoading } from "@/shared/components/PageState";
 import { paginate } from "@/shared/utils/paginate";
@@ -75,10 +77,8 @@ export default function CampaignInterviewsPage() {
         }
     }, [campaignId, cxpId]);
 
-    // Carga inicial desde las APIs existentes; las entrevistas siguen siendo locales hasta que exista su servicio.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void load(); }, [load]);
-    // Al navegar entre productores sin desmontar la ruta, se muestra el almacén del vínculo nuevo.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { setRecords(getCampaignInterviews(cxpId)); }, [cxpId]);
 
@@ -134,7 +134,6 @@ export default function CampaignInterviewsPage() {
                 pageCount={pageCount}
                 onPageChange={setPage}
             >
-                {/* Móvil en tarjetas; desde md, tabla */}
                 <div className="flex flex-col gap-3 md:hidden">
                     {visible.map((record) => (
                         <TableGridCard
@@ -143,12 +142,14 @@ export default function CampaignInterviewsPage() {
                             icon={<LandPlot size={18} strokeWidth={2} />}
                             title={record.values.fincaNombre}
                             subtitle={record.codigoFyv}
+                            badge={<StatusBadge status={record.values.estadoFitosanitario || "Óptimo"} />}
                             actions={<RowActions primary={actionsFor(record)} />}
                         >
                             <TableGridCardFields>
                                 <TableGridCardField label="Registro" value={format(new Date(record.createdAt), "dd/MM/yyyy · HH:mm")} />
                                 <TableGridCardField label="Ubicación" value={locationOf(record)} />
                                 <TableGridCardField label="Cultivo" value={`${record.values.haCultivo} ha`} />
+                                <TableGridCardField label="Est. cosecha" value={record.values.estimacionCosechaKg ? `${formatCampaignNumber(Number(record.values.estimacionCosechaKg))} kg` : "—"} />
                             </TableGridCardFields>
                         </TableGridCard>
                     ))}
@@ -160,7 +161,8 @@ export default function CampaignInterviewsPage() {
                                 <TableHead className="h-14 px-6 font-semibold text-ink">Finca</TableHead>
                                 <TableHead className="h-14 font-semibold text-ink">Registro</TableHead>
                                 <TableHead className="h-14 font-semibold text-ink">Ubicación</TableHead>
-                                <TableHead className="h-14 font-semibold text-ink">Cultivo</TableHead>
+                                <TableHead className="h-14 font-semibold text-ink">Cultivo / Estimación</TableHead>
+                                <TableHead className="h-14 font-semibold text-ink">Estado Fitosanitario</TableHead>
                                 <TableHead className="h-14 w-32 px-6 text-center font-semibold text-ink">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -180,8 +182,17 @@ export default function CampaignInterviewsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-bold tabular-nums text-ink">{record.values.haCultivo} ha</span>
+                                            <span className="font-bold tabular-nums text-ink">
+                                                {record.values.haCultivo} ha
+                                                {record.values.estimacionCosechaKg ? ` · ${formatCampaignNumber(Number(record.values.estimacionCosechaKg))} kg est.` : ""}
+                                            </span>
                                             <span className="mt-0.5 text-[12px] font-medium text-ink-muted">{record.values.densidadPlantacion} plantas/ha · {record.values.frecuenciaRiego} riegos/día</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col items-start gap-1">
+                                            <StatusBadge status={record.values.estadoFitosanitario || "Óptimo"} />
+                                            {record.values.accesoVial && <span className="text-[11.5px] font-medium text-ink-muted">{record.values.accesoVial}</span>}
                                         </div>
                                     </TableCell>
                                     <TableCell className="px-6">

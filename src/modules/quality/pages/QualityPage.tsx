@@ -6,6 +6,9 @@ import QualityStatusTabs from "@/modules/quality/components/QualityStatusTabs";
 import QualityFilters from "@/modules/quality/components/QualityFilters";
 import QualityTable from "@/modules/quality/components/QualityTable";
 import QualityAddCampaignModal from "@/modules/quality/components/QualityAddCampaignModal";
+import QualityCampaignWorkspace, {
+    type QualityWorkspaceTab,
+} from "@/modules/quality/components/QualityCampaignWorkspace";
 import {
     filterQualityCampaigns,
     type QualityCampaign,
@@ -17,6 +20,10 @@ export default function QualityPage() {
     const campaigns = useQualityCampaigns();
     const [scope, setScope] = useState<QualityScope>("exportador");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [activeCampaign, setActiveCampaign] = useState<QualityCampaign | null>(null);
+    const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<QualityWorkspaceTab | undefined>(
+        undefined,
+    );
 
     // Filtros
     const [search, setSearch] = useState("");
@@ -24,7 +31,8 @@ export default function QualityPage() {
     const [statusFilter, setStatusFilter] = useState("");
     const [feedback, setFeedback] = useState<string | null>(null);
 
-    const hasActiveFilters = search.trim() !== "" || campaignFilter !== "" || statusFilter !== "";
+    const hasActiveFilters =
+        search.trim() !== "" || campaignFilter !== "" || statusFilter !== "";
 
     const clearFilters = () => {
         setSearch("");
@@ -56,7 +64,13 @@ export default function QualityPage() {
     }, [campaignsInScope]);
 
     const filteredData = useMemo(() => {
-        return filterQualityCampaigns(campaigns, scope, campaignFilter, statusFilter, search);
+        return filterQualityCampaigns(
+            campaigns,
+            scope,
+            campaignFilter,
+            statusFilter,
+            search,
+        );
     }, [campaigns, scope, campaignFilter, statusFilter, search]);
 
     const existingCampaignIds = useMemo(() => {
@@ -64,17 +78,28 @@ export default function QualityPage() {
     }, [campaignsInScope]);
 
     const handleViewDetails = (campaign: QualityCampaign) => {
-        setFeedback(`Ver detalles de ${campaign.nombre} (módulo en preparación).`);
+        setActiveWorkspaceTab(scope === "exportador" ? "resumen" : "carga");
+        setActiveCampaign(campaign);
     };
 
-    const handleSelectAction = (actionId: "analisis" | "carga" | "guias", campaign: QualityCampaign) => {
-        const labelMap = {
-            analisis: "Análisis y revisión",
-            carga: "Carga",
-            guias: "Guías de remisión",
-        };
-        setFeedback(`${labelMap[actionId]} de ${campaign.nombre} (próximamente disponible).`);
+    const handleSelectAction = (
+        actionId: "analisis" | "carga" | "guias",
+        campaign: QualityCampaign,
+    ) => {
+        setActiveWorkspaceTab(actionId);
+        setActiveCampaign(campaign);
     };
+
+    if (activeCampaign) {
+        return (
+            <QualityCampaignWorkspace
+                campaign={activeCampaign}
+                scope={scope}
+                initialTab={activeWorkspaceTab}
+                onBack={() => setActiveCampaign(null)}
+            />
+        );
+    }
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
@@ -142,7 +167,9 @@ export default function QualityPage() {
                 existingCampaignIds={existingCampaignIds}
                 onAdd={(input) => {
                     addQualityCampaign(input);
-                    setFeedback(`Campaña ${input.nombre} agregada a ${scope === "exportador" ? "Exportador" : "Industria"}.`);
+                    setFeedback(
+                        `Campaña ${input.nombre} agregada a ${scope === "exportador" ? "Exportador" : "Industria"}.`,
+                    );
                 }}
             />
         </div>

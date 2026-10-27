@@ -9,9 +9,10 @@ type DownloadState = 'idle' | 'downloading' | 'cancelled' | 'complete';
 
 interface AdminLoginFormProps {
     onLogin: () => void;
+    onDriverLogin?: () => void;
 }
 
-export default function AdminLoginForm({ onLogin }: AdminLoginFormProps) {
+export default function AdminLoginForm({ onLogin, onDriverLogin }: AdminLoginFormProps) {
     const [view, setView] = useState<ViewState>('login');
     const contentRef = useRef<HTMLDivElement>(null);
     const [cardHeight, setCardHeight] = useState<number>();
@@ -68,7 +69,7 @@ export default function AdminLoginForm({ onLogin }: AdminLoginFormProps) {
                             </p>
                         </div>
 
-                        <FormControl onSubmit={() => setView('confirm')} />
+                        <FormControl onSubmit={() => setView('confirm')} onDriverLogin={onDriverLogin} />
 
                         <OfflineDownload
                             state={downloadState}
