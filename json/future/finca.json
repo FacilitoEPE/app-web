@@ -40,5 +40,26 @@
     "codigoEstablecimiento": "0001",
     "frutaDerivadaId": 1,
     "edadCultivoAnios": null
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fincaId": 3,
+    "nombreFinca": "Finca La Esperanza",
+    "departamento": "Lambayeque",
+    "provincia": "Lambayeque",
+    "distrito": "Mochumí",
+    "latitud": -6.5432,
+    "longitud": -79.8765,
+    "haTotalFinca": 6.0,
+    "haCultivo": 4.5,
+    "proveedorId": 4,
+    "codigoLugarProduccion": "000203",
+    "codigoCatastral": null,
+    "ubigeo": "140307",
+    "direccion": "Sector La Florida Parcela 12",
+    "codigoEstablecimiento": "0001",
+    "frutaDerivadaId": 1,
+    "edadCultivoAnios": null
   }
 ]

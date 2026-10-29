@@ -1,16 +1,44 @@
 [
   {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
     "proveedorXFrutaDerivadaId": 1,
     "proveedorId": 1,
-    "frutaDerivadaId": 1,
-    "createdAt": "2026-10-29T13:00:00.000Z",
-    "updatedAt": "2026-10-29T13:00:00.000Z"
+    "frutaDerivadaId": 1
   },
   {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
     "proveedorXFrutaDerivadaId": 2,
     "proveedorId": 2,
-    "frutaDerivadaId": 1,
+    "frutaDerivadaId": 2
+  },
+  {
     "createdAt": "2026-10-29T13:00:00.000Z",
-    "updatedAt": "2026-10-29T13:00:00.000Z"
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "proveedorXFrutaDerivadaId": 3,
+    "proveedorId": 3,
+    "frutaDerivadaId": 1
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "proveedorXFrutaDerivadaId": 4,
+    "proveedorId": 4,
+    "frutaDerivadaId": 1
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "proveedorXFrutaDerivadaId": 5,
+    "proveedorId": 1,
+    "frutaDerivadaId": 3
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "proveedorXFrutaDerivadaId": 6,
+    "proveedorId": 3,
+    "frutaDerivadaId": 3
   }
 ]

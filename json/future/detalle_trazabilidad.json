@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "idDetalleTrazabilidad": 1,
+    "guiaUrl": "https://example.com/guias/guia-traza-1.pdf",
+    "flete": 450.0,
+    "sctr": "SCTR-2026-001",
+    "estibas": 50.0,
+    "pasajes": 20.0,
+    "comida": 30.0,
+    "idTrazabilidadTransporte": 1,
+    "cargaId": 1,
+    "guiaRemisionId": 1,
+    "sctrArchivoId": null
+  }
+]

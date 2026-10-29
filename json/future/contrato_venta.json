@@ -32,5 +32,22 @@
     "updatedAt": "2026-10-29T13:00:00.000Z",
     "condicionesEntrega": "FOB Paita",
     "observaciones": null
+  },
+  {
+    "contratoVentaId": 3,
+    "clienteNegocioCampanaId": 4,
+    "numero": "CTR-PALTA-001",
+    "canal": "EXPORTACION",
+    "fecha": "2026-10-10",
+    "kilosAcordados": 15000,
+    "precioKg": 2.8,
+    "moneda": "USD",
+    "estado": "VIGENTE",
+    "condicionesPago": "30 días fecha factura",
+    "archivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "condicionesEntrega": "FOB Callao",
+    "observaciones": "Palta Hass calibre 16-20"
   }
 ]

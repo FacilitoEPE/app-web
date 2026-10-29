@@ -20,5 +20,27 @@
     "observaciones": null,
     "historialCobertura": [],
     "tipoCertificacion": "Global GAP"
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "certificadoId": 2,
+    "nombre": "Certificación GlobalG.A.P. Palta Hass",
+    "documentUrl": null,
+    "costo": 2500,
+    "reciboUrl": null,
+    "fechaVencimiento": "2027-10-31",
+    "estado": "vigente",
+    "campaniaId": 2,
+    "codigo": "GG-PALTA-2026",
+    "normaId": null,
+    "organismo": "Control Union Perú",
+    "fechaEmision": "2026-10-15",
+    "moneda": "PEN",
+    "documentoArchivoId": null,
+    "vigenciaDesde": "2026-10-15",
+    "observaciones": "Auditoría inicial aprobada",
+    "historialCobertura": [],
+    "tipoCertificacion": "Global GAP"
   }
 ]

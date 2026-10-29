@@ -3,13 +3,26 @@
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z",
     "idChoferTransporteExterno": 1,
-    "nombre": "Miguel Torres",
-    "telefono": "930000001",
-    "correo": null,
     "idEmpresaTransporteExterno": 1,
+    "nombre": "Miguel Torres Ramos",
+    "telefono": "900000002",
+    "correo": "persona2@example.com",
+    "numeroLicencia": "Q40000002",
     "personaId": 2,
-    "activo": true,
     "usuarioId": 2,
-    "numeroLicencia": "Q40000002"
+    "activo": true
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "idChoferTransporteExterno": 2,
+    "idEmpresaTransporteExterno": 2,
+    "nombre": "Pedro Pablo Morales Ruiz",
+    "telefono": "900000008",
+    "correo": "pedro.morales@transnorte.com",
+    "numeroLicencia": "Q40000008",
+    "personaId": 8,
+    "usuarioId": null,
+    "activo": true
   }
 ]

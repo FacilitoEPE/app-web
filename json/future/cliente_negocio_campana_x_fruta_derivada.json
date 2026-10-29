@@ -1,16 +1,37 @@
 [
   {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
     "clienteNegocioCampanaXFrutaDerivadaId": 1,
     "clienteNegocioCampanaId": 1,
-    "frutaDerivadaId": 1,
-    "createdAt": "2026-10-29T13:00:00.000Z",
-    "updatedAt": "2026-10-29T13:00:00.000Z"
+    "frutaDerivadaId": 1
   },
   {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
     "clienteNegocioCampanaXFrutaDerivadaId": 2,
     "clienteNegocioCampanaId": 2,
-    "frutaDerivadaId": 1,
+    "frutaDerivadaId": 2
+  },
+  {
     "createdAt": "2026-10-29T13:00:00.000Z",
-    "updatedAt": "2026-10-29T13:00:00.000Z"
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "clienteNegocioCampanaXFrutaDerivadaId": 3,
+    "clienteNegocioCampanaId": 3,
+    "frutaDerivadaId": 1
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "clienteNegocioCampanaXFrutaDerivadaId": 4,
+    "clienteNegocioCampanaId": 4,
+    "frutaDerivadaId": 3
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "clienteNegocioCampanaXFrutaDerivadaId": 5,
+    "clienteNegocioCampanaId": 5,
+    "frutaDerivadaId": 3
   }
 ]

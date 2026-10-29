@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "certificadoProveedorId": 1,
+    "proveedorId": 1,
+    "nombre": "Certificado de Lugar de Producción SENASA",
+    "fechaRevisionSenasa": "2026-09-15",
+    "documentoArchivoId": null
+  },
+  {
+    "certificadoProveedorId": 2,
+    "proveedorId": 2,
+    "nombre": "Certificado Fitosanitario SENASA",
+    "fechaRevisionSenasa": "2026-08-20",
+    "documentoArchivoId": null
+  }
+]

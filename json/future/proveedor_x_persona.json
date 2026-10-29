@@ -1,11 +1,38 @@
 [
   {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
     "proveedorXPersonaId": 1,
     "proveedorId": 1,
-    "personaId": 3,
-    "vinculo": "Familiar",
-    "activo": true,
+    "personaId": 1,
+    "vinculo": "titular",
+    "activo": true
+  },
+  {
     "createdAt": "2026-10-29T13:00:00.000Z",
-    "updatedAt": "2026-10-29T13:00:00.000Z"
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "proveedorXPersonaId": 2,
+    "proveedorId": 2,
+    "personaId": 4,
+    "vinculo": "titular",
+    "activo": true
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "proveedorXPersonaId": 3,
+    "proveedorId": 3,
+    "personaId": 6,
+    "vinculo": "titular",
+    "activo": true
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "proveedorXPersonaId": 4,
+    "proveedorId": 4,
+    "personaId": 7,
+    "vinculo": "titular",
+    "activo": true
   }
 ]

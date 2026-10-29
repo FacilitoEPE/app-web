@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "idTrazabilidadTransporte": 1,
+    "contratoUrl": "https://example.com/contratos/traza-1.pdf",
+    "kgComprados": 1000,
+    "kgPlanta": 980,
+    "estado": "llegada",
+    "cxpId": 1,
+    "coordinacionEntregaId": 1,
+    "cargaId": 1
+  }
+]

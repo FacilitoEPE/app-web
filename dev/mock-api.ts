@@ -226,7 +226,13 @@ export function mockApiPlugin(apiBaseUrl: string | undefined): Plugin {
       if (!enabled) return
       server.middlewares.use(createFutureMockMiddleware(server.config.root))
       server.middlewares.use(createMockMiddleware(path.join(server.config.root, 'json')))
-      server.config.logger.info('[mock-api] Datos ficticios de json/. Cambios en memoria; reinicia Vite para restaurarlos.')
+      server.watcher.add(path.join(server.config.root, 'json/**/*.json'))
+      server.watcher.on('change', (file) => {
+        if (file.includes(path.sep + 'json' + path.sep)) {
+          void server.restart()
+        }
+      })
+      server.config.logger.info('[mock-api] Datos ficticios cargados desde json/. Recarga automática al modificar fixtures.')
     },
   }
 }

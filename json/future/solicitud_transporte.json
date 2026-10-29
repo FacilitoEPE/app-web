@@ -16,5 +16,23 @@
     "estado": "BORRADOR",
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "solicitudTransporteId": 2,
+    "campaniaId": 2,
+    "referencia": "SOL-PALTA-001",
+    "fecha": "2026-10-20T13:00:00.000Z",
+    "origen": "Olmos - Motupe",
+    "destino": "Planta Paita",
+    "ventanaServicio": "Noviembre 2026",
+    "cantidadEstimada": "20.000 kg",
+    "caracteristicasVehiculo": null,
+    "condiciones": null,
+    "limiteRespuesta": null,
+    "mensaje": null,
+    "archivoId": null,
+    "estado": "BORRADOR",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
   }
 ]

@@ -32,5 +32,22 @@
     "moneda": "PEN",
     "adelantoAcordado": 0,
     "referenciaCotizacion": null
+  },
+  {
+    "acuerdoTransporteId": 3,
+    "campaniaId": 2,
+    "idEmpresaTransporteExterno": 2,
+    "cotizacionTransporteId": null,
+    "tipoPago": "CON_ADELANTO",
+    "montoAcordado": 1200,
+    "fechaAcuerdo": "2026-10-20",
+    "fechaPagoFinal": "2026-12-20",
+    "archivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "estado": "CONFIRMADO",
+    "moneda": "PEN",
+    "adelantoAcordado": 300,
+    "referenciaCotizacion": null
   }
 ]

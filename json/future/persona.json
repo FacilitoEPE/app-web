@@ -58,5 +58,53 @@
     "documentoArchivoId": null,
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "personaId": 6,
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "40000006",
+    "nombres": "Carlos Alberto",
+    "apellidos": "Vásquez Ríos",
+    "telefono": "900000006",
+    "correo": "carlos.vasquez@example.com",
+    "documentoArchivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "personaId": 7,
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "40000007",
+    "nombres": "Rosa Isabel",
+    "apellidos": "García Silva",
+    "telefono": "900000007",
+    "correo": "rosa.garcia@example.com",
+    "documentoArchivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "personaId": 8,
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "40000008",
+    "nombres": "Pedro Pablo",
+    "apellidos": "Morales Ruiz",
+    "telefono": "900000008",
+    "correo": "pedro.morales@transnorte.com",
+    "documentoArchivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "personaId": 9,
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "40000009",
+    "nombres": "Ana Sofía",
+    "apellidos": "Velarde Campos",
+    "telefono": "900000009",
+    "correo": "ana.velarde@losandesexport.com",
+    "documentoArchivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
   }
 ]

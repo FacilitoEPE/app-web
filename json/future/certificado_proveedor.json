@@ -3,9 +3,27 @@
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z",
     "certificadoProveedorId": 1,
-    "fechaRevisionSenasa": "2026-10-01",
-    "nombre": "Registro SENASA (demo)",
     "proveedorId": 1,
+    "nombre": "Certificado de Lugar de Producción SENASA",
+    "fechaRevisionSenasa": "2026-09-15",
+    "documentoArchivoId": null
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "certificadoProveedorId": 2,
+    "proveedorId": 2,
+    "nombre": "Certificado Fitosanitario SENASA",
+    "fechaRevisionSenasa": "2026-08-20",
+    "documentoArchivoId": null
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "certificadoProveedorId": 3,
+    "proveedorId": 4,
+    "nombre": "Certificación Orgánica USDA/NOP",
+    "fechaRevisionSenasa": "2026-09-01",
     "documentoArchivoId": null
   }
 ]

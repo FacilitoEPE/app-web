@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "idChoferVehiculoExterno": 1,
+    "fechaAsignacionInicio": "2026-10-29T08:00:00Z",
+    "fechaAsignacionFinal": "2026-10-29T18:00:00Z",
+    "idVehiculoExterno": 1,
+    "idChoferTransporteExterno": 1,
+    "idTrazabilidadTransporte": 1,
+    "coordinacionEntregaId": 1
+  }
+]

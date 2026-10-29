@@ -12,5 +12,33 @@
     "pxfId": 2,
     "proveedorId": 2,
     "frutaId": 1
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "pxfId": 3,
+    "proveedorId": 3,
+    "frutaId": 1
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "pxfId": 4,
+    "proveedorId": 4,
+    "frutaId": 1
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "pxfId": 5,
+    "proveedorId": 1,
+    "frutaId": 2
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "pxfId": 6,
+    "proveedorId": 3,
+    "frutaId": 2
   }
 ]
