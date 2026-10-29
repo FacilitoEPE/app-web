@@ -1,0 +1,24 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "certificadoId": 1,
+    "nombre": "Certificación de campaña",
+    "documentUrl": null,
+    "costo": 2000,
+    "reciboUrl": null,
+    "fechaVencimiento": "2027-09-30",
+    "estado": "vigente",
+    "campaniaId": 1,
+    "codigo": null,
+    "normaId": null,
+    "organismo": null,
+    "fechaEmision": null,
+    "moneda": "PEN",
+    "documentoArchivoId": null,
+    "vigenciaDesde": "2026-10-01",
+    "observaciones": null,
+    "historialCobertura": [],
+    "tipoCertificacion": "Global GAP"
+  }
+]

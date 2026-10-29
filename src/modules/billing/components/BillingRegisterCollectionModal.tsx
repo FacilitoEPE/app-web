@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useState } from "react";
 import { Banknote, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -15,7 +16,7 @@ import type {
     BillingCollectionItem,
     BillingInvoice,
     BillingLoad,
-} from "@/modules/billing/billing.demo";
+} from "@/modules/billing/billing.models";
 
 interface BillingRegisterCollectionModalProps {
     open: boolean;
@@ -53,28 +54,28 @@ export default function BillingRegisterCollectionModal({
     const [evidencia, setEvidencia] = useState<FileSource | null>(null);
     const [observaciones, setObservaciones] = useState("");
 
-    useEffect(() => {
+    useResetOnToggle(open, () => {
         if (!invoice || !open) return;
         const cobrado = invoice.cobros.reduce((s, c) => s + c.importe, 0);
         const saldo = Math.max(0, invoice.total - cobrado);
-        setFecha("2026-10-26");
+        setFecha(new Date().toISOString().slice(0,10));
         setImporte(String(saldo));
         setMedio("Transferencia");
         setReferencia("");
         setEvidencia(null);
         setObservaciones("");
-    }, [invoice, open]);
+    });
 
     if (!client || !load || !invoice) return null;
 
     const totalCobrado = invoice.cobros.reduce((s, c) => s + c.importe, 0);
     const saldoPendiente = Math.max(0, invoice.total - totalCobrado);
-    const symbol = invoice.moneda === "USD" ? "US$" : "S/";
+    const symbol = invoice.moneda === "EUR" ? "€" : invoice.moneda === "USD" ? "US$" : "S/";
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const amount = Number(importe) || 0;
         if (amount <= 0) return;
-        onRegister(client.id, load.id, invoice.id, {
+        await onRegister(client.id, load.id, invoice.id, {
             fecha,
             importe: amount,
             medio,

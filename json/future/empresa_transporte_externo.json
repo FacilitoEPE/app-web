@@ -1,0 +1,38 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "idEmpresaTransporteExterno": 1,
+    "nombreCompleto": "Transportes del Norte SAC",
+    "ruc": "20100000001",
+    "correo": "transporte@example.com",
+    "numero": "920000001",
+    "tipoTransportista": "EMPRESA",
+    "tipoDocumento": null,
+    "numeroDocumento": null,
+    "personaId": null,
+    "registroMtc": "1542870-CNG",
+    "departamento": null,
+    "provincia": null,
+    "ciudad": null,
+    "activo": true
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "idEmpresaTransporteExterno": 2,
+    "nombreCompleto": "José Ramírez",
+    "ruc": null,
+    "correo": null,
+    "numero": "920000002",
+    "tipoTransportista": "INDEPENDIENTE",
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "04000009",
+    "personaId": null,
+    "registroMtc": null,
+    "departamento": null,
+    "provincia": null,
+    "ciudad": null,
+    "activo": true
+  }
+]

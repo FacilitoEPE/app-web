@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useEffect, useState } from "react";
 import { X, Save, Sprout } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -86,6 +87,8 @@ export default function CampaignFormModal({
                     setValues({
                         ...EMPTY_CAMPAIGN,
                         nombre: campana.nombre,
+                        añoTemporada: campana.temporada ?? "",
+                        observaciones: campana.observaciones ?? "",
                         frutaId: campana.frutaId,
                         fechaInicio: formatFecha(campana.fechaInicio),
                         fechaFin: formatFecha(campana.fechaFin),
@@ -134,6 +137,7 @@ export default function CampaignFormModal({
         try {
             const input = {
                 ...validation.data,
+                ...(usesV1() ? {temporada:values.añoTemporada.trim()||null,observaciones:values.observaciones.trim()||null} : {}),
                 fechaInicio: parseFecha(validation.data.fechaInicio),
                 fechaFin: parseFecha(validation.data.fechaFin),
             };
@@ -185,7 +189,7 @@ export default function CampaignFormModal({
                 {/* Fila 1 */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InputField id="campaign-nombre" label="Nombre de Campaña:" placeholder="Ej: Campaña Mango 2026" value={values.nombre} onChange={(value) => set("nombre", value)} error={errors.nombre} />
-                    <InputField id="campaign-responsable" label="Responsable:" placeholder="Nombre del administrador" value={values.responsable} onChange={(value) => set("responsable", value)} error={errors.responsable} />
+                    <InputField id="campaign-responsable" disabled={usesV1()} hint={usesV1() ? "Pendiente de asignación por usuario" : undefined} label="Responsable:" placeholder="Nombre del administrador" value={values.responsable} onChange={(value) => set("responsable", value)} error={errors.responsable} />
                 </div>
 
                 {/* Fila 2 */}

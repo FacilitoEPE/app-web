@@ -1,0 +1,16 @@
+[
+  {
+    "liquidacionTransporteId": 1,
+    "cargaId": 1,
+    "numero": "LT-DEMO-1",
+    "fecha": "2026-10-29",
+    "flete": 500,
+    "registradoPorUsuarioId": 1,
+    "archivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fechaVencimiento": null,
+    "moneda": "PEN",
+    "observaciones": null
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "personaId": 1,
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "40000001",
+    "nombres": "José Luis",
+    "apellidos": "Ramos Quispe",
+    "telefono": "900000001",
+    "correo": "persona1@example.com",
+    "documentoArchivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "personaId": 2,
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "40000002",
+    "nombres": "Miguel",
+    "apellidos": "Torres Ramos",
+    "telefono": "900000002",
+    "correo": "persona2@example.com",
+    "documentoArchivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "personaId": 3,
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "40000003",
+    "nombres": "Rosa",
+    "apellidos": "Ramos Vega",
+    "telefono": "900000003",
+    "correo": "persona3@example.com",
+    "documentoArchivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "personaId": 4,
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "40000004",
+    "nombres": "María Elena",
+    "apellidos": "Flores Vega",
+    "telefono": "900000004",
+    "correo": "persona4@example.com",
+    "documentoArchivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "personaId": 5,
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "40000005",
+    "nombres": "Administrador",
+    "apellidos": "Demo",
+    "telefono": "900000005",
+    "correo": "persona5@example.com",
+    "documentoArchivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

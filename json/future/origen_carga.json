@@ -1,0 +1,20 @@
+[
+  {
+    "origenCargaId": 1,
+    "proveedorCargaId": 1,
+    "cxpId": 1,
+    "kilosOrigen": 600,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fincaId": 1
+  },
+  {
+    "origenCargaId": 2,
+    "proveedorCargaId": 2,
+    "cxpId": 2,
+    "kilosOrigen": 400,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fincaId": 2
+  }
+]

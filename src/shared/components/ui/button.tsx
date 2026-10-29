@@ -3,6 +3,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 import { BRAND_ACTIVE_SURFACE } from "@/shared/styles/brandGradients"
+import { useModalAction } from '../../hooks/modal-action'
+import { clearActionError, isPromise, reportActionError } from '../../api/action-errors'
 
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg]:transition-transform [&_svg]:duration-200 hover:[&_svg]:scale-110 active:[&_svg]:scale-95",
@@ -50,14 +52,26 @@ function Button({
   variant = "default",
   size = "default",
   style,
+  onClick,
+  disabled,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants> & { style?: React.CSSProperties }) {
+  const action = useModalAction()
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       style={variant === "default" ? { ...BRAND_ACTIVE_SURFACE, ...style } : style}
       {...props}
+      disabled={disabled || action?.pending}
+      onClick={(event) => {
+        if (action) { action.run(() => onClick?.(event)); return }
+        clearActionError()
+        try {
+          const result: unknown = onClick?.(event)
+          if (isPromise(result)) void Promise.resolve(result).catch(reportActionError)
+        } catch (error) { reportActionError(error) }
+      }}
     />
   )
 }

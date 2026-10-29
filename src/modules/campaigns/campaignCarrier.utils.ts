@@ -35,7 +35,7 @@ export interface CampaignCarrierLink {
     carrierId: number;
     /** yyyy-MM-dd */
     fechaVinculacion: string;
-    cotizacion: File;
+    cotizacion: File | null;
     acuerdo: CarrierPaymentAgreement | null;
 }
 

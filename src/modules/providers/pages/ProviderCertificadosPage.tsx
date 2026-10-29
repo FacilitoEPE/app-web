@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Plus, ShieldCheck, UserRound } from "lucide-react";
@@ -70,12 +71,12 @@ function ProviderCertificadosView({ provider }: { provider: Proveedor }) {
     const [form, setForm] = useState<{ open: boolean; certificate: CertificadoLocal | null }>({ open: false, certificate: null });
     const [success, setSuccess] = useState<{ open: boolean; mode: ProviderSuccessMode }>({ open: false, mode: "certificado" });
 
-    const handleSave = (values: CertificadoFormValues, file: File | null) => {
+    const handleSave = async (values: CertificadoFormValues, file: File | null) => {
         const editing = form.certificate;
         if (editing) {
-            updateCertificado(provider.proveedorId, editing.certificadoId, values, file ?? undefined);
-        } else if (file) {
-            addCertificado(provider.proveedorId, values, file);
+            await updateCertificado(provider.proveedorId, editing.certificadoId, values, file ?? undefined);
+        } else if (file || usesV1()) {
+            await addCertificado(provider.proveedorId, values, file);
         }
         setForm((current) => ({ ...current, open: false }));
         setSuccess({ open: true, mode: editing ? "certificado-edit" : "certificado" });

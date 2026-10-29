@@ -1,3 +1,6 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { analysisOriginOptions } from '@/modules/quality/api/quality-commands.api';
+import { Combobox } from '@/shared/components/ui/combobox';
 import { useState } from "react";
 import {
     AlertTriangle,
@@ -33,7 +36,7 @@ import type {
     QualityLabAnalysisRecord,
     QualityMtdProducerRecord,
     QualityReviewStatus,
-} from "@/modules/quality/qualityOperations.demo";
+} from "@/modules/quality/qualityOperations.models";
 
 interface QualityDeliveryReviewModalProps {
     open: boolean;
@@ -55,6 +58,7 @@ export default function QualityDeliveryReviewModal({
     load,
     onSave,
 }: QualityDeliveryReviewModalProps) {
+    const [originId, setOriginId] = useState("");
     const [mtdList, setMtdList] = useState<QualityMtdProducerRecord[]>([]);
     const [labList, setLabList] = useState<QualityLabAnalysisRecord[]>([]);
 
@@ -69,6 +73,7 @@ export default function QualityDeliveryReviewModal({
 
     useResetOnToggle(open, () => {
         if (!load) return;
+        setOriginId("");
         setMtdList(load.mtdRegistros.map((r) => ({ ...r })));
         setLabList(load.analisisLaboratorio.map((r) => ({ ...r })));
         setTipoAnalisis("Residuos de Plaguicidas");
@@ -95,9 +100,12 @@ export default function QualityDeliveryReviewModal({
     };
 
     const handleAddAnalysis = () => {
-        if (!identificacionMuestra.trim()) return;
+        if (!usesV1() && !identificacionMuestra.trim()) return;
+        const origin = usesV1() ? analysisOriginOptions(load.id).find(o=>o.value===originId)?.origin : undefined;
+        if (usesV1() && !origin) throw new Error("Selecciona el proveedor y la finca de la muestra.");
         const created: QualityLabAnalysisRecord = {
             id: `lab-${Date.now()}`,
+            origin,
             tipoAnalisis,
             fechaMuestreo,
             identificacionMuestra: identificacionMuestra.trim(),
@@ -113,7 +121,7 @@ export default function QualityDeliveryReviewModal({
     };
 
     const maxMtd = mtdList.reduce((max, item) => Math.max(max, item.mtdCalculado), 0);
-    const hasHighMtd = maxMtd > 0.5;
+    const hasHighMtd = mtdList.some(item=>item.mtdCalculado > (item.limiteAplicado ?? (usesV1() ? Infinity : 0.5)));
     const hasNonAptLab = labList.some((item) => item.resultado === "No apto");
 
     return (
@@ -132,8 +140,8 @@ export default function QualityDeliveryReviewModal({
                     <Button
                         variant="outline"
                         size="xl"
-                        onClick={() => {
-                            onSave(load.id, {
+                        onClick={async () => {
+                            await onSave(load.id, {
                                 estadoRevision: "Observada",
                                 mtdRegistros: mtdList,
                                 analisisLaboratorio: labList,
@@ -145,8 +153,8 @@ export default function QualityDeliveryReviewModal({
                     </Button>
                     <Button
                         size="xl"
-                        onClick={() => {
-                            onSave(load.id, {
+                        onClick={async () => {
+                            await onSave(load.id, {
                                 estadoRevision: "Aprobada para cosecha",
                                 mtdRegistros: mtdList,
                                 analisisLaboratorio: labList,
@@ -178,7 +186,7 @@ export default function QualityDeliveryReviewModal({
                         },
                         {
                             label: "Aptitud de laboratorio",
-                            value: hasNonAptLab ? "Con muestra No apta" : "100% Apto",
+                            value: hasNonAptLab ? "Con muestra No apta" : !labList.length || labList.some(a=>a.resultado==="Pendiente") ? "Pendiente" : "100% Apto",
                             tone: hasNonAptLab ? "highlight" : "brand",
                         },
                     ]}
@@ -188,8 +196,7 @@ export default function QualityDeliveryReviewModal({
                     <div className="flex items-center gap-3 rounded-2xl border border-status-error/40 bg-status-error-bg/30 p-3.5 text-[13px] font-medium text-ink">
                         <AlertTriangle size={18} className="shrink-0 text-status-error" />
                         <span>
-                            <strong>Alerta Fitosanitaria SENASA:</strong> Al menos una finca supera el umbral de{" "}
-                            <strong>MTD 0.5000</strong>. Verifica las capturas antes de autorizar la cosecha.
+                            <strong>Revisión fitosanitaria:</strong> Al menos una finca supera el límite MTD registrado. Verifica la medición antes de autorizar la cosecha.
                         </span>
                     </div>
                 )}
@@ -200,7 +207,7 @@ export default function QualityDeliveryReviewModal({
                 >
                     <div className="flex flex-col gap-4">
                         {mtdList.map((item, idx) => {
-                            const exceeds = item.mtdCalculado > 0.5;
+                            const exceeds = item.mtdCalculado > (item.limiteAplicado ?? (usesV1() ? Infinity : 0.5));
                             return (
                                 <div
                                     key={item.id}
@@ -226,7 +233,7 @@ export default function QualityDeliveryReviewModal({
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                    {usesV1() ? <InputField id={`mtd-value-${item.id}`} label="MTD registrado" type="number" step="0.0001" value={String(item.mtdCalculado)} onChange={v=>setMtdList(rows=>rows.map((row,i)=>i===idx?{...row,mtdCalculado:Number(v)}:row))} /> : <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                         <InputField
                                             id={`mtd-cap-${item.id}`}
                                             label="Moscas capturadas"
@@ -256,7 +263,7 @@ export default function QualityDeliveryReviewModal({
                                                 })
                                             }
                                         />
-                                    </div>
+                                    </div>}
 
                                     <FileDropzone
                                         label="Reporte o evidencia del conteo SENASA"
@@ -305,23 +312,23 @@ export default function QualityDeliveryReviewModal({
                                 onChange={setFechaMuestreo}
                             />
 
-                            <InputField
+                            {usesV1() ? <FormField label="Proveedor y finca" required><Combobox options={analysisOriginOptions(load.id)} value={originId} onChange={setOriginId} placeholder="Seleccionar origen" /></FormField> : <InputField
                                 id="lab-id-muestra"
                                 label="Identificación de muestra"
                                 value={identificacionMuestra}
                                 onChange={setIdentificacionMuestra}
                                 placeholder="Ej. MUE-LMR-2026-085"
-                            />
+                            />}
                         </div>
 
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                            <InputField
+                            {!usesV1() && <InputField
                                 id="lab-etapa"
                                 label="Etapa de muestreo"
                                 value={etapa}
                                 onChange={setEtapa}
                                 placeholder="Pre-cosecha / Liberación"
-                            />
+                            />}
                             <FormField label="Resultado" required>
                                 <Select
                                     value={resultado}

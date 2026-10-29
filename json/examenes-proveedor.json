@@ -1,0 +1,42 @@
+[
+  {
+    "examenProveedorId": 1,
+    "proveedorId": 1,
+    "fecha": "2026-10-10",
+    "tipoExamen": "Análisis fitosanitario",
+    "resultado": "negativo",
+    "origen": "Laboratorio de demostración",
+    "observacion": "Registro ficticio para revisar el frontend.",
+    "documentoUrl": "https://example.com/documentos/demostracion.pdf"
+  },
+  {
+    "examenProveedorId": 2,
+    "proveedorId": 2,
+    "fecha": "2026-10-10",
+    "tipoExamen": "Análisis fitosanitario",
+    "resultado": "negativo",
+    "origen": "Laboratorio de demostración",
+    "observacion": "Registro ficticio para revisar el frontend.",
+    "documentoUrl": "https://example.com/documentos/demostracion.pdf"
+  },
+  {
+    "examenProveedorId": 3,
+    "proveedorId": 4,
+    "fecha": "2026-10-10",
+    "tipoExamen": "Análisis fitosanitario",
+    "resultado": "negativo",
+    "origen": "Laboratorio de demostración",
+    "observacion": "Registro ficticio para revisar el frontend.",
+    "documentoUrl": "https://example.com/documentos/demostracion.pdf"
+  },
+  {
+    "examenProveedorId": 4,
+    "proveedorId": 6,
+    "fecha": "2026-10-10",
+    "tipoExamen": "Análisis fitosanitario",
+    "resultado": "negativo",
+    "origen": "Laboratorio de demostración",
+    "observacion": "Registro ficticio para revisar el frontend.",
+    "documentoUrl": "https://example.com/documentos/demostracion.pdf"
+  }
+]

@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+import { usesV1 } from '@/shared/api/data-contract';
 import { useMemo, useState } from "react";
 import {
     AlertTriangle,
@@ -58,7 +60,7 @@ import BillingCollectionHistoryModal from "@/modules/billing/components/BillingC
 import BillingIssueInvoiceModal from "@/modules/billing/components/BillingIssueInvoiceModal";
 import BillingPrepareInvoiceModal from "@/modules/billing/components/BillingPrepareInvoiceModal";
 import BillingRegisterCollectionModal from "@/modules/billing/components/BillingRegisterCollectionModal";
-import type { BillingInvoice, BillingLoad } from "@/modules/billing/billing.demo";
+import type { BillingInvoice, BillingLoad } from "@/modules/billing/billing.models";
 import {
     issueBillingElectronicInvoice,
     registerBillingCollection,
@@ -77,6 +79,7 @@ interface CampaignBillingRow {
 }
 
 export default function BillingPage() {
+    const navigate = useNavigate();
     const clients = useBillingClients();
 
     const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
@@ -147,6 +150,8 @@ export default function BillingPage() {
 
     // KPIs financieros para Nivel 2
     const campaignMetrics = useMemo<Metric[]>(() => {
+        let facturadoEur = 0;
+        let cobradoEur = 0;
         let facturadoUsd = 0;
         let cobradoUsd = 0;
         let facturadoPen = 0;
@@ -156,7 +161,9 @@ export default function BillingPage() {
             for (const load of cli.cargas) {
                 for (const inv of load.facturas) {
                     const cobrado = inv.cobros.reduce((s, c) => s + c.importe, 0);
-                    if (inv.moneda === "USD") {
+                    if (inv.moneda === "EUR") {
+                        facturadoEur += inv.total; cobradoEur += cobrado;
+                    } else if (inv.moneda === "USD") {
                         facturadoUsd += inv.total;
                         cobradoUsd += cobrado;
                     } else {
@@ -174,21 +181,21 @@ export default function BillingPage() {
             {
                 title: "TOTAL FACTURADO",
                 value: `US$ ${facturadoUsd.toLocaleString("es-PE")}`,
-                unit: facturadoPen > 0 ? `+ S/ ${facturadoPen.toLocaleString("es-PE")}` : "USD",
+                unit: [facturadoPen > 0 ? `S/ ${facturadoPen.toLocaleString("es-PE")}` : "", facturadoEur > 0 ? `€ ${facturadoEur.toLocaleString("es-PE")}` : ""].filter(Boolean).join(" + ") || "USD",
                 description: "Preparaciones y facturas emitidas",
                 icon: Receipt,
             },
             {
                 title: "TOTAL COBRADO",
                 value: `US$ ${cobradoUsd.toLocaleString("es-PE")}`,
-                unit: cobradoPen > 0 ? `+ S/ ${cobradoPen.toLocaleString("es-PE")}` : "USD",
+                unit: [cobradoPen > 0 ? `S/ ${cobradoPen.toLocaleString("es-PE")}` : "", cobradoEur > 0 ? `€ ${cobradoEur.toLocaleString("es-PE")}` : ""].filter(Boolean).join(" + ") || "USD",
                 description: "Abonos conciliados en bancos",
                 icon: CheckCircle2,
             },
             {
                 title: "SALDO POR COBRAR",
                 value: `US$ ${saldoUsd.toLocaleString("es-PE")}`,
-                unit: saldoPen > 0 ? `+ S/ ${saldoPen.toLocaleString("es-PE")}` : "USD",
+                unit: [saldoPen > 0 ? `S/ ${saldoPen.toLocaleString("es-PE")}` : "", facturadoEur > cobradoEur ? `€ ${(facturadoEur-cobradoEur).toLocaleString("es-PE")}` : ""].filter(Boolean).join(" + ") || "USD",
                 description: "Cuentas por cobrar pendientes",
                 icon: Wallet,
                 warm: saldoUsd > 0 || saldoPen > 0,
@@ -253,7 +260,7 @@ export default function BillingPage() {
             c.canal,
             String(c.cargas.length),
             `${formatKg(c.kilosContratados)} kg`,
-            `${c.moneda === "USD" ? "US$" : "S/"} ${(c.kilosContratados * c.precioPorKg).toLocaleString("es-PE")}`,
+            `${c.moneda === "EUR" ? "€" : c.moneda === "USD" ? "US$" : "S/"} ${(c.kilosContratados * c.precioPorKg).toLocaleString("es-PE")}`,
         ]),
     });
 
@@ -603,7 +610,7 @@ export default function BillingPage() {
                             }`}
                         >
                             {visibleClients.map((cli) => {
-                                const symbol = cli.moneda === "USD" ? "US$" : "S/";
+                                const symbol = cli.moneda === "EUR" ? "€" : cli.moneda === "USD" ? "US$" : "S/";
                                 const totalContract = cli.kilosContratados * cli.precioPorKg;
                                 return (
                                     <TableGridCard
@@ -673,7 +680,7 @@ export default function BillingPage() {
                                     </TableHeader>
                                     <TableBody>
                                         {visibleClients.map((cli) => {
-                                            const symbol = cli.moneda === "USD" ? "US$" : "S/";
+                                            const symbol = cli.moneda === "EUR" ? "€" : cli.moneda === "USD" ? "US$" : "S/";
                                             const totalContract =
                                                 cli.kilosContratados * cli.precioPorKg;
                                             return (
@@ -758,7 +765,7 @@ export default function BillingPage() {
                             {
                                 icon: <Wallet />,
                                 label: "Precio y total contratado",
-                                value: `${activeClient.moneda === "USD" ? "US$" : "S/"} ${activeClient.precioPorKg.toFixed(2)} / kg · Total: ${activeClient.moneda === "USD" ? "US$" : "S/"} ${(activeClient.kilosContratados * activeClient.precioPorKg).toLocaleString("es-PE")}`,
+                                value: `${activeClient.moneda === "EUR" ? "€" : activeClient.moneda === "USD" ? "US$" : "S/"} ${activeClient.precioPorKg.toFixed(2)} / kg · Total: ${activeClient.moneda === "EUR" ? "€" : activeClient.moneda === "USD" ? "US$" : "S/"} ${(activeClient.kilosContratados * activeClient.precioPorKg).toLocaleString("es-PE")}`,
                             },
                         ]}
                         watermark={Building2}
@@ -767,7 +774,7 @@ export default function BillingPage() {
                     {/* Bloques por cada Carga del cliente */}
                     <div className="flex flex-col gap-5">
                         {activeClient.cargas.map((load, idx) => {
-                            const symbol = load.moneda === "USD" ? "US$" : "S/";
+                            const symbol = load.moneda === "EUR" ? "€" : load.moneda === "USD" ? "US$" : "S/";
                             const kilosFacturadosLoad = load.facturas.reduce(
                                 (s, f) => s + f.kilosFacturados,
                                 0,
@@ -804,7 +811,7 @@ export default function BillingPage() {
                                                         variant="outline"
                                                         size="lg"
                                                         onClick={() =>
-                                                            setPendingModalLoad(load.codigo)
+                                                            usesV1() ? navigate(`/campaigns/${activeClient?.campaniaId}/clients`) : setPendingModalLoad(load.codigo)
                                                         }
                                                     >
                                                         Completar pendientes
@@ -995,8 +1002,8 @@ export default function BillingPage() {
                 client={activeClient}
                 load={prepareTarget?.load ?? null}
                 editingInvoice={prepareTarget?.invoice ?? null}
-                onSave={(clientId, loadId, invoice) => {
-                    saveBillingInvoicePreparation(clientId, loadId, invoice);
+                onSave={async (clientId, loadId, invoice) => {
+                    await saveBillingInvoicePreparation(clientId, loadId, invoice);
                     setSuccessInfo({
                         title: invoice.id
                             ? "Preparación de factura actualizada"
@@ -1013,8 +1020,8 @@ export default function BillingPage() {
                 client={activeClient}
                 load={issueTarget?.load ?? null}
                 invoice={issueTarget?.invoice ?? null}
-                onIssue={(clientId, loadId, invoiceId, payload) => {
-                    issueBillingElectronicInvoice(clientId, loadId, invoiceId, payload);
+                onIssue={async (clientId, loadId, invoiceId, payload) => {
+                    await issueBillingElectronicInvoice(clientId, loadId, invoiceId, payload);
                     setSuccessInfo({
                         title: "Factura electrónica registrada",
                         description: `Se vinculó el comprobante electrónico ${payload.numeroFacturaElectronica} a la carga.`,
@@ -1028,8 +1035,8 @@ export default function BillingPage() {
                 client={activeClient}
                 load={collectionTarget?.load ?? null}
                 invoice={collectionTarget?.invoice ?? null}
-                onRegister={(clientId, loadId, invoiceId, collection) => {
-                    registerBillingCollection(clientId, loadId, invoiceId, collection);
+                onRegister={async (clientId, loadId, invoiceId, collection) => {
+                    await registerBillingCollection(clientId, loadId, invoiceId, collection);
                     setSuccessInfo({
                         title: "Cobro registrado con éxito",
                         description:

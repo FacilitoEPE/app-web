@@ -1,0 +1,42 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "entrevistaId": 1,
+    "densidad": null,
+    "distanciamiento": null,
+    "frecuencia": null,
+    "nombreAplicacion": null,
+    "anioAplicacion": null,
+    "codigo": "FVV-MANGO-1",
+    "camXProvId": 1,
+    "fincaId": 1,
+    "frutaDerivadaId": 1,
+    "distanciamientoDescripcion": "5 x 4 m",
+    "frecuenciaRiegoDescripcion": "Cada tres días",
+    "aplicacionesAlAno": 6,
+    "observaciones": null,
+    "archivoId": null,
+    "registradoPorUsuarioId": null
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "entrevistaId": 2,
+    "densidad": null,
+    "distanciamiento": null,
+    "frecuencia": null,
+    "nombreAplicacion": null,
+    "anioAplicacion": null,
+    "codigo": "FVV-MANGO-2",
+    "camXProvId": 2,
+    "fincaId": 2,
+    "frutaDerivadaId": 1,
+    "distanciamientoDescripcion": "5 x 4 m",
+    "frecuenciaRiegoDescripcion": "Cada tres días",
+    "aplicacionesAlAno": 6,
+    "observaciones": null,
+    "archivoId": null,
+    "registradoPorUsuarioId": null
+  }
+]

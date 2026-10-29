@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useState } from "react";
 import { Banknote, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -14,7 +15,7 @@ import type { FileSource } from "@/shared/utils/fileSource";
 import type {
     CarrierAdvanceItem,
     SettlementPaymentItem,
-} from "@/modules/purchase-settlement/purchaseSettlement.demo";
+} from "@/modules/purchase-settlement/purchaseSettlement.models";
 
 interface SettlementPaymentModalProps {
     open: boolean;
@@ -57,30 +58,30 @@ export default function SettlementPaymentModal({
     const saldoPendiente = Math.max(0, totalAmount - paidAmount);
     const activeAdvances = availableAdvances.filter((a) => a.saldoDisponible > 0);
 
-    useEffect(() => {
+    useResetOnToggle(open, () => {
         if (!open) return;
         setModo("Caja");
         setSelectedAdvanceId(activeAdvances[0]?.id ?? "");
-        setFecha("2026-10-26");
+        setFecha(new Date().toISOString().slice(0,10));
         setImporte(String(saldoPendiente));
         setMedio("Transferencia");
         setReferencia("");
         setEvidencia(null);
         setObservaciones("");
-    }, [open, saldoPendiente]);
+    });
 
     const advanceItems = activeAdvances.map((a) => ({
         value: a.id,
         label: `${a.referencia} · Disponible: S/ ${a.saldoDisponible.toLocaleString("es-PE")}`,
     }));
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const amount = Number(importe) || 0;
         if (amount <= 0) return;
 
         if (modo === "Adelanto") {
             const adv = activeAdvances.find((a) => a.id === selectedAdvanceId);
-            onRegister(
+            await onRegister(
                 {
                     fecha,
                     importe: amount,
@@ -94,12 +95,12 @@ export default function SettlementPaymentModal({
                 selectedAdvanceId,
             );
         } else {
-            onRegister({
+            await onRegister({
                 fecha,
                 importe: amount,
                 modo: "Caja",
                 medio,
-                referencia: referencia.trim() || "BCP-OP",
+                referencia: referencia.trim(),
                 evidencia,
                 observaciones: observaciones.trim(),
             });

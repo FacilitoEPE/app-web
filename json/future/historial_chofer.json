@@ -1,0 +1,13 @@
+[
+  {
+    "historialChoferId": 1,
+    "coordinacionEntregaId": 1,
+    "cargaId": 1,
+    "idChoferTransporteExterno": 1,
+    "estado": "EN_CARGA",
+    "fechaHora": "2026-10-29T13:00:00.000Z",
+    "observacion": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

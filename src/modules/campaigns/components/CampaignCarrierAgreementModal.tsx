@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useState } from "react";
 import { Save, Wallet, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -64,13 +65,14 @@ export default function CampaignCarrierAgreementModal({ open, onOpenChange, mode
         setErrors((current) => ({ ...current, [field]: undefined }));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const next = validateAgreement(values);
+        if (usesV1()) delete next.fechaAdelanto;
         if (Object.keys(next).length > 0) {
             setErrors(next);
             return;
         }
-        onSave(values, boleta);
+        await onSave(values, boleta);
     };
 
     const symbol = getMonedaSymbol(isView && agreement ? agreement.moneda : values.moneda);
@@ -145,12 +147,12 @@ export default function CampaignCarrierAgreementModal({ open, onOpenChange, mode
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField id="carrier-agreement-moneda" label="Moneda" required error={errors.moneda}>
-                            <Select items={MONEDA_OPTIONS} value={values.moneda || null} onValueChange={(next) => update("moneda", (next as string | null) ?? "")}>
+                            <Select items={usesV1() ? MONEDA_OPTIONS.filter(o=>o.value==="PEN") : MONEDA_OPTIONS} value={values.moneda || null} onValueChange={(next) => update("moneda", (next as string | null) ?? "")}>
                                 <SelectTrigger id="carrier-agreement-moneda" className="w-full" aria-invalid={errors.moneda ? true : undefined}>
                                     <SelectValue placeholder="Seleccionar" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {MONEDA_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                                    {(usesV1() ? MONEDA_OPTIONS.filter(o=>o.value==="PEN") : MONEDA_OPTIONS).map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </FormField>
@@ -159,7 +161,7 @@ export default function CampaignCarrierAgreementModal({ open, onOpenChange, mode
                         {isAdvance && (
                             <>
                                 <InputField {...bind("adelanto")} label="Monto del adelanto" leading={symbol} step="0.01" min={0} placeholder="0.00" />
-                                <InputField {...bind("fechaAdelanto")} type="date" label="Fecha del adelanto" />
+                                {!usesV1() && <InputField {...bind("fechaAdelanto")} type="date" label="Fecha del adelanto" />}
                             </>
                         )}
                         <InputField {...bind("fechaPago")} type="date" label={isAdvance ? "Fecha del saldo" : "Fecha de pago"} className={isAdvance ? undefined : "sm:col-span-2"} />

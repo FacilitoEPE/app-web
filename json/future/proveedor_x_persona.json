@@ -1,0 +1,11 @@
+[
+  {
+    "proveedorXPersonaId": 1,
+    "proveedorId": 1,
+    "personaId": 3,
+    "vinculo": "Familiar",
+    "activo": true,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

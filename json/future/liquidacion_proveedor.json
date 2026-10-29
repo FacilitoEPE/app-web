@@ -1,0 +1,56 @@
+[
+  {
+    "liquidacionProveedorId": 1,
+    "cargaId": 1,
+    "proveedorId": 1,
+    "personaLiquidacionId": 1,
+    "numero": "LC-DEMO-1",
+    "fecha": "2026-10-29",
+    "importeCompra": 1160,
+    "valorUitAplicado": 5500,
+    "registradoPorUsuarioId": 1,
+    "archivoId": null,
+    "observaciones": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "kilosReconocidos": 580,
+    "precioKgAplicado": 2,
+    "moneda": "PEN",
+    "fechaVencimiento": null,
+    "personaSnapshot": {
+      "nombres": "José Luis",
+      "apellidos": "Ramos Quispe",
+      "tipoDocumento": "DNI",
+      "dni": "40000001"
+    },
+    "avisoUitConfirmado": false,
+    "limiteUitAplicado": 75
+  },
+  {
+    "liquidacionProveedorId": 2,
+    "cargaId": 1,
+    "proveedorId": 2,
+    "personaLiquidacionId": 4,
+    "numero": "LC-DEMO-2",
+    "fecha": "2026-10-29",
+    "importeCompra": 760,
+    "valorUitAplicado": 5500,
+    "registradoPorUsuarioId": 1,
+    "archivoId": null,
+    "observaciones": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "kilosReconocidos": 380,
+    "precioKgAplicado": 2,
+    "moneda": "PEN",
+    "fechaVencimiento": null,
+    "personaSnapshot": {
+      "nombres": "María Elena",
+      "apellidos": "Flores Vega",
+      "tipoDocumento": "DNI",
+      "dni": "40000004"
+    },
+    "avisoUitConfirmado": false,
+    "limiteUitAplicado": 75
+  }
+]

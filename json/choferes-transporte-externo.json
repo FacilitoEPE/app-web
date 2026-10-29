@@ -1,0 +1,37 @@
+[
+  {
+    "idChoferTransporteExterno": 1,
+    "idEmpresaTransporteExterno": 1,
+    "nombre": "Juan Pérez",
+    "telefono": "930000001",
+    "correo": "chofer1@example.com"
+  },
+  {
+    "idChoferTransporteExterno": 2,
+    "idEmpresaTransporteExterno": 2,
+    "nombre": "Roberto Silva",
+    "telefono": "930000002",
+    "correo": "chofer2@example.com"
+  },
+  {
+    "idChoferTransporteExterno": 3,
+    "idEmpresaTransporteExterno": 3,
+    "nombre": "Luis Castro",
+    "telefono": "930000003",
+    "correo": "chofer3@example.com"
+  },
+  {
+    "idChoferTransporteExterno": 4,
+    "idEmpresaTransporteExterno": 4,
+    "nombre": "Pedro Ríos",
+    "telefono": "930000004",
+    "correo": "chofer4@example.com"
+  },
+  {
+    "idChoferTransporteExterno": 5,
+    "idEmpresaTransporteExterno": 5,
+    "nombre": "José Ramírez",
+    "telefono": "930000005",
+    "correo": "chofer5@example.com"
+  }
+]

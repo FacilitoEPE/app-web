@@ -237,10 +237,10 @@ function CertificationsView({ campaign }: { campaign: Campana }) {
                 onOpenChange={(open) => !open && closePanel()}
                 campaniaId={campaniaId}
                 certificate={panel.last === "form" ? selected : null}
-                onSave={(values, productores, archivos) => {
+                onSave={async (values, productores, archivos) => {
                     // TODO(api): reemplazar por la llamada al servicio cuando exista
-                    if (selected && panel.last === "form") updateCampaignCertificate(campaniaId, selected.id, values, productores, archivos);
-                    else addCampaignCertificate(campaniaId, values, productores, archivos);
+                    if (selected && panel.last === "form") await updateCampaignCertificate(campaniaId, selected.id, values, productores, archivos);
+                    else await addCampaignCertificate(campaniaId, values, productores, archivos);
                     finish("certification");
                 }}
             />
@@ -255,9 +255,9 @@ function CertificationsView({ campaign }: { campaign: Campana }) {
                 open={panel.open === "expansion"}
                 onOpenChange={(open) => !open && closePanel()}
                 certificate={selected}
-                onSave={(values) => {
+                onSave={async (values) => {
                     if (!selected) return;
-                    addCertificateExpansion(campaniaId, selected.id, values);
+                    await addCertificateExpansion(campaniaId, selected.id, values);
                     finish("expansion");
                 }}
             />
@@ -266,9 +266,9 @@ function CertificationsView({ campaign }: { campaign: Campana }) {
                 open={panel.open === "payment"}
                 onOpenChange={(open) => !open && closePanel()}
                 certificate={selected}
-                onSave={(values, evidencia) => {
+                onSave={async (values, evidencia) => {
                     if (!selected) return;
-                    addCertificatePayment(campaniaId, selected.id, values, evidencia);
+                    await addCertificatePayment(campaniaId, selected.id, values, evidencia);
                     finish("certificationPayment");
                 }}
             />

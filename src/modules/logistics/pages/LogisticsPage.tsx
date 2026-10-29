@@ -51,7 +51,7 @@ import LogisticsDocumentsClosureModal from "@/modules/logistics/components/Logis
 import LogisticsLoadDetailsModal from "@/modules/logistics/components/LogisticsLoadDetailsModal";
 import LogisticsPurchasesModal from "@/modules/logistics/components/LogisticsPurchasesModal";
 import LogisticsReceptionQualityModal from "@/modules/logistics/components/LogisticsReceptionQualityModal";
-import type { LogisticsLoad } from "@/modules/logistics/logistics.demo";
+import type { LogisticsLoad } from "@/modules/logistics/logistics.models";
 import {
     addLogisticsCrateMovement,
     updateLogisticsDocumentsClosure,
@@ -757,8 +757,8 @@ export default function LogisticsPage() {
                 open={purchasesLoad !== null}
                 onOpenChange={(open) => !open && setPurchasesLoad(null)}
                 load={purchasesLoad}
-                onSave={(loadId, payload) => {
-                    updateLogisticsPurchases(loadId, payload);
+                onSave={async (loadId, payload) => {
+                    await updateLogisticsPurchases(loadId, payload);
                     setSuccessInfo({
                         title: "Compras de la carga actualizadas",
                         description: "Se actualizaron los kilos, bultos y viáticos registrados en la carga.",
@@ -770,8 +770,8 @@ export default function LogisticsPage() {
                 open={receptionLoad !== null}
                 onOpenChange={(open) => !open && setReceptionLoad(null)}
                 load={receptionLoad}
-                onSave={(loadId, recepcion, proveedores) => {
-                    updateLogisticsReception(loadId, recepcion, proveedores);
+                onSave={async (loadId, recepcion, proveedores) => {
+                    await updateLogisticsReception(loadId, recepcion, proveedores);
                     setSuccessInfo({
                         title: "Recepción y calidad guardadas",
                         description:
@@ -784,8 +784,8 @@ export default function LogisticsPage() {
                 open={cratesLoad !== null}
                 onOpenChange={(open) => !open && setCratesLoad(null)}
                 load={cratesLoad}
-                onAddMovement={(loadId, movement) => {
-                    addLogisticsCrateMovement(loadId, movement);
+                onAddMovement={async (loadId, movement) => {
+                    await addLogisticsCrateMovement(loadId, movement);
                     setCratesLoad(null);
                     setSuccessInfo({
                         title: "Movimiento de jabas y guía registrados",
@@ -798,8 +798,8 @@ export default function LogisticsPage() {
                 open={documentsLoad !== null}
                 onOpenChange={(open) => !open && setDocumentsLoad(null)}
                 load={documentsLoad}
-                onSave={(loadId, closure) => {
-                    updateLogisticsDocumentsClosure(loadId, closure);
+                onSave={async (loadId, closure) => {
+                    await updateLogisticsDocumentsClosure(loadId, closure);
                     setSuccessInfo({
                         title: "Expediente y cierre actualizados",
                         description:

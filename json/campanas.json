@@ -1,0 +1,90 @@
+[
+  {
+    "campaniaId": 1,
+    "nombre": "Campaña Mango 2026",
+    "frutaId": 1,
+    "fechaInicio": "2026-10-01",
+    "fechaFin": "2027-03-31",
+    "estado": "en proceso",
+    "requerimientoComercial": 120000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "campaniaId": 2,
+    "nombre": "Campaña Uva 2027",
+    "frutaId": 2,
+    "fechaInicio": "2027-01-01",
+    "fechaFin": "2027-05-31",
+    "estado": "planificacion",
+    "requerimientoComercial": 90000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "campaniaId": 3,
+    "nombre": "Campaña Palta 2026",
+    "frutaId": 3,
+    "fechaInicio": "2026-03-01",
+    "fechaFin": "2026-08-31",
+    "estado": "terminado",
+    "requerimientoComercial": 75000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "campaniaId": 4,
+    "nombre": "Campaña Arándano 2026",
+    "frutaId": 4,
+    "fechaInicio": "2026-11-01",
+    "fechaFin": "2027-02-28",
+    "estado": "planificacion",
+    "requerimientoComercial": 48000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "campaniaId": 5,
+    "nombre": "Campaña Mango 2025",
+    "frutaId": 1,
+    "fechaInicio": "2025-10-01",
+    "fechaFin": "2026-03-31",
+    "estado": "terminado",
+    "requerimientoComercial": 85000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "campaniaId": 6,
+    "nombre": "Campaña Fresa 2026",
+    "frutaId": 5,
+    "fechaInicio": "2026-09-01",
+    "fechaFin": "2027-01-31",
+    "estado": "en proceso",
+    "requerimientoComercial": 32000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "campaniaId": 7,
+    "nombre": "Campaña Banana 2027",
+    "frutaId": 6,
+    "fechaInicio": "2027-02-01",
+    "fechaFin": "2027-09-30",
+    "estado": "planificacion",
+    "requerimientoComercial": 110000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "campaniaId": 8,
+    "nombre": "Campaña Maracuyá 2027",
+    "frutaId": 7,
+    "fechaInicio": "2027-01-15",
+    "fechaFin": "2027-06-30",
+    "estado": "planificacion",
+    "requerimientoComercial": 40000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  }
+]

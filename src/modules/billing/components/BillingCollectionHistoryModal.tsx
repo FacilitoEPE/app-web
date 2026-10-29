@@ -6,7 +6,7 @@ import ModalSection from "@/shared/components/ModalSection";
 import StatusBadge from "@/shared/components/StatusBadge";
 import { Button } from "@/shared/components/ui/button";
 import { formatDisplayDate } from "@/shared/utils/format";
-import type { BillingClient, BillingInvoice } from "@/modules/billing/billing.demo";
+import type { BillingClient, BillingInvoice } from "@/modules/billing/billing.models";
 
 interface BillingCollectionHistoryModalProps {
     open: boolean;
@@ -27,7 +27,7 @@ export default function BillingCollectionHistoryModal({
 
     const totalCobrado = invoice.cobros.reduce((s, c) => s + c.importe, 0);
     const saldoPendiente = Math.max(0, invoice.total - totalCobrado);
-    const symbol = invoice.moneda === "USD" ? "US$" : "S/";
+    const symbol = invoice.moneda === "EUR" ? "€" : invoice.moneda === "USD" ? "US$" : "S/";
 
     return (
         <AppModal

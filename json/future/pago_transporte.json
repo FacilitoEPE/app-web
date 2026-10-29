@@ -1,0 +1,14 @@
+[
+  {
+    "pagoTransporteId": 1,
+    "liquidacionTransporteId": 1,
+    "fecha": "2026-10-29",
+    "monto": 50,
+    "medio": "TRANSFERENCIA",
+    "referencia": "PT-DEMO-1",
+    "comprobanteId": null,
+    "registradoPorUsuarioId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

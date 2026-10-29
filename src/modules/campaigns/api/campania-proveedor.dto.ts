@@ -3,6 +3,9 @@ import type { ProveedorDto } from "@/modules/providers/api/proveedor.dto";
 export type TipoProveedorCampania = "acopio" | "productor";
 
 export interface CampaniaProveedorDto {
+  precioCompraKg?: number | null;
+  moneda?: string;
+  observaciones?: string | null;
   cxpId: number;
   campaniaId: number;
   proveedor?: ProveedorDto;
@@ -15,6 +18,9 @@ export interface CampaniaProveedorDto {
 }
 
 export interface CreateCampaniaProveedorDto {
+  precioCompraKg?: number | null;
+  moneda?: string;
+  observaciones?: string | null;
   campaniaId: number;
   proveedorId: number;
   fincaId?: number | null;

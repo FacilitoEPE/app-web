@@ -1,3 +1,5 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { campaignCommands } from '@/modules/campaigns/api/campaign-commands.api';
 import { useSyncExternalStore } from "react";
 import { format } from "date-fns";
 import {
@@ -5,22 +7,10 @@ import {
     type AgreementFormValues,
     type CampaignCarrierLink,
 } from "@/modules/campaigns/campaignCarrier.utils";
-import { createDemoCampaignCarriers } from "@/modules/campaigns/campaignCarriers.demo";
 
-/**
- * Transportistas vinculados a cada campaña, en memoria: el vínculo con su cotización y su acuerdo de pago. Los datos
- * del transportista no se guardan acá, se leen de Gestión de Transporte por `carrierId`.
- *
- * TODO(api): se pierden al recargar la página. Cuando exista el servicio de transportistas por campaña, este es el
- * único archivo a reemplazar: las funciones de abajo pasan a llamar a la API y `useCampaignCarriers` a leer lo que
- * ella devuelva.
- *
- * En desarrollo arranca con datos de demostración (`campaignCarriers.demo.ts`); en producción y en las pruebas
- * arranca vacío, sin simular respuestas del backend.
- */
-const demo = import.meta.env.DEV && import.meta.env.MODE !== "test" ? createDemoCampaignCarriers() : null;
-let byCampaign: Record<number, CampaignCarrierLink[]> = demo?.records ?? {};
-let nextId = demo?.nextId ?? 1;
+/** V1: remote commands and server projections. Legacy: local compatibility state, initially empty. */
+let byCampaign: Record<number, CampaignCarrierLink[]> = {};
+let nextId = 1;
 const listeners = new Set<() => void>();
 const EMPTY: CampaignCarrierLink[] = [];
 
@@ -48,7 +38,8 @@ const patch = (campaniaId: number, linkId: number, change: (link: CampaignCarrie
     update({ ...byCampaign, [campaniaId]: (byCampaign[campaniaId] ?? EMPTY).map((link) => (link.id === linkId ? change(link) : link)) });
 
 /** Vincula un transportista a la campaña con su cotización; el más reciente queda al final, como se fue vinculando. */
-export function linkCampaignCarrier(campaniaId: number, carrierId: number, cotizacion: File) {
+export function linkCampaignCarrier(campaniaId: number, carrierId: number, cotizacion: File | null) {
+    if (usesV1()) return campaignCommands.linkCarrier(campaniaId, carrierId, cotizacion);
     const current = byCampaign[campaniaId] ?? EMPTY;
     if (current.some((link) => link.carrierId === carrierId)) return;
     const link: CampaignCarrierLink = { id: nextId++, carrierId, fechaVinculacion: format(new Date(), "yyyy-MM-dd"), cotizacion, acuerdo: null };
@@ -56,15 +47,20 @@ export function linkCampaignCarrier(campaniaId: number, carrierId: number, cotiz
 }
 
 export function unlinkCampaignCarrier(campaniaId: number, linkId: number) {
+    if (usesV1()) return campaignCommands.unlinkCarrier(campaniaId, linkId);
     update({ ...byCampaign, [campaniaId]: (byCampaign[campaniaId] ?? EMPTY).filter((link) => link.id !== linkId) });
 }
 
 /** Registra o edita el acuerdo. Sin boleta nueva conserva la que ya tenía. */
 export function saveCampaignCarrierAgreement(campaniaId: number, linkId: number, values: AgreementFormValues, boleta: File | null) {
+    if (usesV1()) return campaignCommands.agreement(campaniaId, linkId, values, boleta);
     patch(campaniaId, linkId, (link) => ({ ...link, acuerdo: toAgreement(values, boleta ?? link.acuerdo?.boleta ?? null, false) }));
 }
 
 /** Marca el saldo de un acuerdo con adelanto como pagado: el acuerdo queda cerrado, solo de consulta. */
 export function settleCampaignCarrierAgreement(campaniaId: number, linkId: number) {
+    if (usesV1()) return campaignCommands.settleAgreement();
     patch(campaniaId, linkId, (link) => (link.acuerdo?.tipo === "adelanto" ? { ...link, acuerdo: { ...link.acuerdo, saldoPagado: true } } : link));
 }
+
+export function hydrateCampaignCarriers(value: Record<number, CampaignCarrierLink[]>) { update(value); }

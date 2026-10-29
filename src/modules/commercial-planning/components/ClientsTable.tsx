@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Eye, Contact, FileText, ListFilter, MapPin, Trash2, TriangleAlert, RotateCw, SearchX } from "lucide-react";
@@ -64,7 +65,7 @@ export default function ClientsTable({ data, isLoading, loadError, onRetry, hasA
         const deliveries = contracts.flatMap((contract) =>
             (deliveryRecords[`1:${relationId}:${contract.id}`] ?? []).map((delivery) => ({
                 contractId: contract.id,
-                contractName: contract.archivo.name,
+                contractName: contract.archivo?.name ?? "Sin adjunto",
                 delivery,
             })),
         );
@@ -117,7 +118,7 @@ export default function ClientsTable({ data, isLoading, loadError, onRetry, hasA
                 label: "Consulta cliente–campaña",
                 icon: <FileText size={16} strokeWidth={2.5} />,
                 variant: "brand",
-                onClick: () => setCampaignInquiry({ open: true, participation: buildParticipationFor(row) }),
+                onClick: () => usesV1() ? navigate(`/planificacion-comercial/${row.clienteNegocioId}`) : setCampaignInquiry({ open: true, participation: buildParticipationFor(row) }),
             },
         ],
     });
@@ -232,7 +233,7 @@ export default function ClientsTable({ data, isLoading, loadError, onRetry, hasA
                                         <TableCell>
                                             <button
                                                 type="button"
-                                                onClick={() => setCampaignInquiry({ open: true, participation: buildParticipationFor(row) })}
+                                                onClick={() => usesV1() ? navigate(`/planificacion-comercial/${row.clienteNegocioId}`) : setCampaignInquiry({ open: true, participation: buildParticipationFor(row) })}
                                                 className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-page/60 px-2.5 py-1 text-[12px] font-semibold text-ink hover:border-brand hover:text-brand transition-colors"
                                             >
                                                 <FileText size={13} className="text-brand" />

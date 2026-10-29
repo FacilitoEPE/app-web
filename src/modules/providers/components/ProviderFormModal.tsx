@@ -80,7 +80,7 @@ export default function ProviderFormModal({ open, onOpenChange, mode = "create",
                     }
                     const saved = await onSave(provider?.proveedorId ?? null, { ...input, identidadDocUrl: urlToSave });
                     // TODO(api): las frutas y el estado de sanidad pasan al backend cuando el proveedor los modele
-                    saveProduccion(saved.proveedorId, {
+                    await saveProduccion(saved.proveedorId, {
                         estadoSanidad: values.estadoSanidadAgraria || "Sin registrar",
                         frutas: toCultivos(values.frutas ?? []).map(({ fruta, variedades }) => ({ nombre: fruta, variedades })),
                     });

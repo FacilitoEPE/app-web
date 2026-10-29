@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useState } from "react";
 import { PackageCheck, Save, Sprout, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FormField from "@/shared/components/FormField";
@@ -8,7 +9,7 @@ import ModalSection from "@/shared/components/ModalSection";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { formatKg } from "@/shared/utils/format";
-import type { LogisticsLoad, LogisticsProviderBreakdown } from "@/modules/logistics/logistics.demo";
+import type { LogisticsLoad, LogisticsProviderBreakdown } from "@/modules/logistics/logistics.models";
 
 interface LogisticsPurchasesModalProps {
     open: boolean;
@@ -44,7 +45,7 @@ export default function LogisticsPurchasesModal({
     const [observacionesCarga, setObservacionesCarga] = useState("");
     const [proveedores, setProveedores] = useState<LogisticsProviderBreakdown[]>([]);
 
-    useEffect(() => {
+    useResetOnToggle(open, () => {
         if (!load || !open) return;
         setFechaCarga(load.fechaCarga);
         setAnotador(load.anotador);
@@ -54,7 +55,7 @@ export default function LogisticsPurchasesModal({
         setGastoAnotadores(String(load.gastoAnotadores));
         setObservacionesCarga(load.observacionesCarga);
         setProveedores(load.proveedores.map((p) => ({ ...p })));
-    }, [load, open]);
+    });
 
     if (!load) return null;
 
@@ -79,8 +80,8 @@ export default function LogisticsPurchasesModal({
         (Number(gastoCuadrilla) || 0) +
         (Number(gastoAnotadores) || 0);
 
-    const handleSubmit = () => {
-        onSave(load.id, {
+    const handleSubmit = async () => {
+        await onSave(load.id, {
             fechaCarga,
             anotador: anotador.trim() || "Anotador de campo",
             viaticosMovilidad: Number(viaticosMovilidad) || 0,

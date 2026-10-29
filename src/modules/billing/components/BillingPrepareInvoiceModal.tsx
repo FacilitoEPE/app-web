@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useState } from "react";
 import { FileSpreadsheet, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -10,7 +11,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import type { FileSource } from "@/shared/utils/fileSource";
 import { formatKg } from "@/shared/utils/format";
-import type { BillingClient, BillingInvoice, BillingLoad } from "@/modules/billing/billing.demo";
+import type { BillingClient, BillingInvoice, BillingLoad } from "@/modules/billing/billing.models";
 
 interface BillingPrepareInvoiceModalProps {
     open: boolean;
@@ -43,7 +44,7 @@ export default function BillingPrepareInvoiceModal({
     const [archivoPreparacion, setArchivoPreparacion] = useState<FileSource | null>(null);
     const [observaciones, setObservaciones] = useState("");
 
-    useEffect(() => {
+    useResetOnToggle(open, () => {
         if (!load || !client || !open) return;
         if (editingInvoice) {
             setReferenciaPreparacion(editingInvoice.referenciaPreparacion);
@@ -56,9 +57,9 @@ export default function BillingPrepareInvoiceModal({
             setArchivoPreparacion(editingInvoice.archivoPreparacion);
             setObservaciones(editingInvoice.observaciones);
         } else {
-            setReferenciaPreparacion(`PREP-2026-00${load.facturas.length + 1}`);
+            setReferenciaPreparacion("");
             setFechaPreparacion(load.fechaRecepcion);
-            setFechaVencimiento("2026-11-25");
+            setFechaVencimiento("");
             setKilosFacturados(String(load.kilosRecibidos));
             setPrecioUnitario(String(load.precioVentaKg));
             setDescuento("0");
@@ -66,7 +67,7 @@ export default function BillingPrepareInvoiceModal({
             setArchivoPreparacion(null);
             setObservaciones("");
         }
-    }, [load, client, editingInvoice, open]);
+    });
 
     if (!client || !load) return null;
 
@@ -76,12 +77,12 @@ export default function BillingPrepareInvoiceModal({
     const cargosNum = Number(cargos) || 0;
     const subtotal = kgNum * priceNum;
     const total = Math.max(0, subtotal - descNum + cargosNum);
-    const symbol = client.moneda === "USD" ? "US$" : "S/";
+    const symbol = client.moneda === "EUR" ? "€" : client.moneda === "USD" ? "US$" : "S/";
 
-    const handleSubmit = () => {
-        onSave(client.id, load.id, {
+    const handleSubmit = async () => {
+        await onSave(client.id, load.id, {
             id: editingInvoice?.id,
-            referenciaPreparacion: referenciaPreparacion.trim() || "PREP-2026",
+            referenciaPreparacion: referenciaPreparacion.trim(),
             numeroFacturaElectronica: editingInvoice?.numeroFacturaElectronica ?? "",
             estado: editingInvoice?.estado ?? "Preparación pendiente",
             fechaPreparacion,

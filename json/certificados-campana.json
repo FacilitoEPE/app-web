@@ -1,0 +1,12 @@
+[
+  {
+    "certificadoId": 1,
+    "campaniaId": 1,
+    "nombre": "GlobalGAP",
+    "documentUrl": "https://example.com/documentos/demostracion.pdf",
+    "reciboUrl": "https://example.com/documentos/demostracion.pdf",
+    "costo": 4500,
+    "fechaVencimiento": "2027-08-31",
+    "estado": "vigente"
+  }
+]

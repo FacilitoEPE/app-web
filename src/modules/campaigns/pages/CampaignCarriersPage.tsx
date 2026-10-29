@@ -142,7 +142,7 @@ export default function CampaignCarriersPage() {
         const firstDrv = row.carrier?.choferes[0];
         return {
             unitAndDriver: [firstVeh?.placa, firstDrv?.nombre].filter(Boolean).join(" · ") || "Flota disponible",
-            quoteLabel: row.link.cotizacion.name,
+            quoteLabel: row.link.cotizacion?.name ?? "Sin adjunto",
             status: "Recibida",
         };
     };
@@ -368,8 +368,8 @@ export default function CampaignCarriersPage() {
                 campaignName={campaign?.nombre ?? "Campaña"}
                 carriers={available}
                 isLoading={isLoading}
-                onSave={(carrierId, cotizacion) => {
-                    linkCampaignCarrier(campaniaId, carrierId, cotizacion);
+                onSave={async (carrierId, cotizacion) => {
+                    await linkCampaignCarrier(campaniaId, carrierId, cotizacion);
                     setLinkOpen(false);
                     showSuccess("carrier");
                 }}
@@ -390,9 +390,9 @@ export default function CampaignCarriersPage() {
                 carrierName={selectedAgreementRow ? rowName(selectedAgreementRow) : ""}
                 campaignName={campaign?.nombre ?? "Campaña"}
                 agreement={selectedAgreementRow?.link.acuerdo ?? null}
-                onSave={(values: AgreementFormValues, boleta) => {
+                onSave={async (values: AgreementFormValues, boleta) => {
                     if (!selectedAgreementRow) return;
-                    saveCampaignCarrierAgreement(campaniaId, selectedAgreementRow.link.id, values, boleta);
+                    await saveCampaignCarrierAgreement(campaniaId, selectedAgreementRow.link.id, values, boleta);
                     setAgreement((current) => ({ ...current, open: false }));
                     showSuccess("carrierAgreement");
                 }}
@@ -412,9 +412,9 @@ export default function CampaignCarriersPage() {
                     </>
                 }
                 confirmLabel="Sí, marcar como pagado"
-                onConfirm={() => {
+                onConfirm={async () => {
                     if (!settling.row) return;
-                    settleCampaignCarrierAgreement(campaniaId, settling.row.link.id);
+                    await settleCampaignCarrierAgreement(campaniaId, settling.row.link.id);
                     showSuccess("carrierSettled");
                 }}
             />
@@ -426,7 +426,7 @@ export default function CampaignCarriersPage() {
                 title="¿Desvincular transportista?"
                 description={<>Se quitará a <strong className="font-bold text-ink">{unlinking.row ? rowName(unlinking.row) : ""}</strong> de esta campaña junto con su cotización y su acuerdo de pago. Su ficha seguirá en Gestión de Transporte.</>}
                 confirmLabel="Sí, desvincular"
-                onConfirm={() => { if (unlinking.row) unlinkCampaignCarrier(campaniaId, unlinking.row.link.id); }}
+                onConfirm={async () => { if (unlinking.row) await unlinkCampaignCarrier(campaniaId, unlinking.row.link.id); }}
             />
 
             <CampaignSuccessModal open={success.open} onOpenChange={(open) => setSuccess((current) => ({ ...current, open }))} mode={success.mode} />

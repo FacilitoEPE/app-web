@@ -12,7 +12,7 @@ import {
     UIT_LIMITE_UNIDADES,
     UIT_VALOR_2026,
     type SettlementLoad,
-} from "@/modules/purchase-settlement/purchaseSettlement.demo";
+} from "@/modules/purchase-settlement/purchaseSettlement.models";
 
 interface SettlementUitControlModalProps {
     open: boolean;

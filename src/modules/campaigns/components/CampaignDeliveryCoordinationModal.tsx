@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useMemo, useState } from "react";
 import { PackageCheck, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -102,14 +103,14 @@ export default function CampaignDeliveryCoordinationModal({
         clear("carrierId", "vehicleId", "driverId");
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const next = validateCoordination(values);
         const entry = entries.find((item) => item.key === values.entrega);
         if (hasCoordinationErrors(next) || !entry) {
             setErrors(next);
             return;
         }
-        onSave(entry, values);
+        await onSave(entry, values);
     };
 
     const renderSelect = (id: string, label: string, placeholder: string, options: { value: string; label: string }[], field: "vehicleId" | "driverId", disabledHint: string) => (
@@ -175,8 +176,8 @@ export default function CampaignDeliveryCoordinationModal({
                         </FormField>
                         {renderSelect("delivery-vehicle", "Camión", "Seleccionar camión", vehicleOptions, "vehicleId", "Elige primero el transportista")}
                         {renderSelect("delivery-driver", "Chofer", "Seleccionar chofer", driverOptions, "driverId", "Elige primero el transportista")}
-                        <InputField id="delivery-start" type="date" label="Fecha de inicio" required value={values.fechaInicio} error={errors.fechaInicio} onChange={(value) => update("fechaInicio", value)} />
-                        <InputField id="delivery-end" type="date" label="Fecha de fin" required value={values.fechaFin} error={errors.fechaFin} onChange={(value) => update("fechaFin", value)} />
+                        <InputField id="delivery-start" type={usesV1()?"datetime-local":"date"} label="Fecha de inicio" required value={values.fechaInicio} error={errors.fechaInicio} onChange={(value) => update("fechaInicio", value)} />
+                        <InputField id="delivery-end" type={usesV1()?"datetime-local":"date"} label="Fecha de fin" required value={values.fechaFin} error={errors.fechaFin} onChange={(value) => update("fechaFin", value)} />
                     </div>
                 </ModalSection>
 

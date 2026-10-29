@@ -32,10 +32,10 @@ const noFiles = { documento: null, cotizacion: null };
 describe("campaignCertificates.store", () => {
     beforeEach(() => resetCampaignCertificates());
 
-    it("registra una única certificación por campaña con los textos recortados", () => {
-        addCampaignCertificate(1, values({ nombre: "Primera" }), [], noFiles);
-        addCampaignCertificate(1, values({ nombre: " Segunda ", kilosIniciales: "3500" }), [{ id: "9", nombre: "María", kilos: 3500 }], noFiles);
-        addCampaignCertificate(2, values({ nombre: "Otra campaña" }), [], noFiles);
+    it("registra una única certificación por campaña con los textos recortados", async () => {
+        await addCampaignCertificate(1, values({ nombre: "Primera" }), [], noFiles);
+        await addCampaignCertificate(1, values({ nombre: " Segunda ", kilosIniciales: "3500" }), [{ id: "9", nombre: "María", kilos: 3500 }], noFiles);
+        await addCampaignCertificate(2, values({ nombre: "Otra campaña" }), [], noFiles);
 
         const campaign1 = getCampaignCertificates(1);
         expect(campaign1.map((item) => item.nombre)).toEqual(["Segunda"]);
@@ -44,34 +44,34 @@ describe("campaignCertificates.store", () => {
         expect(getCampaignCertificates(2)).toHaveLength(1);
     });
 
-    it("al editar conserva los documentos si no se eligen nuevos", () => {
+    it("al editar conserva los documentos si no se eligen nuevos", async () => {
         const document = new File(["a"], "a.pdf");
-        addCampaignCertificate(1, values(), [], { documento: document, cotizacion: null });
+        await addCampaignCertificate(1, values(), [], { documento: document, cotizacion: null });
         const [created] = getCampaignCertificates(1);
 
-        updateCampaignCertificate(1, created.id, values({ nombre: "Renombrada", costo: "1200" }), [], noFiles);
+        await updateCampaignCertificate(1, created.id, values({ nombre: "Renombrada", costo: "1200" }), [], noFiles);
         const [edited] = getCampaignCertificates(1);
         expect(edited).toMatchObject({ nombre: "Renombrada", costo: 1200 });
         expect(edited.documento).toBe(document);
 
         const replacement = new File(["b"], "b.pdf");
-        updateCampaignCertificate(1, created.id, values(), [], { documento: replacement, cotizacion: null });
+        await updateCampaignCertificate(1, created.id, values(), [], { documento: replacement, cotizacion: null });
         expect(getCampaignCertificates(1)[0].documento).toBe(replacement);
     });
 
-    it("suma ampliaciones a los kilos y acumula pagos hasta saldar", () => {
-        addCampaignCertificate(1, values(), [], noFiles);
+    it("suma ampliaciones a los kilos y acumula pagos hasta saldar", async () => {
+        await addCampaignCertificate(1, values(), [], noFiles);
         const id = getCampaignCertificates(1)[0].id;
 
-        addCertificateExpansion(1, id, { kilos: "250.5", fecha: "2026-06-01", referencia: "" });
-        addCertificatePayment(1, id, { monto: "400", fecha: "2026-06-02", referencia: "OP-1" }, null);
+        await addCertificateExpansion(1, id, { kilos: "250.5", fecha: "2026-06-01", referencia: "" });
+        await addCertificatePayment(1, id, { monto: "400", fecha: "2026-06-02", referencia: "OP-1" }, null);
 
         let certificate = getCampaignCertificates(1)[0];
         expect(getKilosTotales(certificate)).toBe(750.5);
         expect(getSaldoPendiente(certificate)).toBe(600);
         expect(getEstadoPago(certificate)).toBe("Parcial");
 
-        addCertificatePayment(1, id, { monto: "600", fecha: "2026-06-03", referencia: "" }, null);
+        await addCertificatePayment(1, id, { monto: "600", fecha: "2026-06-03", referencia: "" }, null);
         certificate = getCampaignCertificates(1)[0];
         expect(getEstadoPago(certificate)).toBe("Pagado");
         expect(certificate.pagos).toHaveLength(2);

@@ -1,0 +1,53 @@
+[
+  {
+    "recepcionPlantaId": 1,
+    "cargaId": 1,
+    "idChoferTransporteExterno": 1,
+    "fechaRecepcion": "2026-10-29T18:00:00.000Z",
+    "pesoPlantaKg": 960,
+    "huboDescarte": false,
+    "descarteKg": 0,
+    "evidenciaDescarteId": null,
+    "reporteRecepcionId": null,
+    "resultado": null,
+    "recepcionConfirmadaAt": null,
+    "descarteConfirmadoAt": null,
+    "jabasDevueltas": 50,
+    "jabasDevolucionAt": null,
+    "descargaAt": null,
+    "cierreFisicoAt": null,
+    "cierreAdministrativoAt": null,
+    "observaciones": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "compras": [
+      {
+        "providerId": 1,
+        "recognizedQuantity": 580,
+        "reference": "REC-1",
+        "quantity": 600,
+        "document": null,
+        "reviewStatus": "Revisado",
+        "observation": ""
+      },
+      {
+        "providerId": 2,
+        "recognizedQuantity": 380,
+        "reference": "REC-2",
+        "quantity": 400,
+        "document": null,
+        "reviewStatus": "Revisado",
+        "observation": ""
+      }
+    ],
+    "logistica": {
+      "logisticsStatus": "Recepción completada"
+    },
+    "checklist": {},
+    "documentos": {},
+    "descargaInicioAt": null,
+    "descargaFinAt": null,
+    "jabasIniciales": 50,
+    "jabasNoAplica": null
+  }
+]

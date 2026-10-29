@@ -30,6 +30,7 @@ import BillingPage from '@/modules/billing/pages/BillingPage'
 import PurchaseSettlementPage from '@/modules/purchase-settlement/pages/PurchaseSettlementPage'
 import DriverPortalPage from '@/modules/driver-portal/pages/DriverPortalPage'
 import DashboardLayout from '@/shared/layout/DashboardLayout'
+import FrontendDataBoundary from '@/FrontendDataBoundary'
 import OfflinePage from '@/shared/components/OfflinePage'
 import WelcomeSplash from '@/shared/components/WelcomeSplash'
 import { unlockSplashAudio } from '@/shared/components/welcomeSplashSound'
@@ -54,7 +55,7 @@ const ProtectedLayout = ({ isAuthenticated, onLogout }: { isAuthenticated: boole
   }
   return (
     <DashboardLayout onLogout={onLogout}>
-      <Outlet />
+      <FrontendDataBoundary><Outlet /></FrontendDataBoundary>
     </DashboardLayout>
   );
 };

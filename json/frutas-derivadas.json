@@ -1,0 +1,58 @@
+[
+  {
+    "frutaDerivadaId": 1,
+    "frutaId": 1,
+    "name": "Pulpa de mango",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "frutaDerivadaId": 2,
+    "frutaId": 1,
+    "name": "Mango deshidratado",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "frutaDerivadaId": 3,
+    "frutaId": 2,
+    "name": "Pasas",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "frutaDerivadaId": 4,
+    "frutaId": 3,
+    "name": "Aceite de palta",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "frutaDerivadaId": 5,
+    "frutaId": 4,
+    "name": "Arándano congelado",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "frutaDerivadaId": 6,
+    "frutaId": 5,
+    "name": "Pulpa de fresa",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "frutaDerivadaId": 7,
+    "frutaId": 6,
+    "name": "Harina de banana",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "frutaDerivadaId": 8,
+    "frutaId": 7,
+    "name": "Pulpa de maracuyá",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  }
+]

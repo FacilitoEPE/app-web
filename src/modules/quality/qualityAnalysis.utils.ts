@@ -37,13 +37,7 @@ export const ANALYSIS_TYPE_OPTIONS = [
     { value: "Microbiológico", label: "Microbiológico" },
 ];
 
-export const DEMO_PRODUCER_FARMS = [
-    { value: "Roberto Palacios · Parcela San José", productor: "Roberto Palacios", finca: "Parcela San José" },
-    { value: "Roberto Palacios · Parcela San José · Sector Este", productor: "Roberto Palacios", finca: "Parcela San José · Sector Este" },
-    { value: "Brayan Gay II · Finca El Sol", productor: "Brayan Gay II", finca: "Finca El Sol" },
-    { value: "Brayan Gay II · Finca El Sol · Sector Sur", productor: "Brayan Gay II", finca: "Finca El Sol · Sector Sur" },
-    { value: "Agroexportadora del Valle · Finca Santa Rosa", productor: "Agroexportadora del Valle", finca: "Finca Santa Rosa" },
-];
+export const PRODUCER_FARM_OPTIONS: {value:string;productor:string;finca:string;campaniaId?:number}[] = [];
 
 export function determineResultState(resultado: string): QualityAnalysisResultState {
     const lower = resultado.trim().toLowerCase();

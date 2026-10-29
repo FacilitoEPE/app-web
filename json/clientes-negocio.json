@@ -1,0 +1,98 @@
+[
+  {
+    "clienteNegocioId": 1,
+    "nombreEmpresa": "Exportadora Andina SAC",
+    "nombreContacto": "Lucía Mendoza",
+    "telefono": "910000001",
+    "ruc": "20000000001",
+    "correoCorporativo": "cliente1@example.com",
+    "ubicacion": "Lima, Perú",
+    "tipoCliente": "exportador",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioId": 2,
+    "nombreEmpresa": "Alimentos del Pacífico SAC",
+    "nombreContacto": "Carlos García",
+    "telefono": "910000002",
+    "ruc": "20000000002",
+    "correoCorporativo": "cliente2@example.com",
+    "ubicacion": "Sullana, Piura",
+    "tipoCliente": "industria",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioId": 3,
+    "nombreEmpresa": "Frutas del Norte SAC",
+    "nombreContacto": "Paola Torres",
+    "telefono": "910000003",
+    "ruc": "20000000003",
+    "correoCorporativo": "cliente3@example.com",
+    "ubicacion": "Paita, Piura",
+    "tipoCliente": "exportador",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioId": 4,
+    "nombreEmpresa": "Procesadora Valle Verde SAC",
+    "nombreContacto": "Miguel Flores",
+    "telefono": "910000004",
+    "ruc": "20000000004",
+    "correoCorporativo": "cliente4@example.com",
+    "ubicacion": "Chiclayo, Lambayeque",
+    "tipoCliente": "industria",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioId": 5,
+    "nombreEmpresa": "Comercializadora Costa Azul SAC",
+    "nombreContacto": "Elena Rojas",
+    "telefono": "910000005",
+    "ruc": "20000000005",
+    "correoCorporativo": "cliente5@example.com",
+    "ubicacion": "Trujillo, La Libertad",
+    "tipoCliente": "exportador",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioId": 6,
+    "nombreEmpresa": "Pulpa y Fruta Peruana SAC",
+    "nombreContacto": "Andrés Díaz",
+    "telefono": "910000006",
+    "ruc": "20000000006",
+    "correoCorporativo": "cliente6@example.com",
+    "ubicacion": "Lima, Perú",
+    "tipoCliente": "industria",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioId": 7,
+    "nombreEmpresa": "Agrocomercial Los Valles SAC",
+    "nombreContacto": "Rocío Pérez",
+    "telefono": "910000007",
+    "ruc": "20000000007",
+    "correoCorporativo": "cliente7@example.com",
+    "ubicacion": "Ica, Perú",
+    "tipoCliente": "exportador",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioId": 8,
+    "nombreEmpresa": "Industrias La Huerta SAC",
+    "nombreContacto": "Jorge Castillo",
+    "telefono": "910000008",
+    "ruc": "20000000008",
+    "correoCorporativo": "cliente8@example.com",
+    "ubicacion": "Arequipa, Perú",
+    "tipoCliente": "industria",
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  }
+]

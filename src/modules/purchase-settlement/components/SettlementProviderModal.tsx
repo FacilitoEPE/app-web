@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useState } from "react";
 import { AlertTriangle, FileSpreadsheet, Save, Scale, UserPlus, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -21,7 +22,7 @@ import {
     type SettlementLinkedPerson,
     type SettlementLoad,
     type SettlementProviderEntry,
-} from "@/modules/purchase-settlement/purchaseSettlement.demo";
+} from "@/modules/purchase-settlement/purchaseSettlement.models";
 
 interface SettlementProviderModalProps {
     open: boolean;
@@ -32,7 +33,7 @@ interface SettlementProviderModalProps {
         loadId: string,
         providerEntryId: string,
         person: Omit<SettlementLinkedPerson, "id" | "acumuladoAnualPen">,
-    ) => SettlementLinkedPerson;
+    ) => SettlementLinkedPerson | Promise<SettlementLinkedPerson>;
     onSave: (
         loadId: string,
         providerEntryId: string,
@@ -74,9 +75,9 @@ export default function SettlementProviderModal({
     const [newDocumento, setNewDocumento] = useState("");
     const [newVinculo, setNewVinculo] = useState("Cónyuge / Copropietario");
 
-    useEffect(() => {
+    useResetOnToggle(open, () => {
         if (!providerEntry || !open) return;
-        setNumeroLiquidacion(providerEntry.numeroLiquidacion || "E001-000188");
+        setNumeroLiquidacion(providerEntry.numeroLiquidacion || "");
         setFechaLiquidacion(providerEntry.fechaLiquidacion);
         setPrecioKg(String(providerEntry.precioKg));
         setSelectedPersonId(
@@ -86,7 +87,7 @@ export default function SettlementProviderModal({
         setArchivoLiquidacion(providerEntry.archivoLiquidacion);
         setObservaciones(providerEntry.observaciones);
         setShowAddPerson(false);
-    }, [providerEntry, open]);
+    });
 
     if (!load || !providerEntry) return null;
 
@@ -95,7 +96,7 @@ export default function SettlementProviderModal({
         providerEntry.personasVinculadas[0];
 
     const priceNum = Number(precioKg) || 0;
-    const totalCompra = providerEntry.kilosCargados * priceNum;
+    const totalCompra = (providerEntry.kilosReconocidos ?? providerEntry.kilosCargados) * priceNum;
     const previoPen = selectedPerson?.acumuladoAnualPen ?? 0;
     const proyectadoPen = previoPen + totalCompra;
     const proyectadoUit = proyectadoPen / UIT_VALOR_2026;
@@ -107,9 +108,9 @@ export default function SettlementProviderModal({
         label: `${p.nombres} ${p.apellidos} · ${p.tipoDocumento} ${p.numeroDocumento} (${p.vinculo})`,
     }));
 
-    const handleCreatePerson = () => {
+    const handleCreatePerson = async () => {
         if (!newNombres.trim() || !newApellidos.trim() || !newDocumento.trim()) return;
-        const created = onAddLinkedPerson(load.id, providerEntry.id, {
+        const created = await onAddLinkedPerson(load.id, providerEntry.id, {
             nombres: newNombres.trim(),
             apellidos: newApellidos.trim(),
             tipoDocumento: "DNI",
@@ -123,10 +124,10 @@ export default function SettlementProviderModal({
         setShowAddPerson(false);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!selectedPerson) return;
-        onSave(load.id, providerEntry.id, {
-            numeroLiquidacion: numeroLiquidacion.trim() || "E001-000188",
+        await onSave(load.id, providerEntry.id, {
+            numeroLiquidacion: numeroLiquidacion.trim() || "",
             fechaLiquidacion,
             precioKg: priceNum,
             personaLiquidadaId: selectedPerson.id,
@@ -167,8 +168,8 @@ export default function SettlementProviderModal({
                 <SummaryBar
                     items={[
                         {
-                            label: "Kilos cargados",
-                            value: `${formatKg(providerEntry.kilosCargados)} kg`,
+                            label: "Kilos reconocidos",
+                            value: `${formatKg((providerEntry.kilosReconocidos ?? providerEntry.kilosCargados))} kg`,
                         },
                         {
                             label: "Precio de compra / kg",

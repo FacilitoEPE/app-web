@@ -20,6 +20,15 @@ export function getBadRequestFieldErrors(
     ? body.message.filter((message): message is string => typeof message === "string")
     : typeof body?.message === "string" ? [body.message] : [];
   const result: FormFieldErrors = {};
+  const fields = asRecord(body?.fieldErrors);
+  if (fields && Object.keys(fields).length) {
+    for (const [property, message] of Object.entries(fields)) {
+      if (typeof message !== 'string') continue;
+      const field = backendToFormField[property] ?? '_form';
+      result[field] = result[field] ? `${result[field]} ${message}` : message;
+    }
+    return result;
+  }
 
   for (const message of messages) {
     const property = Object.keys(backendToFormField).find((key) =>

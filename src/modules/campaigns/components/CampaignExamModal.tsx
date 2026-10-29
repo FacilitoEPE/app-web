@@ -67,13 +67,13 @@ export default function CampaignExamModal({ open, onOpenChange, providerName, mo
         setErrors((current) => ({ ...current, [field]: undefined }));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const nextErrors = validateExam(values);
         if (Object.keys(nextErrors).length > 0) {
             setErrors(nextErrors);
             return;
         }
-        if (onSave) onSave(normalizeExam(values));
+        if (onSave) await onSave(normalizeExam(values));
         else onOpenChange(false);
     };
 

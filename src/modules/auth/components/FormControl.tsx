@@ -1,3 +1,5 @@
+import { refreshRemoteData, usesV1 } from '@/shared/api/data-contract';
+import FormField from '@/shared/components/FormField';
 import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Field, FieldLabel } from "@/shared/components/ui/field";
@@ -16,6 +18,8 @@ interface FormControlProps {
 const inputGroupClassName = "h-11 border-border/70 bg-background transition-colors rounded-lg has-[[data-slot=input-group-control]:focus-visible]:border-brand has-[[data-slot=input-group-control]:focus-visible]:ring-1 has-[[data-slot=input-group-control]:focus-visible]:ring-brand/30";
 
 export default function FormControl({ onSubmit, onDriverLogin }: FormControlProps) {
+    const [driverLoading, setDriverLoading] = useState(false);
+    const [driverError, setDriverError] = useState("");
     const [role, setRole] = useState<"admin" | "chofer">("admin");
     const [showPassword, setShowPassword] = useState(false);
     const { activeDriverId } = useDriverPortalState();
@@ -30,6 +34,7 @@ export default function FormControl({ onSubmit, onDriverLogin }: FormControlProp
             className="flex flex-col w-full space-y-4"
             onSubmit={(e) => {
                 e.preventDefault();
+                if (role === "chofer" && (driverLoading || !drivers.length)) return;
                 if (role === "chofer" && onDriverLogin) {
                     onDriverLogin();
                 } else {
@@ -45,7 +50,13 @@ export default function FormControl({ onSubmit, onDriverLogin }: FormControlProp
                         { label: "Chofer", value: "chofer" },
                     ]}
                     value={role}
-                    onChange={(next) => setRole(next as "admin" | "chofer")}
+                    onChange={(next) => {
+                        setRole(next as "admin" | "chofer");
+                        if (next === "chofer" && usesV1()) {
+                            setDriverLoading(true); setDriverError("");
+                            void refreshRemoteData().catch(()=>setDriverError("No se pudieron cargar los choferes. Vuelve a seleccionar el perfil para reintentar.")).finally(()=>setDriverLoading(false));
+                        }
+                    }}
                 />
             </Field>
 
@@ -104,8 +115,8 @@ export default function FormControl({ onSubmit, onDriverLogin }: FormControlProp
                     <Select
                         items={driverItems}
                         value={activeDriverId}
-                        onValueChange={(next) => {
-                            if (next) setActiveDriver(next as string);
+                        onValueChange={async (next) => {
+                            if (next) await setActiveDriver(next as string);
                         }}
                     >
                         <SelectTrigger aria-label="Chofer registrado" className="h-11 rounded-lg bg-background font-semibold">
@@ -127,7 +138,8 @@ export default function FormControl({ onSubmit, onDriverLogin }: FormControlProp
             )}
 
             <div className="pt-2">
-                <Button type="submit" size="xl" className="w-full">
+                {role === "chofer" && <FormField error={driverError} hint={driverLoading ? "Cargando choferes…" : drivers.length ? undefined : "No hay choferes registrados."} />}
+                <Button type="submit" size="xl" className="w-full" disabled={role === "chofer" && (driverLoading || !drivers.length)}>
                     <LogIn size={20} strokeWidth={2.5} /> {role === "chofer" ? "Ingresar al Portal del Chofer" : "Ingresar"}
                 </Button>
             </div>

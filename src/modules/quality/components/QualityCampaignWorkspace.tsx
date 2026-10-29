@@ -1,3 +1,5 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { useNavigate } from 'react-router-dom';
 import { useMemo, useState } from "react";
 import {
     ArrowLeft,
@@ -40,7 +42,6 @@ import {
 } from "@/shared/components/ui/table";
 import PageHeader from "@/shared/layout/PageHeader";
 import { formatDisplayDate, formatKg, formatMoney } from "@/shared/utils/format";
-import { getCampaignFruitIcon } from "@/modules/campaigns/campaignFruit";
 import type { QualityCampaign, QualityScope } from "@/modules/quality/quality.utils";
 import QualityDeliveryReviewModal from "@/modules/quality/components/QualityDeliveryReviewModal";
 import QualityHarvestWizardModal from "@/modules/quality/components/QualityHarvestWizardModal";
@@ -49,7 +50,7 @@ import QualityRemissionGuideModal from "@/modules/quality/components/QualityRemi
 import type {
     QualityDeliveryLoadItem,
     QualitySunatRemissionGuide,
-} from "@/modules/quality/qualityOperations.demo";
+} from "@/modules/quality/qualityOperations.models";
 import {
     createQualityExportLoad,
     saveQualityDeliveryReview,
@@ -74,6 +75,7 @@ export default function QualityCampaignWorkspace({
     initialTab,
     onBack,
 }: QualityCampaignWorkspaceProps) {
+    const navigate = useNavigate();
     const allLoads = useQualityDeliveryLoads();
     const defaultTab: QualityWorkspaceTab =
         initialTab ?? (scope === "exportador" ? "resumen" : "carga");
@@ -101,10 +103,10 @@ export default function QualityCampaignWorkspace({
         () =>
             allLoads.filter(
                 (item) =>
-                    (item.campaniaId === campaign.campaniaId || item.fruta === campaign.fruta) &&
+                    item.campaniaId === campaign.campaniaId &&
                     item.scope === scope,
             ),
-        [allLoads, campaign.campaniaId, campaign.fruta, scope],
+        [allLoads, campaign.campaniaId, scope],
     );
 
     const tabs: readonly SegmentedTabItem[] =
@@ -202,7 +204,7 @@ export default function QualityCampaignWorkspace({
         [campaignLoads],
     );
 
-    const handleCreateNewExportLoad = () => {
+    const handleCreateNewExportLoad = async () => {
         const created: QualityDeliveryLoadItem = {
             id: `qload-${Date.now()}`,
             codigoCarga: `CAR-2026-00${allLoads.length + 4}`,
@@ -286,7 +288,7 @@ export default function QualityCampaignWorkspace({
             ],
             guiasRemision: [],
         };
-        createQualityExportLoad(created);
+        await createQualityExportLoad(created);
         setNewExportLoadOpen(false);
     };
 
@@ -352,10 +354,7 @@ export default function QualityCampaignWorkspace({
             <ContextBanner
                 ariaLabel={`Campaña ${campaign.nombre}`}
                 eyebrow={{
-                    icon: (() => {
-                        const FruitIcon = getCampaignFruitIcon(campaign.fruta);
-                        return <FruitIcon size={14} strokeWidth={2.4} />;
-                    })(),
+                    icon: <Sprout size={14} strokeWidth={2.4} />,
                     label: `Campaña · ${campaign.fruta}`,
                 }}
                 title={campaign.nombre}
@@ -382,8 +381,8 @@ export default function QualityCampaignWorkspace({
                             <ArrowLeft size={18} strokeWidth={2.5} /> Volver al listado
                         </Button>
                         {scope === "exportador" && (
-                            <Button size="xl" onClick={() => setNewExportLoadOpen(true)}>
-                                <Plus size={18} strokeWidth={2.5} /> Nueva carga de Exportación
+                            <Button size="xl" onClick={() => usesV1() ? navigate(`/campaigns/${campaign.campaniaId}/deliveries`) : setNewExportLoadOpen(true)}>
+                                <Plus size={18} strokeWidth={2.5} /> {usesV1() ? "Programar entrega" : "Nueva carga de Exportación"}
                             </Button>
                         )}
                     </div>

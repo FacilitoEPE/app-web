@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useState } from "react";
 import { Plus, Save, Trash2, Truck, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -9,7 +10,7 @@ import ModalSection from "@/shared/components/ModalSection";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import type { FileSource } from "@/shared/utils/fileSource";
-import type { CarrierRealExpense, SettlementLoad } from "@/modules/purchase-settlement/purchaseSettlement.demo";
+import type { CarrierRealExpense, SettlementLoad } from "@/modules/purchase-settlement/purchaseSettlement.models";
 
 interface SettlementCarrierModalProps {
     open: boolean;
@@ -41,16 +42,16 @@ export default function SettlementCarrierModal({
     const [archivoLiquidacion, setArchivoLiquidacion] = useState<FileSource | null>(null);
     const [observaciones, setObservaciones] = useState("");
 
-    useEffect(() => {
+    useResetOnToggle(open, () => {
         if (!load || !open) return;
         const t = load.transporte;
-        setNumeroLiquidacion(t.numeroLiquidacion || "LQT-2026-0045");
+        setNumeroLiquidacion(t.numeroLiquidacion || "");
         setFechaLiquidacion(t.fechaLiquidacion);
         setFleteCarga(String(t.fleteCarga));
         setGastosReales(t.gastosReales.map((g) => ({ ...g })));
         setArchivoLiquidacion(t.archivoLiquidacion);
         setObservaciones(t.observaciones);
-    }, [load, open]);
+    });
 
     if (!load) return null;
 
@@ -70,9 +71,9 @@ export default function SettlementCarrierModal({
         setGastosReales((current) => current.filter((item) => item.id !== id));
     };
 
-    const handleSubmit = () => {
-        onSave(load.id, {
-            numeroLiquidacion: numeroLiquidacion.trim() || "LQT-2026-0045",
+    const handleSubmit = async () => {
+        await onSave(load.id, {
+            numeroLiquidacion: numeroLiquidacion.trim() || "",
             fechaLiquidacion,
             fleteCarga: fleteNum,
             gastosReales: gastosReales.filter((g) => g.concepto.trim() !== ""),

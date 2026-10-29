@@ -12,6 +12,10 @@ import { Separator } from "@/shared/components/ui/separator";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import type { Carrier } from "@/modules/carriers/carriers.data";
+import { usesV1 } from '@/shared/api/data-contract';
+import { quotationCommands, requestCampaignOptions } from '@/modules/carriers/api/quotation-commands.api';
+import InputField from '@/shared/components/InputField';
+import { Combobox } from '@/shared/components/ui/combobox';
 
 const MAX_FILE_MB = 10;
 const MAX_DETAIL_LENGTH = 1000;
@@ -35,12 +39,14 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
     const [fileError, setFileError] = useState("");
     const [recipientsError, setRecipientsError] = useState("");
     const [detail, setDetail] = useState("");
+    const [campaignId,setCampaignId]=useState(''),[reference,setReference]=useState(''),[origin,setOrigin]=useState(''),[destination,setDestination]=useState('');
 
     useResetOnToggle(open, () => {
         setFile(null);
         setFileError("");
         setRecipientsError("");
         setDetail("");
+        setCampaignId('');setReference(`SOL-${Date.now()}`);setOrigin('');setDestination('');
     });
 
     const handleFileChange = (next: File | null) => {
@@ -57,12 +63,16 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
     const countLabel = `${count} ${count === 1 ? "empresa" : "empresas"}`;
 
     // Sin botón desactivado: al enviar, lo que falta se indica bajo su bloque
-    const handleSend = () => {
+    const handleSend = async () => {
         const noRecipients = count === 0;
-        const noFile = file === null;
+        const noFile = !usesV1() && file === null;
         setRecipientsError(noRecipients ? "Selecciona al menos una empresa en la tabla." : "");
         setFileError(noFile ? "Adjunta el documento del requerimiento." : "");
         if (noRecipients || noFile) return;
+        if(usesV1()) {
+            if(!campaignId||!reference.trim()||!origin.trim()||!destination.trim())throw new Error('Completa la campaña, referencia, origen y destino de la solicitud.');
+            await quotationCommands.send({campaniaId:Number(campaignId),referencia:reference.trim(),origen:origin.trim(),destino:destination.trim(),mensaje:detail,carrierIds:selectedCarriers.map(c=>c.id)});
+        }
         onSuccess?.();
     };
 
@@ -71,27 +81,28 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
             open={open}
             onOpenChange={onOpenChange}
             icon={<Send size={22} strokeWidth={2} />}
-            title="Enviar requerimiento"
-            description="Comparte el requerimiento con las empresas seleccionadas."
+            title={usesV1() ? "Registrar solicitud de transporte" : "Enviar requerimiento"}
+            description={usesV1() ? "Registra la solicitud y sus invitaciones. El envío de correo está pendiente." : "Comparte el requerimiento con las empresas seleccionadas."}
             size="lg"
             footer={
                 <>
                     <p className="hidden items-center gap-2 text-[13px] font-medium text-ink-muted sm:mr-auto sm:flex">
                         <Info size={16} strokeWidth={2} className="text-brand" />
                         <span>
-                            Se enviará a <strong className="font-bold text-ink">{countLabel}</strong> {count === 1 ? "seleccionada" : "seleccionadas"}.
+                            {usesV1() ? "Se registrará para" : "Se enviará a"} <strong className="font-bold text-ink">{countLabel}</strong> {count === 1 ? "seleccionada" : "seleccionadas"}.
                         </span>
                     </p>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={20} strokeWidth={2.5} /> Cancelar
                     </Button>
                     <Button size="xl" onClick={handleSend}>
-                        <Send size={20} strokeWidth={2.5} /> Enviar requerimiento
+                        <Send size={20} strokeWidth={2.5} /> {usesV1() ? "Registrar solicitud" : "Enviar requerimiento"}
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-6">
+                {usesV1()&&<div className="grid gap-4 sm:grid-cols-2"><FormField label="Campaña" required><Combobox options={requestCampaignOptions()} value={campaignId} onChange={setCampaignId} placeholder="Seleccionar campaña" /></FormField><InputField id="solicitud-referencia" label="Referencia" required value={reference} onChange={setReference} /><InputField id="solicitud-origen" label="Origen" required value={origin} onChange={setOrigin} /><InputField id="solicitud-destino" label="Destino" required value={destination} onChange={setDestination} /></div>}
                 <div className="flex flex-col gap-4 rounded-2xl border border-brand-border/60 bg-brand-surface p-4 sm:flex-row sm:items-center sm:gap-5">
                     <div className="flex items-center gap-4">
                         <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-card text-brand shadow-sm">

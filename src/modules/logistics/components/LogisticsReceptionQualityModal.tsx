@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useState } from "react";
 import { ClipboardCheck, Save, Sprout, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -16,7 +17,7 @@ import type {
     LogisticsLoad,
     LogisticsProviderBreakdown,
     LogisticsReceptionData,
-} from "@/modules/logistics/logistics.demo";
+} from "@/modules/logistics/logistics.models";
 
 interface LogisticsReceptionQualityModalProps {
     open: boolean;
@@ -59,7 +60,7 @@ export default function LogisticsReceptionQualityModal({
     // Desglose por proveedor
     const [proveedores, setProveedores] = useState<LogisticsProviderBreakdown[]>([]);
 
-    useEffect(() => {
+    useResetOnToggle(open, () => {
         if (!load || !open) return;
         const r = load.recepcion;
         setInicioDescarga(r.inicioDescarga);
@@ -77,7 +78,7 @@ export default function LogisticsReceptionQualityModal({
         setMotivoDescarte(r.motivoDescarte);
         setActaDescarteArchivo(r.actaDescarteArchivo);
         setProveedores(load.proveedores.map((p) => ({ ...p })));
-    }, [load, open]);
+    });
 
     if (!load) return null;
 
@@ -87,8 +88,8 @@ export default function LogisticsReceptionQualityModal({
         0,
     );
 
-    const handleSubmit = () => {
-        onSave(
+    const handleSubmit = async () => {
+        await onSave(
             load.id,
             {
                 inicioDescarga,

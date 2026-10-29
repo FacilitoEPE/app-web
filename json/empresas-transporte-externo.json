@@ -1,0 +1,37 @@
+[
+  {
+    "idEmpresaTransporteExterno": 1,
+    "nombreCompleto": "Transportes del Norte SAC",
+    "ruc": "20100000001",
+    "correo": "transporte1@example.com",
+    "numero": "920000001"
+  },
+  {
+    "idEmpresaTransporteExterno": 2,
+    "nombreCompleto": "SUTRIMEX SAC",
+    "ruc": "20100000002",
+    "correo": "transporte2@example.com",
+    "numero": "920000002"
+  },
+  {
+    "idEmpresaTransporteExterno": 3,
+    "nombreCompleto": "FIXGROM SAC",
+    "ruc": "20100000003",
+    "correo": "transporte3@example.com",
+    "numero": "920000003"
+  },
+  {
+    "idEmpresaTransporteExterno": 4,
+    "nombreCompleto": "TRANSPACK SAC",
+    "ruc": "20100000004",
+    "correo": "transporte4@example.com",
+    "numero": "920000004"
+  },
+  {
+    "idEmpresaTransporteExterno": 5,
+    "nombreCompleto": "José Ramírez Transporte",
+    "ruc": "20100000005",
+    "correo": "transporte5@example.com",
+    "numero": "920000005"
+  }
+]

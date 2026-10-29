@@ -7,7 +7,7 @@ import ModalSection from "@/shared/components/ModalSection";
 import StatusBadge from "@/shared/components/StatusBadge";
 import { Button } from "@/shared/components/ui/button";
 import { formatDisplayDate, formatKg } from "@/shared/utils/format";
-import type { LogisticsLoad } from "@/modules/logistics/logistics.demo";
+import type { LogisticsLoad } from "@/modules/logistics/logistics.models";
 
 interface LogisticsLoadDetailsModalProps {
     open: boolean;

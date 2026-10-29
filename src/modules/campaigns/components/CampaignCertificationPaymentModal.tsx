@@ -52,11 +52,11 @@ export default function CampaignCertificationPaymentModal({ open, onOpenChange, 
         },
     });
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const nextErrors = validatePago(values, balance);
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return;
-        onSave(values, evidence);
+        await onSave(values, evidence);
     };
 
     return (

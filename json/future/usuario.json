@@ -1,0 +1,20 @@
+[
+  {
+    "usuarioId": 1,
+    "personaId": 5,
+    "rolId": 1,
+    "usuario": "admin-demo",
+    "activo": true,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "usuarioId": 2,
+    "personaId": 2,
+    "rolId": 2,
+    "usuario": "chofer-demo",
+    "activo": true,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

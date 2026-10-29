@@ -32,9 +32,9 @@ import {
     TableHeader,
     TableRow,
 } from "@/shared/components/ui/table";
-import { demoPdf } from "@/shared/utils/demoData";
 import type { TableExport } from "@/shared/utils/exportTable";
 import { formatDisplayDate, formatKg } from "@/shared/utils/format";
+import { PageError } from "@/shared/components/PageState";
 import { paginate } from "@/shared/utils/paginate";
 import { getCampanas } from "@/modules/campaigns/api/campaign.api";
 import { getClientesNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.api";
@@ -44,187 +44,14 @@ import CommercialClientCampaignDetailModal, {
     type CommercialParticipationRow,
 } from "@/modules/commercial-planning/components/CommercialClientCampaignDetailModal";
 
-const DEMO_PARTICIPATIONS: CommercialParticipationRow[] = [
-    {
-        id: "part-1",
-        campaniaId: 1,
-        campaniaNombre: "Campaña Mango Kent 2026",
-        fruta: "Mango",
-        variedades: ["Kent", "Edward"],
-        relationId: 1,
-        clienteId: 1,
-        clienteNombre: "Nature's Pride B.V.",
-        ruc: "NL813492018B01",
-        canal: "Exportador",
-        pais: "Países Bajos",
-        cantidadRequeridaKg: 60000,
-        kilosAcordados: 60000,
-        fechaRegistro: "2026-09-18",
-        observaciones: "Cliente prioritario con ventana de embarque octubre-diciembre.",
-        contracts: [
-            {
-                id: 101,
-                fechaRegistro: "2026-09-20",
-                precioKg: 1.85,
-                moneda: "USD",
-                cantidadPropuestaKg: 40000,
-                condicionesPago: "50% contra embarque BL · 50% a 15 días de arribo",
-                condicionesEntrega: "FOB Puerto de Paita · Contenedor Reefer 40 pies",
-                observaciones: "Calibre 7-10 con certificación GlobalG.A.P.",
-                archivo: demoPdf("contrato_natures_pride_lote1.pdf", "Contrato Natures Pride Lote 1"),
-            },
-            {
-                id: 102,
-                fechaRegistro: "2026-10-02",
-                precioKg: 1.9,
-                moneda: "USD",
-                cantidadPropuestaKg: 20000,
-                condicionesPago: "Transferencia SWIFT a 15 días",
-                condicionesEntrega: "Planta Empacadora Paita · Zona Industrial II",
-                observaciones: "Ampliación de volumen para variedad Kent orgánica.",
-                archivo: demoPdf("adenda_natures_pride_lote2.pdf", "Adenda Natures Pride Lote 2"),
-            },
-        ],
-        deliveries: [
-            {
-                contractId: 101,
-                contractName: "contrato_natures_pride_lote1.pdf",
-                delivery: {
-                    id: 1,
-                    fecha: "2026-10-25",
-                    kilosProgramados: 20000,
-                    destino: "Planta Empacadora Paita · Zona Industrial II",
-                    observaciones: "Primer despacho de campaña.",
-                    coordinacion: {
-                        carrierId: 1,
-                        vehicleId: 1,
-                        driverId: 1,
-                        proveedores: [{ proveedorId: 1, fincas: ["Fundo San Isidro"] }],
-                        fechaInicio: "2026-10-25",
-                        fechaFin: "2026-10-25",
-                        condicionesCarga: "Cosecha matutina",
-                        observaciones: "",
-                    },
-                },
-            },
-            {
-                contractId: 102,
-                contractName: "adenda_natures_pride_lote2.pdf",
-                delivery: {
-                    id: 2,
-                    fecha: "2026-10-28",
-                    kilosProgramados: 20000,
-                    destino: "Terminal Portuario Paita",
-                    observaciones: "Segundo despacho programado.",
-                    coordinacion: null,
-                },
-            },
-        ],
-    },
-    {
-        id: "part-2",
-        campaniaId: 1,
-        campaniaNombre: "Campaña Mango Kent 2026",
-        fruta: "Mango",
-        variedades: ["Edward", "Haden"],
-        relationId: 2,
-        clienteId: 2,
-        clienteNombre: "Agroindustrias del Chira S.A.",
-        ruc: "20526198412",
-        canal: "Industria",
-        pais: "Perú",
-        cantidadRequeridaKg: 45000,
-        kilosAcordados: 30000,
-        fechaRegistro: "2026-09-25",
-        observaciones: "Abastecimiento de fruta industrial en bines plásticos.",
-        contracts: [
-            {
-                id: 103,
-                fechaRegistro: "2026-09-28",
-                precioKg: 2.4,
-                moneda: "PEN",
-                cantidadPropuestaKg: 30000,
-                condicionesPago: "Factura a 15 días de recepción en balanza",
-                condicionesEntrega: "Planta Procesadora Sullana · Km 1028",
-                observaciones: "Brix mínimo 12° para pulpa concentrada.",
-                archivo: demoPdf("contrato_agrochira_2026.pdf", "Contrato Agroindustrias del Chira"),
-            },
-        ],
-        deliveries: [
-            {
-                contractId: 103,
-                contractName: "contrato_agrochira_2026.pdf",
-                delivery: {
-                    id: 3,
-                    fecha: "2026-10-26",
-                    kilosProgramados: 15000,
-                    destino: "Planta Procesadora Sullana · Km 1028",
-                    observaciones: "Recepción en bines de 400 kg.",
-                    coordinacion: null,
-                },
-            },
-        ],
-    },
-    {
-        id: "part-3",
-        campaniaId: 2,
-        campaniaNombre: "Campaña Palta Hass 2026",
-        fruta: "Palta",
-        variedades: ["Hass"],
-        relationId: 3,
-        clienteId: 3,
-        clienteNombre: "Westfalia Fruit International",
-        ruc: "GB641908214",
-        canal: "Exportador",
-        pais: "Reino Unido",
-        cantidadRequeridaKg: 80000,
-        kilosAcordados: 50000,
-        fechaRegistro: "2026-10-01",
-        observaciones: "Programa europeo con certificación Rainforest Alliance.",
-        contracts: [
-            {
-                id: 104,
-                fechaRegistro: "2026-10-04",
-                precioKg: 2.35,
-                moneda: "USD",
-                cantidadPropuestaKg: 50000,
-                condicionesPago: "Carta de crédito irrevocable",
-                condicionesEntrega: "Packing Agroexportador Chiclayo",
-                observaciones: "Materia seca entre 22% y 25%.",
-                archivo: demoPdf("contrato_westfalia_palta_2026.pdf", "Contrato Westfalia Palta Hass"),
-            },
-        ],
-        deliveries: [
-            {
-                contractId: 104,
-                contractName: "contrato_westfalia_palta_2026.pdf",
-                delivery: {
-                    id: 4,
-                    fecha: "2026-10-24",
-                    kilosProgramados: 22000,
-                    destino: "Packing Agroexportador Chiclayo",
-                    observaciones: "Lote aprobado al 99.2%.",
-                    coordinacion: {
-                        carrierId: 2,
-                        vehicleId: 2,
-                        driverId: 2,
-                        proveedores: [{ proveedorId: 4, fincas: ["Fundo Tierra Verde"] }],
-                        fechaInicio: "2026-10-24",
-                        fechaFin: "2026-10-24",
-                        condicionesCarga: "Furgón refrigerado",
-                        observaciones: "",
-                    },
-                },
-            },
-        ],
-    },
-];
 
 export default function CommercialContractsSubView() {
     const navigate = useNavigate();
     const contractRecords = useCampaignContractRecords();
     const deliveryRecords = useCampaignDeliveryRecords();
 
+    const [error, setError] = useState(false);
+    const [retry, setRetry] = useState(0);
     const [apiRows, setApiRows] = useState<CommercialParticipationRow[]>([]);
     const [search, setSearch] = useState("");
     const [campaignFilter, setCampaignFilter] = useState("all");
@@ -245,7 +72,7 @@ export default function CommercialContractsSubView() {
             .then(async (campanas) => {
                 const collected: CommercialParticipationRow[] = [];
                 for (const campana of campanas) {
-                    const rels = await getClientesNegocioCampana(campana.campaniaId).catch(() => []);
+                    const rels = await getClientesNegocioCampana(campana.campaniaId);
                     for (const rel of rels) {
                         const contracts =
                             contractRecords[`${campana.campaniaId}:${rel.clienteNegocioCampanaId}`] ?? [];
@@ -256,7 +83,7 @@ export default function CommercialContractsSubView() {
                                 ] ?? []
                             ).map((d) => ({
                                 contractId: c.id,
-                                contractName: c.archivo.name,
+                                contractName: c.archivo?.name ?? "Sin adjunto",
                                 delivery: d,
                             })),
                         );
@@ -265,8 +92,8 @@ export default function CommercialContractsSubView() {
                             id: `${campana.campaniaId}-${rel.clienteNegocioCampanaId}`,
                             campaniaId: campana.campaniaId,
                             campaniaNombre: campana.nombre,
-                            fruta: campana.fruta?.name ?? "Mango",
-                            variedades: ["Kent"],
+                            fruta: campana.fruta?.name ?? "",
+                            variedades: [],
                             relationId: rel.clienteNegocioCampanaId,
                             clienteId: rel.clienteNegocioId,
                             clienteNombre: rel.clienteNegocio?.nombreEmpresa ?? "Cliente",
@@ -275,8 +102,8 @@ export default function CommercialContractsSubView() {
                                 rel.clienteNegocio?.tipoCliente === "industria"
                                     ? "Industria"
                                     : "Exportador",
-                            pais: "Perú",
-                            cantidadRequeridaKg: acordados,
+                            pais: "",
+                            cantidadRequeridaKg: rel.kilosAcordados ?? 0,
                             kilosAcordados: acordados,
                             fechaRegistro:
                                 rel.fechaRegistro instanceof Date
@@ -288,17 +115,17 @@ export default function CommercialContractsSubView() {
                         });
                     }
                 }
-                if (active) setApiRows(collected);
+                if (active) { setApiRows(collected); setError(false); }
             })
             .catch(() => {
-                if (active) setApiRows([]);
+                if (active) setError(true);
             });
         return () => {
             active = false;
         };
-    }, [contractRecords, deliveryRecords]);
+    }, [contractRecords, deliveryRecords, retry]);
 
-    const rows = apiRows.length > 0 ? apiRows : DEMO_PARTICIPATIONS;
+    const rows = apiRows;
 
     const campaignOptions = useMemo(
         () => Array.from(new Set(rows.map((r) => r.campaniaNombre))),
@@ -403,6 +230,8 @@ export default function CommercialContractsSubView() {
     });
 
     const hasActiveFilters = search !== "" || campaignFilter !== "all" || clientFilter !== "all";
+
+    if (error) return <PageError title="No se pudieron cargar los contratos" message="Verifica la conexión e intenta nuevamente." onRetry={()=>setRetry(value=>value+1)} />;
 
     return (
         <div className="flex flex-col gap-6">

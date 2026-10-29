@@ -37,7 +37,7 @@ import { formatDisplayDate, formatKg } from "@/shared/utils/format";
 import { getCampaignFruitIcon } from "@/modules/campaigns/campaignFruit";
 import DriverLoadDataModal from "@/modules/driver-portal/components/DriverLoadDataModal";
 import DriverRouteMapModal from "@/modules/driver-portal/components/DriverRouteMapModal";
-import type { DriverLoad } from "@/modules/driver-portal/driverPortal.demo";
+import type { DriverLoad } from "@/modules/driver-portal/driverPortal.models";
 import {
     advanceDriverLoadStage,
     getRegisteredDrivers,
@@ -72,12 +72,9 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
     const { activeDriverId, loads } = useDriverPortalState();
     const drivers = getRegisteredDrivers();
     const currentDriver = drivers.find((d) => d.id === activeDriverId) ?? drivers[0];
-    const currentDriverId = currentDriver.id;
+    const currentDriverId = currentDriver?.id ?? "";
 
-    const driverLoads = useMemo(
-        () => loads.filter((item) => item.driverId === currentDriverId),
-        [loads, currentDriverId],
-    );
+    const driverLoads = loads.filter((item) => item.driverId === currentDriverId);
 
     const campaigns = useMemo(() => {
         const byId = new Map<
@@ -165,9 +162,9 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
         label: `${d.nombre} · ${d.placaAsignada}`,
     }));
 
-    const handleAdvanceStage = () => {
+    const handleAdvanceStage = async () => {
         if (!activeLoad) return;
-        advanceDriverLoadStage(activeLoad.id, stageNote);
+        await advanceDriverLoadStage(activeLoad.id, stageNote);
         setStageNote("");
         setSuccessInfo({
             title: "Etapa de despacho actualizada",
@@ -175,9 +172,9 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
         });
     };
 
-    const handleSaveChecklist = () => {
+    const handleSaveChecklist = async () => {
         if (!activeLoad) return;
-        saveDriverArrivalChecklist(activeLoad.id, {
+        await saveDriverArrivalChecklist(activeLoad.id, {
             kilosEnPlanta,
             huboDescarte,
             kilosDescarte: huboDescarte ? kilosDescarte : "0",
@@ -191,9 +188,9 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
         });
     };
 
-    const handleSaveExitGuide = () => {
+    const handleSaveExitGuide = async () => {
         if (!activeLoad) return;
-        saveDriverVehicleExitGuide(activeLoad.id, {
+        await saveDriverVehicleExitGuide(activeLoad.id, {
             requiereGuia: true,
             numeroGuia: numeroGuiaSalida,
             motivoSalida,
@@ -208,6 +205,8 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
         });
     };
 
+    if (!currentDriver) return <div className="p-8 text-ink-muted">Registra un chofer y coordina una entrega para utilizar el portal.</div>;
+
     return (
         <div className="px-4 py-5 pb-24 sm:px-8 lg:px-14">
             {/* Cabecera del Portal Móvil del Chofer */}
@@ -221,9 +220,9 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                             <Select
                                 items={driverItems}
                                 value={currentDriver.id}
-                                onValueChange={(next) => {
+                                onValueChange={async (next) => {
                                     if (!next) return;
-                                    setActiveDriver(next as string);
+                                    await setActiveDriver(next as string);
                                     setSelectedCampaignId(null);
                                 }}
                             >
@@ -819,8 +818,8 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                 open={loadDataModalLoad !== null}
                 onOpenChange={(open) => !open && setLoadDataModalLoad(null)}
                 load={loadDataModalLoad}
-                onSave={(loadId, payload) => {
-                    saveDriverLoadFieldData(loadId, payload);
+                onSave={async (loadId, payload) => {
+                    await saveDriverLoadFieldData(loadId, payload);
                     setSuccessInfo({
                         title: "Datos de carga actualizados",
                         description: "El desglose de kilos, bultos y viáticos del camión se guardó correctamente.",

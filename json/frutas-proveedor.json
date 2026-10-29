@@ -1,0 +1,47 @@
+[
+  {
+    "pxfId": 1,
+    "proveedorId": 1,
+    "frutaId": 1
+  },
+  {
+    "pxfId": 2,
+    "proveedorId": 1,
+    "frutaId": 3
+  },
+  {
+    "pxfId": 3,
+    "proveedorId": 2,
+    "frutaId": 4
+  },
+  {
+    "pxfId": 4,
+    "proveedorId": 3,
+    "frutaId": 2
+  },
+  {
+    "pxfId": 5,
+    "proveedorId": 4,
+    "frutaId": 2
+  },
+  {
+    "pxfId": 6,
+    "proveedorId": 4,
+    "frutaId": 1
+  },
+  {
+    "pxfId": 7,
+    "proveedorId": 5,
+    "frutaId": 1
+  },
+  {
+    "pxfId": 8,
+    "proveedorId": 6,
+    "frutaId": 3
+  },
+  {
+    "pxfId": 9,
+    "proveedorId": 7,
+    "frutaId": 5
+  }
+]

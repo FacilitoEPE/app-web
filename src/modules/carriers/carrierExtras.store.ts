@@ -1,20 +1,10 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { quotationCommands } from '@/modules/carriers/api/quotation-commands.api';
 import { useSyncExternalStore } from "react";
 import type { CarrierExtras } from "@/modules/carriers/carrierProfile.utils";
-import { createDemoCarrierExtras } from "@/modules/carriers/carrierExtras.demo";
 
-/**
- * Datos del transportista que todavía no tienen campo en el backend: tipo (público o privado), MTC, CGN,
- * documento de identidad y ubicación.
- *
- * TODO(api): se guardan en memoria por id de transportista (se pierden al recargar la página) y viven acá, y no
- * en un componente, para que sobrevivan al navegar entre la lista y el detalle. Cuando el backend los modele,
- * `setCarrierExtras` y `removeCarrierExtras` desaparecen y `CarrierDto` / `CarrierInput` de `carrier.api.ts`
- * pasan a llevarlos. Los modelos y validaciones están en `carrierProfile.utils.ts`.
- *
- * En desarrollo arranca con datos de demostración (`carrierExtras.demo.ts`); en producción y en las pruebas
- * arranca vacío.
- */
-let data: Record<number, CarrierExtras> = import.meta.env.DEV && import.meta.env.MODE !== "test" ? createDemoCarrierExtras() : {};
+/** V1: remote commands and server projections. Legacy: local compatibility state, initially empty. */
+let data: Record<number, CarrierExtras> = {};
 const listeners = new Set<() => void>();
 
 function update(next: Record<number, CarrierExtras>) {
@@ -31,6 +21,7 @@ function subscribe(listener: () => void) {
 
 /** Guarda (o reemplaza) los datos nuevos de un transportista. */
 export function setCarrierExtras(carrierId: number, extras: CarrierExtras) {
+    if (usesV1()) return quotationCommands.extras(carrierId, extras);
     update({ ...data, [carrierId]: extras });
 }
 
@@ -45,3 +36,5 @@ export function removeCarrierExtras(carrierId: number) {
 export function useCarrierExtras(): Record<number, CarrierExtras> {
     return useSyncExternalStore(subscribe, () => data);
 }
+
+export function hydrateCarrierExtras(value: Record<number, CarrierExtras>) { data = value; listeners.forEach(listener => listener()); }

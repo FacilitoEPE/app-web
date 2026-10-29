@@ -1,0 +1,20 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "examenProveedorId": 1,
+    "fecha": "2026-10-10",
+    "tipoExamen": "cadmio",
+    "resultado": null,
+    "origen": null,
+    "observacion": null,
+    "documentoUrl": null,
+    "proveedorId": 1,
+    "cxpId": 1,
+    "fincaId": 1,
+    "codigoMuestra": "M-001",
+    "fechaEnvio": null,
+    "estadoExamen": "Pendiente",
+    "documentoArchivoId": null
+  }
+]

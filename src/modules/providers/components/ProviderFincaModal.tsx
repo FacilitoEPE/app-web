@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useState } from "react";
 import { LandPlot, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -56,13 +57,13 @@ export default function ProviderFincaModal({ open, onOpenChange, providerName, r
         },
     });
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const nextErrors = { ...validateFinca(values, registeredFincas.map((finca) => finca.nombre)), ...validateFincaCultivo(values) };
         if (Object.keys(nextErrors).length > 0) {
             setErrors(nextErrors);
             return;
         }
-        onSave(toFinca(values));
+        await onSave(toFinca(values));
     };
 
     return (
@@ -110,7 +111,7 @@ export default function ProviderFincaModal({ open, onOpenChange, providerName, r
                         <InputField {...bind("edadCultivo")} label="Edad del cultivo" optional placeholder="0" step="0.5" min={0} unit="años" className="sm:col-span-2" />
 
                         <FormField label="Cultivos y variedades" required error={errors.cultivos} className="sm:col-span-6">
-                            <FruitVarietyPicker
+                            <FruitVarietyPicker single={usesV1()}
                                 fruits={CATALOGO_FRUTAS}
                                 value={values.cultivos}
                                 onChange={(next) => { set("cultivos")(next); clearError("cultivos"); }}

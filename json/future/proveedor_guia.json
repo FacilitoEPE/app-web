@@ -1,0 +1,26 @@
+[
+  {
+    "proveedorGuiaId": 1,
+    "guiaRemisionId": 1,
+    "cargaId": 1,
+    "proveedorCargaId": 1,
+    "kilosAsignados": 600,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fincasIds": [
+      1
+    ]
+  },
+  {
+    "proveedorGuiaId": 2,
+    "guiaRemisionId": 1,
+    "cargaId": 1,
+    "proveedorCargaId": 2,
+    "kilosAsignados": 400,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fincasIds": [
+      2
+    ]
+  }
+]

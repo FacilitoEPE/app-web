@@ -1,3 +1,4 @@
+import CampaignClosureAction from '@/modules/campaigns/components/CampaignClosureAction';
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CalendarRange, ClipboardCheck, FileSpreadsheet, PackageCheck, Pencil, Receipt, Sprout, Truck } from "lucide-react";
@@ -128,11 +129,11 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
         let active = true;
         Promise.all([
             getCampana(campaniaId),
-            getCampaniaProveedoresByCampania(campaniaId).catch(() => []),
-            getClientesNegocioCampana(campaniaId).catch(() => []),
+            getCampaniaProveedoresByCampania(campaniaId),
+            getClientesNegocioCampana(campaniaId),
         ])
             .then(async ([campana, proveedores, clientes]) => {
-                const derivadas = campana.frutaId ? await getFrutaDerivadas(campana.frutaId).catch(() => []) : [];
+                const derivadas = campana.frutaId ? await getFrutaDerivadas(campana.frutaId) : [];
                 if (active) setState({ status: "success", data: { campana, proveedores, clientes, derivadas } });
             })
             .catch(() => { if (active) setState({ status: "error" }); });
@@ -179,6 +180,7 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                             <Button variant="outline" size="xl" onClick={() => setOpenModal("edit")}>
                                 <Pencil size={19} strokeWidth={2.5} /> Editar campaña
                             </Button>
+                            <CampaignClosureAction campaignId={campaniaId} closed={campana.estado === "terminado"} onClosed={retry} />
                         </div>
                     }
                 />

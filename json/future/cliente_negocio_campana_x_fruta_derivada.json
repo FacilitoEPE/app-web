@@ -1,0 +1,16 @@
+[
+  {
+    "clienteNegocioCampanaXFrutaDerivadaId": 1,
+    "clienteNegocioCampanaId": 1,
+    "frutaDerivadaId": 1,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "clienteNegocioCampanaXFrutaDerivadaId": 2,
+    "clienteNegocioCampanaId": 2,
+    "frutaDerivadaId": 1,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

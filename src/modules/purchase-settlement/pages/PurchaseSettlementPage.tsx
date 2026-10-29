@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+import { usesV1 } from '@/shared/api/data-contract';
 import { useMemo, useState } from "react";
 import {
     ArrowLeft,
@@ -58,7 +60,7 @@ import SettlementUitControlModal from "@/modules/purchase-settlement/components/
 import type {
     SettlementProviderEntry,
     SettlementStatus,
-} from "@/modules/purchase-settlement/purchaseSettlement.demo";
+} from "@/modules/purchase-settlement/purchaseSettlement.models";
 import {
     addProviderLinkedPerson,
     registerCarrierPayment,
@@ -86,6 +88,7 @@ const PROVIDER_TABS: readonly SegmentedTabItem[] = [
 ];
 
 export default function PurchaseSettlementPage() {
+    const navigate = useNavigate();
     const { loads, tipoCambioUit } = usePurchaseSettlementState();
 
     const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
@@ -838,7 +841,7 @@ export default function PurchaseSettlementPage() {
                                                         <Button
                                                             variant="outline"
                                                             onClick={() =>
-                                                                setPendingModalLoad(activeLoad.codigo)
+                                                                usesV1() ? navigate(`/campaigns/${activeLoad.campaniaId}/providers`) : setPendingModalLoad(activeLoad.codigo)
                                                             }
                                                         >
                                                             Completar pendientes
@@ -1058,8 +1061,8 @@ export default function PurchaseSettlementPage() {
                 load={activeLoad}
                 providerEntry={editingProvider}
                 onAddLinkedPerson={addProviderLinkedPerson}
-                onSave={(loadId, providerEntryId, payload) => {
-                    saveProviderSettlement(loadId, providerEntryId, payload);
+                onSave={async (loadId, providerEntryId, payload) => {
+                    await saveProviderSettlement(loadId, providerEntryId, payload);
                     setProviderStatusTab("Por pagar");
                     setSuccessInfo({
                         title: "Liquidación de proveedor guardada",
@@ -1072,8 +1075,8 @@ export default function PurchaseSettlementPage() {
                 open={carrierModalOpen}
                 onOpenChange={setCarrierModalOpen}
                 load={activeLoad}
-                onSave={(loadId, payload) => {
-                    saveCarrierSettlement(loadId, payload);
+                onSave={async (loadId, payload) => {
+                    await saveCarrierSettlement(loadId, payload);
                     setSuccessInfo({
                         title: "Liquidación de transporte actualizada",
                         description:
@@ -1117,12 +1120,12 @@ export default function PurchaseSettlementPage() {
                         ? activeLoad?.transporte.adelantosDisponibles
                         : undefined
                 }
-                onRegister={(payment, advanceId) => {
+                onRegister={async (payment, advanceId) => {
                     if (!activeLoad || !paymentTarget) return;
                     if (paymentTarget.type === "carrier") {
-                        registerCarrierPayment(activeLoad.id, payment, advanceId);
+                        await registerCarrierPayment(activeLoad.id, payment, advanceId);
                     } else {
-                        registerProviderPayment(activeLoad.id, paymentTarget.prov.id, payment);
+                        await registerProviderPayment(activeLoad.id, paymentTarget.prov.id, payment);
                     }
                     setSuccessInfo({
                         title: "Pago registrado correctamente",

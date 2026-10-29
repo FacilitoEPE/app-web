@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useState } from "react";
 import { PackageCheck, Save, Sprout, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FormField from "@/shared/components/FormField";
@@ -8,7 +9,7 @@ import ModalSection from "@/shared/components/ModalSection";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { formatKg } from "@/shared/utils/format";
-import type { DriverLoad, DriverProviderLoadDetail } from "@/modules/driver-portal/driverPortal.demo";
+import type { DriverLoad, DriverProviderLoadDetail } from "@/modules/driver-portal/driverPortal.models";
 
 interface DriverLoadDataModalProps {
     open: boolean;
@@ -39,7 +40,7 @@ export default function DriverLoadDataModal({ open, onOpenChange, load, onSave }
     const [observacionesCarga, setObservacionesCarga] = useState("");
     const [proveedores, setProveedores] = useState<DriverProviderLoadDetail[]>([]);
 
-    useEffect(() => {
+    useResetOnToggle(open, () => {
         if (!load || !open) return;
         setFechaCarga(load.fechaCarga);
         setAnotador(load.anotador);
@@ -49,7 +50,7 @@ export default function DriverLoadDataModal({ open, onOpenChange, load, onSave }
         setGastoAnotadores(String(load.gastoAnotadores));
         setObservacionesCarga(load.observacionesCarga);
         setProveedores(load.proveedores.map((p) => ({ ...p })));
-    }, [load, open]);
+    });
 
     if (!load) return null;
 
@@ -69,8 +70,8 @@ export default function DriverLoadDataModal({ open, onOpenChange, load, onSave }
         0,
     );
 
-    const handleSubmit = () => {
-        onSave(load.id, {
+    const handleSubmit = async () => {
+        await onSave(load.id, {
             fechaCarga,
             anotador: anotador.trim() || "Anotador de campo",
             viaticosMovilidad: Number(viaticosMovilidad) || 0,

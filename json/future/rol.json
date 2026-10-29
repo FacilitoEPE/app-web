@@ -1,0 +1,14 @@
+[
+  {
+    "rolId": 1,
+    "nombre": "Administrador",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "rolId": 2,
+    "nombre": "Chofer",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

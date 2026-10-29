@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Eye, FileSignature, PackageCheck, Pencil, Plus, Trash2 } from "lucide-react";
@@ -104,10 +105,10 @@ function ContractsView({ campaign, relation }: { campaign: Campana; relation: Cl
         ],
     });
 
-    const save = (values: CampaignClientContractValues, archivo: File | null) => {
+    const save = async (values: CampaignClientContractValues, archivo: File | null) => {
         if (panel.open === "edit" && panel.contract)
-            updateCampaignClientContract(campaign.campaniaId, relation.clienteNegocioCampanaId, panel.contract.id, values, archivo);
-        else if (archivo) addCampaignClientContract(campaign.campaniaId, relation.clienteNegocioCampanaId, values, archivo);
+            await updateCampaignClientContract(campaign.campaniaId, relation.clienteNegocioCampanaId, panel.contract.id, values, archivo);
+        else if (archivo || usesV1()) await addCampaignClientContract(campaign.campaniaId, relation.clienteNegocioCampanaId, values, archivo);
         setPanel((current) => ({ ...current, open: null }));
         setSuccessOpen(true);
     };
@@ -236,8 +237,8 @@ function ContractsView({ campaign, relation }: { campaign: Campana; relation: Cl
                 title="¿Eliminar contrato?"
                 description="El contrato se quitará de esta participación comercial."
                 confirmLabel="Sí, eliminar"
-                onConfirm={() => {
-                    if (deleting) deleteCampaignClientContract(campaign.campaniaId, relation.clienteNegocioCampanaId, deleting.id);
+                onConfirm={async () => {
+                    if (deleting) await deleteCampaignClientContract(campaign.campaniaId, relation.clienteNegocioCampanaId, deleting.id);
                     setDeleting(null);
                 }}
             />

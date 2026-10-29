@@ -1,0 +1,13 @@
+[
+  {
+    "pagoCertificadoCampanaId": 1,
+    "certificadoId": 1,
+    "fecha": "2026-10-20",
+    "monto": 500,
+    "referencia": "CERT-DEMO-1",
+    "comprobanteId": null,
+    "registradoPorUsuarioId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

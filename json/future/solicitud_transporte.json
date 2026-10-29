@@ -1,0 +1,20 @@
+[
+  {
+    "solicitudTransporteId": 1,
+    "campaniaId": 1,
+    "referencia": "SOL-DEMO-1",
+    "fecha": "2026-10-29T13:00:00.000Z",
+    "origen": "Tambogrande",
+    "destino": "Paita",
+    "ventanaServicio": "29 de octubre por la mañana",
+    "cantidadEstimada": "1.000 kg",
+    "caracteristicasVehiculo": null,
+    "condiciones": null,
+    "limiteRespuesta": null,
+    "mensaje": null,
+    "archivoId": null,
+    "estado": "BORRADOR",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

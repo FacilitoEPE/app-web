@@ -73,8 +73,8 @@ export default function CarriersPage() {
         }
     }, []);
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial remote loading uses the shared retry callback.
         void loadCarriers();
     }, [loadCarriers]);
 
@@ -103,8 +103,8 @@ export default function CarriersPage() {
 
     const handleCreateCarrier = async (values: CarrierFormValues) => {
         const { input, extras: carrierExtras } = splitCarrierValues(values);
-        const created = await createCarrier(input);
-        setCarrierExtras(created.id, carrierExtras);
+        const created = await createCarrier(input, carrierExtras);
+        await setCarrierExtras(created.id, carrierExtras);
         await loadCarriers();
         setIsCreateModalOpen(false);
         showSuccess("carrier-created");
@@ -112,15 +112,15 @@ export default function CarriersPage() {
 
     const handleUpdateCarrier = async (id: number, values: CarrierFormValues) => {
         const { input, extras: carrierExtras } = splitCarrierValues(values);
-        await updateCarrier(id, input);
-        setCarrierExtras(id, carrierExtras);
+        await updateCarrier(id, input, carrierExtras);
+        await setCarrierExtras(id, carrierExtras);
         await loadCarriers();
     };
 
     const handleDeleteCarrier = async (id: number) => {
         try {
             await deleteCarrier(id);
-            removeCarrierExtras(id);
+            await removeCarrierExtras(id);
             await loadCarriers();
             setSelectedIds((current) => {
                 const next = new Set(current);

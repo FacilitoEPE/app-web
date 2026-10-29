@@ -1,0 +1,79 @@
+[
+  {
+    "idVehiculoExterno": 1,
+    "idEmpresaTransporteExterno": 1,
+    "placa": "ABC-101",
+    "volumen": 32,
+    "ancho": 2.4,
+    "altura": 2.5,
+    "profundidad": 5.5,
+    "pesoNeto": 6500,
+    "pesoBruto": 18000
+  },
+  {
+    "idVehiculoExterno": 2,
+    "idEmpresaTransporteExterno": 2,
+    "placa": "ABC-102",
+    "volumen": 32,
+    "ancho": 2.4,
+    "altura": 2.5,
+    "profundidad": 5.5,
+    "pesoNeto": 6500,
+    "pesoBruto": 18000
+  },
+  {
+    "idVehiculoExterno": 3,
+    "idEmpresaTransporteExterno": 2,
+    "placa": "ABC-103",
+    "volumen": 32,
+    "ancho": 2.4,
+    "altura": 2.5,
+    "profundidad": 5.5,
+    "pesoNeto": 6500,
+    "pesoBruto": 18000
+  },
+  {
+    "idVehiculoExterno": 4,
+    "idEmpresaTransporteExterno": 3,
+    "placa": "ABC-104",
+    "volumen": 32,
+    "ancho": 2.4,
+    "altura": 2.5,
+    "profundidad": 5.5,
+    "pesoNeto": 6500,
+    "pesoBruto": 18000
+  },
+  {
+    "idVehiculoExterno": 5,
+    "idEmpresaTransporteExterno": 4,
+    "placa": "ABC-105",
+    "volumen": 32,
+    "ancho": 2.4,
+    "altura": 2.5,
+    "profundidad": 5.5,
+    "pesoNeto": 6500,
+    "pesoBruto": 18000
+  },
+  {
+    "idVehiculoExterno": 6,
+    "idEmpresaTransporteExterno": 5,
+    "placa": "ABC-106",
+    "volumen": 32,
+    "ancho": 2.4,
+    "altura": 2.5,
+    "profundidad": 5.5,
+    "pesoNeto": 6500,
+    "pesoBruto": 18000
+  },
+  {
+    "idVehiculoExterno": 7,
+    "idEmpresaTransporteExterno": 1,
+    "placa": "ABC-107",
+    "volumen": 32,
+    "ancho": 2.4,
+    "altura": 2.5,
+    "profundidad": 5.5,
+    "pesoNeto": 6500,
+    "pesoBruto": 18000
+  }
+]

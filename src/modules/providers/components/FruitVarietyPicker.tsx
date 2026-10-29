@@ -12,6 +12,7 @@ interface FruitVarietyPickerProps {
     value: CultivoFinca[];
     onChange: (next: CultivoFinca[]) => void;
     disabled?: boolean;
+    single?: boolean;
     invalid?: boolean;
     /** Ayuda bajo el título de variedades; cambia según quién las tiene (la finca, el proveedor) */
     varietiesHint?: string;
@@ -22,7 +23,7 @@ interface FruitVarietyPickerProps {
  * izquierda (un clic la agrega y la deja activa; la X la quita) y, a la derecha, las variedades de la fruta
  * activa para marcar una o varias. Lo usan el formulario de finca y el de proveedor.
  */
-export default function FruitVarietyPicker({ fruits, value, onChange, disabled, invalid, varietiesHint = "Marca las que tiene esta finca" }: FruitVarietyPickerProps) {
+export default function FruitVarietyPicker({ fruits, value, onChange, disabled, single, invalid, varietiesHint = "Marca las que tiene esta finca" }: FruitVarietyPickerProps) {
     const [activeName, setActiveName] = useState<string>("");
 
     // La fruta activa es la que se tocó, si sigue agregada; si no, la primera agregada
@@ -35,13 +36,13 @@ export default function FruitVarietyPicker({ fruits, value, onChange, disabled, 
 
     const select = (fruit: FrutaCatalogo) => {
         setActiveName(fruit.nombre);
-        if (!value.some((item) => item.fruta === fruit.nombre)) onChange([...value, { fruta: fruit.nombre, variedades: [] }]);
+        if (!value.some((item) => item.fruta === fruit.nombre)) onChange([...(single ? [] : value), { fruta: fruit.nombre, variedades: [] }]);
     };
 
     const remove = (name: string) => onChange(value.filter((item) => item.fruta !== name));
 
     const setVarieties = (name: string, varieties: string[]) =>
-        onChange(value.map((item) => (item.fruta === name ? { ...item, variedades: varieties } : item)));
+        onChange(value.map((item) => (item.fruta === name ? { ...item, variedades: single ? varieties.filter(v=>!activeVarieties.includes(v)).slice(-1) : varieties } : item)));
 
     return (
         <div
@@ -106,7 +107,7 @@ export default function FruitVarietyPicker({ fruits, value, onChange, disabled, 
                                 <h4 className="text-[13.5px] font-bold text-ink">Variedades de {active.nombre}</h4>
                                 <p className="text-[11.5px] text-ink-muted">{varietiesHint}</p>
                             </div>
-                            <Button
+                            {!single && <Button
                                 type="button"
                                 variant="link"
                                 size="sm"
@@ -115,7 +116,7 @@ export default function FruitVarietyPicker({ fruits, value, onChange, disabled, 
                                 className="h-auto p-0 text-[11.5px] font-semibold text-brand hover:underline"
                             >
                                 {allSelected ? "Quitar todas" : "Marcar todas"}
-                            </Button>
+                            </Button>}
                         </div>
                         <ChipSelect
                             ariaLabel={`Variedades de ${active.nombre}`}

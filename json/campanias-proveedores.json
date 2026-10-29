@@ -1,0 +1,92 @@
+[
+  {
+    "cxpId": 1,
+    "campaniaId": 1,
+    "proveedorId": 1,
+    "fincaId": null,
+    "cantidadProveedor": 35000,
+    "mtdCeratitis": null,
+    "frutaConvencionalEstimado": 28000.0,
+    "tipoProveedor": "productor"
+  },
+  {
+    "cxpId": 2,
+    "campaniaId": 1,
+    "proveedorId": 2,
+    "fincaId": null,
+    "cantidadProveedor": 28000,
+    "mtdCeratitis": null,
+    "frutaConvencionalEstimado": null,
+    "tipoProveedor": "acopio"
+  },
+  {
+    "cxpId": 3,
+    "campaniaId": 1,
+    "proveedorId": 4,
+    "fincaId": null,
+    "cantidadProveedor": 24000,
+    "mtdCeratitis": null,
+    "frutaConvencionalEstimado": 19200.0,
+    "tipoProveedor": "productor"
+  },
+  {
+    "cxpId": 4,
+    "campaniaId": 1,
+    "proveedorId": 5,
+    "fincaId": null,
+    "cantidadProveedor": 18000,
+    "mtdCeratitis": null,
+    "frutaConvencionalEstimado": null,
+    "tipoProveedor": "acopio"
+  },
+  {
+    "cxpId": 5,
+    "campaniaId": 2,
+    "proveedorId": 1,
+    "fincaId": null,
+    "cantidadProveedor": 40000,
+    "mtdCeratitis": null,
+    "frutaConvencionalEstimado": 32000.0,
+    "tipoProveedor": "productor"
+  },
+  {
+    "cxpId": 6,
+    "campaniaId": 2,
+    "proveedorId": 3,
+    "fincaId": null,
+    "cantidadProveedor": 25000,
+    "mtdCeratitis": null,
+    "frutaConvencionalEstimado": null,
+    "tipoProveedor": "acopio"
+  },
+  {
+    "cxpId": 7,
+    "campaniaId": 3,
+    "proveedorId": 6,
+    "fincaId": null,
+    "cantidadProveedor": 50000,
+    "mtdCeratitis": null,
+    "frutaConvencionalEstimado": 40000.0,
+    "tipoProveedor": "productor"
+  },
+  {
+    "cxpId": 8,
+    "campaniaId": 4,
+    "proveedorId": 2,
+    "fincaId": null,
+    "cantidadProveedor": 22000,
+    "mtdCeratitis": null,
+    "frutaConvencionalEstimado": 17600.0,
+    "tipoProveedor": "productor"
+  },
+  {
+    "cxpId": 9,
+    "campaniaId": 6,
+    "proveedorId": 7,
+    "fincaId": null,
+    "cantidadProveedor": 16000,
+    "mtdCeratitis": null,
+    "frutaConvencionalEstimado": 12800.0,
+    "tipoProveedor": "productor"
+  }
+]

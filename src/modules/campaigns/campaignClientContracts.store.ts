@@ -1,17 +1,12 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { campaignCommands } from '@/modules/campaigns/api/campaign-commands.api';
 import { useSyncExternalStore } from "react";
 import { format } from "date-fns";
 import type { CampaignClientContractLocal, CampaignClientContractValues } from "@/modules/campaigns/campaignClientContract.utils";
-import { createDemoContracts } from "@/modules/campaigns/campaignClientContracts.demo";
 
-/**
- * TODO(api): reemplazar este almacén en memoria por el servicio de contratos cliente-campaña.
- *
- * En desarrollo arranca con datos de demostración (`campaignClientContracts.demo.ts`); en producción y en las
- * pruebas arranca vacío, sin simular respuestas del backend.
- */
-const demo = import.meta.env.DEV && import.meta.env.MODE !== "test" ? createDemoContracts() : null;
-let records: Record<string, CampaignClientContractLocal[]> = demo?.records ?? {};
-let nextId = demo?.nextId ?? 1;
+/** V1: remote commands and server projections. Legacy: local compatibility state, initially empty. */
+let records: Record<string, CampaignClientContractLocal[]> = {};
+let nextId = 1;
 const listeners = new Set<() => void>();
 const EMPTY: CampaignClientContractLocal[] = [];
 
@@ -29,7 +24,8 @@ export function useCampaignContractRecords() {
     return useSyncExternalStore(subscribe, () => records);
 }
 
-export function addCampaignClientContract(campaniaId: number, clienteNegocioCampanaId: number, values: CampaignClientContractValues, archivo: File) {
+export function addCampaignClientContract(campaniaId: number, clienteNegocioCampanaId: number, values: CampaignClientContractValues, archivo: File | null) {
+    if (usesV1()) return campaignCommands.contract(clienteNegocioCampanaId, values, archivo);
     const key = keyOf(campaniaId, clienteNegocioCampanaId);
     const contract: CampaignClientContractLocal = {
         id: nextId++,
@@ -47,6 +43,7 @@ export function addCampaignClientContract(campaniaId: number, clienteNegocioCamp
 }
 
 export function updateCampaignClientContract(campaniaId: number, clienteNegocioCampanaId: number, contractId: number, values: CampaignClientContractValues, archivo: File | null) {
+    if (usesV1()) return campaignCommands.contract(clienteNegocioCampanaId, values, archivo, contractId);
     const key = keyOf(campaniaId, clienteNegocioCampanaId);
     records = { ...records, [key]: (records[key] ?? EMPTY).map((item) => item.id === contractId ? {
         ...item,
@@ -62,8 +59,11 @@ export function updateCampaignClientContract(campaniaId: number, clienteNegocioC
 }
 
 export function deleteCampaignClientContract(campaniaId: number, clienteNegocioCampanaId: number, contractId: number) {
+    if (usesV1()) return campaignCommands.deleteContract(clienteNegocioCampanaId, contractId);
     const key = keyOf(campaniaId, clienteNegocioCampanaId);
     records = { ...records, [key]: (records[key] ?? EMPTY).filter((item) => item.id !== contractId) };
     emit();
 }
 
+
+export function hydrateCampaignContracts(value: Record<string, CampaignClientContractLocal[]>) { records = value; emit(); }

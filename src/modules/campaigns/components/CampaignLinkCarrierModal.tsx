@@ -41,13 +41,13 @@ export default function CampaignLinkCarrierModal({ open, onOpenChange, campaignN
     );
     const selected = carriers.find((carrier) => String(carrier.id) === carrierId);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const next = { carrier: selected ? undefined : "Selecciona el transportista.", quote: quote ? undefined : "Adjunta la cotización del transportista." };
         if (next.carrier || next.quote) {
             setErrors(next);
             return;
         }
-        onSave(selected!.id, quote!);
+        await onSave(selected!.id, quote!);
     };
 
     return (

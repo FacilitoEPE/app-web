@@ -1,0 +1,36 @@
+[
+  {
+    "coordinacionEntregaId": 1,
+    "entregaProgramadaId": 1,
+    "acuerdoTransporteId": 1,
+    "idEmpresaTransporteExterno": 1,
+    "idVehiculoExterno": 1,
+    "idChoferTransporteExterno": 1,
+    "inicioProgramado": "2026-10-29T13:00:00.000Z",
+    "finProgramado": "2026-10-29T15:00:00.000Z",
+    "origenDescripcion": "Tambogrande",
+    "condicionesCarga": null,
+    "observaciones": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fleteAsignado": 500,
+    "observacionFlete": null
+  },
+  {
+    "coordinacionEntregaId": 2,
+    "entregaProgramadaId": 2,
+    "acuerdoTransporteId": 1,
+    "idEmpresaTransporteExterno": 1,
+    "idVehiculoExterno": 1,
+    "idChoferTransporteExterno": 1,
+    "inicioProgramado": "2026-10-30T13:00:00.000Z",
+    "finProgramado": "2026-10-30T15:00:00.000Z",
+    "origenDescripcion": "Tambogrande",
+    "condicionesCarga": null,
+    "observaciones": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fleteAsignado": 500,
+    "observacionFlete": null
+  }
+]

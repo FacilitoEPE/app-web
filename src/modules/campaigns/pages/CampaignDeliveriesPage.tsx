@@ -106,7 +106,7 @@ export default function CampaignDeliveriesPage() {
         const names: Record<string, string> = {};
         for (const entry of entries) {
             const contract = contractRecords[`${campaniaId}:${entry.relationId}`]?.find((item) => item.id === entry.contractId);
-            names[entry.key] = contract?.archivo.name ?? `Contrato ${entry.contractId}`;
+            names[entry.key] = contract?.archivo?.name ?? `Contrato ${entry.contractId}`;
         }
         return names;
     }, [entries, contractRecords, campaniaId]);
@@ -202,8 +202,8 @@ export default function CampaignDeliveriesPage() {
                     : undefined,
             };
 
-    const saveCoordination = (entry: CampaignDeliveryEntry, values: DeliveryCoordinationValues) => {
-        saveCampaignDeliveryCoordination(campaniaId, entry.relationId, entry.contractId, entry.delivery.id, toCoordination(values));
+    const saveCoordination = async (entry: CampaignDeliveryEntry, values: DeliveryCoordinationValues) => {
+        await saveCampaignDeliveryCoordination(campaniaId, entry.relationId, entry.contractId, entry.delivery.id, toCoordination(values));
         setCoordination((current) => ({ ...current, open: false }));
         setSuccessOpen(true);
     };

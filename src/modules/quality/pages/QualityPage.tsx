@@ -165,8 +165,8 @@ export default function QualityPage() {
                 onOpenChange={setIsAddModalOpen}
                 scope={scope}
                 existingCampaignIds={existingCampaignIds}
-                onAdd={(input) => {
-                    addQualityCampaign(input);
+                onAdd={async (input) => {
+                    await addQualityCampaign(input);
                     setFeedback(
                         `Campaña ${input.nombre} agregada a ${scope === "exportador" ? "Exportador" : "Industria"}.`,
                     );

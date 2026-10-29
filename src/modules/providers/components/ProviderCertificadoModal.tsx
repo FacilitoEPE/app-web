@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useState } from "react";
 import { ShieldCheck, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -49,14 +50,14 @@ export default function ProviderCertificadoModal({ open, onOpenChange, providerN
         setErrors((current) => ({ ...current, [field]: undefined }));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const nextErrors = validateCertificado(values);
         // Al registrar el documento es obligatorio; al editar, sin archivo nuevo se conserva el actual
-        const nextFileError = file ? validateCertificadoProveedorFile(file) : isEdit ? undefined : "Adjunta el documento del certificado.";
+        const nextFileError = file ? validateCertificadoProveedorFile(file) : (isEdit || usesV1()) ? undefined : "Adjunta el documento del certificado.";
         setErrors(nextErrors);
         setFileError(nextFileError);
         if (Object.keys(nextErrors).length > 0 || nextFileError) return;
-        onSave(values, file);
+        await onSave(values, file);
     };
 
     return (

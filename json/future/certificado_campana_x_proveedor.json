@@ -1,0 +1,22 @@
+[
+  {
+    "certificadoCampanaXProveedorId": 1,
+    "certificadoId": 1,
+    "campaniaId": 1,
+    "cxpId": 1,
+    "proveedorId": 1,
+    "kilosAutorizados": 1000,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "certificadoCampanaXProveedorId": 2,
+    "certificadoId": 1,
+    "campaniaId": 1,
+    "cxpId": 2,
+    "proveedorId": 2,
+    "kilosAutorizados": 1000,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

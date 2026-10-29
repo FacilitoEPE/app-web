@@ -1,0 +1,11 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "certificadoProveedorId": 1,
+    "fechaRevisionSenasa": "2026-10-01",
+    "nombre": "Registro SENASA (demo)",
+    "proveedorId": 1,
+    "documentoArchivoId": null
+  }
+]

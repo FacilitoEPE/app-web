@@ -1,0 +1,36 @@
+[
+  {
+    "contratoVentaId": 1,
+    "clienteNegocioCampanaId": 1,
+    "numero": "CTR-DEMO-1",
+    "canal": "EXPORTACION",
+    "fecha": "2026-10-06",
+    "kilosAcordados": 1500,
+    "precioKg": 3,
+    "moneda": "USD",
+    "estado": "VIGENTE",
+    "condicionesPago": "Contra entrega",
+    "archivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "condicionesEntrega": "FOB Paita",
+    "observaciones": null
+  },
+  {
+    "contratoVentaId": 2,
+    "clienteNegocioCampanaId": 2,
+    "numero": "CTR-DEMO-2",
+    "canal": "EXPORTACION",
+    "fecha": "2026-10-06",
+    "kilosAcordados": 1500,
+    "precioKg": null,
+    "moneda": "USD",
+    "estado": "VIGENTE",
+    "condicionesPago": "Contra entrega",
+    "archivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "condicionesEntrega": "FOB Paita",
+    "observaciones": null
+  }
+]

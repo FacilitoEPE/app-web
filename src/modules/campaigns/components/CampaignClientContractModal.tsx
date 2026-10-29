@@ -44,11 +44,11 @@ export default function CampaignClientContractModal({ open, mode, contract, onOp
         setErrors((current) => ({ ...current, [field]: undefined }));
     };
 
-    const save = () => {
+    const save = async () => {
         const nextErrors = validateCampaignClientContract(values, archivo, Boolean(contract?.archivo));
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return;
-        onSave(values, archivo);
+        await onSave(values, archivo);
     };
 
     const symbol = CONTRACT_CURRENCIES.find((item) => item.value === values.moneda)?.symbol ?? "$";

@@ -1,0 +1,36 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "clienteNegocioCampanaId": 1,
+    "documentoUrl": null,
+    "fechaRegistro": "2026-10-05",
+    "fichaTecnicaUrl": null,
+    "cantidadKg": 1500,
+    "kilosAcordados": 1500,
+    "clienteNegocioId": 1,
+    "campaniaId": 1,
+    "fichaTecnicaArchivoId": null,
+    "destinoSolicitado": "Rotterdam",
+    "entregaDesde": "2026-10-29",
+    "entregaHasta": "2026-11-30",
+    "observaciones": null
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "clienteNegocioCampanaId": 2,
+    "documentoUrl": null,
+    "fechaRegistro": "2026-10-05",
+    "fichaTecnicaUrl": null,
+    "cantidadKg": 1500,
+    "kilosAcordados": 1500,
+    "clienteNegocioId": 1,
+    "campaniaId": 1,
+    "fichaTecnicaArchivoId": null,
+    "destinoSolicitado": "Rotterdam",
+    "entregaDesde": "2026-10-29",
+    "entregaHasta": "2026-11-30",
+    "observaciones": null
+  }
+]

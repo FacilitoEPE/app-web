@@ -29,6 +29,7 @@ export interface FincaFormValues {
 }
 
 export interface Finca {
+    fincaId?: number;
     nombre: string;
     /** Código de lugar de producción SENASA y código catastral: opcionales, no toda finca los tiene */
     codigoSenasa?: string;

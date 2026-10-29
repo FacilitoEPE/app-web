@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import type {
     CampaignContractDeliveryLocal,
     DeliveryCoordination,
@@ -84,8 +85,8 @@ export function validateCoordination(values: DeliveryCoordinationValues): Delive
     const sinFinca = selected.filter(([, fincas]) => fincas.length === 0).map(([id]) => Number(id));
     if (sinFinca.length > 0) errors.sinFinca = sinFinca;
 
-    if (!ISO_DATE.test(values.fechaInicio)) errors.fechaInicio = "Selecciona la fecha de inicio.";
-    if (!ISO_DATE.test(values.fechaFin)) errors.fechaFin = "Selecciona la fecha de fin.";
+    if (!(usesV1() ? Number.isFinite(Date.parse(values.fechaInicio)) : ISO_DATE.test(values.fechaInicio))) errors.fechaInicio = "Selecciona la fecha de inicio.";
+    if (!(usesV1() ? Number.isFinite(Date.parse(values.fechaFin)) : ISO_DATE.test(values.fechaFin))) errors.fechaFin = "Selecciona la fecha de fin.";
     else if (!errors.fechaInicio && values.fechaFin < values.fechaInicio) errors.fechaFin = "La fecha de fin no puede ser anterior al inicio.";
     return errors;
 }

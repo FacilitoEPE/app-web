@@ -1,16 +1,11 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { qualityCommands } from '@/modules/quality/api/quality-commands.api';
 import { useSyncExternalStore } from "react";
 import type { QualityAnalysisRecord } from "@/modules/quality/qualityAnalysis.utils";
-import { createDemoQualityAnalysis } from "@/modules/quality/qualityAnalysis.demo";
 
-/**
- * Muestreos y análisis de calidad por campaña en memoria.
- *
- * TODO(api): se pierden al recargar la página mientras el backend no cuente con el
- * servicio de análisis de laboratorio de cosecha y calidad.
- */
-const demo = import.meta.env.DEV && import.meta.env.MODE !== "test" ? createDemoQualityAnalysis() : null;
-let records: QualityAnalysisRecord[] = demo?.records ?? [];
-let nextId = demo?.nextId ?? 1;
+/** V1: remote commands and server projections. Legacy: local compatibility state, initially empty. */
+let records: QualityAnalysisRecord[] = [];
+let nextId = 1;
 const listeners = new Set<() => void>();
 
 function notify() {
@@ -25,18 +20,18 @@ function subscribe(listener: () => void) {
 }
 
 export function useQualityAnalysis(campaniaId: number): QualityAnalysisRecord[] {
-    return useSyncExternalStore(subscribe, () =>
-        records.filter((r) => r.campaniaId === campaniaId || campaniaId === 1),
-    );
+    const all=useSyncExternalStore(subscribe,()=>records);
+    return all.filter(row=>row.campaniaId===campaniaId);
 }
 
 export function getQualityAnalysis(campaniaId: number): QualityAnalysisRecord[] {
-    return records.filter((r) => r.campaniaId === campaniaId || campaniaId === 1);
+    return records.filter((r) => r.campaniaId === campaniaId);
 }
 
 export function saveQualityAnalysis(
     entry: Omit<QualityAnalysisRecord, "id"> & { id?: number },
-): QualityAnalysisRecord {
+): QualityAnalysisRecord | Promise<QualityAnalysisRecord> {
+    if (usesV1()) return qualityCommands.analysis(entry);
     if (entry.id) {
         records = records.map((r) => (r.id === entry.id ? { ...(entry as QualityAnalysisRecord) } : r));
         notify();
@@ -53,6 +48,7 @@ export function saveQualityAnalysis(
 }
 
 export function deleteQualityAnalysis(id: number) {
+    if (usesV1()) return qualityCommands.deleteAnalysis(id);
     records = records.filter((r) => r.id !== id);
     notify();
 }
@@ -63,3 +59,5 @@ export function _resetQualityAnalysisStore(initial: QualityAnalysisRecord[] = []
     nextId = startId;
     notify();
 }
+
+export function hydrateQualityAnalyses(value: QualityAnalysisRecord[]) { records = value; notify(); }

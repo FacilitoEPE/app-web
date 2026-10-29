@@ -1,11 +1,12 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { settlementCommands } from '@/modules/purchase-settlement/api/settlement-commands.api';
 import { useSyncExternalStore } from "react";
 import {
-    DEMO_SETTLEMENT_LOADS,
     type CarrierRealExpense,
     type SettlementLinkedPerson,
     type SettlementLoad,
     type SettlementPaymentItem,
-} from "@/modules/purchase-settlement/purchaseSettlement.demo";
+} from "@/modules/purchase-settlement/purchaseSettlement.models";
 
 interface SettlementState {
     loads: SettlementLoad[];
@@ -13,8 +14,8 @@ interface SettlementState {
 }
 
 let state: SettlementState = {
-    loads: DEMO_SETTLEMENT_LOADS,
-    tipoCambioUit: 3.76,
+    loads: [],
+    tipoCambioUit: 1,
 };
 
 const listeners = new Set<() => void>();
@@ -44,7 +45,8 @@ export function addProviderLinkedPerson(
     loadId: string,
     providerEntryId: string,
     person: Omit<SettlementLinkedPerson, "id" | "acumuladoAnualPen">,
-): SettlementLinkedPerson {
+): SettlementLinkedPerson | Promise<SettlementLinkedPerson> {
+    if (usesV1()) return settlementCommands.addPerson(loadId, providerEntryId, person);
     const newPerson: SettlementLinkedPerson = {
         ...person,
         id: `pers-${Date.now()}`,
@@ -84,6 +86,7 @@ export function saveProviderSettlement(
         observaciones: string;
     },
 ) {
+    if (usesV1()) return settlementCommands.provider(loadId, providerEntryId, payload);
     state = {
         ...state,
         loads: state.loads.map((load) => {
@@ -118,6 +121,7 @@ export function saveCarrierSettlement(
         observaciones: string;
     },
 ) {
+    if (usesV1()) return settlementCommands.carrier(loadId, payload);
     state = {
         ...state,
         loads: state.loads.map((load) => {
@@ -143,6 +147,7 @@ export function registerProviderPayment(
     providerEntryId: string,
     payment: Omit<SettlementPaymentItem, "id">,
 ) {
+    if (usesV1()) return settlementCommands.providerPayment(loadId, providerEntryId, payment);
     state = {
         ...state,
         loads: state.loads.map((load) => {
@@ -171,6 +176,7 @@ export function registerCarrierPayment(
     payment: Omit<SettlementPaymentItem, "id">,
     advanceId?: string,
 ) {
+    if (usesV1()) return settlementCommands.carrierPayment(loadId, payment, advanceId);
     state = {
         ...state,
         loads: state.loads.map((load) => {
@@ -207,3 +213,5 @@ export function registerCarrierPayment(
     };
     emit();
 }
+
+export function hydrateSettlementData(value: SettlementLoad[]) { state = { ...state, loads: value }; emit(); }

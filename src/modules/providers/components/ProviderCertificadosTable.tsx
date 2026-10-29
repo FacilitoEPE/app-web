@@ -67,7 +67,7 @@ export default function ProviderCertificadosTable({ certificates, onRegister, on
                         }
                     >
                         <TableGridCardFields>
-                            <TableGridCardField label="Documento" value={certificate.documento.name} />
+                            <TableGridCardField label="Documento" value={certificate.documento?.name ?? "Sin adjunto"} />
                         </TableGridCardFields>
                     </TableGridCard>
                 ))}
@@ -109,7 +109,7 @@ export default function ProviderCertificadosTable({ certificates, onRegister, on
                                             </button>
                                         </Hint>
                                         <FileText size={16} className="shrink-0 text-ink-muted" />
-                                        <span className="truncate">{certificate.documento.name}</span>
+                                        <span className="truncate">{certificate.documento?.name ?? "Sin adjunto"}</span>
                                     </div>
                                 </TableCell>
                                 <TableCell className="px-6">

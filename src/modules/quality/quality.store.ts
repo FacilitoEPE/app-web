@@ -1,16 +1,11 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { qualityCommands } from '@/modules/quality/api/quality-commands.api';
 import { useSyncExternalStore } from "react";
 import type { QualityCampaign, QualityScope } from "@/modules/quality/quality.utils";
-import { createDemoQualityCampaigns } from "@/modules/quality/quality.demo";
 
-/**
- * Campañas incorporadas al módulo de Cosecha y Control de Calidad en memoria.
- *
- * TODO(api): se pierden al recargar la página mientras el backend no cuente con el
- * servicio de vinculación de campañas a control de calidad.
- */
-const demo = import.meta.env.DEV && import.meta.env.MODE !== "test" ? createDemoQualityCampaigns() : null;
-let records: QualityCampaign[] = demo?.records ?? [];
-let nextId = demo?.nextId ?? 1;
+/** V1: remote commands and server projections. Legacy: local compatibility state, initially empty. */
+let records: QualityCampaign[] = [];
+let nextId = 1;
 const listeners = new Set<() => void>();
 
 function notify() {
@@ -42,7 +37,8 @@ export interface AddQualityCampaignInput {
     scope: QualityScope;
 }
 
-export function addQualityCampaign(input: AddQualityCampaignInput): QualityCampaign {
+export function addQualityCampaign(input: AddQualityCampaignInput): QualityCampaign | Promise<QualityCampaign> {
+    if (usesV1()) return qualityCommands.addCampaign(input);
     // Si ya existe la campaña, se asegura de incluir el nuevo scope
     const existing = records.find((item) => item.campaniaId === input.campaniaId || item.nombre === input.nombre);
     if (existing) {
@@ -71,6 +67,7 @@ export function addQualityCampaign(input: AddQualityCampaignInput): QualityCampa
 }
 
 export function removeQualityCampaign(id: number) {
+    if (usesV1()) return qualityCommands.removeCampaign(id);
     records = records.filter((item) => item.id !== id);
     notify();
 }
@@ -81,3 +78,5 @@ export function _resetQualityStore(initial: QualityCampaign[] = [], startId = 1)
     nextId = startId;
     notify();
 }
+
+export function hydrateQualityCampaigns(value: QualityCampaign[]) { records = value; notify(); }

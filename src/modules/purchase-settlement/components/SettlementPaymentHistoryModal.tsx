@@ -6,7 +6,7 @@ import ModalSection from "@/shared/components/ModalSection";
 import StatusBadge from "@/shared/components/StatusBadge";
 import { Button } from "@/shared/components/ui/button";
 import { formatDisplayDate } from "@/shared/utils/format";
-import type { SettlementPaymentItem } from "@/modules/purchase-settlement/purchaseSettlement.demo";
+import type { SettlementPaymentItem } from "@/modules/purchase-settlement/purchaseSettlement.models";
 
 interface SettlementPaymentHistoryModalProps {
     open: boolean;

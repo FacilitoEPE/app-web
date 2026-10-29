@@ -103,10 +103,10 @@ function DeliveriesView({
         ],
     });
 
-    const save = (values: CampaignContractDeliveryValues) => {
+    const save = async (values: CampaignContractDeliveryValues) => {
         if (editing.delivery)
-            updateCampaignContractDelivery(campaign.campaniaId, relation.clienteNegocioCampanaId, contract.id, editing.delivery.id, values);
-        else addCampaignContractDelivery(campaign.campaniaId, relation.clienteNegocioCampanaId, contract.id, values);
+            await updateCampaignContractDelivery(campaign.campaniaId, relation.clienteNegocioCampanaId, contract.id, editing.delivery.id, values);
+        else await addCampaignContractDelivery(campaign.campaniaId, relation.clienteNegocioCampanaId, contract.id, values);
         setEditing((current) => ({ ...current, open: false }));
         setSuccessOpen(true);
     };
@@ -225,9 +225,9 @@ function DeliveriesView({
                 title="¿Eliminar entrega?"
                 description="La entrega programada se retirará de este contrato."
                 confirmLabel="Sí, eliminar"
-                onConfirm={() => {
+                onConfirm={async () => {
                     if (deleting)
-                        deleteCampaignContractDelivery(campaign.campaniaId, relation.clienteNegocioCampanaId, contract.id, deleting.id);
+                        await deleteCampaignContractDelivery(campaign.campaniaId, relation.clienteNegocioCampanaId, contract.id, deleting.id);
                     setDeleting(null);
                 }}
             />

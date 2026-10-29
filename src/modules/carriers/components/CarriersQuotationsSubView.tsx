@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+import { usesV1 } from '@/shared/api/data-contract';
 import { useMemo, useState } from "react";
 import {
     Building2,
@@ -58,6 +60,7 @@ interface CarriersQuotationsSubViewProps {
 }
 
 export default function CarriersQuotationsSubView({ carriers }: CarriersQuotationsSubViewProps) {
+    const navigate=useNavigate();
     const quotations = useCarrierQuotations();
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -118,13 +121,14 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
             open: true,
             item,
             estado: "Recibida",
-            monto: item.montoCotizadoPen != null ? String(item.montoCotizadoPen) : "3800",
+            monto: item.montoCotizadoPen != null ? String(item.montoCotizadoPen) : "",
             archivo: item.documentoCotizacion,
             observaciones: item.observaciones,
         });
     };
 
     const openAssignModalFor = (item: CarrierRequirementQuotation) => {
+        if(usesV1()){navigate(`/campaigns/${item.campaniaId}/deliveries`);return;}
         const carrierObj = carriers.find((c) => c.id === item.carrierId) ?? carriers[0];
         const defaultPlate = item.vehiculoAsignadoPlaca || carrierObj?.vehiculos[0]?.placa || "B8T-914";
         const defaultDriver = item.choferAsignadoNombre || carrierObj?.choferes[0]?.nombre || "Carlos Alberto Mendoza Ríos";
@@ -152,7 +156,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
         ],
         secondary: [
             {
-                label: "Asignar camión y chofer",
+                label: usesV1() ? "Coordinar entregas" : "Asignar camión y chofer",
                 icon: <UserCheck size={16} strokeWidth={2.4} />,
                 onClick: () => openAssignModalFor(item),
             },
@@ -516,9 +520,9 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                         </Button>
                         <Button
                             size="xl"
-                            onClick={() => {
+                            onClick={async () => {
                                 if (!responseModal.item) return;
-                                registerQuotationResponse(responseModal.item.id, {
+                                await registerQuotationResponse(responseModal.item.id, {
                                     estado: responseModal.estado,
                                     montoCotizadoPen:
                                         responseModal.estado === "Recibida"
@@ -606,9 +610,9 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                         </Button>
                         <Button
                             size="xl"
-                            onClick={() => {
+                            onClick={async () => {
                                 if (!assignModal.item) return;
-                                assignQuotationUnit(assignModal.item.id, {
+                                await assignQuotationUnit(assignModal.item.id, {
                                     vehiculoAsignadoPlaca: assignModal.placa,
                                     choferAsignadoNombre: assignModal.chofer,
                                     choferAsignadoLicencia: assignModal.licencia,

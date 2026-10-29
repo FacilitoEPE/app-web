@@ -42,11 +42,11 @@ export default function CampaignCertificationExpansionModal({ open, onOpenChange
         },
     });
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const nextErrors = validateAmpliacion(values);
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return;
-        onSave(values);
+        await onSave(values);
     };
 
     return (

@@ -1,0 +1,44 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 1,
+    "name": "Mango Kent",
+    "frutaId": 1
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 2,
+    "name": "Mango Edward",
+    "frutaId": 1
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 3,
+    "name": "Palta Hass",
+    "frutaId": 2
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 4,
+    "name": "Biloxi",
+    "frutaId": 3
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 5,
+    "name": "Red Globe",
+    "frutaId": 4
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 6,
+    "name": "Banana Cavendish",
+    "frutaId": 5
+  }
+]

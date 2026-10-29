@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { brandShade } from "@/shared/styles/brandGradients";
+import { ModalActionContext, useModalActionController } from '@/shared/hooks/modal-action';
+import FormField from '@/shared/components/FormField';
 
 /**
  * Anchos de modal en escritorio. Se elige por cuánto contenido lleva, no a ojo por modal:
@@ -121,12 +123,15 @@ function AnimatedModalBody({ children, ready = true }: { children: ReactNode; re
 
 /** Shared shell only: each module owns its content; the footer (if any) always sits bottom-right, pinned outside the scroll area. */
 export default function AppModal({ open, onOpenChange, title, description, icon, children, footer, size = "md", busy = false, className, ready = true }: AppModalProps & { ready?: boolean }) {
+    const action = useModalActionController(open);
+    busy = busy || action.pending;
     const handleOpenChange = (nextOpen: boolean) => {
         if (!nextOpen && busy) return;
         onOpenChange(nextOpen);
     };
 
     return (
+        <ModalActionContext value={{pending:busy,run:action.run}}>
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
                 showCloseButton={false}
@@ -152,7 +157,7 @@ export default function AppModal({ open, onOpenChange, title, description, icon,
                         </DialogClose>
                     </span>
                 </DialogHeader>
-                <AnimatedModalBody ready={ready}>{children}</AnimatedModalBody>
+                <AnimatedModalBody ready={ready}>{children}{action.error && <FormField error={action.error} className="mt-4" />}</AnimatedModalBody>
                 {footer && (
                     <div className="flex shrink-0 flex-col-reverse gap-3 px-5 py-4 sm:flex-row sm:justify-end sm:px-6 [&>button]:w-full sm:[&>button]:w-auto">
                         {footer}
@@ -160,5 +165,6 @@ export default function AppModal({ open, onOpenChange, title, description, icon,
                 )}
             </DialogContent>
         </Dialog>
+        </ModalActionContext>
     );
 }

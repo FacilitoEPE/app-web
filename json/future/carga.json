@@ -1,0 +1,17 @@
+[
+  {
+    "cargaId": 1,
+    "coordinacionEntregaId": 1,
+    "codigo": "CAR-DEMO-1",
+    "fechaCarga": "2026-10-29",
+    "anotadorNombre": "Ana García",
+    "estadoCalidad": "APROBADA",
+    "viaticosMovilidad": 0,
+    "viaticosInsumos": 0,
+    "guiaSalidaId": null,
+    "guiaSalidaRegistradaAt": null,
+    "observaciones": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

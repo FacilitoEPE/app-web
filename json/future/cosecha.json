@@ -1,0 +1,55 @@
+[
+  {
+    "cosechaId": 1,
+    "entregaProgramadaId": 1,
+    "codigoLote": "LOT-DEMO-1",
+    "fechaPrevista": "2026-10-29",
+    "kilosEstimados": 1000,
+    "kilosCosechados": 1000,
+    "kilosAceptados": 1000,
+    "estado": "PENDIENTE",
+    "cierreCosechaAt": null,
+    "evidenciaId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "organizacion": {
+      "harvestDate": "2026-10-29",
+      "serviceId": 1,
+      "crewLead": "Ana García",
+      "transportConfirmed": true,
+      "crewConfirmed": true,
+      "arrivalConfirmed": true,
+      "trainingCompleted": true,
+      "evidence": null,
+      "mobility": "Movilidad local",
+      "supplies": "Jabas y tijeras"
+    },
+    "avances": [
+      {
+        "id": 1,
+        "providerId": 1,
+        "fincaId": 1,
+        "date": "2026-10-29",
+        "kilos": 600,
+        "crates": 30,
+        "responsible": "Ana García",
+        "observations": "",
+        "evidence": null
+      },
+      {
+        "id": 2,
+        "providerId": 2,
+        "fincaId": 2,
+        "date": "2026-10-29",
+        "kilos": 400,
+        "crates": 20,
+        "responsible": "Ana García",
+        "observations": "",
+        "evidence": null
+      }
+    ],
+    "cierre": {},
+    "industria": {},
+    "observaciones": null
+  }
+]

@@ -1,0 +1,16 @@
+[
+  {
+    "proveedorXFrutaDerivadaId": 1,
+    "proveedorId": 1,
+    "frutaDerivadaId": 1,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "proveedorXFrutaDerivadaId": 2,
+    "proveedorId": 2,
+    "frutaDerivadaId": 1,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

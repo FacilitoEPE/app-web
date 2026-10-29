@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useState } from "react";
 import { CheckCircle2, CircleAlert, FileCheck2, Lock, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -8,7 +9,7 @@ import StatusBadge from "@/shared/components/StatusBadge";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import type { FileSource } from "@/shared/utils/fileSource";
-import type { LogisticsDocumentsClosure, LogisticsLoad } from "@/modules/logistics/logistics.demo";
+import type { LogisticsDocumentsClosure, LogisticsLoad } from "@/modules/logistics/logistics.models";
 
 interface LogisticsDocumentsClosureModalProps {
     open: boolean;
@@ -35,7 +36,7 @@ export default function LogisticsDocumentsClosureModal({
     const [fechaCierreAdmin, setFechaCierreAdmin] = useState("");
     const [observacionesCierre, setObservacionesCierre] = useState("");
 
-    useEffect(() => {
+    useResetOnToggle(open, () => {
         if (!load || !open) return;
         const d = load.documentosCierre;
         setGuiaRemisionFruta(d.guiaRemisionFruta);
@@ -49,7 +50,7 @@ export default function LogisticsDocumentsClosureModal({
         setCierreAdmin(d.cierreAdministrativoConfirmado);
         setFechaCierreAdmin(d.fechaCierreAdministrativo);
         setObservacionesCierre(d.observacionesCierre);
-    }, [load, open]);
+    });
 
     if (!load) return null;
 
@@ -100,8 +101,8 @@ export default function LogisticsDocumentsClosureModal({
         if (!fechaCierreAdmin) setFechaCierreAdmin(nowFormatted());
     };
 
-    const handleSubmit = () => {
-        onSave(load.id, {
+    const handleSubmit = async () => {
+        await onSave(load.id, {
             guiaRemisionFruta,
             guiaTransportista,
             reporteRecepcionPlanta,

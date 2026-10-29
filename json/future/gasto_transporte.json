@@ -1,0 +1,12 @@
+[
+  {
+    "gastoTransporteId": 1,
+    "cargaId": 1,
+    "concepto": "Peaje",
+    "monto": 10,
+    "origen": "REAL",
+    "incluidoEnLiquidacion": true,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

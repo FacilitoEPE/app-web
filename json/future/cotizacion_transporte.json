@@ -1,0 +1,15 @@
+[
+  {
+    "cotizacionTransporteId": 1,
+    "invitacionTransporteId": 1,
+    "fecha": "2026-10-10",
+    "monto": 1000,
+    "moneda": "PEN",
+    "condiciones": null,
+    "archivoId": null,
+    "estado": "RECIBIDA",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "disponibilidad": "Mañanas"
+  }
+]

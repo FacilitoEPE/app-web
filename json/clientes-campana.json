@@ -1,0 +1,86 @@
+[
+  {
+    "clienteNegocioCampanaId": 1,
+    "campaniaId": 1,
+    "clienteNegocioId": 1,
+    "documentoUrl": "https://example.com/documentos/demostracion.pdf",
+    "fichaTecnicaUrl": "https://example.com/documentos/demostracion.pdf",
+    "fechaRegistro": "2026-10-05",
+    "cantidadKg": 44500,
+    "kilosAcordados": 44500,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioCampanaId": 2,
+    "campaniaId": 1,
+    "clienteNegocioId": 2,
+    "documentoUrl": "https://example.com/documentos/demostracion.pdf",
+    "fichaTecnicaUrl": "https://example.com/documentos/demostracion.pdf",
+    "fechaRegistro": "2026-10-05",
+    "cantidadKg": 18000,
+    "kilosAcordados": 18000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioCampanaId": 3,
+    "campaniaId": 2,
+    "clienteNegocioId": 1,
+    "documentoUrl": "https://example.com/documentos/demostracion.pdf",
+    "fichaTecnicaUrl": "https://example.com/documentos/demostracion.pdf",
+    "fechaRegistro": "2026-10-05",
+    "cantidadKg": 39000,
+    "kilosAcordados": 39000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioCampanaId": 4,
+    "campaniaId": 1,
+    "clienteNegocioId": 3,
+    "documentoUrl": "https://example.com/documentos/demostracion.pdf",
+    "fichaTecnicaUrl": "https://example.com/documentos/demostracion.pdf",
+    "fechaRegistro": "2026-10-05",
+    "cantidadKg": 24000,
+    "kilosAcordados": 24000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioCampanaId": 5,
+    "campaniaId": 3,
+    "clienteNegocioId": 4,
+    "documentoUrl": "https://example.com/documentos/demostracion.pdf",
+    "fichaTecnicaUrl": "https://example.com/documentos/demostracion.pdf",
+    "fechaRegistro": "2026-10-05",
+    "cantidadKg": 30000,
+    "kilosAcordados": 30000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioCampanaId": 6,
+    "campaniaId": 4,
+    "clienteNegocioId": 5,
+    "documentoUrl": "https://example.com/documentos/demostracion.pdf",
+    "fichaTecnicaUrl": "https://example.com/documentos/demostracion.pdf",
+    "fechaRegistro": "2026-10-05",
+    "cantidadKg": 20000,
+    "kilosAcordados": 20000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  },
+  {
+    "clienteNegocioCampanaId": 7,
+    "campaniaId": 6,
+    "clienteNegocioId": 6,
+    "documentoUrl": "https://example.com/documentos/demostracion.pdf",
+    "fichaTecnicaUrl": "https://example.com/documentos/demostracion.pdf",
+    "fechaRegistro": "2026-10-05",
+    "cantidadKg": 16000,
+    "kilosAcordados": 16000,
+    "createdAt": "2026-10-01T14:00:00.000Z",
+    "updatedAt": "2026-10-01T14:00:00.000Z"
+  }
+]

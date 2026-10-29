@@ -16,71 +16,9 @@ interface QualityAddCampaignModalProps {
     onOpenChange: (open: boolean) => void;
     scope: QualityScope;
     existingCampaignIds: number[];
-    onAdd: (input: AddQualityCampaignInput) => void;
+    onAdd: (input: AddQualityCampaignInput) => void | Promise<void>;
 }
 
-const DEMO_ACTIVE_CAMPAIGNS: Campana[] = [
-    {
-        campaniaId: 101,
-        nombre: "Mango 2026",
-        frutaId: 1,
-        fruta: { frutaId: 1, name: "Mango" },
-        fechaInicio: new Date("2026-09-11"),
-        fechaFin: new Date("2027-01-19"),
-        estado: "en proceso",
-        requerimientoComercial: 50000,
-        createdAt: "",
-        updatedAt: "",
-    },
-    {
-        campaniaId: 102,
-        nombre: "Mango 2025 · Cerrada",
-        frutaId: 1,
-        fruta: { frutaId: 1, name: "Mango" },
-        fechaInicio: new Date("2025-09-16"),
-        fechaFin: new Date("2025-12-25"),
-        estado: "terminado",
-        requerimientoComercial: 40000,
-        createdAt: "",
-        updatedAt: "",
-    },
-    {
-        campaniaId: 103,
-        nombre: "Arándano 2026",
-        frutaId: 2,
-        fruta: { frutaId: 2, name: "Arándano" },
-        fechaInicio: new Date("2026-10-06"),
-        fechaFin: new Date("2026-12-20"),
-        estado: "en proceso",
-        requerimientoComercial: 35000,
-        createdAt: "",
-        updatedAt: "",
-    },
-    {
-        campaniaId: 104,
-        nombre: "Uva Red Globe 2026",
-        frutaId: 3,
-        fruta: { frutaId: 3, name: "Uva Red Globe" },
-        fechaInicio: new Date("2026-11-10"),
-        fechaFin: new Date("2027-02-28"),
-        estado: "en proceso",
-        requerimientoComercial: 60000,
-        createdAt: "",
-        updatedAt: "",
-    },
-    {
-        campaniaId: 105,
-        nombre: "Palta Hass 2026",
-        frutaId: 4,
-        fruta: { frutaId: 4, name: "Palta Hass" },
-        fechaInicio: new Date("2026-04-15"),
-        fechaFin: new Date("2026-08-30"),
-        estado: "en proceso",
-        requerimientoComercial: 45000,
-        createdAt: "",
-        updatedAt: "",
-    },
-];
 
 export default function QualityAddCampaignModal({
     open,
@@ -95,6 +33,7 @@ export default function QualityAddCampaignModal({
     const [error, setError] = useState<string | undefined>();
 
     useResetOnToggle(open, () => {
+        setIsLoading(open);
         setSelectedId("");
         setError(undefined);
     });
@@ -102,21 +41,15 @@ export default function QualityAddCampaignModal({
     useEffect(() => {
         if (!open) return;
         let active = true;
-        setIsLoading(true);
+
 
         void getCampanas()
             .then((list) => {
                 if (!active) return;
-                if (list.length > 0) {
-                    setCampaigns(list);
-                } else if (import.meta.env.DEV) {
-                    setCampaigns(DEMO_ACTIVE_CAMPAIGNS);
-                }
+                setCampaigns(list);
             })
             .catch(() => {
-                if (active && import.meta.env.DEV) {
-                    setCampaigns(DEMO_ACTIVE_CAMPAIGNS);
-                }
+                if (active) { setCampaigns([]); setError("No se pudieron cargar las campañas. Cierra y vuelve a intentar."); }
             })
             .finally(() => {
                 if (active) setIsLoading(false);
@@ -141,7 +74,7 @@ export default function QualityAddCampaignModal({
         }));
     }, [availableCampaigns]);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!selectedId) {
             setError("Selecciona una campaña en proceso.");
             return;
@@ -153,7 +86,7 @@ export default function QualityAddCampaignModal({
             return;
         }
 
-        onAdd({
+        await onAdd({
             campaniaId: found.campaniaId,
             nombre: found.nombre,
             fruta: found.fruta?.name ?? "Fruta",

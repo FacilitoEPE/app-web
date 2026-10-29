@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import type { FileSource } from "@/shared/utils/fileSource";
 
 /**
@@ -97,7 +98,7 @@ export function validateExam(values: ExamValues): ExamErrors {
     }
     if (examNeedsResult(values.estado)) {
         if (values.resultado !== "positivo" && values.resultado !== "negativo") errors.resultado = "Selecciona el resultado del examen.";
-        if (!values.archivo) errors.archivo = "Adjunta el documento del laboratorio.";
+        if (!usesV1() && !values.archivo) errors.archivo = "Adjunta el documento del laboratorio.";
     }
     return errors;
 }

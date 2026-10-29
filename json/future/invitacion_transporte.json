@@ -1,0 +1,11 @@
+[
+  {
+    "invitacionTransporteId": 1,
+    "solicitudTransporteId": 1,
+    "idEmpresaTransporteExterno": 1,
+    "correoSnapshot": "transporte@example.com",
+    "estado": "INVITADA",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

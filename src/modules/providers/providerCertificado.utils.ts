@@ -5,7 +5,7 @@ export interface CertificadoLocal {
     /** yyyy-MM-dd */
     fechaRevisionSenasa: string;
     /** Archivo elegido; se conserva en memoria igual que el resto de los datos */
-    documento: File;
+    documento: File | null;
 }
 
 export interface CertificadoFormValues {

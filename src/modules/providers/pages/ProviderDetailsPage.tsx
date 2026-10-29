@@ -1,3 +1,5 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { providerOperationalSummary } from '@/modules/providers/api/provider-screen-data';
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Award, CalendarCheck, FileSpreadsheet, FileText, LandPlot, MapPin, PackageCheck, Pencil, ShieldCheck, Sprout, UserRound } from "lucide-react";
@@ -93,11 +95,12 @@ function ProviderDetailsView({ provider, onSaved }: { provider: Proveedor; onSav
     const hiddenFincas = providerFincas.length - PREVIEW_ROWS;
     const hiddenCertificates = providerCertificates.length - PREVIEW_ROWS;
 
-    const totalDeliveredKg = qualityLoads.reduce(
-        (sum, item) => sum + item.proveedoresCarga.reduce((acc, p) => acc + p.kilosCargados, 0),
+    const remoteSummary = usesV1() ? providerOperationalSummary(provider.proveedorId) : undefined;
+    const totalDeliveredKg = remoteSummary?.kilosRecibidos ?? qualityLoads.reduce(
+        (sum, item) => sum + item.proveedoresCarga.filter(p=>Number(p.proveedorId)===provider.proveedorId).reduce((acc, p) => acc + p.kilosCargados, 0),
         0,
     );
-    const latestMtd = qualityLoads.flatMap((item) => item.mtdRegistros)[0]?.mtdCalculado ?? 0.08;
+    const latestMtd = remoteSummary?.mtd;
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
@@ -173,8 +176,8 @@ function ProviderDetailsView({ provider, onSaved }: { provider: Proveedor; onSav
                                 metaIcon={<CalendarCheck size={12} className="shrink-0" aria-hidden="true" />}
                                 subtitle={`Revisión SENASA · ${displayCertificadoDate(certificate.fechaRevisionSenasa)}`}
                                 trailing={
-                                    <span className="inline-flex items-center gap-1 rounded-md bg-card px-2 py-1 text-[11px] font-bold text-ink-body ring-1 ring-border" title={certificate.documento.name}>
-                                        <FileText size={12} aria-hidden="true" />{fileExtension(certificate.documento.name)}
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-card px-2 py-1 text-[11px] font-bold text-ink-body ring-1 ring-border" title={certificate.documento?.name ?? "Sin adjunto"}>
+                                        <FileText size={12} aria-hidden="true" />{fileExtension(certificate.documento?.name ?? "Sin adjunto")}
                                     </span>
                                 }
                             />
@@ -194,7 +197,7 @@ function ProviderDetailsView({ provider, onSaved }: { provider: Proveedor; onSav
                     stats={[
                         { label: "Campañas activas", value: 2 },
                         { label: "Kilos recepcionados", value: `${formatDecimal(totalDeliveredKg)} kg` },
-                        { label: "Índice MTD Ceratitis", value: formatDecimal(latestMtd) },
+                        { label: "Índice MTD Ceratitis", value: latestMtd === undefined ? "—" : formatDecimal(latestMtd) },
                     ]}
                     isEmpty={false}
                     emptyMessage=""

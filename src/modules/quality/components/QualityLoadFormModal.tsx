@@ -14,7 +14,7 @@ import { formatKg, formatMoney } from "@/shared/utils/format";
 import type {
     QualityDeliveryLoadItem,
     QualityProviderLoadDetail,
-} from "@/modules/quality/qualityOperations.demo";
+} from "@/modules/quality/qualityOperations.models";
 
 interface QualityLoadFormModalProps {
     open: boolean;
@@ -106,8 +106,8 @@ export default function QualityLoadFormModal({
                     </Button>
                     <Button
                         size="xl"
-                        onClick={() => {
-                            onSave(load.id, {
+                        onClick={async () => {
+                            await onSave(load.id, {
                                 fechaCargaReal,
                                 anotador: anotador.trim(),
                                 cumpleRequisitosIndustria: cumpleRequisitos,

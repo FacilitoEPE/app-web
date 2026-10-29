@@ -1,3 +1,6 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { weeklyCampaignItems } from '@/modules/campaigns/api/weekly-screen-data';
+import { PageError } from '@/shared/components/PageState';
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -89,11 +92,13 @@ function buildWeekDefinition(mondayIso: string, index: number): WeekDefinition {
 export default function CampaignWeeklyDeliveryProgramPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const campaniaId = Number(id) || 1;
+    const campaniaId = Number(id);
     const campaign = useCampaign(campaniaId);
     const deliveryRecords = useCampaignDeliveryRecords();
     const contractRecords = useCampaignContractRecords();
 
+    const [dataError, setDataError] = useState(false);
+    const [retry, setRetry] = useState(0);
     const [relations, setRelations] = useState<ClienteNegocioCampana[]>([]);
     const [varietiesFromApi, setVarietiesFromApi] = useState<string[]>([]);
     const [selectedWeekId, setSelectedWeekId] = useState<string>("");
@@ -119,12 +124,12 @@ export default function CampaignWeeklyDeliveryProgramPage() {
                 if (active) setRelations(items);
             })
             .catch(() => {
-                if (active) setRelations([]);
+                if (active) setDataError(true);
             });
         return () => {
             active = false;
         };
-    }, [campaniaId]);
+    }, [campaniaId, retry]);
 
     useEffect(() => {
         if (!campaign?.frutaId) return;
@@ -134,215 +139,27 @@ export default function CampaignWeeklyDeliveryProgramPage() {
                 if (active) setVarietiesFromApi(items.map((item) => item.name));
             })
             .catch(() => {
-                if (active) setVarietiesFromApi([]);
+                if (active) setDataError(true);
             });
         return () => {
             active = false;
         };
-    }, [campaign?.frutaId]);
+    }, [campaign?.frutaId, retry]);
 
     const rawEntries = useMemo(
         () => listCampaignDeliveries(deliveryRecords, campaniaId),
         [deliveryRecords, campaniaId],
     );
 
-    const varieties = useMemo(() => {
-        if (varietiesFromApi.length > 0) return varietiesFromApi;
-        const fruit = campaign?.fruta?.name?.toLowerCase() ?? "mango";
-        if (fruit.includes("palta")) return ["Hass", "Fuerte", " Zutano"];
-        if (fruit.includes("arándano") || fruit.includes("arandano")) return ["Biloxi", "Ventura", "Emerald"];
-        return ["Kent", "Edward", "Keitt", "Haden"];
-    }, [varietiesFromApi, campaign?.fruta?.name]);
-
+    const varieties = varietiesFromApi;
     const weeklyItems = useMemo<WeeklySlotDeliveryItem[]>(() => {
-        const clientMap = new Map<number, { nombre: string; canal: "Exportador" | "Industria" }>();
-        for (const rel of relations) {
-            clientMap.set(rel.clienteNegocioCampanaId, {
-                nombre: rel.clienteNegocio?.nombreEmpresa ?? `Cliente #${rel.clienteNegocioCampanaId}`,
-                canal: rel.clienteNegocio?.tipoCliente === "industria" ? "Industria" : "Exportador",
-            });
-        }
-
-        if (rawEntries.length > 0) {
-            const list: WeeklySlotDeliveryItem[] = [];
-            rawEntries.forEach((entry, index) => {
-                const clientInfo = clientMap.get(entry.relationId) ?? {
-                    nombre: index % 2 === 0 ? "Nature's Pride B.V." : "Agroindustrias del Chira S.A.",
-                    canal: index % 2 === 0 ? "Exportador" : "Industria",
-                };
-                const contract = contractRecords[`${campaniaId}:${entry.relationId}`]?.find(
-                    (c) => c.id === entry.contractId,
-                );
-                const mainVariety = varieties[index % varieties.length] ?? "Kent";
-                const secondVariety = varieties[(index + 1) % varieties.length];
-                const isMultiVariety = index % 3 === 0 && Boolean(secondVariety) && secondVariety !== mainVariety;
-
-                if (isMultiVariety && secondVariety) {
-                    const firstKg = Math.round(entry.delivery.kilosProgramados * 0.65);
-                    const secondKg = entry.delivery.kilosProgramados - firstKg;
-                    list.push({
-                        id: `${entry.key}-v1`,
-                        fecha: entry.delivery.fecha,
-                        variedad: mainVariety,
-                        cliente: clientInfo.nombre,
-                        canal: clientInfo.canal,
-                        contratoRef: contract?.archivo.name ?? `CNT-2026-0${entry.contractId}`,
-                        destino: entry.delivery.destino,
-                        kilosVariedad: firstKg,
-                        kilosTotalesEntrega: entry.delivery.kilosProgramados,
-                        coordinada: Boolean(entry.delivery.coordinacion),
-                        transportista: "Transportes Frigoríficos del Norte S.A.C.",
-                        placa: "B8T-914",
-                        observaciones: entry.delivery.observaciones,
-                    });
-                    list.push({
-                        id: `${entry.key}-v2`,
-                        fecha: entry.delivery.fecha,
-                        variedad: secondVariety,
-                        cliente: clientInfo.nombre,
-                        canal: clientInfo.canal,
-                        contratoRef: contract?.archivo.name ?? `CNT-2026-0${entry.contractId}`,
-                        destino: entry.delivery.destino,
-                        kilosVariedad: secondKg,
-                        kilosTotalesEntrega: entry.delivery.kilosProgramados,
-                        coordinada: Boolean(entry.delivery.coordinacion),
-                        transportista: "Transportes Frigoríficos del Norte S.A.C.",
-                        placa: "B8T-914",
-                        observaciones: entry.delivery.observaciones,
-                    });
-                } else {
-                    list.push({
-                        id: `${entry.key}-v1`,
-                        fecha: entry.delivery.fecha,
-                        variedad: mainVariety,
-                        cliente: clientInfo.nombre,
-                        canal: clientInfo.canal,
-                        contratoRef: contract?.archivo.name ?? `CNT-2026-0${entry.contractId}`,
-                        destino: entry.delivery.destino,
-                        kilosVariedad: entry.delivery.kilosProgramados,
-                        kilosTotalesEntrega: entry.delivery.kilosProgramados,
-                        coordinada: Boolean(entry.delivery.coordinacion),
-                        transportista: "Logística Agroandina Perú E.I.R.L.",
-                        placa: "C4M-782",
-                        observaciones: entry.delivery.observaciones,
-                    });
-                }
-            });
-            return list;
-        }
-
-        // Datos de respaldo cuando la campaña aún no tiene entregas en el almacén local
-        const v0 = varieties[0] ?? "Kent";
-        const v1 = varieties[1] ?? "Edward";
-        const v2 = varieties[2] ?? "Keitt";
-        return [
-            {
-                id: "demo-wk-1",
-                fecha: "2026-10-19",
-                variedad: v0,
-                cliente: "Nature's Pride B.V.",
-                canal: "Exportador",
-                contratoRef: "CNT-EXP-2026-01",
-                destino: "Planta Empacadora Paita · Zona Industrial II",
-                kilosVariedad: 14000,
-                kilosTotalesEntrega: 20000,
-                coordinada: true,
-                transportista: "Transportes Frigoríficos del Norte S.A.C.",
-                placa: "B8T-914",
-                observaciones: "Despacho temprano con control térmico a 10.5 °C.",
-            },
-            {
-                id: "demo-wk-2",
-                fecha: "2026-10-19",
-                variedad: v1,
-                cliente: "Nature's Pride B.V.",
-                canal: "Exportador",
-                contratoRef: "CNT-EXP-2026-01",
-                destino: "Planta Empacadora Paita · Zona Industrial II",
-                kilosVariedad: 6000,
-                kilosTotalesEntrega: 20000,
-                coordinada: true,
-                transportista: "Transportes Frigoríficos del Norte S.A.C.",
-                placa: "B8T-914",
-                observaciones: "Complemento de lote exportable en la misma unidad.",
-            },
-            {
-                id: "demo-wk-3",
-                fecha: "2026-10-21",
-                variedad: v0,
-                cliente: "Camposol Trading S.A.",
-                canal: "Exportador",
-                contratoRef: "CNT-EXP-2026-03",
-                destino: "Planta Empacadora Sullana · Zona Industrial",
-                kilosVariedad: 18500,
-                kilosTotalesEntrega: 18500,
-                coordinada: true,
-                transportista: "Logística Agroandina Perú E.I.R.L.",
-                placa: "C4M-782",
-                observaciones: "Fruta con certificación GlobalG.A.P.",
-            },
-            {
-                id: "demo-wk-4",
-                fecha: "2026-10-23",
-                variedad: v1,
-                cliente: "Agroindustrias del Chira S.A.",
-                canal: "Industria",
-                contratoRef: "CNT-IND-2026-04",
-                destino: "Planta Procesadora Sullana · Km 1028",
-                kilosVariedad: 15000,
-                kilosTotalesEntrega: 15000,
-                coordinada: false,
-                transportista: "Por asignar",
-                placa: "—",
-                observaciones: "Recepción en bines plásticos de 400 kg.",
-            },
-            {
-                id: "demo-wk-5",
-                fecha: "2026-10-24",
-                variedad: v2,
-                cliente: "Westfalia Fruit International",
-                canal: "Exportador",
-                contratoRef: "CNT-EXP-2026-06",
-                destino: "Terminal Portuario Paita · Reefer Yard",
-                kilosVariedad: 22000,
-                kilosTotalesEntrega: 22000,
-                coordinada: true,
-                transportista: "Rutas del Sol Refrigerados S.A.",
-                placa: "F9K-805",
-                observaciones: "Embarque directo en contenedor refrigerado.",
-            },
-            {
-                id: "demo-wk-6",
-                fecha: "2026-10-26",
-                variedad: v0,
-                cliente: "Nature's Pride B.V.",
-                canal: "Exportador",
-                contratoRef: "CNT-EXP-2026-01",
-                destino: "Planta Empacadora Paita · Zona Industrial II",
-                kilosVariedad: 20400,
-                kilosTotalesEntrega: 20400,
-                coordinada: true,
-                transportista: "Transportes Frigoríficos del Norte S.A.C.",
-                placa: "B8T-914",
-                observaciones: "Segunda ventana semanal de exportación.",
-            },
-            {
-                id: "demo-wk-7",
-                fecha: "2026-10-28",
-                variedad: v1,
-                cliente: "Agroindustrias del Chira S.A.",
-                canal: "Industria",
-                contratoRef: "CNT-IND-2026-04",
-                destino: "Planta Procesadora Sullana · Km 1028",
-                kilosVariedad: 16200,
-                kilosTotalesEntrega: 16200,
-                coordinada: false,
-                transportista: "Por asignar",
-                placa: "—",
-                observaciones: "Lote para concentrado industrial.",
-            },
-        ];
-    }, [rawEntries, relations, contractRecords, campaniaId, varieties]);
+        if (usesV1()) return weeklyCampaignItems(campaniaId);
+        return rawEntries.map(entry => {
+            const client = relations.find(r=>r.clienteNegocioCampanaId===entry.relationId);
+            const contract = contractRecords[`${campaniaId}:${entry.relationId}`]?.find(c=>c.id===entry.contractId);
+            return {id:entry.key,fecha:entry.delivery.fecha,variedad:entry.delivery.variedad || "Sin variedad asignada",cliente:client?.clienteNegocio?.nombreEmpresa || "Cliente no disponible",canal:client?.clienteNegocio?.tipoCliente==="industria" ? "Industria" : "Exportador",contratoRef:contract?.archivo?.name || `Contrato ${entry.contractId}`,destino:entry.delivery.destino,kilosVariedad:entry.delivery.kilosProgramados,kilosTotalesEntrega:entry.delivery.kilosProgramados,coordinada:Boolean(entry.delivery.coordinacion),transportista:"",placa:"",observaciones:entry.delivery.observaciones};
+        });
+    }, [rawEntries, relations, contractRecords, campaniaId]);
 
     const weeks = useMemo<WeekDefinition[]>(() => {
         const mondaySet = new Set<string>();
@@ -351,10 +168,10 @@ export default function CampaignWeeklyDeliveryProgramPage() {
         }
         const sortedMondays = [...mondaySet].sort();
         if (sortedMondays.length === 0) {
-            sortedMondays.push("2026-10-19");
+            sortedMondays.push(getMondayIso(campaign?.fechaInicio ? `${campaign.fechaInicio.getFullYear()}-${String(campaign.fechaInicio.getMonth()+1).padStart(2,"0")}-${String(campaign.fechaInicio.getDate()).padStart(2,"0")}` : new Date().toISOString().slice(0,10)));
         }
         return sortedMondays.map((mondayIso, idx) => buildWeekDefinition(mondayIso, idx));
-    }, [weeklyItems]);
+    }, [weeklyItems, campaign]);
 
     const activeWeek = useMemo(
         () => weeks.find((w) => w.id === selectedWeekId) ?? weeks[0],
@@ -449,6 +266,8 @@ export default function CampaignWeeklyDeliveryProgramPage() {
     });
 
     const hasActiveFilters = selectedVariety !== "all" || (selectedWeekId !== "" && selectedWeekId !== weeks[0]?.id);
+
+    if (dataError) return <PageError title="No se pudo cargar el programa semanal" message="Verifica la conexión e inténtalo nuevamente." onRetry={()=>{setDataError(false);setRetry(n=>n+1)}} />;
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">

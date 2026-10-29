@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ClipboardList, FileSpreadsheet, FlaskConical, Layers, MapPin, PackageCheck, Pencil, Scale, UserRoundCheck } from "lucide-react";
@@ -80,7 +81,7 @@ export default function CampaignProviderDetailsPage() {
                 return;
             }
             setLoadState({ status: "ready", relation });
-            getExamenesProveedor(relation.proveedorId).then(setApiExams).catch(() => setApiExams([]));
+            if (!usesV1()) getExamenesProveedor(relation.proveedorId).then(setApiExams).catch(() => setApiExams([]));
         } catch {
             setLoadState({ status: "error", message: "No se pudo cargar la información del proveedor." });
         }

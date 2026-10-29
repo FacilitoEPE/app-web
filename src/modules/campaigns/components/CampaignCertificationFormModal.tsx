@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useEffect, useState } from "react";
 import { Save, ShieldCheck, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -146,7 +147,7 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
         onChange: update(field),
     });
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const payload: CertificadoCampanaFormValues = {
             ...values,
             kilosIniciales: String(kilosCalculados),
@@ -155,7 +156,7 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return;
         const selected = producers.filter((producer) => values.productores.includes(producer.id));
-        onSave(payload, selected, { documento: certificateFile, cotizacion: quoteFile });
+        await onSave(payload, selected, { documento: certificateFile, cotizacion: quoteFile });
     };
 
     const currencySymbol = MONEDA_OPTIONS.find((option) => option.value === values.moneda)?.symbol;
@@ -211,7 +212,7 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
                                         <StatusBadge status={vigencia} />
                                     </p>
                                 </div>
-                                {selectField("estadoTramite", "Estado del trámite:", TRAMITE_OPTIONS, "sm:col-span-2")}
+                                {!usesV1() && selectField("estadoTramite", "Estado del trámite:", TRAMITE_OPTIONS, "sm:col-span-2")}
                             </>
                         ) : (
                             <>

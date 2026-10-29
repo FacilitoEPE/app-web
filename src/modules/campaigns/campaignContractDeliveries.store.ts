@@ -1,16 +1,11 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { campaignCommands } from '@/modules/campaigns/api/campaign-commands.api';
 import { useSyncExternalStore } from "react";
 import type { CampaignContractDeliveryLocal, CampaignContractDeliveryValues, DeliveryCoordination } from "@/modules/campaigns/campaignContractDelivery.utils";
-import { createDemoDeliveries } from "@/modules/campaigns/campaignClientContracts.demo";
 
-/**
- * TODO(api): reemplazar este almacén en memoria por el servicio de entregas por contrato.
- *
- * En desarrollo arranca con datos de demostración (`campaignClientContracts.demo.ts`); en producción y en las
- * pruebas arranca vacío.
- */
-const demo = import.meta.env.DEV && import.meta.env.MODE !== "test" ? createDemoDeliveries() : null;
-let records: Record<string, CampaignContractDeliveryLocal[]> = demo?.records ?? {};
-let nextId = demo?.nextId ?? 1;
+/** V1: remote commands and server projections. Legacy: local compatibility state, initially empty. */
+let records: Record<string, CampaignContractDeliveryLocal[]> = {};
+let nextId = 1;
 const listeners = new Set<() => void>();
 const EMPTY: CampaignContractDeliveryLocal[] = [];
 
@@ -30,12 +25,14 @@ export function useCampaignDeliveryRecords() {
 
 /** Guarda la coordinación de una entrega; si ya tenía una, la reemplaza. */
 export function saveCampaignDeliveryCoordination(campaniaId: number, relationId: number, contractId: number, deliveryId: number, coordination: DeliveryCoordination) {
+    if (usesV1()) return campaignCommands.coordinate(campaniaId, deliveryId, coordination);
     const key = keyOf(campaniaId, relationId, contractId);
     records = { ...records, [key]: (records[key] ?? EMPTY).map((item) => item.id === deliveryId ? { ...item, coordinacion: coordination } : item) };
     emit();
 }
 
 export function addCampaignContractDelivery(campaniaId: number, relationId: number, contractId: number, values: CampaignContractDeliveryValues) {
+    if (usesV1()) return campaignCommands.delivery(campaniaId, contractId, values);
     const key = keyOf(campaniaId, relationId, contractId);
     const delivery: CampaignContractDeliveryLocal = {
         id: nextId++,
@@ -51,6 +48,7 @@ export function addCampaignContractDelivery(campaniaId: number, relationId: numb
 }
 
 export function updateCampaignContractDelivery(campaniaId: number, relationId: number, contractId: number, deliveryId: number, values: CampaignContractDeliveryValues) {
+    if (usesV1()) return campaignCommands.delivery(campaniaId, contractId, values, deliveryId);
     const key = keyOf(campaniaId, relationId, contractId);
     records = { ...records, [key]: (records[key] ?? EMPTY).map((item) => item.id === deliveryId ? {
         ...item,
@@ -64,7 +62,10 @@ export function updateCampaignContractDelivery(campaniaId: number, relationId: n
 }
 
 export function deleteCampaignContractDelivery(campaniaId: number, relationId: number, contractId: number, deliveryId: number) {
+    if (usesV1()) return campaignCommands.deleteDelivery(contractId, deliveryId);
     const key = keyOf(campaniaId, relationId, contractId);
     records = { ...records, [key]: (records[key] ?? EMPTY).filter((item) => item.id !== deliveryId) };
     emit();
 }
+
+export function hydrateCampaignDeliveries(value: Record<string, CampaignContractDeliveryLocal[]>) { records = value; emit(); }

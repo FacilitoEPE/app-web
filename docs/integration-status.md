@@ -4,7 +4,26 @@
 
 ---
 
-## 4.1. Matriz Actual por Módulo y Vista (Última consolidación: 2026-10-25)
+## 4.1. Integración V1 de las pantallas — 2026-10-29
+
+**Completo para el consumo HTTP de datos y operaciones soportadas por el contrato; backend futuro todavía no implementado.** Con `VITE_API_BASE_URL=/mock-api/` las pantallas consumen automáticamente `/mock-api/v1` y `json/future/`. Con una URL real, activar `VITE_API_CONTRACT=v1`; sin esa opción se conserva la API actual. `legacy` explícito mantiene la compatibilidad anterior.
+
+| Pantallas | Consumo V1 implementado | Límites vigentes |
+|---|---|---|
+| Campañas, proveedores y clientes | CRUD, catálogos, participaciones, varios requerimientos por cliente, contratos, entregas, coordinación y cierre con motivo | Participación sin finca; finca y origen se eligen al coordinar. Campos visuales sin columna no se persisten. |
+| Proveedores, fincas, certificados, entrevistas y exámenes | Identificadores servidor, variedad única por finca, coordenadas obligatorias, código FVV del servidor y etapas reales del examen | Certificados guardan metadatos; adjuntos diferidos. |
+| Certificaciones y transporte | Coberturas, ampliaciones, pagos, acuerdos, solicitudes/invitaciones, cotizaciones, vehículos y choferes | Se conserva el límite visual de una certificación por campaña. Trámite derivado; sin envío real de correo. CGN sin columna no editable en V1. |
+| Calidad | Alcances de campaña, revisión, análisis por participación/finca, cosecha, carga, proveedores/orígenes y guías | La carga nace de una entrega coordinada. MTD consume valor y límite registrados; no inventa capturas/trampas/días. |
+| Logística y chofer | Carga compartida, recepción/desglose manual, historial de estados, checklist, envases y cierres | Destino textual; sin coordenadas ficticias. Sesión y selección de chofer siguen siendo locales. |
+| Liquidación y facturación | Kilos reconocidos, precio de origen, personas y UIT; liquidaciones, pagos, aplicaciones de adelanto, facturas y cobros | PEN para compra/transporte; ventas según contrato. FC14 no incluye archivos ni emisión tributaria real. |
+
+`FrontendDataBoundary` carga el contexto remoto antes de las pantallas. Cada dominio transforma sus DTOs y publica un estado coherente; los componentes no leen JSON ni agregan demos como fallback. Una mutación espera HTTP y recarga los recursos relacionados antes de confirmar éxito. Errores se muestran en el modal o en la vista. Operaciones compuestas sobre varios endpoints pueden completar parte del trabajo; el refresco reconcilia el estado aun si una petición falla. No se promete atomicidad de esos comandos.
+
+La carga inicial recorre las colecciones paginadas y sus hijos. Es adecuada para este escenario de desarrollo; un backend con volumen real necesitará lecturas por pantalla sin cambiar los DTOs públicos. No se agrega caché, service worker, autenticación ni subida de archivos. Los modelos y servicios legacy permanecen aislados por selección explícita; las demos antiguas no alimentan las vistas V1.
+
+Validación: pruebas HTTP del router y de los adaptadores/almacenes del frontend, comprobación del contrato generado, TypeScript, ESLint y build con URL real. El mock se excluye del bundle; compilar apuntando a `/mock-api/` está bloqueado.
+
+### Matriz histórica de la API actual sin versión (consolidación 2026-10-25)
 
 | Módulo / Vista (Ruta) | Estado Actual | Operaciones Conectadas (`epe-backend`) | Brecha / Operaciones en Memoria (`// TODO(api)`) |
 | :--- | :--- | :--- | :--- |
@@ -33,6 +52,10 @@
 
 ## 4.2. Historial Compacto de Auditorías y Decisiones
 
+- **2026-10-29 · Completo (conexión de pantallas a V1):** adaptadores de lectura y comandos HTTP por dominio, hidratación y refresco de almacenes, formularios asíncronos con errores visibles, eliminación de fallbacks demo en V1 y pruebas de integración del frontend. Snapshot de fuentes en `docs/reference/` para regenerar el contrato desde un clon independiente. Las limitaciones de adjuntos, sesión local, campos sin columna y operaciones compuestas quedan identificadas arriba.
+
+- **2026-10-29 · Completo (contrato y mocks futuros; migración de pantallas pendiente):** contrato V1 documentado en `future-api-contract.md`, OpenAPI en `future-api.openapi.json` y catálogo `future-api-endpoints.md`, derivados del SQL objetivo de `app/docs/agro-schema/03_schema_total.sql` y acuerdos vigentes. Fixtures separadas en `json/future/`; middleware `/mock-api/v1` y servicios/DTOs por módulo en `api/future.*`. Se conservan servicios sin versión y almacenes actuales; no se afirma conexión de pantallas a V1 ni backend desplegado. Diferencias de fincas/variedades, certificaciones, tipos, cardinalidades y documentos identificadas en la guía. Las vistas de Logística, Facturación, Liquidación y Chofer sí existen en el código actual con almacenes locales; la fila anterior que las declaraba en construcción es un antecedente desactualizado.
+- **2026-10-29 · Completo (modo ficticio de desarrollo):** API local de Vite activada explícitamente con `VITE_API_BASE_URL=/mock-api/`. Fixtures editables en `json/` para los recursos consumidos por los servicios actuales; lecturas, CRUD en memoria y relaciones sin modificar páginas, mappers ni el cliente HTTP. Reiniciar Vite restaura las fixtures. Backend real sigue siendo el modo predeterminado y conserva sus errores sin fallback. Build bloqueado si apunta a la API ficticia; archivos/S3 fuera de la simulación. Los almacenes y demos locales sin API mantienen su comportamiento previo.
 - **2026-10-25:** Consolidación de toda la documentación en `docs/` (`architecture-and-solid.md`, `ui-and-design-system.md`, `agent-workflow-and-constraints.md`, `integration-status.md`), unificando los antiguos `reporte-conexion-vistas.md`, `backend-api-integration.md` y `entidades-vistas.md`.
 - **2026-10-21:** Implementación de `QualityPage` (`/calidad`) con alcances Exportador e Industria sobre `quality.store.ts` (`// TODO(api)`).
 - **2026-10-19:** Implementación de `CampaignDeliveriesPage` (`/campaigns/:id/deliveries`) con coordinación en memoria y ruta placeholder `CampaignWeeklyDeliveryProgramPage`.

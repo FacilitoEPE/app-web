@@ -1,14 +1,14 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { driverCommands } from '@/modules/driver-portal/api/driver-commands.api';
 import { useSyncExternalStore } from "react";
 import { DISPATCH_STAGES, type DispatchStage } from "@/shared/components/DispatchStepProgress";
 import {
-    DEMO_DRIVER_LOADS,
-    DEMO_DRIVERS,
     type DriverArrivalChecklist,
     type DriverLoad,
     type DriverProfile,
     type DriverProviderLoadDetail,
     type DriverVehicleExitGuide,
-} from "@/modules/driver-portal/driverPortal.demo";
+} from "@/modules/driver-portal/driverPortal.models";
 
 interface DriverPortalState {
     activeDriverId: string;
@@ -16,8 +16,8 @@ interface DriverPortalState {
 }
 
 let state: DriverPortalState = {
-    activeDriverId: DEMO_DRIVERS[0].id,
-    loads: DEMO_DRIVER_LOADS,
+    activeDriverId: "",
+    loads: [],
 };
 
 const listeners = new Set<() => void>();
@@ -39,7 +39,7 @@ export function useDriverPortalState(): DriverPortalState {
 }
 
 export function getRegisteredDrivers(): DriverProfile[] {
-    return DEMO_DRIVERS;
+    return drivers;
 }
 
 export function setActiveDriver(driverId: string) {
@@ -48,6 +48,7 @@ export function setActiveDriver(driverId: string) {
 }
 
 export function advanceDriverLoadStage(loadId: string, note?: string) {
+    if (usesV1()) return driverCommands.advance(loadId, note);
     state = {
         ...state,
         loads: state.loads.map((load) => {
@@ -89,6 +90,7 @@ export function advanceDriverLoadStage(loadId: string, note?: string) {
 }
 
 export function saveDriverArrivalChecklist(loadId: string, checklist: DriverArrivalChecklist) {
+    if (usesV1()) return driverCommands.arrival(loadId, checklist);
     state = {
         ...state,
         loads: state.loads.map((load) =>
@@ -99,6 +101,7 @@ export function saveDriverArrivalChecklist(loadId: string, checklist: DriverArri
 }
 
 export function saveDriverVehicleExitGuide(loadId: string, guiaSalida: DriverVehicleExitGuide) {
+    if (usesV1()) return driverCommands.exit(loadId, guiaSalida);
     state = {
         ...state,
         loads: state.loads.map((load) => (load.id === loadId ? { ...load, guiaSalida } : load)),
@@ -119,9 +122,14 @@ export function saveDriverLoadFieldData(
         proveedores: DriverProviderLoadDetail[];
     },
 ) {
+    if (usesV1()) return driverCommands.load(loadId, payload);
     state = {
         ...state,
         loads: state.loads.map((load) => (load.id === loadId ? { ...load, ...payload } : load)),
     };
     emit();
 }
+
+let drivers: DriverProfile[] = [];
+
+export function hydrateDriverData(value: {drivers:DriverProfile[];loads:DriverLoad[]}) { drivers = value.drivers; state = { activeDriverId:drivers.some(d=>d.id===state.activeDriverId)?state.activeDriverId:drivers[0]?.id??'', loads:value.loads }; emit(); }

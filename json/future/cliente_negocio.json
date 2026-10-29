@@ -1,0 +1,15 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "clienteNegocioId": 1,
+    "nombreEmpresa": "Exportadora Andina SAC",
+    "nombreContacto": "Lucía Mendoza",
+    "telefono": "910000001",
+    "ruc": "20000000001",
+    "correoCorporativo": "cliente@example.com",
+    "ubicacion": "Lima, Perú",
+    "tipoCliente": "exportador",
+    "fechaRegistro": "2026-10-01"
+  }
+]

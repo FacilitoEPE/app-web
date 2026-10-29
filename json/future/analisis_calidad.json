@@ -1,0 +1,18 @@
+[
+  {
+    "analisisCalidadId": 1,
+    "cosechaId": null,
+    "cxpId": 1,
+    "tipo": "Materia seca",
+    "fechaMuestreo": "2026-10-10",
+    "estado": "APTO",
+    "resultadoTexto": null,
+    "resultadoNumerico": 22.5,
+    "unidad": "%",
+    "archivoId": null,
+    "observaciones": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fincaId": 1
+  }
+]

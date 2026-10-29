@@ -46,8 +46,8 @@ export default function CommercialPlanningPage() {
     }, []);
 
     // Carga inicial desde la API: el estado se actualiza al resolverse la petición.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial remote loading uses the shared retry callback.
         void loadClients();
     }, [loadClients]);
 

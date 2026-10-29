@@ -68,7 +68,7 @@ export default function CampaignInterviewsPage() {
             }
             const fruitName = campaign.fruta?.name ?? (await getFrutas()).find((fruit) => fruit.frutaId === campaign.frutaId)?.name;
             if (!fruitName) {
-                setLoadState({ status: "error", message: "No se pudo identificar la fruta de esta campaña para generar el código FYV." });
+                setLoadState({ status: "error", message: "No se pudo identificar la fruta de esta campaña para generar el código FVV." });
                 return;
             }
             setLoadState({ status: "ready", campaign, relation, fruitName });
@@ -82,10 +82,10 @@ export default function CampaignInterviewsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { setRecords(getCampaignInterviews(cxpId)); }, [cxpId]);
 
-    const handleSave = ({ values, newFinca }: InterviewSubmission) => {
+    const handleSave = async ({ values, newFinca }: InterviewSubmission) => {
         if (loadState.status !== "ready") return;
-        const nextRecords = saveCampaignInterview(campaignId, cxpId, loadState.fruitName, values, modal.mode === "edit" ? modal.record?.id : undefined);
-        if (newFinca) addFinca(loadState.relation.proveedorId, newFinca);
+        if (newFinca) await addFinca(loadState.relation.proveedorId, newFinca);
+        const nextRecords = await saveCampaignInterview(campaignId, cxpId, loadState.fruitName, values, modal.mode === "edit" ? modal.record?.id : undefined);
         setRecords(nextRecords);
         setModal((current) => ({ ...current, open: false }));
         setSuccess({ open: true, mode: modal.mode === "edit" ? "edit" : "interview" });
@@ -142,7 +142,7 @@ export default function CampaignInterviewsPage() {
                             icon={<LandPlot size={18} strokeWidth={2} />}
                             title={record.values.fincaNombre}
                             subtitle={record.codigoFyv}
-                            badge={<StatusBadge status={record.values.estadoFitosanitario || "Óptimo"} />}
+                            badge={<StatusBadge status={record.values.estadoFitosanitario || "Sin evaluación"} />}
                             actions={<RowActions primary={actionsFor(record)} />}
                         >
                             <TableGridCardFields>
@@ -191,7 +191,7 @@ export default function CampaignInterviewsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col items-start gap-1">
-                                            <StatusBadge status={record.values.estadoFitosanitario || "Óptimo"} />
+                                            <StatusBadge status={record.values.estadoFitosanitario || "Sin evaluación"} />
                                             {record.values.accesoVial && <span className="text-[11.5px] font-medium text-ink-muted">{record.values.accesoVial}</span>}
                                         </div>
                                     </TableCell>

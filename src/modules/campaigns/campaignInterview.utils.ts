@@ -1,6 +1,7 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { campaignCommands } from '@/modules/campaigns/api/campaign-commands.api';
 import type { InterviewAgronomicValues, InterviewValues } from "@/modules/campaigns/campaignInterview";
 import type { Finca } from "@/modules/providers/providerFinca.utils";
-import { createDemoInterviews } from "@/modules/campaigns/campaignInterviews.demo";
 
 export interface CampaignInterviewRecord {
     id: string;
@@ -14,8 +15,7 @@ export interface CampaignInterviewRecord {
 // No representa una confirmación del backend y se vacía al recargar la aplicación.
 // En desarrollo arranca con entrevistas de demostración (`campaignInterviews.demo.ts`); en producción y en las
 // pruebas arranca vacío, sin simular respuestas del backend.
-const useDemoData = import.meta.env.DEV && import.meta.env.MODE !== "test";
-const interviewsByRelation: Map<number, CampaignInterviewRecord[]> = useDemoData ? createDemoInterviews() : new Map();
+const interviewsByRelation: Map<number, CampaignInterviewRecord[]> = new Map();
 
 const normalizeFincaName = (name: string) => name.trim().toLocaleLowerCase("es");
 
@@ -58,7 +58,8 @@ export function getCampaignInterviews(cxpId: number): CampaignInterviewRecord[] 
     return interviewsByRelation.get(cxpId) ?? [];
 }
 
-export function saveCampaignInterview(campaignId: number, cxpId: number, fruitName: string, values: InterviewValues, recordId?: string): CampaignInterviewRecord[] {
+export function saveCampaignInterview(campaignId: number, cxpId: number, fruitName: string, values: InterviewValues, recordId?: string): CampaignInterviewRecord[] | Promise<CampaignInterviewRecord[]> {
+    if (usesV1()) return campaignCommands.interview(cxpId, values, recordId).then(() => getCampaignInterviews(cxpId));
     const current = getCampaignInterviews(cxpId);
     if (!values.fincaNombre?.trim()) throw new Error("Selecciona o registra una finca para la entrevista.");
     if (recordId && !current.some((record) => record.id === recordId)) {
@@ -77,3 +78,5 @@ export function saveCampaignInterview(campaignId: number, cxpId: number, fruitNa
 export function resetCampaignInterviews() {
     interviewsByRelation.clear();
 }
+
+export function hydrateCampaignInterviews(value: Map<number, CampaignInterviewRecord[]>) { interviewsByRelation.clear(); for (const [id, rows] of value) interviewsByRelation.set(id, rows); }

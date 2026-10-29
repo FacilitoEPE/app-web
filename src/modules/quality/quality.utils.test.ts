@@ -88,11 +88,11 @@ describe("quality.utils", () => {
 });
 
 describe("quality.store", () => {
-    it("allows adding and removing campaigns in memory", () => {
+    it("allows adding and removing campaigns in memory", async () => {
         _resetQualityStore([]);
         expect(getQualityCampaigns()).toHaveLength(0);
 
-        addQualityCampaign({
+        await addQualityCampaign({
             campaniaId: 50,
             nombre: "Palta 2026",
             fruta: "Palta",
@@ -108,7 +108,7 @@ describe("quality.store", () => {
         expect(current[0].scope).toEqual(["exportador"]);
 
         // Agregar la misma campaña al scope industria amplía sus scopes
-        addQualityCampaign({
+        await addQualityCampaign({
             campaniaId: 50,
             nombre: "Palta 2026",
             fruta: "Palta",
@@ -122,7 +122,7 @@ describe("quality.store", () => {
         expect(getQualityCampaigns()[0].scope).toEqual(["exportador", "industria"]);
 
         // Remove
-        removeQualityCampaign(current[0].id);
+        await removeQualityCampaign(current[0].id);
         expect(getQualityCampaigns()).toHaveLength(0);
     });
 });

@@ -1,0 +1,22 @@
+[
+  {
+    "entregaProgramadaId": 1,
+    "contratoVentaId": 1,
+    "destino": "Países Bajos, Rotterdam",
+    "fecha": "2026-10-29",
+    "kilosProgramados": 1000,
+    "observaciones": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "entregaProgramadaId": 2,
+    "contratoVentaId": 1,
+    "destino": "Países Bajos, Rotterdam",
+    "fecha": "2026-10-30",
+    "kilosProgramados": 500,
+    "observaciones": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

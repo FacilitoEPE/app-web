@@ -1,0 +1,36 @@
+[
+  {
+    "acuerdoTransporteId": 1,
+    "campaniaId": 1,
+    "idEmpresaTransporteExterno": 1,
+    "cotizacionTransporteId": null,
+    "tipoPago": "CON_ADELANTO",
+    "montoAcordado": 1000,
+    "fechaAcuerdo": "2026-10-15",
+    "fechaPagoFinal": "2026-11-15",
+    "archivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "estado": "CONFIRMADO",
+    "moneda": "PEN",
+    "adelantoAcordado": 200,
+    "referenciaCotizacion": null
+  },
+  {
+    "acuerdoTransporteId": 2,
+    "campaniaId": 1,
+    "idEmpresaTransporteExterno": 2,
+    "cotizacionTransporteId": null,
+    "tipoPago": null,
+    "montoAcordado": null,
+    "fechaAcuerdo": null,
+    "fechaPagoFinal": null,
+    "archivoId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "estado": "BORRADOR",
+    "moneda": "PEN",
+    "adelantoAcordado": 0,
+    "referenciaCotizacion": null
+  }
+]

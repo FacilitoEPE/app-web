@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import type { ProveedorDto, ProveedorFormValues, ProveedorInput } from "@/modules/providers/api/proveedor.dto";
 
 export type ProveedorField = keyof ProveedorFormValues;
@@ -25,12 +26,12 @@ export function toProveedorPayload(values: ProveedorFormValues): ProveedorInput 
     nombres: values.nombres.trim(),
     apellido: values.apellido.trim(),
     tipoDocumento: values.tipoDocumento as ProveedorInput["tipoDocumento"],
-    nmrDocumento: Number(values.nmrDocumento.trim()),
+    nmrDocumento: usesV1() ? values.nmrDocumento.trim() : Number(values.nmrDocumento.trim()),
     identidadDocUrl: values.identidadDocUrl.trim(),
     zona: values.zona.trim(),
-    telefono: Number(values.telefono.trim()),
+    telefono: usesV1() ? values.telefono.trim() : Number(values.telefono.trim()),
     email: values.email.trim(),
-    codigoLugarProduccion: Number(values.codigoLugarProduccion.trim()),
+    codigoLugarProduccion: usesV1() ? values.codigoLugarProduccion.trim() : Number(values.codigoLugarProduccion.trim()),
     estadoSanidadAgraria: values.estadoSanidadAgraria.trim(),
     identidadDocArchivo: values.identidadDocArchivo,
     frutas: values.frutas,
@@ -39,6 +40,13 @@ export function toProveedorPayload(values: ProveedorFormValues): ProveedorInput 
 
 export function validateProveedorInput(values: ProveedorFormValues): ProveedorFieldErrors {
   const errors: ProveedorFieldErrors = {};
+  if (usesV1()) {
+    for (const field of ['nombres','apellido','tipoDocumento','nmrDocumento','zona','telefono'] as const) if (!values[field].trim()) errors[field]='Este campo es obligatorio.';
+    if (values.nmrDocumento.length>30) errors.nmrDocumento='Usa hasta 30 caracteres.';
+    if (values.telefono.length>30) errors.telefono='Usa hasta 30 caracteres.';
+    if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) errors.email='Ingresa un correo válido.';
+    return errors;
+  }
   const required: ProveedorField[] = [
     "nombres", "apellido", "tipoDocumento", "nmrDocumento", "zona", "telefono", "email", "codigoLugarProduccion", "estadoSanidadAgraria"
   ];

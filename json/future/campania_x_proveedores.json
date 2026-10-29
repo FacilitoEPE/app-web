@@ -1,0 +1,38 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "cxpId": 1,
+    "cantidadProveedor": 1000,
+    "mtdCeratitis": null,
+    "frutaConvencionalEstimado": null,
+    "tipoProveedor": "productor",
+    "estado": "validado",
+    "campaniaId": 1,
+    "proveedorId": 1,
+    "precioCompraKg": 2,
+    "moneda": "PEN",
+    "disponibilidadDesde": null,
+    "disponibilidadHasta": null,
+    "observaciones": null,
+    "entrevistaAplica": true
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "cxpId": 2,
+    "cantidadProveedor": 1000,
+    "mtdCeratitis": null,
+    "frutaConvencionalEstimado": null,
+    "tipoProveedor": "productor",
+    "estado": "validado",
+    "campaniaId": 1,
+    "proveedorId": 2,
+    "precioCompraKg": 2,
+    "moneda": "PEN",
+    "disponibilidadDesde": null,
+    "disponibilidadHasta": null,
+    "observaciones": null,
+    "entrevistaAplica": true
+  }
+]

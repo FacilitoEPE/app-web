@@ -1,9 +1,13 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import type {
   CreateCampaniaProveedorDto,
   TipoProveedorCampania,
 } from "@/modules/campaigns/api/campania-proveedor.dto";
 
 export interface CampaniaProveedorDraft {
+  precioEstimado?: string;
+  moneda?: string;
+  observacionesParticipacion?: string;
   proveedorId: number;
   tipoProveedor: TipoProveedorCampania;
   cantidadProveedor: string;
@@ -54,6 +58,7 @@ export function toCreateCampaniaProveedorInput(
     ...(draft.fincaId == null ? {} : { fincaId: draft.fincaId }),
     tipoProveedor: draft.tipoProveedor,
     cantidadProveedor: Number(draft.cantidadProveedor),
+    ...(usesV1() ? {precioCompraKg:draft.precioEstimado?.trim()?Number(draft.precioEstimado):null,moneda:draft.moneda??"PEN",observaciones:draft.observacionesParticipacion??null}:{}),
     ...(draft.mtdCeratitis != null && draft.mtdCeratitis !== ""
       ? { mtdCeratitis: Number(draft.mtdCeratitis) }
       : {}),
@@ -68,6 +73,7 @@ export function toUpdateCampaniaProveedorInput(
     tipoProveedor: draft.tipoProveedor,
     ...(draft.fincaId == null ? {} : { fincaId: draft.fincaId }),
     cantidadProveedor: Number(draft.cantidadProveedor),
+    ...(usesV1() ? {precioCompraKg:draft.precioEstimado?.trim()?Number(draft.precioEstimado):null,moneda:draft.moneda??"PEN",observaciones:draft.observacionesParticipacion??null}:{}),
     ...(draft.mtdCeratitis != null && draft.mtdCeratitis !== ""
       ? { mtdCeratitis: Number(draft.mtdCeratitis) }
       : {}),

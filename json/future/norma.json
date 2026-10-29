@@ -1,0 +1,37 @@
+[
+  {
+    "normaId": 1,
+    "codigo": "NOP",
+    "nombre": "NOP",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "normaId": 2,
+    "codigo": "RTPO",
+    "nombre": "RTPO",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "normaId": 3,
+    "codigo": "EU",
+    "nombre": "EU",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "normaId": 4,
+    "codigo": "ROC",
+    "nombre": "ROC",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "normaId": 5,
+    "codigo": "GLOBALGAP_GRASP",
+    "nombre": "GLOBALGAP_GRASP",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

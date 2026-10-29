@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useState } from "react";
 import { FileCheck2, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -10,7 +11,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import type { FileSource } from "@/shared/utils/fileSource";
 import { formatKg } from "@/shared/utils/format";
-import type { BillingClient, BillingInvoice, BillingLoad } from "@/modules/billing/billing.demo";
+import type { BillingClient, BillingInvoice, BillingLoad } from "@/modules/billing/billing.models";
 
 interface BillingIssueInvoiceModalProps {
     open: boolean;
@@ -46,22 +47,22 @@ export default function BillingIssueInvoiceModal({
     const [archivoFacturaEmitida, setArchivoFacturaEmitida] = useState<FileSource | null>(null);
     const [observaciones, setObservaciones] = useState("");
 
-    useEffect(() => {
+    useResetOnToggle(open, () => {
         if (!invoice || !open) return;
-        setNumeroFacturaElectronica(invoice.numeroFacturaElectronica || "F001-000490");
+        setNumeroFacturaElectronica(invoice.numeroFacturaElectronica || "");
         setFechaEmision(invoice.fechaEmision || invoice.fechaPreparacion);
         setFechaVencimiento(invoice.fechaVencimiento);
         setArchivoFacturaEmitida(invoice.archivoFacturaEmitida);
         setObservaciones(invoice.observaciones);
-    }, [invoice, open]);
+    });
 
     if (!client || !load || !invoice) return null;
 
-    const symbol = invoice.moneda === "USD" ? "US$" : "S/";
+    const symbol = invoice.moneda === "EUR" ? "€" : invoice.moneda === "USD" ? "US$" : "S/";
 
     const handleSubmit = () => {
         onIssue(client.id, load.id, invoice.id, {
-            numeroFacturaElectronica: numeroFacturaElectronica.trim() || "F001-000490",
+            numeroFacturaElectronica: numeroFacturaElectronica.trim() || "",
             fechaEmision,
             fechaVencimiento,
             archivoFacturaEmitida,

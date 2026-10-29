@@ -1,0 +1,12 @@
+[
+  {
+    "adelantoTransporteId": 1,
+    "acuerdoTransporteId": 1,
+    "fecha": "2026-10-20",
+    "monto": 200,
+    "referencia": "ADEL-DEMO-1",
+    "comprobanteId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

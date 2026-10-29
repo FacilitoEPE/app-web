@@ -1,0 +1,11 @@
+[
+  {
+    "parametroUitId": 1,
+    "anio": 2026,
+    "valor": 5500,
+    "limiteUit": 75,
+    "umbralAlerta": 0.9,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

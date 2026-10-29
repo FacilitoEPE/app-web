@@ -46,10 +46,10 @@ export default function CampaignContractDeliveryModal({ open, delivery, onOpenCh
         setErrors((current) => ({ ...current, [field]: undefined }));
     };
 
-    const save = () => {
+    const save = async () => {
         const nextErrors = validateContractDelivery(values);
         setErrors(nextErrors);
-        if (Object.keys(nextErrors).length === 0) onSave(values);
+        if (Object.keys(nextErrors).length === 0) await onSave(values);
     };
 
     return (

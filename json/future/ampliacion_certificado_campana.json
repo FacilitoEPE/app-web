@@ -1,0 +1,12 @@
+[
+  {
+    "ampliacionCertificadoCampanaId": 1,
+    "certificadoId": 1,
+    "fecha": "2026-10-20",
+    "kilosAdicionales": 500,
+    "referencia": "AMP-DEMO-1",
+    "registradoPorUsuarioId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

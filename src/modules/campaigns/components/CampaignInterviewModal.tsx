@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useState } from "react";
 import { ClipboardList, LandPlot, Save, Sprout, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -130,7 +131,7 @@ export default function CampaignInterviewModal({
         },
     });
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setSubmitError(undefined);
         const nextAgronomicErrors = validateInterviewAgronomics(agronomic);
         setAgronomicErrors(nextAgronomicErrors);
@@ -162,8 +163,8 @@ export default function CampaignInterviewModal({
 
         if (!finca || Object.keys(nextAgronomicErrors).length > 0) return;
         try {
-            const baseValues = toInterviewValues(finca, agronomic);
-            onSave({
+            const baseValues = await toInterviewValues(finca, agronomic);
+            await onSave({
                 values: {
                     ...baseValues,
                     estimacionCosechaKg: estimacionCosechaKg.trim() || undefined,
@@ -226,7 +227,7 @@ export default function CampaignInterviewModal({
                         )}
 
                         {isEditing && <InfoField label="Finca" value={initialRecord.values.fincaNombre ?? "—"} />}
-                        <InfoField label="Código FYV de la finca en campaña" value={initialRecord?.codigoFyv ?? previewCode} />
+                        <InfoField label="Código FVV de la finca en campaña" value={initialRecord?.codigoFyv ?? (usesV1() ? "Se asignará al guardar" : previewCode)} />
                         {!isEditing && <p className="text-[12px] leading-relaxed text-ink-muted">El código se asigna automáticamente al guardar la entrevista.</p>}
                     </ModalSection>
 
@@ -252,7 +253,7 @@ export default function CampaignInterviewModal({
                     </ModalSection>
                 </div>
 
-                <ModalSection title="Evaluación técnica de campo y acceso logístico" aside="Opcional">
+                {!usesV1() && <ModalSection title="Evaluación técnica de campo y acceso logístico" aside="Opcional">
                     {isViewOnly ? (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                             <InfoField label="Estimación cosecha en campo" value={estimacionCosechaKg || "—"} suffix={estimacionCosechaKg ? "kg" : undefined} />
@@ -298,7 +299,7 @@ export default function CampaignInterviewModal({
                             </div>
                         </div>
                     )}
-                </ModalSection>
+                </ModalSection>}
 
                 <FormField error={submitError} />
             </div>

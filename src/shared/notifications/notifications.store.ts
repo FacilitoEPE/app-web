@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useSyncExternalStore } from "react";
 import { createDemoNotifications } from "@/shared/notifications/notifications.demo";
 
@@ -23,7 +24,7 @@ export interface AppNotification {
  * En desarrollo arranca con datos de demostración (`notifications.demo.ts`); en producción y en las pruebas,
  * vacío.
  */
-let items: AppNotification[] = import.meta.env.DEV && import.meta.env.MODE !== "test" ? createDemoNotifications() : [];
+let items: AppNotification[] = !usesV1() && import.meta.env.DEV && import.meta.env.MODE !== "test" ? createDemoNotifications() : [];
 const listeners = new Set<() => void>();
 
 function update(next: AppNotification[]) {

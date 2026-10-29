@@ -124,8 +124,8 @@ function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefres
 
     async function saveCarrier(values: CarrierFormValues) {
         const { input, extras: carrierExtras } = splitCarrierValues(values);
-        await updateCarrier(carrier.id, input);
-        setCarrierExtras(carrier.id, carrierExtras);
+        await updateCarrier(carrier.id, input, carrierExtras);
+        await setCarrierExtras(carrier.id, carrierExtras);
         await onRefresh();
         setEditingCarrier(false);
         showSuccess("carrier-updated");

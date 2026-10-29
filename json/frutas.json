@@ -1,0 +1,30 @@
+[
+  {
+    "frutaId": 1,
+    "name": "Mango"
+  },
+  {
+    "frutaId": 2,
+    "name": "Uva"
+  },
+  {
+    "frutaId": 3,
+    "name": "Palta"
+  },
+  {
+    "frutaId": 4,
+    "name": "Arándano"
+  },
+  {
+    "frutaId": 5,
+    "name": "Fresa"
+  },
+  {
+    "frutaId": 6,
+    "name": "Banana"
+  },
+  {
+    "frutaId": 7,
+    "name": "Maracuyá"
+  }
+]

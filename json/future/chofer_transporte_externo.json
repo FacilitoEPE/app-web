@@ -1,0 +1,15 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "idChoferTransporteExterno": 1,
+    "nombre": "Miguel Torres",
+    "telefono": "930000001",
+    "correo": null,
+    "idEmpresaTransporteExterno": 1,
+    "personaId": 2,
+    "activo": true,
+    "usuarioId": 2,
+    "numeroLicencia": "Q40000002"
+  }
+]

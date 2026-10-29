@@ -26,7 +26,7 @@ import {
     SUNAT_UBIGEO_CATALOG,
     type QualityDeliveryLoadItem,
     type QualitySunatRemissionGuide,
-} from "@/modules/quality/qualityOperations.demo";
+} from "@/modules/quality/qualityOperations.models";
 
 interface QualityRemissionGuideModalProps {
     open: boolean;
@@ -153,7 +153,7 @@ export default function QualityRemissionGuideModal({
         .map((n) => n.certText)
         .join(" | ");
 
-    const saveWithStatus = (estado: QualitySunatRemissionGuide["estado"]) => {
+    const saveWithStatus = async (estado: QualitySunatRemissionGuide["estado"]) => {
         const guide: QualitySunatRemissionGuide = {
             id: editingGuide?.id ?? `guia-${Date.now()}`,
             numeroGuia,
@@ -188,7 +188,7 @@ export default function QualityRemissionGuideModal({
                 ? `${observacionesSunat} · ${autoCertText}`
                 : observacionesSunat,
         };
-        onSave(load.id, guide);
+        await onSave(load.id, guide);
         onOpenChange(false);
     };
 

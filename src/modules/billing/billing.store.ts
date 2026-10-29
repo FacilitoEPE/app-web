@@ -1,12 +1,13 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { billingCommands } from '@/modules/billing/api/billing-commands.api';
 import { useSyncExternalStore } from "react";
 import {
-    DEMO_BILLING_CLIENTS,
     type BillingClient,
     type BillingCollectionItem,
     type BillingInvoice,
-} from "@/modules/billing/billing.demo";
+} from "@/modules/billing/billing.models";
 
-let clients: BillingClient[] = DEMO_BILLING_CLIENTS;
+let clients: BillingClient[] = [];
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -30,6 +31,7 @@ export function saveBillingInvoicePreparation(
     loadId: string,
     invoice: Omit<BillingInvoice, "id" | "cobros"> & { id?: string },
 ) {
+    if (usesV1()) return billingCommands.prepare(clientId, loadId, invoice);
     clients = clients.map((cli) => {
         if (cli.id !== clientId) return cli;
         return {
@@ -71,6 +73,7 @@ export function issueBillingElectronicInvoice(
         observaciones: string;
     },
 ) {
+    if (usesV1()) return billingCommands.issue(clientId, loadId, invoiceId, payload);
     clients = clients.map((cli) => {
         if (cli.id !== clientId) return cli;
         return {
@@ -106,6 +109,7 @@ export function registerBillingCollection(
     invoiceId: string,
     collection: Omit<BillingCollectionItem, "id">,
 ) {
+    if (usesV1()) return billingCommands.collect(clientId, loadId, invoiceId, collection);
     clients = clients.map((cli) => {
         if (cli.id !== clientId) return cli;
         return {
@@ -134,3 +138,5 @@ export function registerBillingCollection(
     });
     emit();
 }
+
+export function hydrateBillingData(value: BillingClient[]) { clients = value; emit(); }

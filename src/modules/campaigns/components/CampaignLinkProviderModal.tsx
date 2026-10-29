@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useEffect, useRef, useState } from "react";
 import { X, Link2, LandPlot, Sprout } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -130,6 +131,9 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
             setSelectedProvider(String(initialData.proveedorId));
             setDraft({
                 ...EMPTY_DRAFT,
+                precioEstimado: initialData.precioCompraKg == null ? "" : String(initialData.precioCompraKg),
+                moneda: initialData.moneda ?? "PEN",
+                observacionesParticipacion: initialData.observaciones ?? "",
                 cantidadProveedor: initialData.cantidadProveedor ? String(initialData.cantidadProveedor) : "",
                 frutaConvencionalEstimado: initialData.frutaConvencionalEstimado ?? null,
             });
@@ -231,13 +235,13 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
         try {
             if (mode === "edit" && initialData) {
                 await updateCampaniaProveedor(initialData.cxpId, toUpdateCampaniaProveedorInput(candidate));
-                onSave?.();
+                await onSave?.();
                 return;
             }
 
             const result = await controller.submit(campaniaId, [candidate]);
             if (result.status === "complete") {
-                onSave?.();
+                await onSave?.();
                 return;
             }
             if (result.status === "unresolved") {
@@ -367,7 +371,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                     {renderField({ field: "precioEstimado", label: "Precio estimado o acordado", step: "0.01", placeholder: "0.00", leading: currencySymbol })}
                     <FormField label="Moneda" required>
                         <Combobox
-                            options={MONEDA_OPTIONS}
+                            options={usesV1() ? MONEDA_OPTIONS.filter(o=>o.value==="PEN") : MONEDA_OPTIONS}
                             value={draft.moneda}
                             onChange={(value) => updateDraft("moneda", value)}
                             disabled={isLocked}
@@ -376,7 +380,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                     </FormField>
                 </div>
 
-                <FormField label="Variedades comprometidas en campaña" hint="Selecciona las variedades que aportará el proveedor en esta campaña.">
+                {!usesV1() && <FormField label="Variedades comprometidas en campaña" hint="Selecciona las variedades que aportará el proveedor en esta campaña.">
                     <div className="flex flex-wrap gap-2">
                         {VARIEDAD_OPTIONS.map((variedad) => {
                             const active = selectedVariedades.includes(variedad);
@@ -398,9 +402,9 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                             );
                         })}
                     </div>
-                </FormField>
+                </FormField>}
 
-                {providerType === "productor" && activeProviderId > 0 && (
+                {!usesV1() && providerType === "productor" && activeProviderId > 0 && (
                     <FormField
                         label="Fincas participantes del productor"
                         hint={providerFincas.length === 0 ? "Este productor aún no tiene fincas en su padrón; podrás vincularlas desde Entrevistas." : "Marca las fincas que participarán en esta campaña."}

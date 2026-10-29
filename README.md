@@ -28,7 +28,7 @@ La experiencia combina tablas y tarjetas, filtros, formularios en modales y una 
 
 > **Estado del proyecto · Frontend en desarrollo**
 >
-> La integración con el backend está en curso: campañas, relaciones de campaña y listados de proveedores/clientes consumen algunas APIs; el CRUD de transporte también quedó conectado. Otras vistas siguen parciales o usan datos de demostración. El acceso aún simula una sesión en IndexedDB y no valida credenciales contra el backend. Consulta el [mapa de integración frontend/backend](docs/backend-api-integration.md) para ver el estado por vista y lo pendiente.
+> La integración con el backend está en curso: campañas, relaciones de campaña y listados de proveedores/clientes consumen algunas APIs; el CRUD de transporte también quedó conectado. Otras vistas siguen parciales o usan datos de demostración. El acceso aún simula una sesión en IndexedDB y no valida credenciales contra el backend. Consulta el [mapa de integración frontend/backend](docs/integration-status.md) para ver el estado por vista y lo pendiente.
 
 <a id="modulos"></a>
 ## 🧭 Un sistema organizado por áreas
@@ -106,13 +106,38 @@ VITE_API_BASE_URL=http://localhost:3000/
 
 La variable alimenta al [cliente Axios compartido](src/shared/api/client.ts). Si abres la web desde otro dispositivo, reemplaza `localhost` por la IP de red del equipo que ejecuta la API, por ejemplo `http://192.168.1.25:3000/`. **Reinicia Vite después de cambiar `.env`** para que cargue el nuevo valor. Las variables `VITE_*` se incluyen en el frontend: no deben contener secretos.
 
+### Datos ficticios sin backend
+
+Para desarrollar el backend objetivo y preparar su consumo desde el frontend, consulta la [guía de APIs futuras](docs/future-api-contract.md), el [contrato OpenAPI V1](docs/future-api.openapi.json) y el [catálogo de endpoints](docs/future-api-endpoints.md). Los servicios tipados `src/modules/*/api/future.api.ts` consumen `/v1`; los datos futuros se editan en `json/future/`. Es un contrato separado de los servicios actuales y todavía requiere migrar sus pantallas mediante mappers del dominio.
+
+Para trabajar en el frontend con la API local de prueba, cambia una sola variable en `.env`:
+
+```dotenv
+VITE_API_BASE_URL=/mock-api/
+```
+
+Ejecuta `pnpm dev` (o `pnpm dev:network`). No necesitas iniciar el backend ni PostgreSQL. Para volver al backend usa `VITE_API_BASE_URL=http://localhost:3000/` o su URL real. Reinicia Vite al cambiar `.env`.
+
+Los datos se editan en [`json/`](json/), con un archivo por recurso y los nombres de campos del backend. Hay campañas en distintos estados, 24 proveedores, 8 clientes, 5 transportistas, vehículos, choferes y vínculos entre recursos. Conserva los IDs y sus referencias para que los detalles y las demos locales sigan coincidiendo. Puedes dejar un archivo como `[]` para revisar estados vacíos, retirando también sus referencias de los otros archivos.
+
+La API ficticia admite las lecturas y operaciones CRUD que consumen los servicios actuales; las relaciones se calculan sobre los registros en memoria. Crear, editar o eliminar no modifica los JSON. Los cambios duran mientras Vite esté ejecutándose y se comparten entre las pestañas conectadas al mismo servidor. Reinicia Vite para volver a cargar los archivos, restaurar los datos o aplicar ediciones de JSON.
+
+Este modo es exclusivo del servidor de desarrollo: el build se detiene si todavía apunta a `/mock-api/`. Los JSON quedan fuera del bundle de producción. El frontend utiliza automáticamente el contrato V1: carga el escenario de `json/future/` por HTTP y actualiza las vistas relacionadas después de guardar. Los almacenes actúan como estado de presentación de las respuestas; no agregan datos demo si la API falla. No se simulan subidas/descargas S3 ni el servicio general de archivos: los enlaces `example.com` de las fixtures son ilustrativos. La API de prueba no sustituye las validaciones completas del backend; protege IDs, referencias y aislamiento de recursos anidados, y devuelve errores JSON para rutas desconocidas.
+
+### Contrato V1 y futuro backend
+
+La configuración `VITE_API_BASE_URL=/mock-api/` conecta las pantallas a `/mock-api/v1`; no debes agregar `/v1` a la variable. Para conectar el backend futuro, configura su URL real y `VITE_API_CONTRACT=v1`. Una URL real sin esa opción conserva la API actual; `VITE_API_CONTRACT=legacy` permite seleccionarla explícitamente.
+
+El agente backend debe recibir [la guía V1](docs/future-api-contract.md), [OpenAPI](docs/future-api.openapi.json), [el índice de endpoints](docs/future-api-endpoints.md) y [las fuentes acordadas](docs/reference/README.md), incluidas en este repositorio. Ejecuta `pnpm contract:check` para comprobar que el SQL y los clientes generados coincidan.
+
+Las escrituras se esperan antes de mostrar éxito. Un fallo HTTP muestra el error y conserva el formulario. Los comandos que abarcan varios recursos pueden guardar parcialmente: se recargan los datos para mostrar el estado confirmado por el servidor. La API real debe definir las transacciones necesarias. El acceso mantiene la sesión local existente y los adjuntos permanecen diferidos (FC14).
+
 ### Comandos del proyecto
 
 | Comando | Función |
 | :--- | :--- |
 | `pnpm dev` | Inicia Vite con recarga durante el desarrollo |
 | `pnpm dev:network` | Inicia Vite accesible por LAN e imprime la URL de red |
-| `npm run dev:network` | La misma tarea usando npm para iniciar el servidor Vite |
 | `pnpm build` | Comprueba TypeScript y genera el bundle en `dist/` |
 | `pnpm preview` | Sirve el resultado de una compilación local |
 | `pnpm lint` | Ejecuta ESLint sobre el proyecto |

@@ -1,0 +1,34 @@
+[
+  {
+    "proveedorCargaId": 1,
+    "cargaId": 1,
+    "cxpId": 1,
+    "frutaDerivadaId": 1,
+    "kilosCargados": 600,
+    "precioCompraKgAplicado": 2,
+    "jabasCargadas": 30,
+    "jabasVacias": 0,
+    "binesCargados": 0,
+    "binesVacios": 0,
+    "mallasCargadas": 0,
+    "mallasVacias": 0,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "proveedorCargaId": 2,
+    "cargaId": 1,
+    "cxpId": 2,
+    "frutaDerivadaId": 1,
+    "kilosCargados": 400,
+    "precioCompraKgAplicado": 2,
+    "jabasCargadas": 20,
+    "jabasVacias": 0,
+    "binesCargados": 0,
+    "binesVacios": 0,
+    "mallasCargadas": 0,
+    "mallasVacias": 0,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]

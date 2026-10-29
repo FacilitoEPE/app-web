@@ -37,7 +37,7 @@ import type {
     QualityHarvestAdvance,
     QualityHarvestClosure,
     QualityHarvestOrganization,
-} from "@/modules/quality/qualityOperations.demo";
+} from "@/modules/quality/qualityOperations.models";
 
 interface QualityHarvestWizardModalProps {
     open: boolean;
@@ -149,8 +149,8 @@ export default function QualityHarvestWizardModal({
         setNewAdvEvidencia(null);
     };
 
-    const handleSaveAll = () => {
-        onSave(load.id, {
+    const handleSaveAll = async () => {
+        await onSave(load.id, {
             organizacionCosecha: org,
             avancesCosecha: avances,
             cierreCosecha: cierre,

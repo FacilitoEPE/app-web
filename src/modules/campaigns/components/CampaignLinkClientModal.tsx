@@ -16,6 +16,8 @@ import { getClientesNegocioCampana } from "@/modules/campaigns/api/cliente-negoc
 import type { ClienteNegocio } from "@/modules/clients/api/cliente-negocio.mapper";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { FrutaDerivadaDto } from "@/modules/campaigns/api/campaign.dto";
+import { usesV1 } from '@/shared/api/data-contract';
+import { campaignCommands } from '@/modules/campaigns/api/campaign-commands.api';
 
 interface CampaignLinkClientModalProps {
     open: boolean;
@@ -115,7 +117,7 @@ export default function CampaignLinkClientModal({ open, onOpenChange, onSave, ca
     }, [open, selectedCampaign]);
 
     const clientOptions = useMemo(() => clientes
-        .filter((item) => !linkedClientIds.has(item.clienteNegocioId))
+        .filter((item) => usesV1() || !linkedClientIds.has(item.clienteNegocioId))
         .map((item) => ({ value: String(item.clienteNegocioId), label: item.nombreEmpresa })), [clientes, linkedClientIds]);
 
     const campaignOptions = useMemo(() => campanas.map((item) => ({
@@ -134,7 +136,7 @@ export default function CampaignLinkClientModal({ open, onOpenChange, onSave, ca
         if (!draft.clienteNegocioId) next.clienteNegocioId = "Selecciona un cliente.";
         if (!selectedCampaign) next.campaign = "Selecciona una campaña antes de continuar.";
         if (!draft.cantidadKg.trim() || Number(draft.cantidadKg) <= 0) next.cantidadKg = "Ingresa una cantidad mayor que cero.";
-        if (!fichaTecnica) next.fichaTecnica = "Adjunta la ficha técnica.";
+        if (!usesV1() && !fichaTecnica) next.fichaTecnica = "Adjunta la ficha técnica.";
         if (draft.variedades.length === 0) next.variedades = "Selecciona al menos una variedad.";
         if (!draft.destinoSolicitado.trim()) next.destinoSolicitado = "Ingresa el destino solicitado.";
         if (!draft.entregaDesde) next.entregaDesde = "Selecciona la fecha inicial.";
@@ -143,15 +145,15 @@ export default function CampaignLinkClientModal({ open, onOpenChange, onSave, ca
         return next;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const nextErrors = validate();
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) {
             setFormError("Revisa los campos marcados antes de guardar la participación.");
             return;
         }
-        // TODO(api): entregar este borrador y la ficha técnica al servicio cuando exista el nuevo contrato.
-        onSave?.();
+        if (usesV1()) await campaignCommands.linkClient(selectedCampaign!.campaniaId, draft);
+        await onSave?.();
         onOpenChange(false);
     };
 

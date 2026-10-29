@@ -6,7 +6,7 @@ import ModalSection from "@/shared/components/ModalSection";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatKg } from "@/shared/utils/format";
-import type { DriverLoad } from "@/modules/driver-portal/driverPortal.demo";
+import type { DriverLoad } from "@/modules/driver-portal/driverPortal.models";
 
 interface DriverRouteMapModalProps {
     open: boolean;
@@ -36,12 +36,12 @@ export default function DriverRouteMapModal({ open, onOpenChange, load }: Driver
         : load.destino;
 
     const bboxDelta = 0.045;
-    const osmEmbedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${focusLng - bboxDelta}%2C${focusLat - bboxDelta}%2C${focusLng + bboxDelta}%2C${focusLat + bboxDelta}&layer=mapnik&marker=${focusLat}%2C${focusLng}`;
+    const osmEmbedUrl = focusLat === null || focusLng === null ? undefined : `https://www.openstreetmap.org/export/embed.html?bbox=${focusLng - bboxDelta}%2C${focusLat - bboxDelta}%2C${focusLng + bboxDelta}%2C${focusLat + bboxDelta}&layer=mapnik&marker=${focusLat}%2C${focusLng}`;
 
     const waypoints = load.fincas.map((f) => `${f.latitud},${f.longitud}`).join("|");
     const googleMapsRouteUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
         load.fincas[0] ? `${load.fincas[0].latitud},${load.fincas[0].longitud}` : load.origen,
-    )}&destination=${encodeURIComponent(`${load.destinoLatitud},${load.destinoLongitud}`)}${
+    )}&destination=${encodeURIComponent(load.destinoLatitud === null || load.destinoLongitud === null ? load.destino : `${load.destinoLatitud},${load.destinoLongitud}`)}${
         waypoints ? `&waypoints=${encodeURIComponent(waypoints)}` : ""
     }&travelmode=driving`;
 
@@ -148,7 +148,7 @@ export default function DriverRouteMapModal({ open, onOpenChange, load }: Driver
                                 <p className="text-[12px] font-medium text-ink-body">{load.destino}</p>
                                 <span className="inline-flex items-center gap-1 text-[11px] text-ink-muted tabular-nums">
                                     <Compass size={12} className="text-status-highlight" />{" "}
-                                    {load.destinoLatitud.toFixed(4)}, {load.destinoLongitud.toFixed(4)}
+                                    {load.destinoLatitud === null || load.destinoLongitud === null ? "Ubicación por dirección" : `${load.destinoLatitud.toFixed(4)}, ${load.destinoLongitud.toFixed(4)}`}
                                 </span>
                             </button>
                         </div>
@@ -156,19 +156,19 @@ export default function DriverRouteMapModal({ open, onOpenChange, load }: Driver
                         {/* Visor cartográfico */}
                         <div className="flex flex-col gap-3 lg:col-span-7">
                             <div className="relative h-72 sm:h-80 w-full overflow-hidden rounded-2xl border border-brand-border/60 bg-surface-page">
-                                <iframe
+                                {osmEmbedUrl ? <iframe
                                     title={`Mapa de ${focusTitle}`}
                                     src={osmEmbedUrl}
                                     className="h-full w-full border-0"
                                     loading="lazy"
-                                />
+                                /> : <p className="p-6 text-ink-muted">Abre la ruta en Google Maps para localizar la dirección de destino.</p>}
                                 <div className="pointer-events-none absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 rounded-xl border border-border/80 bg-card/95 px-3.5 py-2 shadow-sm backdrop-blur-xs">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <MapPin size={16} className="shrink-0 text-brand" />
                                         <span className="truncate text-[12.5px] font-bold text-ink">{focusTitle}</span>
                                     </div>
                                     <span className="shrink-0 text-[11px] font-semibold tabular-nums text-ink-muted">
-                                        {focusLat.toFixed(4)}, {focusLng.toFixed(4)}
+                                        {focusLat?.toFixed(4)} {focusLng?.toFixed(4)}
                                     </span>
                                 </div>
                             </div>

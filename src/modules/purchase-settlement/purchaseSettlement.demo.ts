@@ -29,6 +29,7 @@ export interface SettlementLinkedPerson {
 }
 
 export interface SettlementProviderEntry {
+    kilosReconocidos?: number;
     id: string;
     proveedorId: string;
     proveedorNombre: string;

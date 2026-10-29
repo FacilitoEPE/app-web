@@ -1,0 +1,36 @@
+[
+  {
+    "guiaRemisionId": 1,
+    "cargaId": 1,
+    "numero": "T001-00000001",
+    "fechaInicioTraslado": "2026-10-29",
+    "fechaEntregaTransportista": null,
+    "pesoBrutoKg": 1000,
+    "unidadPeso": "KGM",
+    "numeroBultos": 50,
+    "fincaPartidaId": 1,
+    "ubigeoPartidaSnapshot": "200114",
+    "direccionPartidaSnapshot": "Camino rural km 1",
+    "establecimientoPartidaSnapshot": "0001",
+    "ubigeoLlegadaSnapshot": "200501",
+    "direccionLlegadaSnapshot": "Planta Paita",
+    "establecimientoLlegadaSnapshot": "0001",
+    "transportistaDocumentoSnapshot": "20100000001",
+    "mtcSnapshot": null,
+    "placaSnapshot": "ABC-101",
+    "conductorDocumentoSnapshot": "40000002",
+    "conductorNombreSnapshot": "Miguel Torres",
+    "conductorLicenciaSnapshot": "Q40000002",
+    "archivoId": null,
+    "observaciones": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "contenido": {
+      "standardCodes": [
+        "NOP"
+      ],
+      "standardText": "Certificación NOP de demostración"
+    },
+    "emitidaAt": null
+  }
+]

@@ -1,0 +1,15 @@
+[
+  {
+    "medicionMtdId": 1,
+    "cxpId": 1,
+    "medidoAt": "2026-10-29T13:00:00.000Z",
+    "valor": 0.01,
+    "limiteAplicado": 0.1,
+    "archivoId": null,
+    "registradoPorUsuarioId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "trampaReferencia": "T-01",
+    "fincaId": 1
+  }
+]

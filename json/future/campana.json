@@ -1,0 +1,92 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "campaniaId": 1,
+    "nombre": "Mango 2026",
+    "fechaInicio": "2026-10-01",
+    "fechaFin": "2027-03-31",
+    "estado": "en proceso",
+    "requerimientoComercial": 1500,
+    "frutaId": 1,
+    "temporada": "2026/2027",
+    "responsableUsuarioId": null,
+    "lineamientosArchivoId": null,
+    "observaciones": null,
+    "cerradaAt": null,
+    "cerradaPorUsuarioId": null,
+    "motivoCierre": null,
+    "calidad": {
+      "Exportación": {
+        "incorporada": true,
+        "estado": "EN_PROCESO",
+        "rechazos": []
+      },
+      "Industria": {
+        "incorporada": false,
+        "estado": "PENDIENTE",
+        "rechazos": []
+      }
+    }
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "campaniaId": 2,
+    "nombre": "Palta 2027",
+    "fechaInicio": "2027-01-01",
+    "fechaFin": "2027-06-30",
+    "estado": "planificacion",
+    "requerimientoComercial": 1500,
+    "frutaId": 2,
+    "temporada": "2026/2027",
+    "responsableUsuarioId": null,
+    "lineamientosArchivoId": null,
+    "observaciones": null,
+    "cerradaAt": null,
+    "cerradaPorUsuarioId": null,
+    "motivoCierre": null,
+    "calidad": {
+      "Exportación": {
+        "incorporada": true,
+        "estado": "EN_PROCESO",
+        "rechazos": []
+      },
+      "Industria": {
+        "incorporada": false,
+        "estado": "PENDIENTE",
+        "rechazos": []
+      }
+    }
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "campaniaId": 3,
+    "nombre": "Uva 2025",
+    "fechaInicio": "2025-01-01",
+    "fechaFin": "2025-06-30",
+    "estado": "terminado",
+    "requerimientoComercial": 1500,
+    "frutaId": 4,
+    "temporada": "2026/2027",
+    "responsableUsuarioId": null,
+    "lineamientosArchivoId": null,
+    "observaciones": null,
+    "cerradaAt": null,
+    "cerradaPorUsuarioId": null,
+    "motivoCierre": null,
+    "calidad": {
+      "Exportación": {
+        "incorporada": true,
+        "estado": "EN_PROCESO",
+        "rechazos": []
+      },
+      "Industria": {
+        "incorporada": false,
+        "estado": "PENDIENTE",
+        "rechazos": []
+      }
+    }
+  }
+]

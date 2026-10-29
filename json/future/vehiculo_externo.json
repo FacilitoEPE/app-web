@@ -1,0 +1,16 @@
+[
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "idVehiculoExterno": 1,
+    "placa": "ABC-101",
+    "volumen": null,
+    "ancho": null,
+    "altura": null,
+    "profundidad": null,
+    "pesoNeto": null,
+    "pesoBruto": null,
+    "idEmpresaTransporteExterno": 1,
+    "capacidadKg": 18000
+  }
+]

@@ -1,6 +1,7 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { qualityCommands } from '@/modules/quality/api/quality-commands.api';
 import { useSyncExternalStore } from "react";
 import {
-    DEMO_QUALITY_DELIVERY_LOADS,
     type QualityDeliveryLoadItem,
     type QualityHarvestAdvance,
     type QualityHarvestClosure,
@@ -10,9 +11,9 @@ import {
     type QualityProviderLoadDetail,
     type QualityReviewStatus,
     type QualitySunatRemissionGuide,
-} from "@/modules/quality/qualityOperations.demo";
+} from "@/modules/quality/qualityOperations.models";
 
-let items: QualityDeliveryLoadItem[] = DEMO_QUALITY_DELIVERY_LOADS;
+let items: QualityDeliveryLoadItem[] = [];
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -36,6 +37,7 @@ export function saveQualityDeliveryReview(
         analisisLaboratorio: QualityLabAnalysisRecord[];
     },
 ) {
+    if (usesV1()) return qualityCommands.review(loadId, payload);
     items = items.map((item) =>
         item.id === loadId
             ? {
@@ -57,6 +59,7 @@ export function saveQualityHarvestWizard(
         cierreCosecha: QualityHarvestClosure;
     },
 ) {
+    if (usesV1()) return qualityCommands.harvest(loadId, payload);
     items = items.map((item) =>
         item.id === loadId
             ? {
@@ -85,6 +88,7 @@ export function saveQualityLoadRealData(
         proveedoresCarga: QualityProviderLoadDetail[];
     },
 ) {
+    if (usesV1()) return qualityCommands.saveLoad(loadId, payload);
     items = items.map((item) =>
         item.id === loadId
             ? {
@@ -97,6 +101,7 @@ export function saveQualityLoadRealData(
 }
 
 export function saveQualityRemissionGuide(loadId: string, guide: QualitySunatRemissionGuide) {
+    if (usesV1()) return qualityCommands.guide(loadId, guide);
     items = items.map((item) => {
         if (item.id !== loadId) return item;
         const exists = item.guiasRemision.some((g) => g.id === guide.id);
@@ -111,6 +116,9 @@ export function saveQualityRemissionGuide(loadId: string, guide: QualitySunatRem
 }
 
 export function createQualityExportLoad(newLoad: QualityDeliveryLoadItem) {
+    if (usesV1()) return qualityCommands.createLoad(newLoad);
     items = [newLoad, ...items];
     emit();
 }
+
+export function hydrateQualityOperations(value: QualityDeliveryLoadItem[]) { items = value; emit(); }

@@ -6,7 +6,7 @@ import SegmentedControl from "@/shared/components/SegmentedControl";
 import StatusBadge from "@/shared/components/StatusBadge";
 import { Button } from "@/shared/components/ui/button";
 import { formatDisplayDate, formatKg } from "@/shared/utils/format";
-import type { SettlementLoad } from "@/modules/purchase-settlement/purchaseSettlement.demo";
+import type { SettlementLoad } from "@/modules/purchase-settlement/purchaseSettlement.models";
 
 interface SettlementCampaignPaidModalProps {
     open: boolean;

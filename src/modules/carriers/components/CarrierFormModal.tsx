@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { X, Truck, Save, Building2, UserRound } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import { useModalForm } from "@/shared/hooks/useModalForm";
@@ -117,7 +118,7 @@ export default function CarrierFormModal({
 
                     <InputField {...bind("mtc", true)} label="MTC" maxLength={30} placeholder="Registro MTC" className="sm:col-span-3" />
                     {isPrivado ? (
-                        <InputField {...bind("cgn", true)} label="CGN" maxLength={30} placeholder="Número de CGN" className="sm:col-span-3" />
+                        !usesV1() && <InputField {...bind("cgn", true)} label="CGN" maxLength={30} placeholder="Número de CGN" className="sm:col-span-3" />
                     ) : (
                         <InputField {...bind("numero", true)} label="Teléfono" type="tel" inputMode="tel" maxLength={20} placeholder="Ej. 987654321" className="sm:col-span-3" />
                     )}

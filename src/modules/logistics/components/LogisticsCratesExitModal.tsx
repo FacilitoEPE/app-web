@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useState } from "react";
 import { Layers, Plus, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/shared/components/ui/textarea";
 import type { FileSource } from "@/shared/utils/fileSource";
 import { formatDisplayDate } from "@/shared/utils/format";
-import type { LogisticsCrateMovement, LogisticsLoad } from "@/modules/logistics/logistics.demo";
+import type { LogisticsCrateMovement, LogisticsLoad } from "@/modules/logistics/logistics.models";
 
 interface LogisticsCratesExitModalProps {
     open: boolean;
@@ -36,7 +37,7 @@ export default function LogisticsCratesExitModal({
     const [guiaSalidaArchivo, setGuiaSalidaArchivo] = useState<FileSource | null>(null);
     const [observaciones, setObservaciones] = useState("");
 
-    useEffect(() => {
+    useResetOnToggle(open, () => {
         if (!load || !open) return;
         const firstProv = load.proveedores[0];
         setProveedorNombre(firstProv?.proveedorNombre ?? "");
@@ -47,10 +48,10 @@ export default function LogisticsCratesExitModal({
         setCantidadDevuelta(
             firstProv ? String(firstProv.jabasCargadas + firstProv.jabasVacias) : "0",
         );
-        setGuiaSalidaNumero("EG01-000415");
+        setGuiaSalidaNumero("");
         setGuiaSalidaArchivo(null);
         setObservaciones("");
-    }, [load, open]);
+    });
 
     if (!load) return null;
 

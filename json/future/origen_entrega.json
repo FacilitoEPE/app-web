@@ -1,0 +1,26 @@
+[
+  {
+    "origenEntregaId": 1,
+    "coordinacionEntregaId": 1,
+    "cxpId": 1,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fincaId": 1
+  },
+  {
+    "origenEntregaId": 2,
+    "coordinacionEntregaId": 2,
+    "cxpId": 1,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fincaId": 1
+  },
+  {
+    "origenEntregaId": 3,
+    "coordinacionEntregaId": 1,
+    "cxpId": 2,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "fincaId": 2
+  }
+]

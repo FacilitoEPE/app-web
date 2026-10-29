@@ -75,15 +75,15 @@ function ProviderFincasView({ provider }: { provider: Proveedor }) {
     const at = (index: number | null) => (index === null ? null : providerFincas[index] ?? null);
     const editing = at(form.index);
 
-    const handleSave = (finca: Finca) => {
-        if (form.index === null) addFinca(provider.proveedorId, finca);
-        else updateFinca(provider.proveedorId, form.index, finca);
+    const handleSave = async (finca: Finca) => {
+        if (form.index === null) await addFinca(provider.proveedorId, finca);
+        else await updateFinca(provider.proveedorId, form.index, finca);
         setForm((current) => ({ ...current, open: false }));
         setSuccess({ open: true, mode: form.index === null ? "finca" : "finca-edit" });
     };
 
-    const handleDelete = () => {
-        if (deleting.index !== null) removeFinca(provider.proveedorId, deleting.index);
+    const handleDelete = async () => {
+        if (deleting.index !== null) await removeFinca(provider.proveedorId, deleting.index);
         setDeleting((current) => ({ ...current, open: false }));
     };
 

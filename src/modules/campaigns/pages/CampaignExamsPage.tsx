@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Eye, FlaskConical, Pencil, Plus, Trash2 } from "lucide-react";
@@ -90,7 +91,7 @@ export default function CampaignExamsPage() {
             }
             setLoadState({ status: "ready", campaign, relation });
             // Si el servicio de exámenes falla, la gestión sigue disponible con los exámenes registrados acá
-            getExamenesProveedor(relation.proveedorId).then(setApiExams).catch(() => setApiExams([]));
+            if (!usesV1()) getExamenesProveedor(relation.proveedorId).then(setApiExams).catch(() => setApiExams([]));
         } catch {
             setLoadState({ status: "error", message: "No se pudo cargar la campaña o el proveedor." });
         }
@@ -121,12 +122,12 @@ export default function CampaignExamsPage() {
 
     const openCreate = () => setModal({ open: true, mode: "create", exam: null });
 
-    const handleSave = (values: ExamValues) => {
+    const handleSave = async (values: ExamValues) => {
         if (modal.mode === "edit" && modal.exam && !modal.exam.fromApi) {
-            updateExam(relation.proveedorId, modal.exam.id, values);
+            await updateExam(relation.proveedorId, modal.exam.id, values);
             setSuccess({ open: true, mode: "edit" });
         } else {
-            addExam(relation.proveedorId, values);
+            await addExam(relation.proveedorId, values);
             setSuccess({ open: true, mode: "exam" });
         }
         setModal((current) => ({ ...current, open: false }));
@@ -246,8 +247,8 @@ export default function CampaignExamsPage() {
                 title="¿Eliminar examen?"
                 description={<>Se eliminará el examen <strong className="font-bold text-ink">{deleting.exam?.identificacionMuestra}</strong> de {name}. Esta acción no se puede deshacer.</>}
                 confirmLabel="Sí, eliminar"
-                onConfirm={() => {
-                    if (deleting.exam) removeExam(relation.proveedorId, deleting.exam.id);
+                onConfirm={async () => {
+                    if (deleting.exam) await removeExam(relation.proveedorId, deleting.exam.id);
                 }}
             />
 

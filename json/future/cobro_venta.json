@@ -1,0 +1,14 @@
+[
+  {
+    "cobroVentaId": 1,
+    "facturaVentaId": 1,
+    "fecha": "2026-10-29",
+    "monto": 100,
+    "medio": "TRANSFERENCIA",
+    "referencia": "CV-DEMO-1",
+    "comprobanteId": null,
+    "registradoPorUsuarioId": null,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  }
+]
