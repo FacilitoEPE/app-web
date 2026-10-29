@@ -18,5 +18,15 @@
     "observaciones": null,
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "entregaProgramadaId": 3,
+    "contratoVentaId": 3,
+    "destino": "Países Bajos, Rotterdam",
+    "fecha": "2026-11-15",
+    "kilosProgramados": 5000,
+    "observaciones": "Primera entrega programada de Palta Hass",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
   }
 ]

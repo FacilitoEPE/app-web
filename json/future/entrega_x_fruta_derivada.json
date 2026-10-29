@@ -14,5 +14,13 @@
     "kilosProgramados": 500,
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "entregaXFrutaDerivadaId": 3,
+    "entregaProgramadaId": 3,
+    "frutaDerivadaId": 3,
+    "kilosProgramados": 5000,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
   }
 ]

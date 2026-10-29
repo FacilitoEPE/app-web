@@ -52,7 +52,7 @@ describe('existing frontend with the future HTTP contract', () => {
     expect(getProviderLocalData().fincas[1][0].fincaId).toBe(1)
     expect(providerOperationalSummary(1)).toMatchObject({ kilosRecibidos: 580, mtd: 0.01 })
     expect(weeklyCampaignItems(1).map(row => row.kilosVariedad)).toEqual([1000, 500])
-    expect(weeklyCampaignItems(2)).toEqual([])
+    expect(weeklyCampaignItems(2).map(row => row.kilosVariedad)).toEqual([5000])
     const graph = operationsContext()
     const quality = projectQualityData(graph)
     expect(quality.loads).toHaveLength(2)
