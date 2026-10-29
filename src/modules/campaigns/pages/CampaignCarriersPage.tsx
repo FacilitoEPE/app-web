@@ -175,10 +175,20 @@ export default function CampaignCarriersPage() {
             secondary.push({ label: "Editar acuerdo de pago", icon: <Pencil size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setAgreement({ open: true, mode: "edit", row }) });
             secondary.push({ label: "Marcar saldo como pagado", icon: <CircleCheck size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setSettling({ open: true, row }) });
         }
+        const hasLockedAgreement = Boolean(acuerdo && isAgreementClosed(acuerdo));
         return {
             primary: [
                 { label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: () => setDetails({ open: true, row }) },
-                { label: "Desvincular", icon: <Link2Off size={18} strokeWidth={2.5} />, variant: "destructive", onClick: () => setUnlinking({ open: true, row }) },
+                ...(!hasLockedAgreement
+                    ? [
+                          {
+                              label: "Desvincular",
+                              icon: <Link2Off size={18} strokeWidth={2.5} />,
+                              variant: "destructive" as const,
+                              onClick: () => setUnlinking({ open: true, row }),
+                          },
+                      ]
+                    : []),
             ],
             secondary,
         };

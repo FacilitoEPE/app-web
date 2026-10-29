@@ -951,6 +951,12 @@ export default function BillingPage() {
                                                                 {saldo > 0 && (
                                                                     <Button
                                                                         size="sm"
+                                                                        disabled={!inv.numeroFacturaElectronica}
+                                                                        title={
+                                                                            !inv.numeroFacturaElectronica
+                                                                                ? "Debe emitir la factura electrónica antes de registrar un cobro."
+                                                                                : undefined
+                                                                        }
                                                                         onClick={() =>
                                                                             setCollectionTarget({
                                                                                 load,

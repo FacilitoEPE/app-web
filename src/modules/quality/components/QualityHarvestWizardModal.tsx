@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+    AlertTriangle,
     CheckCircle2,
     ClipboardCheck,
     FileCheck2,
@@ -122,6 +123,10 @@ export default function QualityHarvestWizardModal({
 
     if (!load) return null;
 
+    const hasMtdViolation = load.mtdRegistros.some((m) => m.mtdCalculado > 0.5);
+    const isNotApproved = load.estadoRevision !== "Aprobada para cosecha";
+    const isHarvestBlocked = hasMtdViolation || isNotApproved;
+
     const totalCosechado = avances.reduce((s, a) => s + a.kilosCosechados, 0);
     const totalJabas = avances.reduce((s, a) => s + a.jabas, 0);
 
@@ -172,7 +177,16 @@ export default function QualityHarvestWizardModal({
                         </Button>
                     )}
                     {step < 5 ? (
-                        <Button size="xl" onClick={() => setStep((s) => s + 1)}>
+                        <Button
+                            size="xl"
+                            disabled={isHarvestBlocked && step === 1}
+                            title={
+                                isHarvestBlocked && step === 1
+                                    ? "La cosecha está bloqueada por control fitosanitario (MTD > 0.5 o carga rechazada)."
+                                    : undefined
+                            }
+                            onClick={() => setStep((s) => s + 1)}
+                        >
                             Siguiente paso →
                         </Button>
                     ) : null}
@@ -189,13 +203,18 @@ export default function QualityHarvestWizardModal({
                         const Icon = item.icon;
                         const active = step === item.id;
                         const done = step > item.id;
+                        const isStepDisabled = isHarvestBlocked && item.id > 1;
                         return (
                             <button
                                 key={item.id}
                                 type="button"
-                                onClick={() => setStep(item.id)}
+                                disabled={isStepDisabled}
+                                onClick={() => !isStepDisabled && setStep(item.id)}
                                 className={cn(
-                                    "flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[12.5px] font-bold transition-all cursor-pointer",
+                                    "flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[12.5px] font-bold transition-all",
+                                    isStepDisabled
+                                        ? "cursor-not-allowed bg-card/60 text-ink-muted/50 opacity-60"
+                                        : "cursor-pointer",
                                     active
                                         ? "bg-brand text-white shadow-xs"
                                         : done
@@ -240,6 +259,14 @@ export default function QualityHarvestWizardModal({
                         title="Paso 1 · Revisión fitosanitaria y análisis de laboratorio"
                         aside="MTD Ceratitis y liberación de residuos"
                     >
+                        {isHarvestBlocked && (
+                            <div className="flex items-center gap-3 rounded-2xl border border-status-danger/40 bg-status-danger-surface p-4 text-[13px] font-semibold text-status-danger">
+                                <AlertTriangle size={20} className="shrink-0" strokeWidth={2.4} />
+                                <span>
+                                    Restricción Fitosanitaria SENASA: Uno o más registros superan el umbral límite de MTD (0.5000 moscas/trampa/día) o la carga se encuentra rechazada. La organización y avance de cosecha permanecen bloqueados.
+                                </span>
+                            </div>
+                        )}
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                             <InfoField
                                 label="Estado de liberación"
