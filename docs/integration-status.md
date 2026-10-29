@@ -4,6 +4,65 @@
 
 ---
 
+## Auditoría manual — 2026-10-29 · Parcial / bloqueada por entorno
+
+**Resultado:** no se acredita el funcionamiento integral de las 62 fichas V01–V62. Se recorrieron con Chrome las pantallas principales, pestañas accesibles y formularios indicados abajo, contra `http://localhost:5173` y el backend real configurado en `http://localhost:3000/`. No se activaron mocks, no se modificó código funcional, no se ejecutaron seeds ni se crearon/eliminaron registros de negocio. La sesión local se cerró y se restauró mediante el acceso de demostración.
+
+### Entorno comprobado
+
+- `.env` tiene `VITE_API_BASE_URL=http://localhost:3000/` y no define `VITE_API_CONTRACT=v1`; `usesV1()` selecciona legacy.
+- Lecturas reales: `GET /campanas`, `/frutas`, `/proveedores`, `/clientes-negocio` y `/empresas-transporte-externo`: HTTP 200 con `[]`. CORS de los cuatro últimos permite `http://localhost:5173`.
+- `GET /v1/campanas`: HTTP 404. Hay implementación V1 en el árbol de trabajo del backend, pero su presencia en disco no acredita que el proceso del puerto 3000 la esté sirviendo.
+- El catálogo de frutas vacío impide crear una campaña desde el formulario. Sin campaña, participaciones, contratos, fincas y unidades no se pueden recorrer los procesos dependientes con datos válidos.
+- La documentación histórica de este archivo no es evidencia de pruebas del servidor actual. La afirmación anterior de «backend futuro todavía no implementado» debe entenderse como antecedente, no como evaluación del código backend actual.
+
+### Cobertura manual y pendientes
+
+| Fichas / vista | Resultado observado | Cobertura pendiente |
+|---|---|---|
+| V01 · Acceso | Cierre de sesión con confirmación; una ruta protegida redirige a `/login`; administrador permite Ingresar y Confirmar con credenciales/código vacíos, conforme a sesión simulada documentada. Recuperación abre formulario; Recuperar vacío no muestra avance ni error visible. | Acceso de chofer, recuperación completa y autenticación real (esta última fuera del contrato actual). |
+| V02 · Módulos | Selector muestra los ocho módulos; navegación a proveedores desde su tarjeta correcta. | No se afirma prueba exhaustiva de cada control transversal. |
+| V03, V05 · Comercial | Clientes vacío; alta abre y valida todos los obligatorios sin cerrar; Cancelar cierra. Pestaña Contratos con indicadores y lista vacíos. | Alta válida, edición, persistencia, exportación con datos. |
+| V04, V06–V08 · Cliente, participación, contratos y entregas | **Bloqueado; no ejecutado** por ausencia de registros relacionados. | Todos los flujos con datos. |
+| V09 · Campañas | Indicadores y listado vacíos; alta abre; envío vacío muestra errores en nombre, kilos, fechas y fruta. Selector informa «No hay frutas registradas». Cancelar cierra. | Creación válida, filtros con resultados, estados, edición y persistencia. |
+| V10 · Detalle de campaña | URL abierta inicialmente `/campaigns/2` muestra «No se pudo cargar la campaña»; Volver a campañas lleva al listado vacío. | Detalle válido y reintento después de recuperar datos. |
+| V11–V20, V52 · Operación y cierre de campaña | **Bloqueado; no ejecutado**: proveedores, entrevistas, exámenes, certificación/ampliación/pagos, transportistas, entregas, coordinación, programa semanal y cierre requieren campaña válida y relaciones. | Todos los flujos con datos. |
+| V21 · Proveedores | Listado e indicadores vacíos; Registrar proveedor abre; envío vacío valida obligatorios y adjunto de identidad; Cancelar cierra. | Alta válida, persistencia, búsquedas con resultados. |
+| V22–V24 · Detalle, fincas y certificados | **Bloqueado; no ejecutado** por ausencia de proveedor. | CRUD, validaciones completas y adjuntos según alcance FC14. |
+| V25, V27–V29 · Transporte | Listado vacío; alta abre y valida campos obligatorios. Pestañas globales Vehículos, Choferes y Requerimientos/cotizaciones abren vacías. Nuevo vehículo/chofer y Enviar requerimiento deshabilitados sin transportistas. | CRUD válido, edición, persistencia, cotizaciones y asignaciones. |
+| V26, V30 · Detalle y solicitud | **Bloqueado; no ejecutado** por ausencia de transportistas. | Todos los flujos con datos. |
+| V31 · Calidad | Alcance Exportador vacío; Agregar campaña abre; selector indica «No hay campañas en proceso pendientes por agregar»; envío deshabilitado. | Alcance Industria y operación con campaña elegible. |
+| V32–V37 · Calidad interna | **Bloqueado; no ejecutado**: resumen, análisis/revisión, cargas, detalle y guías necesitan campaña y entregas. | Todos los flujos con datos. |
+| V38 · Logística | Resumen e indicadores vacíos, sin error de renderizado visible. | Filtros con datos y exportación. |
+| V39–V40 · Cargas y entrega | **Bloqueado; no ejecutado** por ausencia de cargas. | Recepción, estados, desglose y envases. |
+| V41 · Facturación | Listado de campañas vacío, sin error de renderizado visible. | Búsqueda con resultados. |
+| V42–V44 · Facturas y cobros | **Bloqueado; no ejecutado** por ausencia de campaña/clientes/cargas. | Facturas, ajustes, cobros y persistencia. |
+| V45, V49 · Liquidación y UIT | Campañas vacías; Control UIT abre con cero personas; parámetros y texto contradictorios (QA-02). | Acumulados y límites con datos válidos. |
+| V46–V48, V50–V51 · Liquidaciones y pagos | **Bloqueado; no ejecutado** por ausencia de cargas/proveedores/transportistas. | Liquidaciones, adelantos y pagos. |
+| V53–V62 · Chofer | `/chofer` muestra «Registra un chofer y coordina una entrega para utilizar el portal» en escritorio y en 390×844; estado vacío legible y sin desbordamiento visible en móvil. | Mis campañas/cargas, mapa, carga, despacho, recepción, descarte, guía y cierre no ejecutados. |
+
+### Hallazgos reproducibles
+
+| ID | Prioridad | Pasos y resultado actual | Resultado esperado / siguiente verificación |
+|---|---|---|---|
+| QA-01 | P1 · Bloqueo del testing V1 | Abrir configuración y consultar `/v1/campanas`: falta selección V1 y el servidor devuelve 404. Las colecciones legacy comprobadas están vacías. | Identificar la instancia V1 que se desea probar y disponer de un escenario de prueba coherente. No cambiar a V1 mientras el endpoint siga ausente. |
+| QA-02 | P2 · Inconsistencia funcional visible | Liquidación de Compra → Control UIT por proveedor: «Valor UIT 2026: S/ 0», «Límite máximo (0 UIT): S/ 0», pero título y pie indican 75 UIT y el pie S/ 401,250. | Cargar parámetros coherentes o mostrar indisponibilidad explícita. No presentar cero como parámetro válido. Evidencia de código: `purchaseSettlement.models.ts` inicializa los tres valores a cero; `SettlementUitControlModal.tsx` combina variables con texto fijo. No se verificó normativa tributaria; se reporta la contradicción de la propia UI. |
+| QA-03 | P3 · Etiquetas de filtros | Comercial → Contratos: filtros campaña y cliente muestran `all`; el desplegable de campaña sí ofrece «Todas las campañas». Transporte → Vehículos, Choferes y Requerimientos repite `all`. | Mostrar las etiquetas españolas de las opciones seleccionadas. Evidencia visual y árbol accesible coinciden; revisar `SelectValue` y el mapeo de opciones. |
+| QA-04 | P3 · Retroalimentación | Acceso → ¿Olvidó su contraseña? → Recuperar con correo vacío: permanece en el formulario sin error visible. | Validación explícita del obligatorio o señal de indisponibilidad del flujo simulado. No se envió correo ni se cambió contraseña. |
+
+No se consideran defectos nuevos la sesión simulada ni FC14, pues son límites documentados. El detalle `/campaigns/2` no acredita una campaña existente: se registró su manejo del error, no una pérdida de datos.
+
+### Verificación complementaria
+
+- `pnpm test`: **52 archivos / 266 pruebas aprobadas**. Son pruebas automatizadas, no sustituyen el recorrido manual ni acreditan persistencia contra este servidor.
+- `pnpm build`: **aprobado**, incluidos tipos; advertencia de bundle principal de aproximadamente 1.87 MB sin comprimir (530 KB gzip).
+- Las primeras ejecuciones restringidas fallaron al resolver pnpm por DNS; las ejecuciones posteriores con acceso autorizado completaron correctamente.
+- Sin archivos de código modificados, no corresponde ESLint sobre fuentes tocadas. Cambios de esta auditoría limitados a este documento.
+
+**Para completar el encargo:** confirmar URL/proceso que sirve V1 y habilitar en ese entorno un conjunto de datos de prueba con campaña, proveedores/fincas, clientes/requerimientos/contratos, entregas, transportistas/vehículos/choferes y cargas en diferentes etapas. No se ejecutó `seed-v1.mjs`: contiene truncado de tablas y no procede usarlo como preparación automática sobre la base del usuario.
+
+---
+
 ## 4.1. Integración V1 de las pantallas — 2026-10-29
 
 **Completo para el consumo HTTP de datos y operaciones soportadas por el contrato; backend futuro todavía no implementado.** Con `VITE_API_BASE_URL=/mock-api/` las pantallas consumen automáticamente `/mock-api/v1` y `json/future/`. Con una URL real, activar `VITE_API_CONTRACT=v1`; sin esa opción se conserva la API actual. `legacy` explícito mantiene la compatibilidad anterior.
