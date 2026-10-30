@@ -352,21 +352,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                     </div>
                 </div>
 
-                {providerType === "acopio" && (
-                    <InputField
-                        id="link-provider-fruta-convencional"
-                        label="Fruta convencional estimada (Acopio)"
-                        value={draft.frutaConvencionalEstimado === null ? "" : String(draft.frutaConvencionalEstimado)}
-                        onChange={(val) => updateDraft("frutaConvencionalEstimado", val.trim() === "" ? null : Number(val))}
-                        placeholder="Ej. 1500"
-                        step="0.001"
-                        min={0}
-                        unit="KG"
-                        optional
-                        disabled={isLocked}
-                    />
-                )}
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     {renderField({ field: "precioEstimado", label: "Precio estimado o acordado", step: "0.01", placeholder: "0.00", leading: currencySymbol })}
                     <FormField label="Moneda" required>

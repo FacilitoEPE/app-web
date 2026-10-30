@@ -45,7 +45,7 @@ import CommercialClientCampaignDetailModal, {
 } from "@/modules/commercial-planning/components/CommercialClientCampaignDetailModal";
 
 
-export default function CommercialContractsSubView() {
+export default function CommercialContractsSubView({ clientId }: { clientId?: number }) {
     const navigate = useNavigate();
     const contractRecords = useCampaignContractRecords();
     const deliveryRecords = useCampaignDeliveryRecords();
@@ -74,6 +74,7 @@ export default function CommercialContractsSubView() {
                 for (const campana of campanas) {
                     const rels = await getClientesNegocioCampana(campana.campaniaId);
                     for (const rel of rels) {
+                        if (clientId !== undefined && rel.clienteNegocioId !== clientId) continue;
                         const contracts =
                             contractRecords[`${campana.campaniaId}:${rel.clienteNegocioCampanaId}`] ?? [];
                         const deliveries = contracts.flatMap((c) =>
@@ -123,7 +124,7 @@ export default function CommercialContractsSubView() {
         return () => {
             active = false;
         };
-    }, [contractRecords, deliveryRecords, retry]);
+    }, [contractRecords, deliveryRecords, retry, clientId]);
 
     const rows = apiRows;
 
@@ -253,7 +254,7 @@ export default function CommercialContractsSubView() {
                 <div className="w-full sm:w-60">
                     <Select value={campaignFilter} onValueChange={(v) => setCampaignFilter(v ?? "all")}>
                         <SelectTrigger aria-label="Filtrar por campaña">
-                            <SelectValue placeholder="Todas las campañas" />
+                            <SelectValue>{campaignFilter === "all" ? "Todas las campañas" : campaignFilter}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Todas las campañas</SelectItem>
@@ -265,10 +266,10 @@ export default function CommercialContractsSubView() {
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="w-full sm:w-60">
+                <div hidden={clientId !== undefined} className="w-full sm:w-60">
                     <Select value={clientFilter} onValueChange={(v) => setClientFilter(v ?? "all")}>
                         <SelectTrigger aria-label="Filtrar por cliente">
-                            <SelectValue placeholder="Todos los clientes" />
+                            <SelectValue>{clientFilter === "all" ? "Todos los clientes" : clientFilter}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Todos los clientes</SelectItem>

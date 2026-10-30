@@ -19,7 +19,8 @@
     "vigenciaDesde": "2026-10-01",
     "observaciones": null,
     "historialCobertura": [],
-    "tipoCertificacion": "Global GAP"
+    "tipoCertificacion": "Global GAP",
+    "kilosIniciales": null
   },
   {
     "createdAt": "2026-10-29T13:00:00.000Z",
@@ -41,6 +42,7 @@
     "vigenciaDesde": "2026-10-15",
     "observaciones": "Auditoría inicial aprobada",
     "historialCobertura": [],
-    "tipoCertificacion": "Global GAP"
+    "tipoCertificacion": "Global GAP",
+    "kilosIniciales": null
   }
 ]

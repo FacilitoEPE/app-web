@@ -186,7 +186,7 @@ export default function CampaignInterviewsPage() {
                                                 {record.values.haCultivo} ha
                                                 {record.values.estimacionCosechaKg ? ` · ${formatCampaignNumber(Number(record.values.estimacionCosechaKg))} kg est.` : ""}
                                             </span>
-                                            <span className="mt-0.5 text-[12px] font-medium text-ink-muted">{record.values.densidadPlantacion} plantas/ha · {record.values.frecuenciaRiego} riegos/día</span>
+                                            <span className="mt-0.5 text-[12px] font-medium text-ink-muted">{[record.values.densidadPlantacion ? record.values.densidadPlantacion + " plantas/ha" : "", record.values.frecuenciaRiego].filter(Boolean).join(" · ") || "Sin datos agronómicos"}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>

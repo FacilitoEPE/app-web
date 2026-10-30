@@ -21,6 +21,7 @@ export interface SettlementLinkedPerson {
     numeroDocumento: string;
     vinculo: string;
     acumuladoAnualPen: number;
+    acumuladosPorAnio?: Record<string, number>;
 }
 export interface SettlementProviderEntry {
     kilosReconocidos?: number;

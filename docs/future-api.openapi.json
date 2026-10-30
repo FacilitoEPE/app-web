@@ -17,7 +17,7 @@
   ],
   "x-source": {
     "path": "reference/agro-schema/03_schema_total.sql",
-    "sha256": "5094ec9efdab160dcf7adafd5b29858c9cbe2caedc44796412ed3e79a9ea8963",
+    "sha256": "bc81eab87d0b6a6b0dbabb9f47d32f11ef4ffb04eeaff9efed85984c8cc60099",
     "date": "2026-10-29"
   },
   "x-database": {
@@ -38423,7 +38423,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "moneda": {
             "type": "string",
@@ -38640,6 +38640,15 @@
               "Rainforest Alliance",
               null
             ]
+          },
+          "kilosIniciales": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-column": "kilos_iniciales",
+            "minimum": 0,
+            "multipleOf": 0.001
           }
         },
         "required": [
@@ -38662,7 +38671,8 @@
           "vigenciaDesde",
           "observaciones",
           "historialCobertura",
-          "tipoCertificacion"
+          "tipoCertificacion",
+          "kilosIniciales"
         ],
         "x-table": "certificado_campana"
       },
@@ -40517,7 +40527,7 @@
           "umbralAlerta": {
             "type": "number",
             "x-column": "umbral_alerta",
-            "multipleOf": 0.0001,
+            "multipleOf": 0.00009999999999999999,
             "default": 0.9
           },
           "createdAt": {
@@ -40975,7 +40985,7 @@
               "null"
             ],
             "x-column": "precio_kg",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "moneda": {
             "type": "string",
@@ -42183,7 +42193,7 @@
               "null"
             ],
             "x-column": "resultado_numerico",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "unidad": {
             "type": [
@@ -42269,12 +42279,12 @@
           "valor": {
             "type": "number",
             "x-column": "valor",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "limiteAplicado": {
             "type": "number",
             "x-column": "limite_aplicado",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "archivoId": {
             "type": [
@@ -42478,7 +42488,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg_aplicado",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "jabasCargadas": {
             "type": "integer",
@@ -43577,7 +43587,7 @@
           "precioKgAplicado": {
             "type": "number",
             "x-column": "precio_kg_aplicado",
-            "multipleOf": 0.0001,
+            "multipleOf": 0.00009999999999999999,
             "readOnly": true
           },
           "moneda": {
@@ -43993,7 +44003,7 @@
           "precioKgAplicado": {
             "type": "number",
             "x-column": "precio_kg_aplicado",
-            "multipleOf": 0.0001,
+            "multipleOf": 0.00009999999999999999,
             "readOnly": true
           },
           "moneda": {
@@ -44637,7 +44647,7 @@
           "umbralAlerta": {
             "type": "number",
             "x-column": "umbral_alerta",
-            "multipleOf": 0.0001,
+            "multipleOf": 0.00009999999999999999,
             "default": 0.9
           }
         },
@@ -44668,7 +44678,7 @@
           "umbralAlerta": {
             "type": "number",
             "x-column": "umbral_alerta",
-            "multipleOf": 0.0001,
+            "multipleOf": 0.00009999999999999999,
             "default": 0.9
           }
         },
@@ -46080,7 +46090,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "moneda": {
             "type": "string",
@@ -46178,7 +46188,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "moneda": {
             "type": "string",
@@ -46815,6 +46825,15 @@
               "Rainforest Alliance",
               null
             ]
+          },
+          "kilosIniciales": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-column": "kilos_iniciales",
+            "minimum": 0,
+            "multipleOf": 0.001
           }
         },
         "required": [
@@ -46948,6 +46967,15 @@
               "Rainforest Alliance",
               null
             ]
+          },
+          "kilosIniciales": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-column": "kilos_iniciales",
+            "minimum": 0,
+            "multipleOf": 0.001
           }
         },
         "required": [],
@@ -47515,7 +47543,7 @@
               "null"
             ],
             "x-column": "precio_kg",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "moneda": {
             "type": "string",
@@ -47600,7 +47628,7 @@
               "null"
             ],
             "x-column": "precio_kg",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "moneda": {
             "type": "string",
@@ -50100,7 +50128,7 @@
               "null"
             ],
             "x-column": "resultado_numerico",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "unidad": {
             "type": [
@@ -50173,7 +50201,7 @@
               "null"
             ],
             "x-column": "resultado_numerico",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "unidad": {
             "type": [
@@ -50242,12 +50270,12 @@
           "valor": {
             "type": "number",
             "x-column": "valor",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "limiteAplicado": {
             "type": "number",
             "x-column": "limite_aplicado",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "trampaReferencia": {
             "type": [
@@ -50282,12 +50310,12 @@
           "valor": {
             "type": "number",
             "x-column": "valor",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "limiteAplicado": {
             "type": "number",
             "x-column": "limite_aplicado",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "trampaReferencia": {
             "type": [
@@ -50514,7 +50542,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg_aplicado",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "jabasCargadas": {
             "type": "integer",
@@ -50578,7 +50606,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg_aplicado",
-            "multipleOf": 0.0001
+            "multipleOf": 0.00009999999999999999
           },
           "jabasCargadas": {
             "type": "integer",

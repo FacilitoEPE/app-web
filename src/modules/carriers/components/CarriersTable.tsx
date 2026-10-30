@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, Eye, Truck, UserRound, UserPlus2, Trash2, ListFilter, Building2, MapPin } from "lucide-react";
+import { Pencil, Eye, Truck, UserRound, Trash2, ListFilter, Building2, MapPin } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
-import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { Badge } from "@/shared/components/ui/badge";
 import TableCard from "@/shared/components/TableCard";
@@ -20,14 +19,7 @@ import RowActions, { type RowAction } from "@/shared/components/RowActions";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import CarrierSuccessModal, { type CarrierSuccessMode } from "./CarrierSuccessModal";
 import CarrierFormModal from "./CarrierFormModal";
-import CarrierVehicleModal from "./CarrierVehicleModal";
-import CarrierDriverModal from "./CarrierDriverModal";
 import { CARRIER_TIPOS, carrierIdentification, type CarrierFormValues, type CarrierProfile } from "@/modules/carriers/carrierProfile.utils";
-import { useCarrierQuotations } from "@/modules/carriers/carrierQuotations.store";
-import { toDriverInput, toVehicleInput } from "@/modules/carriers/carrierRecords.utils";
-import type { DriverInput, VehicleInput } from "@/modules/carriers/api/carrier.api";
-import type { DriverFormValues } from "./CarrierDriverModal";
-import type { VehicleFormValues } from "./CarrierVehicleModal";
 import type { TableExport } from "@/shared/utils/exportTable";
 import { paginate } from "@/shared/utils/paginate";
 
@@ -38,28 +30,20 @@ interface CarriersTableProps {
     isLoading: boolean;
     hasActiveFilters: boolean;
     onClearFilters: () => void;
-    selectedIds: Set<number>;
-    onToggleRow: (id: number) => void;
-    onToggleAll: (ids: number[]) => void;
     onDelete: (id: number) => void;
     onUpdateCarrier: (id: number, values: CarrierFormValues) => Promise<void>;
-    onCreateVehicle: (carrierId: number, values: VehicleInput) => Promise<void>;
-    onCreateDriver: (carrierId: number, values: DriverInput) => Promise<void>;
 }
 
-export default function CarriersTable({ data, isLoading, hasActiveFilters, onClearFilters, selectedIds, onToggleRow, onToggleAll, onDelete, onUpdateCarrier, onCreateVehicle, onCreateDriver }: CarriersTableProps) {
+export default function CarriersTable({ data, isLoading, hasActiveFilters, onClearFilters, onDelete, onUpdateCarrier }: CarriersTableProps) {
     const navigate = useNavigate();
-    const quotations = useCarrierQuotations();
     const [page, setPage] = useState(1);
     const [viewMode, setViewMode] = useState<TableViewMode>("table");
 
     const fleetSummary = (row: CarrierProfile) => {
         const vCount = row.vehiculos.length;
         const dCount = row.choferes.length;
-        const qCount = quotations.filter((q) => q.carrierId === row.id).length;
         return {
             fleetLabel: `${vCount} ${vCount === 1 ? "vehículo" : "vehículos"} · ${dCount} ${dCount === 1 ? "chofer" : "choferes"}`,
-            quotesLabel: `${qCount} ${qCount === 1 ? "cotización" : "cotizaciones"}`,
         };
     };
 
@@ -79,8 +63,6 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
         ]),
     });
     const [editingCarrierId, setEditingCarrierId] = useState<number | null>(null);
-    const [vehicleCarrierId, setVehicleCarrierId] = useState<number | null>(null);
-    const [driverCarrierId, setDriverCarrierId] = useState<number | null>(null);
     const [deleting, setDeleting] = useState<{ open: boolean; carrier: CarrierProfile | null }>({ open: false, carrier: null });
     const [success, setSuccess] = useState<{ open: boolean; mode: CarrierSuccessMode }>({ open: false, mode: "carrier-updated" });
 
@@ -93,27 +75,22 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
             { label: "Eliminar", icon: <Trash2 size={18} strokeWidth={2.5} />, variant: "destructive", onClick: () => setDeleting({ open: true, carrier: row }) },
         ];
         const secondary: RowAction[] = [
-            { label: "Registrar vehículo", icon: <Truck size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setVehicleCarrierId(row.id) },
-            { label: "Registrar chofer", icon: <UserPlus2 size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setDriverCarrierId(row.id) },
+            { label: "Vehículos", icon: <Truck size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => navigate("/transportistas/" + row.id + "?tab=vehiculos") },
+            { label: "Choferes", icon: <UserRound size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => navigate("/transportistas/" + row.id + "?tab=choferes") },
         ];
         return { primary, secondary };
     };
 
     const editingCarrier = data.find((row) => row.id === editingCarrierId) ?? null;
-    const vehicleCarrier = data.find((row) => row.id === vehicleCarrierId) ?? null;
-    const driverCarrier = data.find((row) => row.id === driverCarrierId) ?? null;
 
     const { pageCount, currentPage, visible: visibleData } = paginate(data, page);
-    const visibleIds = visibleData.map((row) => row.id);
-    const selectedOnPage = visibleIds.filter((id) => selectedIds.has(id)).length;
-    const allOnPageSelected = visibleData.length > 0 && selectedOnPage === visibleData.length;
 
     return (
         <>
             <TableCard
                 icon={<Truck size={24} strokeWidth={2.5} />}
                 title="Transportistas Registrados"
-                description="Consulta a los transportistas y selecciónalos para enviarles un requerimiento."
+                description="Consulta a los transportistas y accede a sus vehículos y choferes."
                 headerRight={
                     <TableToolbar>
                         <TableCountPill icon={<Truck size={16} strokeWidth={2.5} className="text-brand" />} count={data.length} singular="transportista" plural="transportistas" />
@@ -149,7 +126,6 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
                                 icon={row.tipo === "privado" ? <UserRound size={18} strokeWidth={2} /> : <Building2 size={18} strokeWidth={2} />}
                                 title={
                                     <span className="flex items-center gap-2">
-                                        <Checkbox checked={selectedIds.has(row.id)} onCheckedChange={() => onToggleRow(row.id)} aria-label={`Seleccionar ${row.nombre}`} />
                                         {row.nombre}
                                     </span>
                                 }
@@ -172,14 +148,6 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
                     <Table>
                         <TableHeader className={TABLE_HEAD_BG}>
                             <TableRow className="border-b border-border hover:bg-transparent">
-                                <TableHead className="w-12 px-6 h-14">
-                                    <Checkbox
-                                        checked={allOnPageSelected}
-                                        indeterminate={selectedOnPage > 0 && !allOnPageSelected}
-                                        onCheckedChange={() => onToggleAll(visibleIds)}
-                                        aria-label="Seleccionar todos"
-                                    />
-                                </TableHead>
                                 <TableHead className="text-ink font-semibold h-14">Transportista</TableHead>
                                 <TableHead className="text-ink font-semibold h-14">Tipo</TableHead>
                                 <TableHead className="text-ink font-semibold h-14">MTC</TableHead>
@@ -194,9 +162,6 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
                                 const fInfo = fleetSummary(row);
                                 return (
                                     <TableRow key={row.id} className="border-b border-border hover:bg-surface-page/60 transition-colors">
-                                        <TableCell className="px-6">
-                                            <Checkbox checked={selectedIds.has(row.id)} onCheckedChange={() => onToggleRow(row.id)} aria-label={`Seleccionar ${row.nombre}`} />
-                                        </TableCell>
                                         <TableCell className="h-20">
                                             <TableRowLead
                                                 icon={row.tipo === "privado" ? <UserRound size={20} strokeWidth={2} /> : <Building2 size={20} strokeWidth={2} />}
@@ -213,7 +178,6 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
                                         <TableCell>
                                             <div className="flex flex-col">
                                                 <span className="text-[13px] font-semibold text-ink">{fInfo.fleetLabel}</span>
-                                                <span className="mt-0.5 text-[11.5px] font-medium text-ink-muted">{fInfo.quotesLabel}</span>
                                             </div>
                                         </TableCell>
                                         <TableCell>
@@ -259,28 +223,6 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
                     await onUpdateCarrier(editingCarrier.id, values);
                     setEditingCarrierId(null);
                     showSuccess("carrier-updated");
-                }}
-            />
-            <CarrierVehicleModal
-                open={vehicleCarrierId !== null}
-                onOpenChange={(open) => !open && setVehicleCarrierId(null)}
-                carrier={vehicleCarrier}
-                onSuccess={async (values: VehicleFormValues) => {
-                    if (!vehicleCarrier) return;
-                    await onCreateVehicle(vehicleCarrier.id, toVehicleInput(values));
-                    setVehicleCarrierId(null);
-                    showSuccess("vehicle-created");
-                }}
-            />
-            <CarrierDriverModal
-                open={driverCarrierId !== null}
-                onOpenChange={(open) => !open && setDriverCarrierId(null)}
-                carrier={driverCarrier}
-                onSuccess={async (values: DriverFormValues) => {
-                    if (!driverCarrier) return;
-                    await onCreateDriver(driverCarrier.id, toDriverInput(values));
-                    setDriverCarrierId(null);
-                    showSuccess("driver-created");
                 }}
             />
             <ConfirmModal

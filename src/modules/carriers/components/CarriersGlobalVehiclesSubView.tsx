@@ -195,7 +195,7 @@ export default function CarriersGlobalVehiclesSubView({
                 <div className="w-full sm:w-72">
                     <Select value={carrierFilter} onValueChange={(v) => setCarrierFilter(v ?? "all")}>
                         <SelectTrigger aria-label="Filtrar por transportista">
-                            <SelectValue placeholder="Todos los transportistas" />
+                            <SelectValue>{carrierFilter === "all" ? "Todos los transportistas" : carriers.find(c => String(c.id) === carrierFilter)?.nombre ?? "Transportista no disponible"}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Todos los transportistas</SelectItem>

@@ -45,7 +45,7 @@ export default function DriverRouteMapModal({ open, onOpenChange, load }: Driver
         waypoints ? `&waypoints=${encodeURIComponent(waypoints)}` : ""
     }&travelmode=driving`;
 
-    const totalKilosFincas = load.fincas.reduce((sum, f) => sum + f.kilosEstimados, 0);
+    const totalKilosFincas = load.fincas.every(f => f.kilosEstimados !== null) ? load.fincas.reduce((sum, f) => sum + (f.kilosEstimados ?? 0), 0) : null;
 
     return (
         <AppModal
@@ -73,7 +73,7 @@ export default function DriverRouteMapModal({ open, onOpenChange, load }: Driver
                 <SummaryBar
                     items={[
                         { label: "Fincas de recojo", value: `${load.fincas.length} punto(s)` },
-                        { label: "Carga estimada", value: `${formatKg(totalKilosFincas)} kg`, tone: "brand" },
+                        { label: "Carga por fincas", value: totalKilosFincas === null ? "Sin desglose por finca" : formatKg(totalKilosFincas) + " kg", tone: "brand" },
                         { label: "Unidad asignada", value: load.placa },
                     ]}
                 />
@@ -107,7 +107,7 @@ export default function DriverRouteMapModal({ open, onOpenChange, load }: Driver
                                                 {finca.nombre}
                                             </span>
                                             <span className="rounded-full bg-brand-surface px-2.5 py-0.5 text-[11px] font-bold text-brand">
-                                                {formatKg(finca.kilosEstimados)} kg
+                                                {finca.kilosEstimados === null ? "Sin desglose" : formatKg(finca.kilosEstimados) + " kg"}
                                             </span>
                                         </div>
                                         <p className="text-[12px] font-medium text-ink-body">{finca.productor}</p>

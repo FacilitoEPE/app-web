@@ -236,8 +236,8 @@ export default function CampaignInterviewModal({
                         {isViewOnly ? (
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <InfoField label="Densidad de plantación" value={agronomic.densidadPlantacion} />
-                                <InfoField label="Distanciamiento" value={agronomic.distanciamiento} suffix="m" />
-                                <InfoField label="Frecuencia de riego" value={agronomic.frecuenciaRiego} suffix="/día" />
+                                <InfoField label="Distanciamiento" value={agronomic.distanciamiento} />
+                                <InfoField label="Frecuencia de riego" value={agronomic.frecuenciaRiego} />
                                 <InfoField label="Nombre de aplicación" value={agronomic.nombreAplicacion} />
                                 <InfoField label="Aplicaciones al año" value={agronomic.aplicacionesAlAno} suffix="/año" />
                             </div>

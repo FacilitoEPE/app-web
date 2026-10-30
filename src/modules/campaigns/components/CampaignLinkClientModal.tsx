@@ -206,7 +206,7 @@ export default function CampaignLinkClientModal({ open, onOpenChange, onSave, ca
                         </FormField>
                     ) : null}
 
-                    <InputField id="client-participation-quantity" label="Cantidad" required unit="kg" min={0} step="0.001" placeholder="0.00" value={draft.cantidadKg} error={errors.cantidadKg} onChange={(value) => update("cantidadKg", value)} />
+                    <InputField id="client-participation-quantity" label="Cantidad estimada requerida" required hint="Estimación comercial. Los kilos acordados se definen en los contratos." unit="kg" min={0} step="0.001" placeholder="0.00" value={draft.cantidadKg} error={errors.cantidadKg} onChange={(value) => update("cantidadKg", value)} />
 
                     <FormField error={errors.fichaTecnica} className="sm:col-span-2">
                         <FileDropzone label="Ficha técnica" variant="horizontal" required hint="PDF, Excel o imagen · Máx. 10 MB" file={fichaTecnica} onChange={(file) => { setFichaTecnica(file); setErrors((current) => ({ ...current, fichaTecnica: undefined })); setFormError(undefined); }} />

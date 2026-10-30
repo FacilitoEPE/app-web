@@ -14,6 +14,10 @@ const values = (overrides: Partial<FincaFormValues> = {}): FincaFormValues => ({
 });
 
 describe("validateFinca", () => {
+    it("exige ambas coordenadas para V1 y acepta valores válidos", () => {
+        expect(validateFinca(values(), [], true)).toMatchObject({ latitud: "Ingresa la latitud.", longitud: "Ingresa la longitud." });
+        expect(validateFinca(values({ latitud: "-5.2", longitud: "-80.6" }), [], true)).toEqual({});
+    });
     it("acepta una finca completa sin coordenadas", () => {
         expect(validateFinca(values())).toEqual({});
     });

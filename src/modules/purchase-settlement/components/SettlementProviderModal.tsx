@@ -1,3 +1,5 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { annualBeforeSettlement } from '@/modules/purchase-settlement/settlementUit.utils';
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { useState } from "react";
 import { AlertTriangle, FileSpreadsheet, Save, Scale, UserPlus, X } from "lucide-react";
@@ -97,7 +99,9 @@ export default function SettlementProviderModal({
 
     const priceNum = Number(precioKg) || 0;
     const totalCompra = (providerEntry.kilosReconocidos ?? providerEntry.kilosCargados) * priceNum;
-    const previoPen = selectedPerson?.acumuladoAnualPen ?? 0;
+    const previoPen = usesV1()
+        ? annualBeforeSettlement(providerEntry, selectedPerson?.id ?? '', Number(fechaLiquidacion.slice(0, 4)) || new Date().getFullYear())
+        : selectedPerson?.acumuladoAnualPen ?? 0;
     const proyectadoPen = previoPen + totalCompra;
     const proyectadoUit = proyectadoPen / UIT_VALOR_2026;
     const pctUit = Math.min(100, (proyectadoPen / UIT_LIMITE_SOLES) * 100);

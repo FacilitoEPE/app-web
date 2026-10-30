@@ -115,6 +115,7 @@ CREATE TABLE "certificado_campana" (
   "observaciones" text,
   "historial_cobertura" jsonb NOT NULL DEFAULT '[]'::jsonb,
   "tipo_certificacion" varchar(80),
+  "kilos_iniciales" numeric(14,3) CHECK (kilos_iniciales >= 0),
   CONSTRAINT "PK_1856de725430dd73744896b9e4f" PRIMARY KEY (certificado_id),
   CHECK (moneda IS NULL OR moneda IN ('PEN','USD','EUR')),
   CHECK (jsonb_typeof(historial_cobertura) = 'array'),

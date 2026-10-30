@@ -96,7 +96,7 @@ export const campaignCommands = {
         assertNoNewFiles(files);
         const g = operationsContext(), parties = producers.map(p => { const row = g.participations.find(r => r.cxpId === Number(p.id) && r.campaniaId === campaignId); if (!row)
             throw new Error('Productor no disponible en la campaña.'); return row; });
-        const body: CreateCertificadoCampanaV1 = { nombre: value.nombre, tipoCertificacion: value.tipo as CreateCertificadoCampanaV1['tipoCertificacion'], organismo: value.organismoEmisor, vigenciaDesde: value.validoDesde || null, fechaVencimiento: value.validoHasta || null, costo: Number(value.costo), moneda: currency(value.moneda), observaciones: value.observaciones };
+        const body: CreateCertificadoCampanaV1 = { nombre: value.nombre, tipoCertificacion: value.tipo as CreateCertificadoCampanaV1['tipoCertificacion'], organismo: value.organismoEmisor, vigenciaDesde: value.validoDesde || null, fechaVencimiento: value.validoHasta || null, costo: Number(value.costo), kilosIniciales: Number(value.kilosIniciales), moneda: currency(value.moneda), observaciones: value.observaciones };
         const api = certificadoCampanaV1(campaignId), saved = id ? await api.update(id, body) : await api.create(body), coverage = g.coverage.filter(c => c.certificadoId === saved.certificadoId);
         for (const p of coverage)
             if (!parties.some(r => r.cxpId === p.cxpId))

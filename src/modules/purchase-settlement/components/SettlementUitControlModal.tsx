@@ -1,3 +1,5 @@
+import { usesV1 } from '@/shared/api/data-contract';
+import { formatMoney } from '@/shared/utils/format';
 import { useMemo, useState } from "react";
 import { Scale, ShieldAlert, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -49,7 +51,7 @@ export default function SettlementUitControlModal({
             for (const prov of load.proveedores) {
                 for (const p of prov.personasVinculadas) {
                     const extraCurrent =
-                        prov.personaLiquidadaId === p.id && prov.estado !== "Por liquidar"
+                        !usesV1() && prov.personaLiquidadaId === p.id && prov.estado !== "Por liquidar"
                             ? prov.total
                             : 0;
                     const existing = byPerson.get(p.numeroDocumento);
@@ -82,12 +84,18 @@ export default function SettlementUitControlModal({
         );
     }, [loads, search]);
 
+    if (!(UIT_VALOR_2026 > 0 && UIT_LIMITE_UNIDADES > 0)) return (
+        <AppModal open={open} onOpenChange={onOpenChange} title="Control UIT" icon={<Scale size={22} strokeWidth={2.2} />} size="md" footer={<Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>}>
+            <p role="status" className="text-sm text-muted-foreground">Los parámetros UIT no están disponibles. Configúralos en el backend antes de calcular límites o saldos.</p>
+        </AppModal>
+    );
+
     return (
         <AppModal
             open={open}
             onOpenChange={onOpenChange}
             icon={<Scale size={22} strokeWidth={2.2} />}
-            title="Control UIT por proveedor · Límite anual 75 UIT"
+            title={`Control UIT por proveedor · Límite anual ${UIT_LIMITE_UNIDADES > 0 ? `${UIT_LIMITE_UNIDADES} UIT` : "pendiente de parámetros"}`}
             description="Control tributario SUNAT para emisión de Liquidaciones de Compra electrónicas por persona natural."
             size="2xl"
             footer={
@@ -203,7 +211,7 @@ export default function SettlementUitControlModal({
                     <span>
                         Según la normativa de SUNAT, el límite anual para emitir Liquidaciones de Compra
                         electrónicas a un mismo productor primario es de{" "}
-                        <strong>75 UIT (S/ 401,250 en 2026)</strong>. Cuando una persona se acerca al tope,
+                        <strong>{UIT_LIMITE_UNIDADES > 0 && UIT_VALOR_2026 > 0 ? `${UIT_LIMITE_UNIDADES} UIT (S/ ${formatMoney(UIT_LIMITE_SOLES)})` : "pendiente de parámetros"}</strong>. Cuando una persona se acerca al tope,
                         puedes seleccionar o vincular a un copropietario/familiar autorizado del predio.
                     </span>
                 </div>

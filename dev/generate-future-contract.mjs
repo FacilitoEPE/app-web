@@ -32,6 +32,7 @@ for (const match of sql.matchAll(/CREATE TABLE "([^"]+)" \(([\s\S]*?)\n\);/g)) {
     if (type === 'integer' && (column === pk || /(^id_|_id$)/.test(column))) property.minimum = 1
     if (type === 'object') property.additionalProperties = true
     if (type === 'array') property.items = {}
+    if (table === 'certificado_campana' && column === 'kilos_iniciales') property.minimum = 0
     if (baseType === 'date') property.format = 'date'
     if (/^(timestamp|timestamptz)/.test(baseType)) property.format = 'date-time'
     if (/^varchar\(\d+\)/.test(baseType)) property.maxLength = Number(/\((\d+)\)/.exec(baseType)[1])

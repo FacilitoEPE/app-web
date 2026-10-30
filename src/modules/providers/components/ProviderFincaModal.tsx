@@ -58,7 +58,7 @@ export default function ProviderFincaModal({ open, onOpenChange, providerName, r
     });
 
     const handleSave = async () => {
-        const nextErrors = { ...validateFinca(values, registeredFincas.map((finca) => finca.nombre)), ...validateFincaCultivo(values) };
+        const nextErrors = { ...validateFinca(values, registeredFincas.map((finca) => finca.nombre), usesV1()), ...validateFincaCultivo(values) };
         if (Object.keys(nextErrors).length > 0) {
             setErrors(nextErrors);
             return;
@@ -99,8 +99,8 @@ export default function ProviderFincaModal({ open, onOpenChange, providerName, r
                         <InputField {...bind("departamento", true)} label="Departamento" placeholder="Ej. Piura" className="sm:col-span-2" />
                         <InputField {...bind("provincia", true)} label="Provincia" placeholder="Ej. Sullana" className="sm:col-span-2" />
                         <InputField {...bind("distrito", true)} label="Distrito" placeholder="Ej. Marcavelica" className="sm:col-span-2" />
-                        <InputField {...bind("latitud")} label="Latitud" optional placeholder="-5.1945" step="0.0000001" className="sm:col-span-3" />
-                        <InputField {...bind("longitud")} label="Longitud" optional placeholder="-80.6328" step="0.0000001" className="sm:col-span-3" />
+                        <InputField {...bind("latitud", usesV1())} label="Latitud" optional={!usesV1()} placeholder="-5.1945" step="0.0000001" className="sm:col-span-3" />
+                        <InputField {...bind("longitud", usesV1())} label="Longitud" optional={!usesV1()} placeholder="-80.6328" step="0.0000001" className="sm:col-span-3" />
                     </div>
                 </ModalSection>
 

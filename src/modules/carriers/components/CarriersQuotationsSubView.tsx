@@ -207,7 +207,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                 <div className="w-full sm:w-60">
                     <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
                         <SelectTrigger aria-label="Filtrar por estado de cotización">
-                            <SelectValue placeholder="Todos los estados" />
+                            <SelectValue>{statusFilter === "all" ? "Todos los estados" : statusFilter}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Todos los estados</SelectItem>

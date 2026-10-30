@@ -1,3 +1,4 @@
+import { createGuideDraft } from '@/modules/quality/remissionGuide.utils';
 import { useState } from "react";
 import {
     CheckCircle2,
@@ -43,7 +44,7 @@ export default function QualityRemissionGuideModal({
     editingGuide,
     onSave,
 }: QualityRemissionGuideModalProps) {
-    const [numeroGuia, setNumeroGuia] = useState("EG07-000020");
+    const [numeroGuia, setNumeroGuia] = useState("");
     const [rolOrigen, setRolOrigen] = useState<"Productor" | "Acopiador">("Productor");
     const [tipoFruta, setTipoFruta] = useState<"Orgánica" | "Convencional">("Orgánica");
     const [fechaInicioTraslado, setFechaInicioTraslado] = useState("");
@@ -62,13 +63,13 @@ export default function QualityRemissionGuideModal({
     const [conductorApellidos, setConductorApellidos] = useState("");
     const [conductorLicencia, setConductorLicencia] = useState("");
 
-    const [ubigeoPartida, setUbigeoPartida] = useState("200114");
+    const [ubigeoPartida, setUbigeoPartida] = useState("");
     const [direccionPartida, setDireccionPartida] = useState("");
-    const [codEstablecimientoPartida, setCodEstablecimientoPartida] = useState("0001");
+    const [codEstablecimientoPartida, setCodEstablecimientoPartida] = useState("");
 
-    const [ubigeoLlegada, setUbigeoLlegada] = useState("200501");
+    const [ubigeoLlegada, setUbigeoLlegada] = useState("");
     const [direccionLlegada, setDireccionLlegada] = useState("");
-    const [codEstablecimientoLlegada, setCodEstablecimientoLlegada] = useState("0002");
+    const [codEstablecimientoLlegada, setCodEstablecimientoLlegada] = useState("");
 
     const [codigoProducto, setCodigoProducto] = useState("");
     const [descripcionProducto, setDescripcionProducto] = useState("");
@@ -77,68 +78,33 @@ export default function QualityRemissionGuideModal({
 
     useResetOnToggle(open, () => {
         if (!load) return;
-        if (editingGuide) {
-            setNumeroGuia(editingGuide.numeroGuia);
-            setRolOrigen(editingGuide.rolOrigen);
-            setTipoFruta(editingGuide.tipoFruta);
-            setFechaInicioTraslado(editingGuide.fechaInicioTraslado);
-            setFechaEntregaTransportista(editingGuide.fechaEntregaTransportista);
-            setPesoBrutoTotalKg(String(editingGuide.pesoBrutoTotalKg));
-            setNumeroBultos(String(editingGuide.numeroBultos));
-            setTransportistaRuc(editingGuide.transportistaRuc);
-            setTransportistaDenominacion(editingGuide.transportistaDenominacion);
-            setTransportistaMtc(editingGuide.transportistaMtc);
-            setVehiculoPlaca(editingGuide.vehiculoPlaca);
-            setConductorTipoDoc(editingGuide.conductorTipoDoc);
-            setConductorNumeroDoc(editingGuide.conductorNumeroDoc);
-            setConductorNombres(editingGuide.conductorNombres);
-            setConductorApellidos(editingGuide.conductorApellidos);
-            setConductorLicencia(editingGuide.conductorLicencia);
-            setUbigeoPartida(editingGuide.ubigeoPartida);
-            setDireccionPartida(editingGuide.direccionPartida);
-            setCodEstablecimientoPartida(editingGuide.codEstablecimientoPartida);
-            setUbigeoLlegada(editingGuide.ubigeoLlegada);
-            setDireccionLlegada(editingGuide.direccionLlegada);
-            setCodEstablecimientoLlegada(editingGuide.codEstablecimientoLlegada);
-            setCodigoProducto(editingGuide.codigoProducto);
-            setDescripcionProducto(editingGuide.descripcionProducto);
-            setNormasSeleccionadas(editingGuide.normasSeleccionadas);
-            setObservacionesSunat(editingGuide.observacionesSunat);
-            return;
-        }
-
-        const totalKg = load.proveedoresCarga.reduce((s, p) => s + p.kilosCargados, 0);
-        const totalBultos = load.proveedoresCarga.reduce(
-            (s, p) => s + p.jabasCargadas + p.binesCargados + p.mallasCargadas,
-            0,
-        );
-        const firstProv = load.proveedoresCarga[0];
-        setNumeroGuia(`EG07-0000${20 + load.guiasRemision.length}`);
-        setRolOrigen(firstProv?.rol ?? "Productor");
-        setTipoFruta(firstProv?.tipoFruta ?? "Orgánica");
-        setFechaInicioTraslado(load.fechaCargaReal);
-        setFechaEntregaTransportista(load.fechaCargaReal);
-        setPesoBrutoTotalKg(String(totalKg));
-        setNumeroBultos(String(totalBultos));
-        setTransportistaRuc("20529841023");
-        setTransportistaDenominacion(load.transportista);
-        setTransportistaMtc("1548291CNG");
-        setVehiculoPlaca(load.placa);
-        setConductorTipoDoc("DNI");
-        setConductorNumeroDoc("43892104");
-        setConductorNombres("Carlos Alberto");
-        setConductorApellidos("Mendoza Ríos");
-        setConductorLicencia(load.licencia);
-        setUbigeoPartida("200114");
-        setDireccionPartida("Sector San Lorenzo Km 14 · Tambogrande, Piura");
-        setCodEstablecimientoPartida("0001");
-        setUbigeoLlegada("200501");
-        setDireccionLlegada(load.destino);
-        setCodEstablecimientoLlegada("0002");
-        setCodigoProducto("MNG-KENT-01");
-        setDescripcionProducto(`MANGO FRESCO ${load.fruta.toUpperCase()} EN ENVASES COSECHEROS`);
-        setNormasSeleccionadas(["NOP", "EU", "GLOBALGAP"]);
-        setObservacionesSunat("PRECINTO TÉRMICO VERIFICADO · DESPACHO DIRECTO A PLANTA");
+        const guide = editingGuide ?? createGuideDraft(load);
+        setNumeroGuia(guide.numeroGuia);
+        setRolOrigen(guide.rolOrigen);
+        setTipoFruta(guide.tipoFruta);
+        setFechaInicioTraslado(guide.fechaInicioTraslado);
+        setFechaEntregaTransportista(guide.fechaEntregaTransportista);
+        setPesoBrutoTotalKg(String(guide.pesoBrutoTotalKg));
+        setNumeroBultos(String(guide.numeroBultos));
+        setTransportistaRuc(guide.transportistaRuc);
+        setTransportistaDenominacion(guide.transportistaDenominacion);
+        setTransportistaMtc(guide.transportistaMtc);
+        setVehiculoPlaca(guide.vehiculoPlaca);
+        setConductorTipoDoc(guide.conductorTipoDoc);
+        setConductorNumeroDoc(guide.conductorNumeroDoc);
+        setConductorNombres(guide.conductorNombres);
+        setConductorApellidos(guide.conductorApellidos);
+        setConductorLicencia(guide.conductorLicencia);
+        setUbigeoPartida(guide.ubigeoPartida);
+        setDireccionPartida(guide.direccionPartida);
+        setCodEstablecimientoPartida(guide.codEstablecimientoPartida);
+        setUbigeoLlegada(guide.ubigeoLlegada);
+        setDireccionLlegada(guide.direccionLlegada);
+        setCodEstablecimientoLlegada(guide.codEstablecimientoLlegada);
+        setCodigoProducto(guide.codigoProducto);
+        setDescripcionProducto(guide.descripcionProducto);
+        setNormasSeleccionadas(guide.normasSeleccionadas);
+        setObservacionesSunat(guide.observacionesSunat);
     });
 
     if (!load) return null;
@@ -158,7 +124,7 @@ export default function QualityRemissionGuideModal({
             id: editingGuide?.id ?? `guia-${Date.now()}`,
             numeroGuia,
             estado,
-            proveedoresIncluidos: load.proveedoresCarga.map((p) => p.proveedorNombre),
+            proveedoresIncluidos: editingGuide?.proveedoresIncluidos ?? [...new Set(load.proveedoresCarga.map((p) => p.proveedorId))],
             rolOrigen,
             tipoFruta,
             fechaInicioTraslado,

@@ -64,6 +64,7 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
     const initial = certificate ? toFormValues(certificate) : EMPTY_CERTIFICADO_CAMPANA;
 
     const [values, setValues, set] = useModalForm<CertificadoCampanaFormValues>(open, initial);
+    const [kilosEdited, setKilosEdited] = useState(false);
     const [errors, setErrors] = useState<CertificadoCampanaErrors>({});
     const [certificateFile, setCertificateFile] = useState<File | null>(null);
     const [quoteFile, setQuoteFile] = useState<File | null>(null);
@@ -72,6 +73,7 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
 
     useResetOnToggle(open, () => {
         setErrors({});
+        setKilosEdited(isEdit);
         setCertificateFile(null);
         setQuoteFile(null);
     });
@@ -123,19 +125,15 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
         }));
     }, [open, isEdit, certificate, apiProducers, setValues]);
 
-    // Kilos calculados directamente como valor derivado (sin bucles de estado)
-    const kilosCalculados = values.productores.reduce((sum, id) => {
-        const p = apiProducers.find((item) => item.id === id);
-        return sum + (p?.kilos ?? 0);
-    }, 0);
-
     const update = <Field extends CertificadoCampanaField>(field: Field) => (next: CertificadoCampanaFormValues[Field]) => {
         set(field)(next);
+        if (field === "kilosIniciales") setKilosEdited(true);
         setErrors((current) => ({ ...current, [field]: undefined }));
     };
 
     const handleProducersChange = (selectedIds: string[]) => {
         set("productores")(selectedIds);
+        if (!kilosEdited) set("kilosIniciales")(String(selectedIds.reduce((sum, id) => sum + (apiProducers.find(p => p.id === id)?.kilos ?? 0), 0)));
         setErrors((current) => ({ ...current, productores: undefined }));
     };
 
@@ -150,7 +148,7 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
     const handleSave = async () => {
         const payload: CertificadoCampanaFormValues = {
             ...values,
-            kilosIniciales: String(kilosCalculados),
+            kilosIniciales: values.kilosIniciales || "0",
         };
         const nextErrors = validateCertificadoCampana(payload);
         setErrors(nextErrors);
@@ -247,12 +245,12 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
                         </FormField>
 
                         <InputField
-                            id="campaign-cert-kilosIniciales"
+                            {...bind("kilosIniciales")}
                             label="Kilos iniciales:"
-                            value={String(kilosCalculados)}
-                            readOnly
+                            min={0}
+                            step="0.001"
                             unit="kg"
-                            hint="Suma calculada de productores"
+                            hint="Suma de los productores seleccionados; puedes ajustar el total."
                             className="sm:col-span-2"
                         />
                         {selectField("moneda", "Moneda:", MONEDA_OPTIONS, "sm:col-span-2")}

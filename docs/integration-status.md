@@ -4,7 +4,119 @@
 
 ---
 
-## Auditoría manual — 2026-10-29 · Parcial / bloqueada por entorno
+## Correcciones y observaciones del usuario — 2026-10-29 · Completo: correcciones implementadas y verificadas en QA
+
+Esta sección actualiza el resultado de la auditoría anterior; las secciones inferiores conservan el historial original. Se implementaron las observaciones de Sin título-2026-10-13-1630.excalidraw y las aclaraciones del usuario.
+
+### Observaciones implementadas
+
+| Observación | Resultado |
+|---|---|
+| Programa semanal | Kilos realmente cargados y fecha real de carga; excluye entregas solo programadas. Cada celda detalla su variedad y el total diario abre los clientes de ese día. No se duplican los totales de cargas con varias variedades. |
+| Orden | Proveedores → Campañas → Gestión comercial → Transporte → Cosecha y calidad → Logística → Liquidación de compra → Facturación y cobros. |
+| Gestión comercial | Solo Clientes; contratos dentro de su ficha y filtrados por ID. Nueva opción Vincular a campaña. Cantidad se rotuló como estimación; los kilos exactos siguen en contratos. |
+| Transporte | Retiradas pestañas globales de vehículos, choferes, requerimientos y cotizaciones y envío de requerimientos. El menú de cada transportista abre sus vehículos o choferes; desde esa ficha se registra. |
+| Transportistas de campaña | Vincular no exige cotización. Camión y chofer provienen de coordinaciones reales de esa campaña, sin usar el primer vehículo o datos de otra campaña. Acceso a asignación desde entregas. Quitados Requerimientos y cotizaciones y Marcar saldo como pagado de la última captura. |
+| Proveedor de campaña | Retirado Fruta convencional estimada (Acopio) del formulario, sin borrar datos históricos existentes. |
+| Certificaciones | Kilos iniciales propone la suma de productores seleccionados; una edición manual deja de recalcularse y se conserva al guardar y recargar. Total propio nullable, sin redistribuir kilos autorizados por productor. |
+| Diagramas negros | Referencia de flujos de aplicación según aclaración del usuario. Estados de despacho de consulta en Logística; reporte de etapas en portal del chofer. No se afirma implementar autenticación o RBAC real. |
+
+### Defectos corregidos
+
+- QA-02, QA-07: UIT desde parámetros, sin límite monetario fijo; acumulados sin sumar dos veces el documento persistido; edición por año del documento. Sin parámetros se muestra indisponibilidad.
+- QA-03: etiquetas de filtros legibles. Las vistas globales de transporte también quedaron retiradas del flujo principal.
+- QA-04: validación de correo y mensaje explícito de servicio no habilitado. Recuperación efectiva pendiente del contrato de autenticación.
+- QA-05, QA-06: guías envían IDs reales de proveedores y proponen datos registrados de transporte, conductor y carga. Datos legales no disponibles quedan vacíos.
+- QA-08: accesos corregidos a programa semanal, calidad y facturación.
+- QA-09: recepción preserva el JSON de compras y evidencias; no reescribe referencias de liquidaciones. Detectado además ISO UTC incompatible con datetime-local: ahora se presenta en formato local y conserva el instante al guardar.
+- QA-10, QA-11, QA-17: clientes únicos, cargas creadas y campañas/contratos propios por entidad; proveedor muestra campañas reales y enlaces específicos.
+- QA-12–QA-16: MTD sin observaciones inventadas, coordenadas obligatorias en V1 con errores por campo, catálogo/plurales de variedades, unidades agronómicas sin duplicación y kilos del viaje por finca. Sin desglose suficiente se informa ausencia de datos.
+- QA-01: antecedente de configuración; se verificó con instancia temporal V1 y base QA, sin sobrescribir .env ni reiniciar el servidor original.
+
+### Persistencia y migración
+
+- Nueva migración backend: src/database/migrations/1793232000000-AddCertificateInitialKilos.ts. Añade agro.certificado_campana.kilos_iniciales numeric(14,3), nullable y no negativo.
+- SQL de instalación, OpenAPI, DTO generado, fixture y diagrama ER sincronizados. Certificados anteriores con null conservan la suma de cobertura como valor inicial de lectura.
+- Migración aplicada y columna verificada solamente en epe_manual_qa_20261029. En otros entornos debe aplicarse la migración y reiniciarse el backend actualizado. No se ejecutó en desarrolloEPE.
+
+### Verificación y evidencia
+
+- Última ejecución completa aprobada: frontend **52 archivos / 274 pruebas**; backend **14 archivos / 51 pruebas**. Builds de ambos aprobados. Permanece la advertencia conocida del tamaño del bundle.
+- Tras cambios de asignaciones por campaña y formato de horas: integración frontend **15 pruebas aprobadas**. Una ejecución anterior de ESLint terminó sin errores ni advertencias; contrato generado verificado.
+- La revisión automática tuvo una interrupción por límite de uso; después del restablecimiento se repitieron correctamente las **274 pruebas**, el **build** y **ESLint sin errores ni advertencias**. También se corrigió una clave React duplicada al repetir una medición MTD en más de una entrega.
+- Manual con PostgreSQL QA: nueva guía T001-00000002 guardada; certificación a **1777.125 kg** conservada tras recargar y total negativo rechazado con 422; cliente QA vinculado a Mango (de cero a una campaña y cero contratos); transportista vinculado a Palta sin adjuntos; lista de choferes desde su transportista; contratos dentro del cliente limitados a sus relaciones; recepción liquidada guardada manteniendo 580/380 kg y horas editadas mediante teclado.
+- Evidencias: [semana real](C:/Users/luisl/.codex/visualizations/2026/10/29/01a1891a-c764-71d3-b9d3-901a0bffcbbd/qa-semana-cargas-reales.jpg), [certificación persistida](C:/Users/luisl/.codex/visualizations/2026/10/29/01a1891a-c764-71d3-b9d3-901a0bffcbbd/qa-certificacion-kilos-persistidos.jpg), [guía guardada](C:/Users/luisl/.codex/visualizations/2026/10/29/01a1891a-c764-71d3-b9d3-901a0bffcbbd/qa-guia-corregida.jpg), [cliente vinculado](C:/Users/luisl/.codex/visualizations/2026/10/29/01a1891a-c764-71d3-b9d3-901a0bffcbbd/qa-cliente-vinculado.jpg).
+- Se detuvieron los servidores temporales 3001 y 5174 y se retiraron los archivos auxiliares de verificación. El servidor original se conservó.
+- Datos modificados solo en QA. No se acredita CRUD exhaustivo con borrado por cada dominio ni autenticación, adjuntos o emisión tributaria real.
+
+---
+## Auditoría manual V1 — 2026-10-29 · Parcial: recorrido ejecutado con defectos abiertos
+
+**Se recorrieron los 28 tipos de ruta de la aplicación actual (27 protegidas y `/login`), sus vistas principales y los formularios detallados abajo. No equivale a aprobar todos los CRUD ni todas las combinaciones de las 62 fichas del prototipo.** La revisión encontró bloqueos e indicadores incorrectos; el sistema no queda aprobado para un flujo integral de operación.
+
+### Entornos y protección de los datos
+
+1. La primera pasada utilizó `5173 → 3000`, legacy, y encontró colecciones `public` vacías. Su evidencia se conserva más abajo como fase inicial.
+2. Al revisar `epe-backend`, se comprobó que V1 sí existe en código y en `dist`, y que PostgreSQL `desarrolloEPE` contiene el esquema `agro` con 3 campañas, 5 frutas, 2 proveedores, 1 cliente y 1 carga. El proceso original de 3000 no exponía esas rutas. Se inició una instancia temporal en **3001** y Vite en **5174**, con `VITE_API_CONTRACT=v1`, mediante variables de proceso, sin editar `.env` ni detener los servidores originales.
+3. Contra `desarrolloEPE` se ejecutaron principalmente lecturas. Única edición reversible: ubicación del cliente 1, `Lima, Perú → QA MANUAL 2026-10-29 → Lima, Perú`. La persistencia y la restauración se verificaron recargando la página tras cada guardado; `updated_at` puede reflejar esta prueba.
+4. Para probar escrituras y cierres se creó la base **`epe_manual_qa_20261029`**, se instaló el SQL del backend y se ejecutó `seed-v1.mjs` **solo en esa base nueva**: 100 registros de ejemplo. Luego se reinició exclusivamente el backend temporal de 3001 sobre QA; Vite 5174 siguió apuntando a él. No se truncó ni migró `desarrolloEPE`.
+5. Al reanudar, `.env` de la instancia original 5173 ya apuntaba a `/mock-api/`, cambio ajeno a esta auditoría. Los resultados V1 siguientes pertenecen a **5174 → 3001 → PostgreSQL**, no a los mocks.
+
+### Cobertura V1 efectivamente ejecutada
+
+| Área / fichas de referencia | Recorrido y resultado manual |
+|---|---|
+| Acceso y módulos · V01–V02 | Logout, redirección de ruta protegida sin sesión, ingreso/confirmación locales sin credenciales reales, recuperación vacía y selector de ocho módulos. Sesión simulada es una limitación acordada. |
+| Comercial · V03–V08 | Directorio con cliente real, detalle, edición persistida/restaurada, requerimientos de campaña, menú Contratos, contrato 1 y sus dos entregas (1,000 y 500 kg). En QA se creó **QA Manual 20261029**, cliente 2; sobrevivió a recarga. Sus contadores revelaron QA-17. |
+| Campañas · V09–V11 | Listado V1 con 3 campañas; pestaña En ejecución; detalle de Mango 2026; resumen modal de proveedores; productores/acopiadores; detalle de participación 1. Indicadores de clientes/cargas inconsistentes (QA-10). |
+| Entrevistas y exámenes · V12–V13 | Entrevista por finca con código FVV, detalle agronómico; examen M-001, estado Pendiente de envío y detalle sin adjunto. Unidades mal presentadas en entrevista (QA-15). No se enviaron muestras reales. |
+| Certificaciones · V14–V16 | Certificación con 2 productores, 2,000 kg iniciales + 500 ampliados; detalle con ampliación y pago de S/ 500 sobre S/ 2,000. Formulario de ampliación vacío rechaza kilos/fecha; formulario de pago muestra saldo S/ 1,500. No se registró un pago real. |
+| Transporte de campaña y entregas · V17–V20 | Dos transportistas, acuerdo con adelanto; entregas coordinadas con vehículo/chofer y dos orígenes; edición de coordinación abre con datos; programa semanal muestra 1,500 kg en dos días. Acceso desde detalle roto (QA-08), aunque la ruta correcta abre. |
+| Proveedores · V21–V24 | Padrón 2 proveedores/2 fincas/20.5 ha de cultivo; buscar María filtra a 1 y Limpiar restaura; detalle de proveedor; fincas, formulario de alta/edición; certificados. Guardar finca sin coordenadas muestra error conservando modal, pese a marcarlas opcionales (QA-13); se canceló sin modificar la finca. |
+| Transporte · V25–V30 | Directorio público/privado, detalle, pestañas Vehículos y Choferes, requerimiento SOL-DEMO-1 y su detalle con cotización S/ 1,000. Formularios vacíos y botones sin transportistas ya probados en primera fase. No se envió un requerimiento/correo a terceros ni se registró una cotización nueva. |
+| Calidad · V31–V37 | Campañas, espacio de Mango 2026, cuatro pestañas, revisión MTD/análisis y asistente de cinco pasos (revisión, organización, avances 600+400 kg, cierre, guía). Listado de guías, formulario de guía existente y nueva. Borrador y emisión fallan por QA-05. Se comprobó QA-06 en una guía nueva. Industria con datos y emisión tributaria real no probadas; FC14 continúa diferido. |
+| Logística · V38–V40 | Resumen de campaña, carga CAR-DEMO-1, detalle de entrega con 600/400 kg en campo y 580/380 kg reconocidos, menú de acciones, recepción/descarga y documentos/cierre. Se reprodujo QA-09. Con preparación limitada de fixture por API, el cierre físico se guardó por UI. |
+| Facturación · V41–V44 | Campaña, clientes, cargas/facturas, documento emitido parcial y preparación pendiente; historial: total USD 1,495, cobrado USD 100, saldo USD 1,395; Cobrar deshabilitado en factura no emitida. No se emitieron facturas ni cobraron importes reales. |
+| Liquidación · V45–V51 | Campaña → carga → Proveedor; pendientes y editor con 580 kg reconocidos × S/ 2 = S/ 1,160; Control UIT con 3 personas; Transportista con S/ 510 total, S/ 150 abonado, S/ 360 saldo y S/ 100 adelanto disponible; historial distingue pago de caja y aplicación de adelanto. Errores de UIT QA-02/QA-07. No se ejecutaron pagos ni aplicaciones nuevas. |
+| Cierre de campaña · V52 | Formulario de motivo y envío en QA: backend rechaza correctamente con **«Hay entregas sin completar»**. La campaña sigue en proceso; no se certifica cierre positivo de campaña. |
+| Chofer · V53–V62 | Mis campañas, Mis cargas, mapa/fincas, datos de carga, Mi despacho, checklist/recepción, campos condicionales de descarte y guía de salida. En QA: bloqueo sin guía emitida; luego Salida → En camino → Llegada; bloqueo por falta de cierre físico; guardado de checklist 960 kg y guía QA-SALIDA-20261029 con retorno de 50 envases; tras cierre físico, **Cierre** persistió después de recargar y el historial contiene cinco eventos. No se cerró la carga original. |
+| Adaptación móvil | Portal sin datos y despacho con datos, **390×844**. Barra inferior y estados legibles; `clientWidth=scrollWidth=390`, sin desbordamiento horizontal en esa vista. Se restauró el tamaño de escritorio. No se afirma auditoría móvil de todas las pantallas. |
+
+**Preparación de QA que no cuenta como éxito manual del flujo:** ante QA-05 se emitió internamente la guía de ejemplo con `POST /v1/guias/1/emitir`. Ante QA-09 se completaron por `PATCH /v1/cargas/1/recepciones/1` únicamente horarios de descarga y resultado `Aceptada`, preservando compras/kilos. A partir de ahí se probaron manualmente cierre físico y cierre del chofer. No hubo comunicación con SUNAT ni con servicios financieros.
+
+### Defectos V1 reproducidos y evidencia
+
+Los IDs QA-01–QA-04 permanecen en la primera fase. QA-01 fue un bloqueo de configuración/proceso, superado para las pruebas mediante instancias temporales; QA-02 y QA-03 también se observan con V1.
+
+| ID | Prioridad | Reproducción y evidencia | Resultado esperado |
+|---|---|---|---|
+| **QA-05** | **P1** | Calidad → Mango 2026 → Guías → Configurar o Agregar → Guardar borrador/Emitir: **«Selecciona los proveedores de la guía»**, aunque los dos proveedores aparecen. `QualityRemissionGuideModal.tsx:161` envía nombres; `quality-commands.api.ts:104` filtra por IDs numéricos convertidos a texto. Bloquea borrador, emisión y salida posterior del chofer. | Usar el identificador del proveedor de extremo a extremo. |
+| **QA-06** | **P1** | Agregar guía nueva para CAR-DEMO-1 precarga **Carlos Alberto Mendoza Ríos**, documento y RUC fijos, aunque el chofer real es Miguel Torres y el RUC de Transportes del Norte es distinto. También precarga MTC, ubicación, producto, normas y observaciones de ejemplo. `QualityRemissionGuideModal.tsx:119–143` no condiciona estos defaults a legacy/demo. Se canceló; no se guardaron identidades falsas. | Derivar snapshots de los registros reales y pedir los datos faltantes. |
+| **QA-07** | **P1** | Control UIT muestra acumulado S/ **2,320** para persona 1; SQL agregado confirma **un documento de S/ 1,160**. Persona 4 muestra S/ 1,520 para un documento de S/ 760. `settlement-screen-data.ts` ya incluye las liquidaciones en `acumuladoAnualPen`; `SettlementUitControlModal.tsx:50–69` suma otra vez `prov.total`. El editor también proyecta de nuevo la liquidación al editarla. | Contar una sola vez cada documento y excluir/reemplazar el actual al proyectar una edición. |
+| **QA-08** | **P2** | Campaña 1 → **Programa semanal**, **Ir a calidad**, **Ver facturas**: los tres terminan en `/modules`. Navegan respectivamente a `/campaigns/1/weekly-program`, `/control-calidad`, `/facturacion`, rutas ausentes. Las registradas son `/campaigns/1/weekly-delivery-program`, `/calidad`, `/facturacion-cobros`. | Abrir las rutas registradas y conservar el contexto pertinente. |
+| **QA-09** | **P2** | En QA, Logística → Recepción y calidad → completar horarios/responsable sin cambiar 580/380 kg → Guardar: **«Los reconocidos ya fueron aplicados a liquidaciones»**. El comando reconstruye todo `compras` con referencias/observaciones vacías; el backend protege ese JSON completo por tener liquidaciones. Un PATCH solo de horarios sí funciona. Impide completar la descarga desde la UI en este escenario. | Conservar compras sin cambios y enviar únicamente los datos editados; mantener la protección de los reconocidos. |
+| **QA-10** | **P2** | Detalle Mango 2026 informa **2 clientes y 2 cargas**; SQL confirma **1 cliente distinto, 2 requerimientos y 1 carga**. Logística muestra correctamente 1 carga. `CampaignDetailsPage.tsx` cuenta requerimientos como clientes y elementos proyectados de coordinación como cargas. | Distinguir cliente, requerimiento, entrega coordinada y carga creada en indicadores y etiquetas. |
+| **QA-11** | **P2** | Proveedor 1 → detalle: «2 campañas activas» y «Campaña Mango Kent Exportación 2026» están fijados en `ProviderDetailsPage.tsx:198,208`, y «Ver campaña» abre el listado general. No derivan de sus relaciones reales. | Mostrar la participación real y navegar a la campaña correspondiente. Los 580 kg y MTD de esta pantalla sí se derivan; no se clasifican como fijos. |
+| **QA-12** | **P2** | Calidad → Análisis y revisión: MTD **0.0100**, pero tabla dice **0 moscas / 0 trampas / 0 d**. `quality-screen-data.ts:23` rellena esas tres cantidades con cero aunque V1 solo aporta valor/límite. | Mostrar cantidades no disponibles como tales y conservar el MTD registrado, sin inventar observaciones de campo. |
+| **QA-13** | **P2** | Finca → Editar → vaciar latitud/longitud, ambas **(Opcional)** → Guardar: **«Completa las coordenadas de la finca antes de guardar»**. El modal conserva el error y se pudo cancelar; no se alteró la finca. | Marcar como obligatorias en V1 y validar por campo conforme al contrato acordado. |
+| **QA-14** | **P3** | Programa semanal de Mango 2026 muestra «1 variedades» y **«De 0 variedades registradas en campaña»**, mientras la matriz incluye Mango Kent y el detalle muestra Kent/Edward. | Consistencia de catálogo y número de variedades entre vistas. |
+| **QA-15** | **P3** | Entrevista → detalle: **«5 x 4 m m»** y **«Cada tres días /día»**; tabla deja «plantas/ha» sin valor. | Evitar sufijos duplicados y no añadir una frecuencia numérica a un texto libre. |
+| **QA-16** | **P3** | Chofer → Ubicación y ruta: **2,000 kg estimados**, 1,000 por finca, para viaje de 1,000 kg con desglose 600/400. `driver-screen-data.ts:12` usa la cantidad total de participación de campaña en cada finca. | Etiquetar claramente que es estimación de campaña o usar los kilos correspondientes al viaje/origen. |
+| **QA-17** | **P2** | Cliente **QA Manual 20261029**, recién creado en QA sin vínculos, muestra **«1 campaña activa · 2 contratos»** tras recargar. `ClientsTable.tsx:55–59` calcula campañas con `(id % 2)+1` y asigna el total global de contratos a cada cliente. | Calcular campañas y contratos propios del cliente; el recién creado debe mostrar cero. |
+
+**Ampliación QA-02 en V1:** el backend carga UIT S/ 5,500 y límite S/ 412,500, pero el pie sigue diciendo S/ 401,250. Es una contradicción entre parámetros y texto, sin afirmar validación de la norma tributaria aplicable. **QA-03** (`all` en filtros) sigue reproducible en V1.
+
+### Verificación, evidencias y límites finales
+
+- En la primera parte de esta sesión: **52 archivos / 266 pruebas automatizadas aprobadas**, y **build aprobado** (incluye tipos), con advertencia de tamaño de bundle. No sustituyen la validación manual ni afirman que QA-05–QA-17 estén cubiertos por tests. Sin cambios de código funcional durante la auditoría; no se repitieron las pruebas por editar solo este documento.
+- Evidencias locales: [guía bloqueada](C:/Users/luisl/.codex/visualizations/2026/10/29/01a1891a-c764-71d3-b9d3-901a0bffcbbd/qa-guia-bloqueada.jpg), [nueva guía con datos fijos](C:/Users/luisl/.codex/visualizations/2026/10/29/01a1891a-c764-71d3-b9d3-901a0bffcbbd/qa-guia-datos-fijos.jpg), [cliente recién creado con contadores](C:/Users/luisl/.codex/visualizations/2026/10/29/01a1891a-c764-71d3-b9d3-901a0bffcbbd/qa-cliente-nuevo-contadores.jpg), [despacho QA cerrado](C:/Users/luisl/.codex/visualizations/2026/10/29/01a1891a-c764-71d3-b9d3-901a0bffcbbd/qa-despacho-cerrado.jpg).
+- La base QA se conserva para reproducir el escenario. Contiene el cliente sintético y los cambios de guía, checklist, retorno, recepción y estados descritos. No representa operaciones reales. Al finalizar se detuvieron exclusivamente los procesos temporales de backend 3001 y frontend 5174; los servidores originales siguieron activos. Se verificó en `desarrolloEPE` que cliente 1 conserva `Lima, Perú` y que el padrón mantiene un solo cliente.
+- Pendientes de cobertura: CRUD completo con borrado por dominio, pagos/cobros nuevos, todos los caminos de Industria, cierre positivo de campaña, errores de desconexión/CORS durante mutaciones y matriz móvil de las demás vistas. Adjuntos, autenticación y emisión tributaria real se mantienen fuera del alcance contratado. No se presentan estos pendientes como aprobados.
+- La revisión es de testing y reporte: **los defectos no fueron corregidos**. Su prioridad de corrección empieza por QA-05, QA-06 y QA-07.
+
+---
+
+## Primera fase manual — 2026-10-29 · Antecedente: bloqueo de entorno superado en la segunda fase
 
 **Resultado:** no se acredita el funcionamiento integral de las 62 fichas V01–V62. Se recorrieron con Chrome las pantallas principales, pestañas accesibles y formularios indicados abajo, contra `http://localhost:5173` y el backend real configurado en `http://localhost:3000/`. No se activaron mocks, no se modificó código funcional, no se ejecutaron seeds ni se crearon/eliminaron registros de negocio. La sesión local se cerró y se restauró mediante el acceso de demostración.
 

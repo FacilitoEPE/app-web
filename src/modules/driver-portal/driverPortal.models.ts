@@ -19,7 +19,7 @@ export interface DriverFarmStop {
     latitud: number;
     longitud: number;
     variedad: string;
-    kilosEstimados: number;
+    kilosEstimados: number | null;
 }
 export interface DriverProviderLoadDetail {
     proveedorId: string;

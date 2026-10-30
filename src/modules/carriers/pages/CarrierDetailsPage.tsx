@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Truck, UserRound, Building2, AlertCircle, Pencil, FileSpreadsheet, PackageCheck } from "lucide-react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Truck, UserRound, Building2, AlertCircle, Pencil, PackageCheck } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import PageHeader from "@/shared/layout/PageHeader";
 import FilterBar, { FilterSearch } from "@/shared/components/FilterBar";
 import SegmentedTabs, { type SegmentedTabItem } from "@/shared/components/SegmentedTabs";
 import LinkedCard, { LinkedRow } from "@/shared/components/LinkedCard";
-import StatusBadge from "@/shared/components/StatusBadge";
 import CarrierInfoCard from "@/modules/carriers/components/CarrierInfoCard";
 import CarrierMetricCards from "@/modules/carriers/components/CarrierMetricCards";
 import CarrierFormModal from "@/modules/carriers/components/CarrierFormModal";
@@ -19,11 +18,9 @@ import CarrierSuccessModal, { type CarrierSuccessMode } from "@/modules/carriers
 import { createDriver, createVehicle, deleteDriver, deleteVehicle, getCarrier, updateCarrier, updateDriver, updateVehicle } from "@/modules/carriers/api/carrier.api";
 import type { Carrier, Driver, Vehicle } from "@/modules/carriers/carriers.data";
 import { setCarrierExtras, useCarrierExtras } from "@/modules/carriers/carrierExtras.store";
-import { useCarrierQuotations } from "@/modules/carriers/carrierQuotations.store";
 import { splitCarrierValues, toCarrierProfile, type CarrierFormValues } from "@/modules/carriers/carrierProfile.utils";
 import { toDriverInput, toVehicleInput, type DriverFormValues, type VehicleFormValues } from "@/modules/carriers/carrierRecords.utils";
 import { PageError, PageLoading } from "@/shared/components/PageState";
-import { formatMoney } from "@/shared/utils/format";
 
 type DetailTab = "vehiculos" | "choferes";
 const normalize = (value: string) => value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -71,7 +68,8 @@ export default function CarrierDetailsPage() {
 
 function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefresh: () => Promise<void> }) {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<DetailTab>("vehiculos");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab: DetailTab = searchParams.get("tab") === "choferes" ? "choferes" : "vehiculos";
     const [search, setSearch] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [vehicleModal, setVehicleModal] = useState<{ open: boolean; editing: Vehicle | null }>({ open: false, editing: null });
@@ -79,11 +77,9 @@ function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefres
     const [editingCarrier, setEditingCarrier] = useState(false);
     const [success, setSuccess] = useState<{ open: boolean; mode: CarrierSuccessMode }>({ open: false, mode: "vehicle-created" });
     const extras = useCarrierExtras();
-    const quotations = useCarrierQuotations();
     const profile = useMemo(() => toCarrierProfile(carrier, extras[carrier.id]), [carrier, extras]);
     const carrierVehicles = carrier.vehiculos;
     const carrierDrivers = carrier.choferes;
-    const carrierQuotations = quotations.filter((item) => item.carrierId === carrier.id);
     const showSuccess = (mode: CarrierSuccessMode) => setSuccess({ open: true, mode });
 
     const filteredVehicles = useMemo(() => {
@@ -102,7 +98,7 @@ function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefres
     const isVehicles = activeTab === "vehiculos";
     const hasActiveFilters = search !== "";
     const clearFilters = () => setSearch("");
-    const changeTab = (value: string) => { setActiveTab(value as DetailTab); clearFilters(); };
+    const changeTab = (value: string) => { setSearchParams({ tab: value }); clearFilters(); };
 
     async function saveVehicle(values: VehicleFormValues) {
         const input = toVehicleInput(values);
@@ -170,33 +166,22 @@ function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefres
 
             <div className="mt-6">
                 <LinkedCard
-                    icon={<FileSpreadsheet size={22} strokeWidth={2.2} />}
-                    title="Requerimientos, Cotizaciones y Despachos Asignados"
-                    description="Historial de requerimientos enviados, cotizaciones presentadas y viajes en monitoreo logístico."
+                    icon={<PackageCheck size={22} strokeWidth={2.2} />}
+                    title="Monitoreo de despachos"
+                    description="Consulta el estado de los viajes informado por los choferes."
                     manageLabel="Ver en Logística y Despacho"
                     onManage={() => navigate("/logistica-despacho")}
                     stats={[
-                        { label: "Cotizaciones", value: carrierQuotations.length },
-                        { label: "Recibidas", value: carrierQuotations.filter((q) => q.estado === "Recibida").length },
                         { label: "Unidades activas", value: carrierVehicles.length },
                     ]}
                     isEmpty={false}
                     emptyMessage=""
                     emptyActionLabel=""
                 >
-                    {carrierQuotations.slice(0, 3).map((quote) => (
-                        <LinkedRow
-                            key={quote.id}
-                            icon={<FileSpreadsheet size={16} strokeWidth={2.2} />}
-                            title={`${quote.codigo} · ${quote.campaniaNombre}`}
-                            subtitle={`Ruta: ${quote.lugarRecojo} → ${quote.destino} · Unidad: ${quote.vehiculoAsignadoPlaca || "Por asignar"} · ${quote.montoCotizadoPen !== null ? `S/ ${formatMoney(quote.montoCotizadoPen)}` : "En evaluación"}`}
-                            trailing={<StatusBadge status={quote.estado} />}
-                        />
-                    ))}
                     <LinkedRow
                         icon={<PackageCheck size={16} strokeWidth={2.2} />}
                         title="Monitoreo de Viajes y Despachos"
-                        subtitle="Seguimiento de las 10 etapas logísticas y Portal del Chofer"
+                        subtitle="Seguimiento de las etapas informadas por el chofer"
                         trailing={
                             <Button variant="outline" size="sm" onClick={() => navigate("/logistica-despacho")}>
                                 Ver despachos

@@ -198,6 +198,7 @@ export default function QualityCampaignWorkspace({
             campaignLoads.flatMap((l) =>
                 l.mtdRegistros.map((m) => ({
                     ...m,
+                    rowKey: l.id + ":" + m.id,
                     codigoCarga: l.codigoCarga,
                 })),
             ),
@@ -550,7 +551,7 @@ export default function QualityCampaignWorkspace({
                             </TableHeader>
                             <TableBody className="divide-y divide-border/60">
                                 {allMtdRecords.map((m) => (
-                                    <TableRow key={m.id} className="transition-colors hover:bg-muted/30">
+                                    <TableRow key={m.rowKey} className="transition-colors hover:bg-muted/30">
                                         <TableCell className="relative py-3.5 pl-6 pr-3">
                                             <TableRowAccent
                                                 color={m.mtdCalculado > 0.5 ? "bg-status-error" : "bg-brand"}
@@ -571,7 +572,7 @@ export default function QualityCampaignWorkspace({
                                             {m.codigoCarga}
                                         </TableCell>
                                         <TableCell className="px-3 py-3.5 text-right tabular-nums text-[13px] text-ink">
-                                            {m.capturas} moscas / {m.trampas} trampas / {m.diasExposicion} d
+                                            {m.capturas === null || m.trampas === null || m.diasExposicion === null ? "Sin datos de conteo" : m.capturas + " moscas / " + m.trampas + " trampas / " + m.diasExposicion + " d"}
                                         </TableCell>
                                         <TableCell className="px-3 py-3.5 text-right font-extrabold tabular-nums text-ink">
                                             {m.mtdCalculado.toFixed(4)}

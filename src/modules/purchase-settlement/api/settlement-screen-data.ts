@@ -5,7 +5,9 @@ import { jsonNumber, jsonObject } from '@/modules/quality/api/quality-screen-dat
 export function projectSettlementData(g: OperationsContext): SettlementLoad[] {
     const personView = (id: number, vinculo: string): SettlementLinkedPerson => {
         const p = g.people.find(p => p.personaId === id)!;
-        return { id: String(id), nombres: p.nombres, apellidos: p.apellidos, tipoDocumento: p.tipoDocumento as 'DNI', numeroDocumento: p.numeroDocumento, vinculo, acumuladoAnualPen: g.providerSettlements.filter(s => s.personaLiquidacionId === id && s.fecha.startsWith(String(new Date().getFullYear()))).reduce((n, s) => n + s.importeCompra, 0) };
+        const acumuladosPorAnio: Record<string, number> = {};
+        for (const row of g.providerSettlements.filter(s => s.personaLiquidacionId === id)) { const year = row.fecha.slice(0, 4); acumuladosPorAnio[year] = (acumuladosPorAnio[year] ?? 0) + row.importeCompra; }
+        return { acumuladosPorAnio, id: String(id), nombres: p.nombres, apellidos: p.apellidos, tipoDocumento: p.tipoDocumento as 'DNI', numeroDocumento: p.numeroDocumento, vinculo, acumuladoAnualPen: g.providerSettlements.filter(s => s.personaLiquidacionId === id && s.fecha.startsWith(String(new Date().getFullYear()))).reduce((n, s) => n + s.importeCompra, 0) };
     };
     return g.loads.map(load => {
         const c = loadContext(load.cargaId, g), receipt = g.receipts.find(r => r.cargaId === load.cargaId), purchases = (receipt?.compras ?? []).map(jsonObject), rows = g.loadProviders.filter(p => p.cargaId === load.cargaId);

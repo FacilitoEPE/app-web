@@ -1,3 +1,6 @@
+import { campaignCarrierAssignments } from "@/modules/campaigns/api/carrier-assignments";
+import { campaignCommands } from '@/modules/campaigns/api/campaign-commands.api';
+import { harvestedWeeklyItems } from "@/modules/campaigns/weeklyHarvest.utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
@@ -21,6 +24,12 @@ import { cerrarCampanaV1 } from '@/modules/campaigns/api/future-actions.api'
 import { providerScreenV1 } from '@/modules/providers/api/v1-screen.api'
 import { providerOperationalSummary } from '@/modules/providers/api/provider-screen-data'
 import { weeklyCampaignItems } from '@/modules/campaigns/api/weekly-screen-data'
+import { createGuideDraft } from '@/modules/quality/remissionGuide.utils'
+import { annualBeforeSettlement } from '@/modules/purchase-settlement/settlementUit.utils'
+import { clientOperationalSummary } from '@/modules/commercial-planning/api/client-summary'
+import { logisticsCommands } from '@/modules/logistics/api/logistics-commands.api'
+import { projectLogisticsData } from '@/modules/logistics/api/logistics-screen-data'
+import { qualityCommands } from '@/modules/quality/api/quality-commands.api'
 
 let server: Server
 let originalBase: string | undefined
@@ -46,6 +55,82 @@ afterEach(async () => {
 })
 
 describe('existing frontend with the future HTTP contract', () => {
+  it('prefills guide identities from the assigned carrier and driver, without demo snapshots', () => {
+    const g = operationsContext(), load = projectQualityData(g).loads.find(l => l.id === '1')!
+    const draft = createGuideDraft(load)
+    expect(draft.proveedoresIncluidos).toEqual(['1', '2'])
+    expect(draft.transportistaRuc).toBe(g.carriers[0].ruc)
+    expect(draft.conductorNombres).toBe(g.drivers[0].nombre)
+    expect(draft.conductorNumeroDoc).toBe(g.people.find(p => p.personaId === g.drivers[0].personaId)?.numeroDocumento)
+    expect(draft.normasSeleccionadas).toEqual([])
+    expect(draft.numeroGuia).toBe('')
+    expect(draft.direccionPartida).toBe('')
+  })
+
+  it('saves a guide draft with actual provider IDs and reads it back', async () => {
+    const load = projectQualityData(operationsContext()).loads.find(l => l.id === '1')!
+    const draft = { ...createGuideDraft(load), ...load.guiasRemision[0], numeroGuia: 'QA-REGRESSION', estado: 'Lista para generar' as const }
+    await qualityCommands.guide(load.id, draft)
+    expect(projectQualityData(operationsContext()).loads.find(l => l.id === '1')?.guiasRemision[0].numeroGuia).toBe('QA-REGRESSION')
+  })
+
+  it('keeps annual totals once, replaces the edited settlement, and isolates each client summary', () => {
+    const g = operationsContext(), entry = projectSettlementData(g)[0].proveedores[0]
+    expect(entry.personasVinculadas.find(p => p.id === entry.personaLiquidadaId)?.acumuladoAnualPen).toBe(1160)
+    expect(annualBeforeSettlement(entry, entry.personaLiquidadaId, 2026)).toBe(0)
+    expect(annualBeforeSettlement(entry, entry.personaLiquidadaId, 2025)).toBe(0)
+    expect(annualBeforeSettlement({ ...entry, fechaLiquidacion: '2025-10-29' }, entry.personaLiquidadaId, 2026)).toBe(1160)
+    expect(clientOperationalSummary(999, g)).toEqual({ activeCampaigns: 0, contracts: 0 })
+    expect(clientOperationalSummary(1, g).contracts).toBe(2)
+    expect(providerOperationalSummary(1, g).campaigns.map(c => c.id)).toEqual([1, 2])
+    expect(providerOperationalSummary(999, g).campaigns).toEqual([])
+    expect(campaignCarrierAssignments(999, 1, g)).toBe('Sin camión ni chofer asignados')
+    expect(campaignCarrierAssignments(1, 1, g)).toContain(g.vehicles[0].placa)
+  })
+
+  it('distinguishes coordinated deliveries from loads and does not invent MTD observations', () => {
+    const g = operationsContext(), loads = projectQualityData(g).loads
+    expect(loads.filter(l => l.cargaId !== undefined)).toHaveLength(g.loads.length)
+    expect(loads[0].mtdRegistros[0]).toMatchObject({ capturas: null, trampas: null, diasExposicion: null, mtdCalculado: 0.01 })
+    expect(projectDriverData(g).loads[0].fincas.map(f => f.kilosEstimados)).toEqual([600, 400])
+    const multiOrigin = structuredClone(g)
+    multiOrigin.loadOrigins = []
+    const origin = multiOrigin.deliveryOrigins[0]
+    multiOrigin.deliveryOrigins.push({ ...origin, fincaId: 2, origenEntregaId: 999 })
+    expect(projectDriverData(multiOrigin).loads[0].fincas.filter(f => f.id === '1')[0].kilosEstimados).toBeNull()
+  })
+
+  it('persists an editable certificate total independently of covered producer estimates', async () => {
+    const certificate = operationsContext().certificates[0]
+    const coverage = operationsContext().coverage.find(c => c.certificadoId === certificate.certificadoId)!
+    await campaignCommands.certificate(certificate.campaniaId, { tipo: certificate.tipoCertificacion ?? 'Global GAP', nombre: certificate.nombre, organismoEmisor: certificate.organismo ?? 'QA', validoDesde: '', validoHasta: '', costo: String(certificate.costo), moneda: 'PEN', kilosIniciales: '777.125', productores: [String(coverage.cxpId)], observaciones: '' }, [{ id: String(coverage.cxpId), nombre: 'QA' }], {}, certificate.certificadoId)
+    expect(operationsContext().certificates[0].kilosIniciales).toBe(777.125)
+  })
+
+  it('shows real kilos on the actual load date and excludes future coordinated deliveries', () => {
+    const loads = projectQualityData(operationsContext()).loads
+    loads[0].fechaCargaReal = '2026-11-02'
+    const rows = harvestedWeeklyItems(loads, 1)
+    expect(rows.every(r => r.fecha === '2026-11-02')).toBe(true)
+    expect(rows.reduce((sum, r) => sum + r.kilosVariedad, 0)).toBe(1000)
+    expect(new Set(rows.map(r => r.loadId)).size).toBe(1)
+    const otherClient = { ...loads[0], id: 'qa-2', cliente: 'Otro cliente', proveedoresCarga: loads[0].proveedoresCarga.map(p => ({ ...p, kilosCargados: p.kilosCargados / 2 })) }
+    const all = harvestedWeeklyItems([...loads, otherClient], 1)
+    expect(new Set(all.map(r => r.cliente)).size).toBe(2)
+    expect(all.reduce((sum, r) => sum + r.kilosVariedad, 0)).toBe(1500)
+  })
+
+  it('updates unloading details without rewriting settled purchase evidence', async () => {
+    const g = operationsContext(), before = structuredClone(g.receipts[0].compras)
+    const row = projectLogisticsData(g)[0]
+    await logisticsCommands.receive(row.id, { ...row.recepcion, inicioDescarga: '2026-10-29T08:00', terminoDescarga: '2026-10-29T09:00', responsableRecepcion: 'QA' }, row.proveedores)
+    expect(operationsContext().receipts[0].compras).toEqual(before)
+    expect(operationsContext().receipts[0].descargaFinAt).toBeTruthy()
+    const reloaded = projectLogisticsData(operationsContext())[0].recepcion
+    expect(new Date(reloaded.inicioDescarga).toISOString()).toBe(operationsContext().receipts[0].descargaInicioAt)
+    expect(new Date(reloaded.terminoDescarga).toISOString()).toBe(operationsContext().receipts[0].descargaFinAt)
+  })
+
   it('hydrates every operational screen from the same V1 scenario without legacy requests', async () => {
     expect(getFrontendDataStatus().phase).toBe('ready')
     expect(await getCampanas()).toHaveLength(3)

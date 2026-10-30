@@ -9,6 +9,7 @@ import { formatDisplayDate, formatKg } from "@/shared/utils/format";
 
 export interface WeeklySlotDeliveryItem {
     id: string;
+    loadId?: string;
     fecha: string;
     variedad: string;
     cliente: string;
@@ -45,7 +46,7 @@ export default function CampaignWeeklySlotModal({
     const navigate = useNavigate();
 
     const totalKilosVariedad = items.reduce((sum, item) => sum + item.kilosVariedad, 0);
-    const totalKilosGeneral = items.reduce((sum, item) => sum + item.kilosTotalesEntrega, 0);
+    const totalKilosGeneral = [...new Map(items.map(item => [item.loadId ?? item.id, item.kilosTotalesEntrega])).values()].reduce((sum, kg) => sum + kg, 0);
     const coordinadasCount = items.filter((item) => item.coordinada).length;
 
     return (
@@ -53,8 +54,8 @@ export default function CampaignWeeklySlotModal({
             open={open}
             onOpenChange={onOpenChange}
             icon={<CalendarRange size={22} strokeWidth={2.2} />}
-            title={`Entregas del programa semanal · ${variedad}`}
-            description={`${dayLabel} (${formatDisplayDate(dateIso)}) · ${items.length} ${items.length === 1 ? "entrega programada" : "entregas programadas"}`}
+            title={`Cargas del programa semanal · ${variedad}`}
+            description={`${dayLabel} (${formatDisplayDate(dateIso)}) · ${items.length} ${items.length === 1 ? "carga registrada" : "cargas registradas"}`}
             size="lg"
             footer={
                 <>
@@ -82,7 +83,7 @@ export default function CampaignWeeklySlotModal({
                             tone: "brand",
                         },
                         {
-                            label: "Kilos totales en entregas",
+                            label: "Kilos totales en cargas",
                             value: `${formatKg(totalKilosGeneral)} kg`,
                         },
                         {
@@ -121,7 +122,7 @@ export default function CampaignWeeklySlotModal({
                                         value={`${formatKg(item.kilosVariedad)} kg`}
                                     />
                                     <InfoField
-                                        label="Total de la entrega"
+                                        label="Total de la carga"
                                         value={`${formatKg(item.kilosTotalesEntrega)} kg`}
                                     />
                                     <InfoField

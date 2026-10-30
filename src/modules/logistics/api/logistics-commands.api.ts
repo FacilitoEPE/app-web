@@ -1,7 +1,9 @@
+import type { JsonObject } from '@/shared/api/future-client';
 import { recepcionPlantaV1 } from '@/modules/logistics/api/future.api';
 import { operationsContext } from '@/modules/operations/api/operations-context.api';
 import { loadContext } from '@/modules/operations/api/operation-links';
 import { commitRemote } from '@/shared/api/data-contract';
+import { jsonObject } from '@/modules/quality/api/quality-screen-data';
 import { assertNoNewFiles, jsonData } from '@/shared/api/document-state';
 import { writeLoad, hasChanges } from '@/modules/quality/api/quality-commands.api';
 import type { LogisticsProviderBreakdown, LogisticsReceptionData, LogisticsCrateMovement, LogisticsDocumentsClosure } from '@/modules/logistics/logistics.models';
@@ -24,7 +26,7 @@ export const logisticsCommands = {
     receive: (id: string, value: LogisticsReceptionData, providers: LogisticsProviderBreakdown[]) => commitRemote(async () => {
         assertNoNewFiles(value);
         const old = operationsContext().receipts.find(r => r.cargaId === Number(id));
-        return writeReceipt(id, { pesoPlantaKg: value.pesoRecibidoPlanta, resultado: value.resultadoRecepcion, huboDescarte: value.huboDescarte, descarteKg: value.huboDescarte ? value.kilosDescarte : 0, fechaRecepcion: old?.fechaRecepcion ?? new Date().toISOString(), recepcionConfirmadaAt: old?.recepcionConfirmadaAt ?? new Date().toISOString(), descargaInicioAt: value.inicioDescarga ? new Date(value.inicioDescarga).toISOString() : null, descargaFinAt: value.terminoDescarga ? new Date(value.terminoDescarga).toISOString() : null, observaciones: value.observacionesEvaluacion, compras: providers.map(p => ({ providerId: Number(p.proveedorId), recognizedQuantity: p.kilosRecibidosPlanta, reference: '', quantity: p.kilosCargados, document: null, reviewStatus: 'Revisado', observation: '' })), logistica: { ...old?.logistica, responsableRecepcion: value.responsableRecepcion, observacionesDescarga: value.observacionesDescarga, calidadRecepcion: value.calidadRecepcion, destinoDescarte: value.destinoDescarte, motivoDescarte: value.motivoDescarte } });
+        return writeReceipt(id, { pesoPlantaKg: value.pesoRecibidoPlanta, resultado: value.resultadoRecepcion, huboDescarte: value.huboDescarte, descarteKg: value.huboDescarte ? value.kilosDescarte : 0, fechaRecepcion: old?.fechaRecepcion ?? new Date().toISOString(), recepcionConfirmadaAt: old?.recepcionConfirmadaAt ?? new Date().toISOString(), descargaInicioAt: value.inicioDescarga ? new Date(value.inicioDescarga).toISOString() : null, descargaFinAt: value.terminoDescarga ? new Date(value.terminoDescarga).toISOString() : null, observaciones: value.observacionesEvaluacion, compras: providers.map((p): JsonObject => { const previous = old?.compras.map(jsonObject).find(row => row.providerId === Number(p.proveedorId)); return previous ? { ...previous, recognizedQuantity: p.kilosRecibidosPlanta } : { providerId: Number(p.proveedorId), recognizedQuantity: p.kilosRecibidosPlanta, reference: '', quantity: p.kilosCargados, document: null, reviewStatus: 'Revisado', observation: '' }; }), logistica: { ...old?.logistica, responsableRecepcion: value.responsableRecepcion, observacionesDescarga: value.observacionesDescarga, calidadRecepcion: value.calidadRecepcion, destinoDescarte: value.destinoDescarte, motivoDescarte: value.motivoDescarte } });
     }),
     crates: (id: string, value: Omit<LogisticsCrateMovement, 'id'>) => commitRemote(async () => {
         assertNoNewFiles(value.guiaSalidaArchivo);

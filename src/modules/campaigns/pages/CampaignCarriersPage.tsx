@@ -1,6 +1,8 @@
+import { usesV1 } from "@/shared/api/data-contract";
+import { campaignCarrierAssignments } from "@/modules/campaigns/api/carrier-assignments";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Eye, FileText, Link2, Link2Off, ListFilter, Pencil, RotateCw, SearchX, Truck, TriangleAlert, Wallet, CircleCheck } from "lucide-react";
+import { Eye, Link2, Link2Off, ListFilter, Pencil, RotateCw, SearchX, Truck, TriangleAlert, Wallet } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Spinner } from "@/shared/components/ui/spinner";
@@ -40,7 +42,6 @@ import {
 import {
     linkCampaignCarrier,
     saveCampaignCarrierAgreement,
-    settleCampaignCarrierAgreement,
     unlinkCampaignCarrier,
     useCampaignCarriers,
 } from "@/modules/campaigns/campaignCarriers.store";
@@ -68,6 +69,7 @@ function agreementCaption(link: CampaignCarrierLink): string | null {
 
 /** Transportistas vinculados a una campaña en ejecución, con su cotización y su acuerdo de pago. */
 export default function CampaignCarriersPage() {
+    const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const campaniaId = Number(id);
     const isValidCampaign = Number.isInteger(campaniaId) && campaniaId > 0;
@@ -75,7 +77,7 @@ export default function CampaignCarriersPage() {
     const links = useCampaignCarriers(campaniaId);
     const extras = useCarrierExtras();
     const quotations = useCarrierQuotations();
-    const navigate = useNavigate();
+
 
     const [carriers, setCarriers] = useState<Carrier[]>([]);
     const [isLoading, setIsLoading] = useState(isValidCampaign);
@@ -87,7 +89,6 @@ export default function CampaignCarriersPage() {
     const [linkOpen, setLinkOpen] = useState(false);
     const [details, setDetails] = useState<{ open: boolean; row: Row | null }>({ open: false, row: null });
     const [agreement, setAgreement] = useState<AgreementState>({ open: false, mode: "create", row: null });
-    const [settling, setSettling] = useState<{ open: boolean; row: Row | null }>({ open: false, row: null });
     const [unlinking, setUnlinking] = useState<{ open: boolean; row: Row | null }>({ open: false, row: null });
     const [success, setSuccess] = useState<{ open: boolean; mode: SuccessMode }>({ open: false, mode: "carrier" });
     const showSuccess = (mode: SuccessMode) => setSuccess({ open: true, mode });
@@ -129,21 +130,18 @@ export default function CampaignCarriersPage() {
     const withoutAgreement = rows.filter((row) => row.link.acuerdo === null).length;
 
     const quotationInfoFor = (row: Row) => {
+        if (usesV1()) return { unitAndDriver: campaignCarrierAssignments(campaniaId, row.link.carrierId) };
         const match = quotations.find((q) => q.carrierId === row.link.carrierId && q.campaniaId === campaniaId)
             ?? quotations.find((q) => q.carrierId === row.link.carrierId);
         if (match) {
             return {
                 unitAndDriver: `${match.vehiculoAsignadoPlaca || "Por asignar"} · ${match.choferAsignadoNombre || "Chofer pendiente"}`,
-                quoteLabel: `${match.codigo} · ${match.montoCotizadoPen !== null ? `S/ ${formatMoney(match.montoCotizadoPen)}` : "En evaluación"}`,
-                status: match.estado,
             };
         }
         const firstVeh = row.carrier?.vehiculos[0];
         const firstDrv = row.carrier?.choferes[0];
         return {
             unitAndDriver: [firstVeh?.placa, firstDrv?.nombre].filter(Boolean).join(" · ") || "Flota disponible",
-            quoteLabel: row.link.cotizacion?.name ?? "Sin adjunto",
-            status: "Recibida",
         };
     };
 
@@ -164,16 +162,13 @@ export default function CampaignCarriersPage() {
 
     const getRowActions = (row: Row): { primary: RowAction[]; secondary: RowAction[] } => {
         const { acuerdo } = row.link;
-        const secondary: RowAction[] = [
-            { label: "Requerimientos y cotizaciones", icon: <FileText size={16} strokeWidth={2.5} />, onClick: () => navigate("/transportistas") },
-        ];
+        const secondary: RowAction[] = [];
         if (!acuerdo) {
             secondary.push({ label: "Registrar acuerdo de pago", icon: <Wallet size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setAgreement({ open: true, mode: "create", row }) });
         } else if (isAgreementClosed(acuerdo)) {
             secondary.push({ label: "Ver acuerdo de pago", icon: <Wallet size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setAgreement({ open: true, mode: "view", row }) });
         } else {
             secondary.push({ label: "Editar acuerdo de pago", icon: <Pencil size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setAgreement({ open: true, mode: "edit", row }) });
-            secondary.push({ label: "Marcar saldo como pagado", icon: <CircleCheck size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setSettling({ open: true, row }) });
         }
         const hasLockedAgreement = Boolean(acuerdo && isAgreementClosed(acuerdo));
         return {
@@ -234,7 +229,6 @@ export default function CampaignCarriersPage() {
     };
 
     const selectedAgreementRow = agreement.row;
-    const settleAgreement = settling.row?.link.acuerdo;
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
@@ -252,12 +246,10 @@ export default function CampaignCarriersPage() {
             <PageHeader
                 icon={<Truck size={24} strokeWidth={2.5} />}
                 title="Transportistas de la Campaña"
-                description="Vincula transportistas, consulta sus cotizaciones y registra el acuerdo de pago de cada uno."
+                description="Vincula transportistas, asigna sus unidades y registra el acuerdo de pago de cada uno."
                 action={
                     <div className="flex flex-wrap items-center gap-2.5">
-                        <Button variant="outline" size="xl" onClick={() => navigate("/transportistas")}>
-                            <FileText size={19} strokeWidth={2.3} /> Cotizaciones globales
-                        </Button>
+                        <Button variant="outline" size="xl" onClick={() => navigate("/campaigns/" + campaniaId + "/deliveries")}>Asignar camión y chofer</Button>
                         <Button size="xl" onClick={() => setLinkOpen(true)} disabled={!isValidCampaign}>
                             <Link2 size={20} strokeWidth={2.5} /> Vincular transportista
                         </Button>
@@ -320,7 +312,7 @@ export default function CampaignCarriersPage() {
                                     <TableHead className="h-14 px-6 font-semibold text-ink">Transportista</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Tipo</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Contacto</TableHead>
-                                    <TableHead className="h-14 font-semibold text-ink">Cotización / Unidad</TableHead>
+                                    <TableHead className="h-14 font-semibold text-ink">Unidad / Chofer</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Vinculado</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Acuerdo de pago</TableHead>
                                     <TableHead className="h-14 w-44 px-6 text-center font-semibold text-ink">Acciones</TableHead>
@@ -345,7 +337,6 @@ export default function CampaignCarriersPage() {
                                             <TableCell>
                                                 <div className="flex flex-col">
                                                     <span className="text-[13px] font-semibold text-ink">{qInfo.unitAndDriver}</span>
-                                                    <span className="mt-0.5 text-[11.5px] font-medium text-ink-muted">{qInfo.quoteLabel}</span>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="whitespace-nowrap font-medium text-ink-body">{formatDisplayDate(row.link.fechaVinculacion)}</TableCell>
@@ -368,8 +359,8 @@ export default function CampaignCarriersPage() {
                 campaignName={campaign?.nombre ?? "Campaña"}
                 carriers={available}
                 isLoading={isLoading}
-                onSave={async (carrierId, cotizacion) => {
-                    await linkCampaignCarrier(campaniaId, carrierId, cotizacion);
+                onSave={async (carrierId) => {
+                    await linkCampaignCarrier(campaniaId, carrierId, null);
                     setLinkOpen(false);
                     showSuccess("carrier");
                 }}
@@ -395,27 +386,6 @@ export default function CampaignCarriersPage() {
                     await saveCampaignCarrierAgreement(campaniaId, selectedAgreementRow.link.id, values, boleta);
                     setAgreement((current) => ({ ...current, open: false }));
                     showSuccess("carrierAgreement");
-                }}
-            />
-
-            <ConfirmModal
-                open={settling.open}
-                onOpenChange={(open) => setSettling((current) => ({ ...current, open }))}
-                icon={<CircleCheck size={28} strokeWidth={2.25} />}
-                tone="warning"
-                title="¿Marcar el saldo como pagado?"
-                description={
-                    <>
-                        Se cerrará el acuerdo con <strong className="font-bold text-ink">{settling.row ? rowName(settling.row) : ""}</strong>
-                        {settleAgreement ? <> (saldo de {getMonedaSymbol(settleAgreement.moneda)} {formatMoney(getAgreementBalance(settleAgreement.total, settleAgreement.adelanto))})</> : null}.
-                        Después solo se podrá consultar.
-                    </>
-                }
-                confirmLabel="Sí, marcar como pagado"
-                onConfirm={async () => {
-                    if (!settling.row) return;
-                    await settleCampaignCarrierAgreement(campaniaId, settling.row.link.id);
-                    showSuccess("carrierSettled");
                 }}
             />
 

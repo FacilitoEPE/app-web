@@ -1,6 +1,5 @@
 import { Truck, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
-import FileDropzone from "@/shared/components/FileDropzone";
 import { InfoField } from "@/shared/components/InfoField";
 import ModalSection from "@/shared/components/ModalSection";
 import StatusBadge from "@/shared/components/StatusBadge";
@@ -64,7 +63,6 @@ export default function CampaignCarrierDetailsModal({ open, onOpenChange, carrie
                         <InfoField label="Fecha de vinculación" value={formatDisplayDate(link.fechaVinculacion)} />
                         <InfoField label="Acuerdo de pago" variant="plain" value={<StatusBadge status={getAgreementStatus(link.acuerdo)} />} />
                     </div>
-                    <FileDropzone label="Cotización de esta campaña" variant="horizontal" hasColon={false} file={link.cotizacion} readOnly onChange={() => undefined} />
                 </ModalSection>
             </div>
         </AppModal>

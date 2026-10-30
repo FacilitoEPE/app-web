@@ -11,8 +11,8 @@ describe("navigationItems", () => {
     it("keeps future modules addressable while they are being built", () => {
         expect(navigationItems.filter((item) => item.status === "building").map((item) => item.url)).toEqual([
             "/logistica-despacho",
-            "/facturacion-cobros",
             "/liquidacion-compra",
+            "/facturacion-cobros",
         ]);
     });
 });

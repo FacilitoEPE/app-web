@@ -147,6 +147,7 @@ export interface CertificadoCampanaV1 {
   observaciones: string | null
   historialCobertura: JsonValue[]
   tipoCertificacion: "Global GAP" | "Orgánico USDA" | "Orgánico UE" | "Fairtrade" | "Rainforest Alliance" | null
+  kilosIniciales: number | null
 }
 
 export interface CreateCertificadoCampanaV1 {
@@ -165,6 +166,7 @@ export interface CreateCertificadoCampanaV1 {
   observaciones?: string | null
   historialCobertura?: JsonValue[]
   tipoCertificacion?: "Global GAP" | "Orgánico USDA" | "Orgánico UE" | "Fairtrade" | "Rainforest Alliance" | null
+  kilosIniciales?: number | null
 }
 
 export interface CertificadoCampanaXProveedorV1 {

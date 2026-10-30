@@ -88,7 +88,7 @@ function validateCoordinate(value: string, limit: number): string | undefined {
  * Valida el formulario. `existingNames` son las fincas que el proveedor ya tiene registradas:
  * no se permite repetir el nombre (sin distinguir mayúsculas ni espacios de los extremos).
  */
-export function validateFinca(values: FincaFormValues, existingNames: string[] = []): FincaErrors {
+export function validateFinca(values: FincaFormValues, existingNames: string[] = [], requireCoordinates = false): FincaErrors {
     const errors: FincaErrors = {};
 
     if (isBlank(values.nombre)) errors.nombre = "Ingresa el nombre de la finca.";
@@ -103,6 +103,8 @@ export function validateFinca(values: FincaFormValues, existingNames: string[] =
     if (values.codigoSenasa.trim().length > MAX_CODIGO_LENGTH) errors.codigoSenasa = `Usa hasta ${MAX_CODIGO_LENGTH} caracteres.`;
     if (values.codigoCatastral.trim().length > MAX_CODIGO_LENGTH) errors.codigoCatastral = `Usa hasta ${MAX_CODIGO_LENGTH} caracteres.`;
 
+    if (requireCoordinates && isBlank(values.latitud)) errors.latitud = "Ingresa la latitud.";
+    if (requireCoordinates && isBlank(values.longitud)) errors.longitud = "Ingresa la longitud.";
     const latitudError = validateCoordinate(values.latitud, 90);
     if (latitudError) errors.latitud = latitudError;
     const longitudError = validateCoordinate(values.longitud, 180);

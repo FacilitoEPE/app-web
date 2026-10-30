@@ -17,9 +17,12 @@ export function projectProviderData(g: OperationsContext) {
     }
     return { fincas, certificados, produccion };
 }
-export function providerOperationalSummary(providerId: number) {
-    const g = operationsContext(), parties = g.participations.filter(p => p.proveedorId === providerId).map(p => p.cxpId);
+export function providerOperationalSummary(providerId: number, g: OperationsContext = operationsContext()) {
+    const participations = g.participations.filter(p => p.proveedorId === providerId);
+    const parties = participations.map(p => p.cxpId);
     const latest = g.measurements.filter(m => parties.includes(m.cxpId)).sort((a, b) => a.medidoAt.localeCompare(b.medidoAt)).at(-1);
     const kilosRecibidos = g.receipts.flatMap(r => r.compras).map(jsonObject).filter(p => p.providerId === providerId).reduce((total, p) => total + jsonNumber(p.recognizedQuantity), 0);
-    return { kilosRecibidos, mtd: latest?.valor };
+    const campaignIds = new Set(participations.map(p => p.campaniaId));
+    const campaigns = g.campaigns.filter(c => campaignIds.has(c.campaniaId) && c.estado !== 'terminado').map(c => ({ id: c.campaniaId, nombre: c.nombre, estado: c.estado, fincas: new Set(g.interviews.filter(i => parties.includes(i.camXProvId) && participations.some(p => p.cxpId === i.camXProvId && p.campaniaId === c.campaniaId)).map(i => i.fincaId)).size }));
+    return { kilosRecibidos, mtd: latest?.valor, campaigns };
 }

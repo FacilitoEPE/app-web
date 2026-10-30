@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, Building2, Contact, FileSpreadsheet, UserPlus } from "lucide-react";
+import { AlertCircle, Contact, UserPlus } from "lucide-react";
 import ClientsFilters from "@/modules/commercial-planning/components/ClientsFilters";
 import ClientsTable from "@/modules/commercial-planning/components/ClientsTable";
 import ClientFormModal from "@/modules/commercial-planning/components/ClientFormModal";
 import ClientSuccessModal from "@/modules/commercial-planning/components/ClientSuccessModal";
-import CommercialContractsSubView from "@/modules/commercial-planning/components/CommercialContractsSubView";
-import SegmentedTabs, { type SegmentedTabItem } from "@/shared/components/SegmentedTabs";
 import PageHeader from "@/shared/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
@@ -22,7 +20,6 @@ export default function CommercialPlanningPage() {
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [type, setType] = useState("");
-    const [activeSection, setActiveSection] = useState<"clientes" | "contratos">("clientes");
     const deleteGuard = useRef(createInFlightGuard());
     const loadSequence = useRef(0);
 
@@ -94,11 +91,6 @@ export default function CommercialPlanningPage() {
         }
     };
 
-    const sectionTabs: readonly SegmentedTabItem[] = [
-        { id: "clientes", label: "Clientes", icon: Building2, count: clients.length },
-        { id: "contratos", label: "Contratos", icon: FileSpreadsheet },
-    ];
-
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
             <PageHeader
@@ -106,25 +98,14 @@ export default function CommercialPlanningPage() {
                 title="Gestión Comercial"
                 description="Administra los clientes y planifica la gestión comercial."
                 action={
-                    activeSection === "clientes" ? (
+
                         <Button size="xl" onClick={() => setIsCreateModalOpen(true)}>
                             <UserPlus size={20} strokeWidth={2.5} /> Nuevo Cliente
                         </Button>
-                    ) : null
+
                 }
             />
 
-            <SegmentedTabs
-                tabs={sectionTabs}
-                value={activeSection}
-                onChange={(v) => setActiveSection(v as "clientes" | "contratos")}
-                className="mb-6"
-            />
-
-            {activeSection === "contratos" ? (
-                <CommercialContractsSubView />
-            ) : (
-                <>
                     <ClientsFilters
                         search={search}
                         onSearchChange={setSearch}
@@ -151,8 +132,6 @@ export default function CommercialPlanningPage() {
                         onChanged={() => void loadClients()}
                         onDelete={handleDelete}
                     />
-                </>
-            )}
 
             <ClientFormModal
                 open={isCreateModalOpen}

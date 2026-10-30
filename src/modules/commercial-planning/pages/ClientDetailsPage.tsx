@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import CommercialContractsSubView from "@/modules/commercial-planning/components/CommercialContractsSubView";
 import { Contact, Pencil } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import PageHeader from "@/shared/layout/PageHeader";
@@ -72,6 +73,10 @@ export default function ClientDetailsPage() {
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <ClientOverviewCard client={client} />
             </div>
+
+            <section className="mt-8" aria-label="Contratos del cliente">
+                <CommercialContractsSubView clientId={clientId} />
+            </section>
 
             <ClientFormModal
                 open={editing}

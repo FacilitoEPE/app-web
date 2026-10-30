@@ -195,7 +195,7 @@ function ProviderDetailsView({ provider, onSaved }: { provider: Proveedor; onSav
                     manageLabel="Ver Liquidaciones de Compra"
                     onManage={() => navigate("/liquidacion-compra")}
                     stats={[
-                        { label: "Campañas activas", value: 2 },
+                        { label: "Campañas activas", value: remoteSummary?.campaigns.length ?? 0 },
                         { label: "Kilos recepcionados", value: `${formatDecimal(totalDeliveredKg)} kg` },
                         { label: "Índice MTD Ceratitis", value: latestMtd === undefined ? "—" : formatDecimal(latestMtd) },
                     ]}
@@ -203,19 +203,14 @@ function ProviderDetailsView({ provider, onSaved }: { provider: Proveedor; onSav
                     emptyMessage=""
                     emptyActionLabel=""
                 >
-                    <LinkedRow
-                        icon={<PackageCheck size={16} strokeWidth={2.2} />}
-                        title="Campaña Mango Kent Exportación 2026"
-                        subtitle={`Fincas habilitadas: ${providerFincas.length || 1} · Control fitosanitario SENASA vigente`}
-                        trailing={
-                            <div className="flex items-center gap-2">
-                                <StatusBadge status="En ejecución" />
-                                <Button variant="outline" size="sm" onClick={() => navigate("/campaigns")}>
-                                    Ver campaña
-                                </Button>
-                            </div>
-                        }
-                    />
+                    {remoteSummary?.campaigns.map(campaign => (
+                        <LinkedRow key={campaign.id} icon={<PackageCheck size={16} strokeWidth={2.2} />}
+                            title={campaign.nombre} subtitle={"Fincas entrevistadas: " + campaign.fincas}
+                            trailing={<div className="flex items-center gap-2">
+                                <StatusBadge status={campaign.estado === "en proceso" ? "En ejecución" : "Planificado"} />
+                                <Button variant="outline" size="sm" onClick={() => navigate("/campaigns/" + campaign.id)}>Ver campaña</Button>
+                            </div>} />
+                    ))}
                     <LinkedRow
                         icon={<FileSpreadsheet size={16} strokeWidth={2.2} />}
                         title="Liquidación de Compra y Estado de Cuenta"

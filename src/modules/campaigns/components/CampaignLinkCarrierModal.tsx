@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link2, Mail, MapPin, Phone, Truck, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
-import FileDropzone from "@/shared/components/FileDropzone";
 import FormField from "@/shared/components/FormField";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -17,21 +16,19 @@ interface CampaignLinkCarrierModalProps {
     /** Transportistas de Gestión de Transporte que todavía no están vinculados a esta campaña */
     carriers: CarrierProfile[];
     isLoading: boolean;
-    onSave: (carrierId: number, cotizacion: File) => void;
+    onSave: (carrierId: number) => void;
 }
 
 /**
- * Vincula un transportista de Gestión de Transporte a la campaña. Lo único que se pide es la cotización que envió; el
+ * Vincula un transportista de Gestión de Transporte a la campaña. Se confirma su identidad; el
  * resto de sus datos ya está en su ficha. Al elegirlo, muestra su tipo, ubicación y datos de contacto para confirmar que es el correcto.
  */
 export default function CampaignLinkCarrierModal({ open, onOpenChange, campaignName, carriers, isLoading, onSave }: CampaignLinkCarrierModalProps) {
     const [carrierId, setCarrierId] = useState("");
-    const [quote, setQuote] = useState<File | null>(null);
-    const [errors, setErrors] = useState<{ carrier?: string; quote?: string }>({});
+    const [errors, setErrors] = useState<{ carrier?: string }>({});
 
     useResetOnToggle(open, () => {
         setCarrierId("");
-        setQuote(null);
         setErrors({});
     });
 
@@ -42,12 +39,12 @@ export default function CampaignLinkCarrierModal({ open, onOpenChange, campaignN
     const selected = carriers.find((carrier) => String(carrier.id) === carrierId);
 
     const handleSave = async () => {
-        const next = { carrier: selected ? undefined : "Selecciona el transportista.", quote: quote ? undefined : "Adjunta la cotización del transportista." };
-        if (next.carrier || next.quote) {
+        const next = { carrier: selected ? undefined : "Selecciona el transportista." };
+        if (next.carrier) {
             setErrors(next);
             return;
         }
-        await onSave(selected!.id, quote!);
+        await onSave(selected!.id);
     };
 
     return (
@@ -56,7 +53,7 @@ export default function CampaignLinkCarrierModal({ open, onOpenChange, campaignN
             onOpenChange={onOpenChange}
             icon={<Truck size={22} strokeWidth={2} />}
             title="Vincular transportista"
-            description={`${campaignName} · Elige un transportista de Gestión de Transporte y adjunta su cotización.`}
+            description={`${campaignName} · Elige un transportista de Gestión de Transporte. Después asigna el camión y chofer desde las entregas de la campaña.`}
             size="md"
             footer={
                 <>
@@ -122,19 +119,6 @@ export default function CampaignLinkCarrierModal({ open, onOpenChange, campaignN
                     </div>
                 )}
 
-                <FormField error={errors.quote}>
-                    <FileDropzone
-                        label="Cotización"
-                        variant="horizontal"
-                        required
-                        hint="PDF o Imagen · Máx. 10 MB"
-                        file={quote}
-                        onChange={(file) => {
-                            setQuote(file);
-                            setErrors((current) => ({ ...current, quote: undefined }));
-                        }}
-                    />
-                </FormField>
             </div>
         </AppModal>
     );

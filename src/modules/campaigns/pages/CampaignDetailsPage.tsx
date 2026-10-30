@@ -1,3 +1,4 @@
+import { usesV1 } from '@/shared/api/data-contract';
 import CampaignClosureAction from '@/modules/campaigns/components/CampaignClosureAction';
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -155,7 +156,8 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
     const timing = getCampaignTiming(campaign.inicio, campaign.fin);
 
     const estimatedKg = proveedores.reduce((sum, item) => sum + (Number(item.cantidadProveedor) || 0), 0);
-    const campaignLoads = qualityLoads.filter((load) => load.campaniaId === campaniaId);
+    const campaignLoads = qualityLoads.filter((load) => load.campaniaId === campaniaId && (!usesV1() || load.cargaId !== undefined));
+    const uniqueClients = [...new Map(clientes.map(c => [c.clienteNegocioId, c])).values()];
     const harvestedKg = campaignLoads.reduce(
         (sum, load) => sum + load.proveedoresCarga.reduce((acc, p) => acc + p.kilosCargados, 0),
         0,
@@ -174,7 +176,7 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                     description="Control y seguimiento integral de la campaña."
                     action={
                         <div className="flex flex-wrap items-center gap-2.5">
-                            <Button variant="outline" size="xl" onClick={() => navigate(`/campaigns/${campaniaId}/weekly-program`)}>
+                            <Button variant="outline" size="xl" onClick={() => navigate(`/campaigns/${campaniaId}/weekly-delivery-program`)}>
                                 <CalendarRange size={19} strokeWidth={2.3} /> Programa semanal
                             </Button>
                             <Button variant="outline" size="xl" onClick={() => setOpenModal("edit")}>
@@ -193,7 +195,7 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                         <CampaignHarvestCard harvested={harvestedKg} estimated={estimatedKg > 0 ? estimatedKg : null} />
                         <div className="campaign-contacts-grid">
                             <CampaignProvidersSummary providers={toProviderSummaries(proveedores)} campaignName={campana.nombre} onViewAll={() => setOpenModal("providers")} />
-                            <CampaignClientsSummary clients={toClientSummaries(clientes)} campaignName={campana.nombre} onViewAll={() => navigate(`/campaigns/${campaniaId}/clients`)} />
+                            <CampaignClientsSummary clients={toClientSummaries(uniqueClients)} campaignName={campana.nombre} onViewAll={() => navigate(`/campaigns/${campaniaId}/clients`)} />
                         </div>
                     </div>
                     <div className="campaign-side-column">
@@ -231,7 +233,7 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                             title="Programa Semanal de Entregas"
                             subtitle="Consolidado semanal por cliente, variedad y proveedor asignado"
                             trailing={
-                                <Button variant="outline" size="sm" onClick={() => navigate(`/campaigns/${campaniaId}/weekly-program`)}>
+                                <Button variant="outline" size="sm" onClick={() => navigate(`/campaigns/${campaniaId}/weekly-delivery-program`)}>
                                     Abrir programa
                                 </Button>
                             }
@@ -241,7 +243,7 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                             title="Cosecha y Control de Calidad"
                             subtitle={`${campaignLoads.length} cargas registradas · ${campaignGuidesCount} guías de remisión emitidas`}
                             trailing={
-                                <Button variant="outline" size="sm" onClick={() => navigate("/control-calidad")}>
+                                <Button variant="outline" size="sm" onClick={() => navigate("/calidad")}>
                                     Ir a calidad
                                 </Button>
                             }
@@ -263,9 +265,9 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                         title="Cierre Financiero y Liquidaciones"
                         description="Acceso directo a la facturación de clientes, liquidación de compra a productores y pagos de flete."
                         manageLabel="Ir a Facturación"
-                        onManage={() => navigate("/facturacion")}
+                        onManage={() => navigate("/facturacion-cobros")}
                         stats={[
-                            { label: "Clientes activos", value: clientes.length },
+                            { label: "Clientes activos", value: uniqueClients.length },
                             { label: "Proveedores", value: proveedores.length },
                             { label: "Acuerdos flete", value: carrierLinks.filter((item) => item.acuerdo !== null).length },
                         ]}
@@ -280,7 +282,7 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                             trailing={
                                 <div className="flex items-center gap-2">
                                     <StatusBadge status={clientes.length > 0 ? "Activo" : "Pendiente"} />
-                                    <Button variant="outline" size="sm" onClick={() => navigate("/facturacion")}>
+                                    <Button variant="outline" size="sm" onClick={() => navigate("/facturacion-cobros")}>
                                         Ver facturas
                                     </Button>
                                 </div>

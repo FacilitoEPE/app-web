@@ -92,8 +92,8 @@ export default function QualityDeliveryReviewModal({
             current.map((item, idx) => {
                 if (idx !== index) return item;
                 const next = { ...item, ...patch };
-                const denom = Math.max(1, next.trampas * next.diasExposicion);
-                next.mtdCalculado = Number((next.capturas / denom).toFixed(4));
+                const denom = Math.max(1, (next.trampas ?? 0) * (next.diasExposicion ?? 0));
+                next.mtdCalculado = Number(((next.capturas ?? 0) / denom).toFixed(4));
                 return next;
             }),
         );

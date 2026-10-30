@@ -1,4 +1,6 @@
+import CampaignLinkClientModal from "@/modules/campaigns/components/CampaignLinkClientModal";
 import { usesV1 } from '@/shared/api/data-contract';
+import { clientOperationalSummary } from '@/modules/commercial-planning/api/client-summary';
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Eye, Contact, FileText, ListFilter, MapPin, Trash2, TriangleAlert, RotateCw, SearchX } from "lucide-react";
@@ -20,9 +22,7 @@ import { TableToolbar, TableCountPill, TableExportMenu, TableViewToggle, type Ta
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
 import ClientFormModal from "@/modules/commercial-planning/components/ClientFormModal";
 import ClientSuccessModal from "@/modules/commercial-planning/components/ClientSuccessModal";
-import CommercialClientCampaignDetailModal, { type CommercialParticipationRow } from "@/modules/commercial-planning/components/CommercialClientCampaignDetailModal";
 import { useCampaignContractRecords } from "@/modules/campaigns/campaignClientContracts.store";
-import { useCampaignDeliveryRecords } from "@/modules/campaigns/campaignContractDeliveries.store";
 import type { ClienteNegocio } from "@/modules/clients/api/cliente-negocio.mapper";
 import type { TableExport } from "@/shared/utils/exportTable";
 import { paginate } from "@/shared/utils/paginate";
@@ -44,51 +44,19 @@ interface ClientsTableProps {
 export default function ClientsTable({ data, isLoading, loadError, onRetry, hasActiveFilters, onClearFilters, onChanged, onDelete }: ClientsTableProps) {
     const navigate = useNavigate();
     const contractRecords = useCampaignContractRecords();
-    const deliveryRecords = useCampaignDeliveryRecords();
     const [page, setPage] = useState(1);
     const [viewMode, setViewMode] = useState<TableViewMode>("table");
     const [editing, setEditing] = useState<{ open: boolean; client: ClienteNegocio | null }>({ open: false, client: null });
     const [deleting, setDeleting] = useState<{ open: boolean; client: ClienteNegocio | null }>({ open: false, client: null });
-    const [campaignInquiry, setCampaignInquiry] = useState<{ open: boolean; participation: CommercialParticipationRow | null }>({ open: false, participation: null });
+    const [linkingClient, setLinkingClient] = useState<ClienteNegocio | null>(null);
     const [success, setSuccess] = useState({ open: false });
 
     const totalContractsCount = Object.values(contractRecords).reduce((sum, list) => sum + list.length, 0);
 
     const clientCampaignSummary = (row: ClienteNegocio) => {
-        const activeCount = (row.clienteNegocioId % 2) + 1;
-        return `${activeCount} ${activeCount === 1 ? "campaña activa" : "campañas activas"} · ${Math.max(1, totalContractsCount)} contratos`;
-    };
-
-    const buildParticipationFor = (row: ClienteNegocio): CommercialParticipationRow => {
-        const relationId = row.clienteNegocioId;
-        const contracts = contractRecords[`1:${relationId}`] ?? Object.values(contractRecords)[0] ?? [];
-        const deliveries = contracts.flatMap((contract) =>
-            (deliveryRecords[`1:${relationId}:${contract.id}`] ?? []).map((delivery) => ({
-                contractId: contract.id,
-                contractName: contract.archivo?.name ?? "Sin adjunto",
-                delivery,
-            })),
-        );
-        const kilosAcordados = contracts.reduce((sum, c) => sum + c.cantidadPropuestaKg, 0) || 48000;
-        return {
-            id: `part-${row.clienteNegocioId}`,
-            campaniaId: 1,
-            campaniaNombre: "Campaña Mango Kent Exportación 2026",
-            fruta: "Mango",
-            variedades: ["Kent", "Edward"],
-            relationId,
-            clienteId: row.clienteNegocioId,
-            clienteNombre: row.nombreEmpresa,
-            ruc: row.ruc,
-            canal: row.tipoCliente === "industria" ? "Industria" : "Exportador",
-            pais: row.ubicacion || "Perú / Exportación",
-            cantidadRequeridaKg: 50000,
-            kilosAcordados,
-            fechaRegistro: "2026-09-15",
-            observaciones: "Cliente vinculado con programación semanal activa y control de calidad habilitado.",
-            contracts,
-            deliveries,
-        };
+        const actual = usesV1() ? clientOperationalSummary(row.clienteNegocioId) : undefined;
+        const activeCount = actual?.activeCampaigns ?? (row.clienteNegocioId % 2) + 1;
+        return `${activeCount} ${activeCount === 1 ? "campaña activa" : "campañas activas"} · ${actual?.contracts ?? Math.max(1, totalContractsCount)} contratos`;
     };
 
     const getExportData = (): TableExport => ({
@@ -115,10 +83,10 @@ export default function ClientsTable({ data, isLoading, loadError, onRetry, hasA
         ],
         secondary: [
             {
-                label: "Consulta cliente–campaña",
+                label: "Vincular a campaña",
                 icon: <FileText size={16} strokeWidth={2.5} />,
                 variant: "brand",
-                onClick: () => usesV1() ? navigate(`/planificacion-comercial/${row.clienteNegocioId}`) : setCampaignInquiry({ open: true, participation: buildParticipationFor(row) }),
+                onClick: () => setLinkingClient(row),
             },
         ],
     });
@@ -233,7 +201,7 @@ export default function ClientsTable({ data, isLoading, loadError, onRetry, hasA
                                         <TableCell>
                                             <button
                                                 type="button"
-                                                onClick={() => usesV1() ? navigate(`/planificacion-comercial/${row.clienteNegocioId}`) : setCampaignInquiry({ open: true, participation: buildParticipationFor(row) })}
+                                                onClick={() => navigate("/planificacion-comercial/" + row.clienteNegocioId)}
                                                 className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-page/60 px-2.5 py-1 text-[12px] font-semibold text-ink hover:border-brand hover:text-brand transition-colors"
                                             >
                                                 <FileText size={13} className="text-brand" />
@@ -257,6 +225,7 @@ export default function ClientsTable({ data, isLoading, loadError, onRetry, hasA
                 )}
             </TableCard>
 
+            <CampaignLinkClientModal open={linkingClient !== null} onOpenChange={(open) => { if (!open) setLinkingClient(null); }} cliente={linkingClient} onSave={() => { setLinkingClient(null); onChanged(); }} />
             <ClientFormModal
                 open={editing.open}
                 onOpenChange={(open) => setEditing((current) => ({ ...current, open }))}
@@ -286,11 +255,7 @@ export default function ClientsTable({ data, isLoading, loadError, onRetry, hasA
                 mode="edit"
             />
 
-            <CommercialClientCampaignDetailModal
-                open={campaignInquiry.open}
-                onOpenChange={(open) => setCampaignInquiry((current) => ({ ...current, open }))}
-                participation={campaignInquiry.participation}
-            />
+
         </>
     );
 }

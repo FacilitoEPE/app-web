@@ -6,9 +6,9 @@ export interface QualityMtdProducerRecord {
     productor: string;
     finca: string;
     codigoSenasa: string;
-    capturas: number;
-    trampas: number;
-    diasExposicion: number;
+    capturas: number | null;
+    trampas: number | null;
+    diasExposicion: number | null;
     mtdCalculado: number;
     limiteAplicado?: number;
     evidenciaConteo: FileSource | null;
@@ -108,6 +108,8 @@ export interface QualitySunatRemissionGuide {
     observacionesSunat: string;
 }
 export interface QualityDeliveryLoadItem {
+    cargaId?: number;
+    guideDefaults?: Partial<QualitySunatRemissionGuide>;
     id: string;
     codigoCarga: string;
     campaniaId: number;
