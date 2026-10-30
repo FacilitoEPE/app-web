@@ -17,7 +17,7 @@
   ],
   "x-source": {
     "path": "reference/agro-schema/03_schema_total.sql",
-    "sha256": "bc81eab87d0b6a6b0dbabb9f47d32f11ef4ffb04eeaff9efed85984c8cc60099",
+    "sha256": "5513f6305d8a48a0cce02b943a948bd4901cdeabce08fb1fb62493b622b5117b",
     "date": "2026-10-29"
   },
   "x-database": {
@@ -42329,6 +42329,27 @@
             "type": "integer",
             "x-column": "finca_id",
             "minimum": 1
+          },
+          "capturas": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-column": "capturas"
+          },
+          "trampas": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-column": "trampas"
+          },
+          "diasExposicion": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-column": "dias_exposicion"
           }
         },
         "required": [
@@ -42342,7 +42363,10 @@
           "createdAt",
           "updatedAt",
           "trampaReferencia",
-          "fincaId"
+          "fincaId",
+          "capturas",
+          "trampas",
+          "diasExposicion"
         ],
         "x-table": "medicion_mtd"
       },
@@ -50289,6 +50313,27 @@
             "type": "integer",
             "x-column": "finca_id",
             "minimum": 1
+          },
+          "capturas": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-column": "capturas"
+          },
+          "trampas": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-column": "trampas"
+          },
+          "diasExposicion": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-column": "dias_exposicion"
           }
         },
         "required": [
@@ -50329,6 +50374,27 @@
             "type": "integer",
             "x-column": "finca_id",
             "minimum": 1
+          },
+          "capturas": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-column": "capturas"
+          },
+          "trampas": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-column": "trampas"
+          },
+          "diasExposicion": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-column": "dias_exposicion"
           }
         },
         "required": [],

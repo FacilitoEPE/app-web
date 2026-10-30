@@ -90,6 +90,9 @@ export interface MedicionMtdV1 {
   updatedAt: string
   trampaReferencia: string | null
   fincaId: number
+  capturas: number | null
+  trampas: number | null
+  diasExposicion: number | null
 }
 
 export interface CreateMedicionMtdV1 {
@@ -98,6 +101,9 @@ export interface CreateMedicionMtdV1 {
   limiteAplicado: number
   trampaReferencia?: string | null
   fincaId: number
+  capturas?: number | null
+  trampas?: number | null
+  diasExposicion?: number | null
 }
 
 export interface CargaV1 {

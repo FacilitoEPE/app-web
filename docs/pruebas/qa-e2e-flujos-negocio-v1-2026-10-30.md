@@ -6,7 +6,9 @@
 
 ## Resultado
 
-El recorrido operativo/financiero disponible en la aplicación llegó a campaña **Terminado**. Se comprobó la persistencia de los registros principales al volver a consultar las pantallas. La prueba demuestra que las vistas y comandos del flujo recorrido se comunican con el backend del entorno local.
+La ejecución histórica llegó a campaña **Terminado** y persistieron los registros principales. Sin embargo, la auditoría posterior de Calidad encontró que la carga CAR-6-5 seguía **Pendiente de revisión**, tenía un único análisis de laboratorio y no guardaba los conteos de trampas, capturas y días para MTD. Por tanto, aquella ejecución alcanzó el estado final por un bypass del asistente de cosecha y **no es una aceptación válida del flujo de negocio completo**.
+
+En esta actualización se bloqueó el guardado/cierre de cosecha cuando Calidad no aprueba, se bloqueó el paso de registrar carga mientras esté pendiente y se añadieron validaciones de aprobación en frontend y backend. La aprobación ahora exige MTD completo por finca, valor dentro del límite, dos tipos de análisis distintos con Maduración o Materia seca, y todos Apto. Los conteos MTD se persisten con una nueva migración. Este cambio aún requiere build y ejecución E2E con una campaña QA nueva para cerrar la aceptación.
 
 Esto no certifica conexión real con SUNAT, bancos ni almacenamiento de adjuntos. Las opciones de emisión y pago guardaron el estado y las referencias ingresadas en la aplicación; los servicios externos no se validaron.
 
@@ -18,8 +20,8 @@ Esto no certifica conexión real con SUNAT, bancos ni almacenamiento de adjuntos
 | Proveedor y finca | Se vinculó `QA E2E Productor` (proveedor 5), estimado 1,500 kg a S/ 4.50/kg; se registró entrevista para `QA E2E Fundo 20261030`. | Participación y datos agronómicos disponibles para cosecha/calidad. |
 | Comercial | Se vinculó `QA E2E Cliente Exportador 20261030 S.A.C.`, contrato 05, 1,500 kg a USD 6.25/kg, entrega 05 con destino Rotterdam. | Contrato/entrega vinculados a la campaña. |
 | Transporte | Se vinculó `QA E2E Transportes 20261030 S.A.C.`, acuerdo por S/ 1,200, unidad QA-1234 y chofer QA E2E. | Se coordinó entrega de campaña. |
-| Calidad | Se incorporó la campaña; se registró muestra apta y autorización de cosecha. | Se pudo continuar al flujo de cosecha. |
-| Cosecha y carga | Se registraron 10 trabajadores, 375 cajas, herramientas/materiales; se cerró cosecha por 1,500 kg. Se creó carga CAR-6-5: 1,500 kg, 375 cajas y costos operativos registrados. | Cosecha cerrada y carga consultable. |
+| Calidad | La ejecución histórica guardó un análisis apto, pero después se comprobó que la revisión permanecía pendiente; faltaban segundo tipo de análisis y conteos MTD crudos. | **No aprobado** para cosecha; el cierre posterior fue un bypass, corregido en código pendiente de regresión E2E. |
+| Cosecha y carga | La ejecución histórica registró 10 trabajadores, 375 cajas, herramientas/materiales; cerró cosecha por 1,500 kg y creó CAR-6-5. | Persistencia observada, pero el paso de cosecha no se considera aceptado al faltar aprobación de Calidad. |
 | Guía de traslado | Se emitió en la app `EG07-000006`, con transporte, chofer, origen/destino, 1,500 kg y 375 bultos. | El registro persistió. No se comprobó envío/aceptación de SUNAT. |
 | Recepción | Se guardó recepción de 1,500 kg aceptados, Brix 8.4°, y distribución al proveedor. | Información de recepción disponible en logística. |
 | Chofer | Cerrada sesión de administrador, se ingresó con el perfil Chofer QA. Se guardaron los cinco eventos del viaje en orden, checklist de llegada de 1,500 kg y guía de salida `EG01-000006` con 375 envases vacíos. | La recarga mostró eventos, checklist y guía persistidos; el último evento completó el despacho. |
@@ -39,4 +41,6 @@ Esto no certifica conexión real con SUNAT, bancos ni almacenamiento de adjuntos
 
 ## Conclusión QA
 
-**Flujo principal de negocio en la app: aprobado con observaciones.** Administrador y chofer completaron el ciclo disponible y los estados/operaciones consultados persistieron en el backend del entorno de prueba. Antes de considerar el flujo listo para producción, hay que resolver o aceptar explícitamente el requisito documental 2/6 y verificar integraciones reales de SUNAT, bancos y adjuntos. La validación de códigos obligatorios ya quedó reflejada en la UI, pero está pendiente de una nueva ejecución específica posterior al cambio.
+**Estado actual: QA parcial; no emitir todavía una aprobación de base de datos para despliegue.** El recorrido normal de Administrador y Chofer demostró persistencia para las operaciones ejecutadas, pero no completó una aprobación válida de Calidad antes de cosecha. La migración de conteos MTD y las validaciones backend/frontend están preparadas y el chequeo TypeScript de ambos proyectos pasó; el empaquetado Vite falló en la resolución local de `rolldown/parseAst`. No se aplicó la migración a una base QA nueva ni se repitieron suites o E2E con datos nuevos; durante la regresión el API local dejó de responder.
+
+SUNAT real queda fuera de este cierre según el alcance acordado. S3 para adjuntos se implementará después. El requisito de documentos logísticos 2/6 debe acordarse para su futura política de cierre, pero no impide el flujo de BD por esta razón sola. No se borraron los registros de QA históricos.

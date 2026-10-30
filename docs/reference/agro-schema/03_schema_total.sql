@@ -821,8 +821,16 @@ CREATE TABLE "medicion_mtd" (
   "updated_at" timestamptz NOT NULL DEFAULT now(),
   "trampa_referencia" varchar(120),
   "finca_id" integer NOT NULL,
+  "capturas" integer,
+  "trampas" integer,
+  "dias_exposicion" integer,
   CHECK (valor >= 0),
-  CHECK (limite_aplicado >= 0)
+  CHECK (limite_aplicado >= 0),
+  CONSTRAINT "CHK_medicion_mtd_conteo_completo" CHECK (
+    (capturas IS NULL AND trampas IS NULL AND dias_exposicion IS NULL)
+    OR (capturas IS NOT NULL AND capturas >= 0 AND trampas IS NOT NULL AND trampas > 0
+      AND dias_exposicion IS NOT NULL AND dias_exposicion > 0)
+  )
 );
 
 -- TABLA PROPUESTA: carga

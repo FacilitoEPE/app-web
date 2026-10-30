@@ -59,12 +59,12 @@ Frutas, variedades, normas, roles y parámetros UIT son catálogos de referencia
 
 1. Abra **Cosecha y Control de Calidad** (`/calidad`).
 2. Incorpore la campaña a **Cosecha y calidad** y escoja el alcance comercial que corresponda (**Exportación** o **Industria**).
-3. Revise los orígenes de la campaña y registre las mediciones MTD requeridas por finca con sus datos de conteo y evidencia.
-4. Registre la muestra de laboratorio, el resultado, unidad y observaciones.
-5. Revise los resultados y escoja la acción habilitada para **Aprobar cosecha** cuando se cumplan las condiciones de calidad.
+3. Por cada proveedor y finca, registre **Moscas capturadas**, **Trampas evaluadas** y **Días de exposición**. El sistema calcula `MTD = capturas ÷ (trampas × días)`; compare el valor calculado con el límite aplicado.
+4. Registre dos análisis de tipos distintos, incluyendo **Maduración** o **Materia seca**. Todos los análisis deben quedar **Apto**.
+5. Revise los resultados y escoja **Aprobar para cosecha** cuando se cumplan todas las condiciones. La pantalla y el backend bloquean el avance si falta un conteo, un análisis requerido o existe un valor fuera del límite.
 
 **Dirección:** `/calidad > Campañas > incorporar campaña > MTD / Análisis / Autorizar cosecha`.  
-**Opción:** el resultado debe reflejar mediciones y análisis reales; no use cero como sustituto de un conteo que no se realizó.
+**Opción:** apruebe solo con conteos y resultados de laboratorio reales, completos y dentro de sus límites.
 
 ## 7. Registrar y cerrar la cosecha
 

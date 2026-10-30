@@ -151,6 +151,7 @@ export default function QualityHarvestWizardModal({
     };
 
     const handleSaveAll = async () => {
+        if (isHarvestBlocked) return;
         await onSave(load.id, {
             organizacionCosecha: org,
             avancesCosecha: avances,
@@ -191,7 +192,7 @@ export default function QualityHarvestWizardModal({
                             Siguiente paso →
                         </Button>
                     ) : null}
-                    <Button size="xl" onClick={handleSaveAll}>
+                    <Button size="xl" onClick={handleSaveAll} disabled={isHarvestBlocked}>
                         <Save size={18} /> Guardar operación de cosecha
                     </Button>
                 </>
@@ -602,6 +603,7 @@ export default function QualityHarvestWizardModal({
                             </div>
                             <Button
                                 type="button"
+                                disabled={isHarvestBlocked}
                                 onClick={async () => {
                                     await handleSaveAll();
                                     onOpenLoadForm(load);

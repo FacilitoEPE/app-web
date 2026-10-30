@@ -60,8 +60,8 @@ export const qualityCommands = {
                 await analisisCalidadV1(a.origin.cxpId).update(a.existing.analisisCalidadId, a.body);
         for (const { origin, m } of mtd) {
             const previous = g.measurements.find(r => r.medicionMtdId === Number(m.id));
-            if (!previous || previous.valor !== m.mtdCalculado)
-                await medicionMtdV1(origin.cxpId).create({ fincaId: origin.fincaId, valor: m.mtdCalculado, limiteAplicado: previous?.limiteAplicado ?? m.limiteAplicado ?? 0.5, medidoAt: new Date().toISOString() });
+            if (!previous || previous.valor !== m.mtdCalculado || previous.capturas !== m.capturas || previous.trampas !== m.trampas || previous.diasExposicion !== m.diasExposicion)
+                await medicionMtdV1(origin.cxpId).create({ fincaId: origin.fincaId, valor: m.mtdCalculado, limiteAplicado: previous?.limiteAplicado ?? m.limiteAplicado ?? 0.5, medidoAt: new Date().toISOString(), capturas: m.capturas ?? undefined, trampas: m.trampas ?? undefined, diasExposicion: m.diasExposicion ?? undefined });
         }
         const estado = payload.estadoRevision === 'Aprobada para cosecha' ? 'APROBADA' : payload.estadoRevision === 'Observada' ? 'OBSERVADA' : 'PENDIENTE';
         if (c.load)

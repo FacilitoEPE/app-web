@@ -573,14 +573,14 @@ export default function QualityCampaignWorkspace({
                                             {m.codigoCarga}
                                         </TableCell>
                                         <TableCell className="px-3 py-3.5 text-right tabular-nums text-[13px] text-ink">
-                                            {m.capturas === null || m.trampas === null || m.diasExposicion === null ? "Sin datos de conteo" : m.capturas + " moscas / " + m.trampas + " trampas / " + m.diasExposicion + " d"}
+                                            {m.capturas == null || m.trampas == null || m.diasExposicion == null ? "Sin datos de conteo" : m.capturas + " moscas / " + m.trampas + " trampas / " + m.diasExposicion + " d"}
                                         </TableCell>
                                         <TableCell className="px-3 py-3.5 text-right font-extrabold tabular-nums text-ink">
-                                            {m.mtdCalculado.toFixed(4)}
+                                            {m.capturas == null || m.trampas == null || m.diasExposicion == null ? "Pendiente" : m.mtdCalculado.toFixed(4)}
                                         </TableCell>
                                         <TableCell className="py-3.5 pl-3 pr-6 text-center">
                                             <StatusBadge
-                                                status={m.mtdCalculado > 0.5 ? "Observada" : "Apto"}
+                                                status={m.capturas == null || m.trampas == null || m.diasExposicion == null ? "Pendiente" : m.mtdCalculado > 0.5 ? "Observada" : "Apto"}
                                             />
                                         </TableCell>
                                     </TableRow>

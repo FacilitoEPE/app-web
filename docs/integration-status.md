@@ -6,6 +6,19 @@
 
 ## Recorrido E2E normal Administrador + Chofer — 2026-10-30 · Parcial: ciclo completado con observaciones
 
+### Revisión correctiva de calidad y preparación de base — 2026-10-30 · Pendiente
+
+- Al auditar el dato persistido de campaña 6 se encontró que CAR-6-5 permanecía **Pendiente de revisión**: solo había un análisis de laboratorio y el MTD estaba guardado como valor escalar sin capturas/trampas/días. Cosecha y carga llegaron al estado final mediante un bypass de la UI. Ese E2E histórico no se acepta como ciclo de negocio completo.
+- Corregido el flujo para impedir guardar/cerrar cosecha y abrir captura de carga si Calidad no aprobó. El asistente exige MTD completo por finca, valor dentro del límite, dos tipos de análisis distintos (incluyendo Maduración o Materia seca) y todos Apto. También se agregó la misma regla de aprobación en el backend.
+- Añadida persistencia `capturas`, `trampas` y `dias_exposicion` en contrato, esquema de instalación y migración `AddMtdCountDetails1793400000000`. Los registros antiguos quedan con conteos `NULL`; el backend los bloquea para nuevas aprobaciones hasta que se registre un conteo válido.
+- Regresión de códigos de establecimiento de guía: se intentaron guardar campos vacíos; la UI mostró error de cuatro dígitos y no envió el guardado.
+- **No se puede cerrar QA aún:** el chequeo TypeScript de ambos proyectos pasó y el contrato regenerado desde SQL pasó su verificación; el empaquetado Vite no arrancó porque el runtime no resolvió `rolldown/parseAst`. Faltan suites backend/frontend, aplicar la migración en una base QA nueva y repetir E2E completo con datos nuevos. El API local dejó de responder durante la regresión de navegador. No se modificó ni limpió el conjunto histórico QA.
+- **Estado para Infraestructura:** el esquema/migración y el seed de catálogos están versionados para implementar, pero la base no tiene aún aprobación QA final ni evidencia de migración aplicada. No comunicar “base lista y validada” hasta ejecutar esa verificación. SUNAT real está fuera de alcance actual y S3 queda para una fase posterior.
+
+La evidencia detallada se registra en [resultado E2E](pruebas/qa-e2e-flujos-negocio-v1-2026-10-30.md).
+
+## Historial del E2E inicial — ejecución observada, no aceptación final
+
 - En Chrome sobre `http://localhost:5173/modules` se completó campaña 6 (`QA E2E Orden Correcto 20261030`) desde el alta hasta **Terminado**, con 1,500 kg, recepción, cobro y liquidaciones registrados. El perfil de Chofer se usó después de cerrar sesión de Administrador; se registraron los cinco eventos, checklist y guía de salida, y luego se volvió a Administrador para el cierre.
 - La evidencia por módulo, identificadores y valores queda en [resultado E2E](pruebas/qa-e2e-flujos-negocio-v1-2026-10-30.md). Los registros de QA se conservaron.
 - La integración de vista/comando/persistencia se comprobó para las operaciones de ese recorrido. La emisión electrónica real de SUNAT, pagos bancarios y carga de adjuntos no fue verificada; los botones de adjuntos estaban deshabilitados y logística permitió cerrar con 2/6 documentos y 0/6 archivos.

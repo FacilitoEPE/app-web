@@ -121,8 +121,18 @@ export default function QualityDeliveryReviewModal({
     };
 
     const maxMtd = mtdList.reduce((max, item) => Math.max(max, item.mtdCalculado), 0);
+    const hasCompleteMtd = mtdList.length > 0 && mtdList.every(item => item.capturas != null && item.trampas != null && item.trampas > 0 && item.diasExposicion != null && item.diasExposicion > 0);
     const hasHighMtd = mtdList.some(item=>item.mtdCalculado > (item.limiteAplicado ?? (usesV1() ? Infinity : 0.5)));
     const hasNonAptLab = labList.some((item) => item.resultado === "No apto");
+    const hasMtdForEveryOrigin = mtdList.length > 0 && mtdList.every((item) => {
+        return item.capturas != null && item.trampas != null && item.trampas > 0 && item.diasExposicion != null && item.diasExposicion > 0;
+    });
+    const maturityTypes: QualityLabAnalysisRecord["tipoAnalisis"][] = ["Maduración", "Materia seca"];
+    const hasRequiredLabPair = labList.length >= 2
+        && labList.some((item) => maturityTypes.includes(item.tipoAnalisis)
+            && labList.some((other) => other.tipoAnalisis !== item.tipoAnalisis));
+    const allLabsApto = labList.length > 0 && labList.every((item) => item.resultado === "Apto");
+    const canApprove = hasMtdForEveryOrigin && !hasHighMtd && hasRequiredLabPair && allLabsApto;
 
     return (
         <AppModal
@@ -153,7 +163,9 @@ export default function QualityDeliveryReviewModal({
                     </Button>
                     <Button
                         size="xl"
+                        disabled={!canApprove}
                         onClick={async () => {
+                            if (!canApprove) return;
                             await onSave(load.id, {
                                 estadoRevision: "Aprobada para cosecha",
                                 mtdRegistros: mtdList,
@@ -177,8 +189,8 @@ export default function QualityDeliveryReviewModal({
                         },
                         {
                             label: "MTD Ceratitis máximo",
-                            value: maxMtd.toFixed(4),
-                            tone: hasHighMtd ? "highlight" : "brand",
+                            value: hasCompleteMtd ? maxMtd.toFixed(4) : "Pendiente",
+                            tone: hasHighMtd || !hasCompleteMtd ? "highlight" : "brand",
                         },
                         {
                             label: "Análisis registrados",
@@ -191,6 +203,18 @@ export default function QualityDeliveryReviewModal({
                         },
                     ]}
                 />
+
+                {!canApprove && (
+                    <div role="alert" className="rounded-2xl border border-status-warning/40 bg-status-warning-surface p-4 text-[13px] text-ink">
+                        <strong>No se puede aprobar para cosecha todavía:</strong>
+                        <ul className="mt-2 list-disc pl-5">
+                            {!hasMtdForEveryOrigin && <li>Registra capturas, trampas y días de exposición para cada proveedor y finca.</li>}
+                            {hasHighMtd && <li>Una medición MTD supera el límite aplicado.</li>}
+                            {!hasRequiredLabPair && <li>Registra dos análisis de tipos distintos, incluyendo Maduración o Materia seca.</li>}
+                            {!allLabsApto && <li>Todos los análisis deben tener resultado Apto.</li>}
+                        </ul>
+                    </div>
+                )}
 
                 {hasHighMtd && (
                     <div className="flex items-center gap-3 rounded-2xl border border-status-error/40 bg-status-error-bg/30 p-3.5 text-[13px] font-medium text-ink">
@@ -207,6 +231,7 @@ export default function QualityDeliveryReviewModal({
                 >
                     <div className="flex flex-col gap-4">
                         {mtdList.map((item, idx) => {
+                            const hasCount = item.capturas != null && item.trampas != null && item.diasExposicion != null;
                             const exceeds = item.mtdCalculado > (item.limiteAplicado ?? (usesV1() ? Infinity : 0.5));
                             return (
                                 <div
@@ -227,43 +252,47 @@ export default function QualityDeliveryReviewModal({
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-[13px] font-extrabold tabular-nums text-ink">
-                                                MTD: {item.mtdCalculado.toFixed(4)}
+                                                MTD: {hasCount ? item.mtdCalculado.toFixed(4) : "Pendiente"}
                                             </span>
-                                            <StatusBadge status={exceeds ? "Observada" : "Apto"} />
+                                            <StatusBadge status={!hasCount ? "Pendiente" : exceeds ? "Observada" : "Apto"} />
                                         </div>
                                     </div>
 
-                                    {usesV1() ? <InputField id={`mtd-value-${item.id}`} label="MTD registrado" type="number" step="0.0001" value={String(item.mtdCalculado)} onChange={v=>setMtdList(rows=>rows.map((row,i)=>i===idx?{...row,mtdCalculado:Number(v)}:row))} /> : <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                         <InputField
                                             id={`mtd-cap-${item.id}`}
                                             label="Moscas capturadas"
                                             type="number"
-                                            value={String(item.capturas)}
+                                            min={0}
+                                            required
+                                            value={item.capturas === null ? "" : String(item.capturas)}
                                             onChange={(v) =>
-                                                updateMtdRecord(idx, { capturas: Math.max(0, Number(v) || 0) })
+                                                updateMtdRecord(idx, { capturas: v === "" ? null : Math.max(0, Number(v)) })
                                             }
                                         />
                                         <InputField
                                             id={`mtd-trp-${item.id}`}
                                             label="Trampas evaluadas"
                                             type="number"
-                                            value={String(item.trampas)}
+                                            min={1}
+                                            required
+                                            value={item.trampas === null ? "" : String(item.trampas)}
                                             onChange={(v) =>
-                                                updateMtdRecord(idx, { trampas: Math.max(1, Number(v) || 1) })
+                                                updateMtdRecord(idx, { trampas: v === "" ? null : Math.max(1, Number(v)) })
                                             }
                                         />
                                         <InputField
                                             id={`mtd-dia-${item.id}`}
                                             label="Días de exposición"
                                             type="number"
-                                            value={String(item.diasExposicion)}
+                                            min={1}
+                                            required
+                                            value={item.diasExposicion === null ? "" : String(item.diasExposicion)}
                                             onChange={(v) =>
-                                                updateMtdRecord(idx, {
-                                                    diasExposicion: Math.max(1, Number(v) || 1),
-                                                })
+                                                updateMtdRecord(idx, { diasExposicion: v === "" ? null : Math.max(1, Number(v)) })
                                             }
                                         />
-                                    </div>}
+                                    </div>
 
                                     <FileDropzone
                                         label="Reporte o evidencia del conteo SENASA"
