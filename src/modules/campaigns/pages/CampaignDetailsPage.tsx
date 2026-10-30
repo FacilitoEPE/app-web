@@ -2,7 +2,7 @@ import { usesV1 } from '@/shared/api/data-contract';
 import CampaignClosureAction from '@/modules/campaigns/components/CampaignClosureAction';
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CalendarRange, ClipboardCheck, FileSpreadsheet, PackageCheck, Pencil, Receipt, Sprout, Truck } from "lucide-react";
+import { CalendarRange, ClipboardCheck, FileSpreadsheet, PackageCheck, Pencil, Play, Receipt, Sprout, Truck } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/shared/components/ui/button";
 import { PageError, PageLoading } from "@/shared/components/PageState";
@@ -10,7 +10,7 @@ import LinkedCard, { LinkedRow } from "@/shared/components/LinkedCard";
 import StatusBadge from "@/shared/components/StatusBadge";
 import { SummaryBar } from "@/shared/components/InfoField";
 import PageHeader from "@/shared/layout/PageHeader";
-import { getCampana, getFrutaDerivadas } from "@/modules/campaigns/api/campaign.api";
+import { getCampana, getFrutaDerivadas, updateCampana } from "@/modules/campaigns/api/campaign.api";
 import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
 import { getClientesNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.api";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
@@ -120,6 +120,8 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
     const [openModal, setOpenModal] = useState<"providers" | "edit" | null>(null);
     const [successOpen, setSuccessOpen] = useState(false);
     const [reloadKey, setReloadKey] = useState(0);
+    const [starting, setStarting] = useState(false);
+    const [startError, setStartError] = useState("");
     const navigate = useNavigate();
     const certificados = useCampaignCertificates(campaniaId);
     const carrierLinks = useCampaignCarriers(campaniaId);
@@ -144,6 +146,19 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
     const retry = () => {
         setState({ status: "loading" });
         setReloadKey((key) => key + 1);
+    };
+
+    const startCampaign = async () => {
+        setStarting(true);
+        setStartError("");
+        try {
+            await updateCampana(campaniaId, { estado: "en proceso" });
+            retry();
+        } catch (error) {
+            setStartError(error instanceof Error ? error.message : "No se pudo iniciar la campaña.");
+        } finally {
+            setStarting(false);
+        }
     };
 
     if (state.status === "loading") return <PageLoading label="Cargando campaña..." />;
@@ -176,6 +191,11 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                     description="Control y seguimiento integral de la campaña."
                     action={
                         <div className="flex flex-wrap items-center gap-2.5">
+                            {campana.estado === "planificacion" && timing.hasStarted && (
+                                <Button size="xl" onClick={() => void startCampaign()} disabled={starting}>
+                                    <Play size={19} strokeWidth={2.5} /> {starting ? "Iniciando…" : "Iniciar campaña"}
+                                </Button>
+                            )}
                             <Button variant="outline" size="xl" onClick={() => navigate(`/campaigns/${campaniaId}/weekly-delivery-program`)}>
                                 <CalendarRange size={19} strokeWidth={2.3} /> Programa semanal
                             </Button>
@@ -186,6 +206,7 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                         </div>
                     }
                 />
+                {startError && <p role="alert" className="mt-2 text-sm text-destructive">{startError}</p>}
                 <div className="campaign-top-grid">
                     <CampaignOverviewCard campaign={campaign} duration={timing.duration} />
                     <CampaignMetricCards requirement={campana.requerimientoComercial} estimated={estimatedKg > 0 ? estimatedKg : null} harvested={harvestedKg} remaining={timing.remaining} hasEnded={timing.hasEnded} hasStarted={timing.hasStarted} />

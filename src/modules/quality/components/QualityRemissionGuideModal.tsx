@@ -70,6 +70,7 @@ export default function QualityRemissionGuideModal({
     const [ubigeoLlegada, setUbigeoLlegada] = useState("");
     const [direccionLlegada, setDireccionLlegada] = useState("");
     const [codEstablecimientoLlegada, setCodEstablecimientoLlegada] = useState("");
+    const [attemptedSave, setAttemptedSave] = useState(false);
 
     const [codigoProducto, setCodigoProducto] = useState("");
     const [descripcionProducto, setDescripcionProducto] = useState("");
@@ -101,6 +102,7 @@ export default function QualityRemissionGuideModal({
         setUbigeoLlegada(guide.ubigeoLlegada);
         setDireccionLlegada(guide.direccionLlegada);
         setCodEstablecimientoLlegada(guide.codEstablecimientoLlegada);
+        setAttemptedSave(false);
         setCodigoProducto(guide.codigoProducto);
         setDescripcionProducto(guide.descripcionProducto);
         setNormasSeleccionadas(guide.normasSeleccionadas);
@@ -120,6 +122,8 @@ export default function QualityRemissionGuideModal({
         .join(" | ");
 
     const saveWithStatus = async (estado: QualitySunatRemissionGuide["estado"]) => {
+        setAttemptedSave(true);
+        if (!/^\d{4}$/.test(codEstablecimientoPartida) || !/^\d{4}$/.test(codEstablecimientoLlegada)) return;
         const guide: QualitySunatRemissionGuide = {
             id: editingGuide?.id ?? `guia-${Date.now()}`,
             numeroGuia,
@@ -426,8 +430,13 @@ export default function QualityRemissionGuideModal({
                             <InputField
                                 id="rg-est-partida"
                                 label="Código establecimiento SUNAT (4 dígitos)"
+                                required
+                                inputMode="numeric"
+                                maxLength={4}
+                                hint="Ingresa el código real del establecimiento de partida."
+                                error={attemptedSave && !/^\d{4}$/.test(codEstablecimientoPartida) ? "Ingresa exactamente 4 dígitos." : undefined}
                                 value={codEstablecimientoPartida}
-                                onChange={setCodEstablecimientoPartida}
+                                onChange={(value) => setCodEstablecimientoPartida(value.replace(/\D/g, "").slice(0, 4))}
                             />
                         </div>
 
@@ -459,8 +468,13 @@ export default function QualityRemissionGuideModal({
                             <InputField
                                 id="rg-est-llegada"
                                 label="Código establecimiento SUNAT (4 dígitos)"
+                                required
+                                inputMode="numeric"
+                                maxLength={4}
+                                hint="Ingresa el código real del establecimiento de llegada."
+                                error={attemptedSave && !/^\d{4}$/.test(codEstablecimientoLlegada) ? "Ingresa exactamente 4 dígitos." : undefined}
                                 value={codEstablecimientoLlegada}
-                                onChange={setCodEstablecimientoLlegada}
+                                onChange={(value) => setCodEstablecimientoLlegada(value.replace(/\D/g, "").slice(0, 4))}
                             />
                         </div>
                     </div>

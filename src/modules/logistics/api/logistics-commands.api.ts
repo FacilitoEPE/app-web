@@ -25,17 +25,18 @@ export const logisticsCommands = {
     }) => commitRemote(() => writeLoad(id, { ...payload, fechaCargaReal: payload.fechaCarga, proveedoresCarga: payload.proveedores.map(p => ({ ...p, rol: p.tipo, tipoFruta: 'Convencional' as const })) })),
     receive: (id: string, value: LogisticsReceptionData, providers: LogisticsProviderBreakdown[]) => commitRemote(async () => {
         assertNoNewFiles(value);
-        const old = operationsContext().receipts.find(r => r.cargaId === Number(id));
+        const c = loadContext(id), old = operationsContext().receipts.find(r => r.cargaId === c.load.cargaId);
         return writeReceipt(id, { pesoPlantaKg: value.pesoRecibidoPlanta, resultado: value.resultadoRecepcion, huboDescarte: value.huboDescarte, descarteKg: value.huboDescarte ? value.kilosDescarte : 0, fechaRecepcion: old?.fechaRecepcion ?? new Date().toISOString(), recepcionConfirmadaAt: old?.recepcionConfirmadaAt ?? new Date().toISOString(), descargaInicioAt: value.inicioDescarga ? new Date(value.inicioDescarga).toISOString() : null, descargaFinAt: value.terminoDescarga ? new Date(value.terminoDescarga).toISOString() : null, observaciones: value.observacionesEvaluacion, compras: providers.map((p): JsonObject => { const previous = old?.compras.map(jsonObject).find(row => row.providerId === Number(p.proveedorId)); return previous ? { ...previous, recognizedQuantity: p.kilosRecibidosPlanta } : { providerId: Number(p.proveedorId), recognizedQuantity: p.kilosRecibidosPlanta, reference: '', quantity: p.kilosCargados, document: null, reviewStatus: 'Revisado', observation: '' }; }), logistica: { ...old?.logistica, responsableRecepcion: value.responsableRecepcion, observacionesDescarga: value.observacionesDescarga, calidadRecepcion: value.calidadRecepcion, destinoDescarte: value.destinoDescarte, motivoDescarte: value.motivoDescarte } });
     }),
     crates: (id: string, value: Omit<LogisticsCrateMovement, 'id'>) => commitRemote(async () => {
         assertNoNewFiles(value.guiaSalidaArchivo);
-        const old = operationsContext().receipts.find(r => r.cargaId === Number(id)), previous = Array.isArray(old?.checklist.envases) ? old.checklist.envases : [], entry = { ...value, id: previous.length + 1, guiaSalidaArchivo: null };
+        const c = loadContext(id), old = operationsContext().receipts.find(r => r.cargaId === c.load.cargaId), previous = Array.isArray(old?.checklist.envases) ? old.checklist.envases : [], entry = { ...value, id: previous.length + 1, guiaSalidaArchivo: null };
         return writeReceipt(id, { checklist: { ...old?.checklist, envases: [...previous, jsonData(entry)] } });
     }),
     closure: (id: string, value: LogisticsDocumentsClosure) => commitRemote(async () => {
         assertNoNewFiles(value);
-        const old = operationsContext().receipts.find(r => r.cargaId === Number(id));
+        const c = loadContext(id);
+        const old = operationsContext().receipts.find(r => r.cargaId === c.load.cargaId);
         if (value.cierreFisicoConfirmado && (!old?.pesoPlantaKg || !old.resultado || !old.descargaInicioAt || !old.descargaFinAt))
             throw new Error('Completa la recepción, el resultado y la descarga antes del cierre físico.');
         if (value.cierreAdministrativoConfirmado && !value.cierreFisicoConfirmado)

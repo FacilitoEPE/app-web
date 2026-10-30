@@ -38423,7 +38423,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "moneda": {
             "type": "string",
@@ -40527,7 +40527,7 @@
           "umbralAlerta": {
             "type": "number",
             "x-column": "umbral_alerta",
-            "multipleOf": 0.00009999999999999999,
+            "multipleOf": 0.0001,
             "default": 0.9
           },
           "createdAt": {
@@ -40985,7 +40985,7 @@
               "null"
             ],
             "x-column": "precio_kg",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "moneda": {
             "type": "string",
@@ -42193,7 +42193,7 @@
               "null"
             ],
             "x-column": "resultado_numerico",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "unidad": {
             "type": [
@@ -42279,12 +42279,12 @@
           "valor": {
             "type": "number",
             "x-column": "valor",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "limiteAplicado": {
             "type": "number",
             "x-column": "limite_aplicado",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "archivoId": {
             "type": [
@@ -42488,7 +42488,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg_aplicado",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "jabasCargadas": {
             "type": "integer",
@@ -43587,7 +43587,7 @@
           "precioKgAplicado": {
             "type": "number",
             "x-column": "precio_kg_aplicado",
-            "multipleOf": 0.00009999999999999999,
+            "multipleOf": 0.0001,
             "readOnly": true
           },
           "moneda": {
@@ -44003,7 +44003,7 @@
           "precioKgAplicado": {
             "type": "number",
             "x-column": "precio_kg_aplicado",
-            "multipleOf": 0.00009999999999999999,
+            "multipleOf": 0.0001,
             "readOnly": true
           },
           "moneda": {
@@ -44647,7 +44647,7 @@
           "umbralAlerta": {
             "type": "number",
             "x-column": "umbral_alerta",
-            "multipleOf": 0.00009999999999999999,
+            "multipleOf": 0.0001,
             "default": 0.9
           }
         },
@@ -44678,7 +44678,7 @@
           "umbralAlerta": {
             "type": "number",
             "x-column": "umbral_alerta",
-            "multipleOf": 0.00009999999999999999,
+            "multipleOf": 0.0001,
             "default": 0.9
           }
         },
@@ -46090,7 +46090,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "moneda": {
             "type": "string",
@@ -46188,7 +46188,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "moneda": {
             "type": "string",
@@ -47543,7 +47543,7 @@
               "null"
             ],
             "x-column": "precio_kg",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "moneda": {
             "type": "string",
@@ -47628,7 +47628,7 @@
               "null"
             ],
             "x-column": "precio_kg",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "moneda": {
             "type": "string",
@@ -50128,7 +50128,7 @@
               "null"
             ],
             "x-column": "resultado_numerico",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "unidad": {
             "type": [
@@ -50201,7 +50201,7 @@
               "null"
             ],
             "x-column": "resultado_numerico",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "unidad": {
             "type": [
@@ -50270,12 +50270,12 @@
           "valor": {
             "type": "number",
             "x-column": "valor",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "limiteAplicado": {
             "type": "number",
             "x-column": "limite_aplicado",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "trampaReferencia": {
             "type": [
@@ -50310,12 +50310,12 @@
           "valor": {
             "type": "number",
             "x-column": "valor",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "limiteAplicado": {
             "type": "number",
             "x-column": "limite_aplicado",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "trampaReferencia": {
             "type": [
@@ -50542,7 +50542,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg_aplicado",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "jabasCargadas": {
             "type": "integer",
@@ -50606,7 +50606,7 @@
               "null"
             ],
             "x-column": "precio_compra_kg_aplicado",
-            "multipleOf": 0.00009999999999999999
+            "multipleOf": 0.0001
           },
           "jabasCargadas": {
             "type": "integer",

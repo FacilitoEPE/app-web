@@ -14,7 +14,7 @@ export const billingCommands = {
             throw new Error('La carga no pertenece al requerimiento de este cliente.');
         if (c.contract.precioKg !== invoice.precioUnitario)
             throw new Error('El precio de venta se obtiene del contrato. Actualízalo en Contratos antes de preparar la factura.');
-        const body = { referenciaPreparacion: invoice.referenciaPreparacion, fechaPreparacion: invoice.fechaPreparacion, kilosFacturados: invoice.kilosFacturados, moneda: invoice.moneda, descuento: invoice.descuento, cargos: invoice.cargos, observaciones: invoice.observaciones };
+        const body = { referenciaPreparacion: invoice.referenciaPreparacion, fechaPreparacion: invoice.fechaPreparacion, fechaVencimiento: invoice.fechaVencimiento || null, kilosFacturados: invoice.kilosFacturados, moneda: invoice.moneda, descuento: invoice.descuento, cargos: invoice.cargos, observaciones: invoice.observaciones };
         return invoice.id ? facturaVentaV1(c.load.cargaId).update(requireId(invoice.id), body) : facturaVentaV1(c.load.cargaId).create(body);
     }),
     issue: (_clientId: string, _loadId: string, id: string, payload: {

@@ -26,20 +26,22 @@ const VARIEDAD_OPTIONS = [
 interface Props {
     open: boolean;
     delivery: CampaignContractDeliveryLocal | null;
+    varietyOptions?: Array<{ value: string; label: string }>;
     onOpenChange: (open: boolean) => void;
     onSave: (values: CampaignContractDeliveryValues) => void;
 }
 
-export default function CampaignContractDeliveryModal({ open, delivery, onOpenChange, onSave }: Props) {
-    const [values, setValues] = useState<CampaignContractDeliveryValues>({ ...EMPTY_CONTRACT_DELIVERY, variedad: "Kent" });
+export default function CampaignContractDeliveryModal({ open, delivery, varietyOptions = VARIEDAD_OPTIONS, onOpenChange, onSave }: Props) {
+    const defaultVariety = varietyOptions[0]?.value ?? "Kent";
+    const [values, setValues] = useState<CampaignContractDeliveryValues>({ ...EMPTY_CONTRACT_DELIVERY, variedad: defaultVariety });
     const [errors, setErrors] = useState<CampaignContractDeliveryErrors>({});
 
     useEffect(() => {
         if (!open) return;
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setValues(delivery ? deliveryToValues(delivery) : { ...EMPTY_CONTRACT_DELIVERY, variedad: "Kent" });
+        setValues(delivery ? deliveryToValues(delivery) : { ...EMPTY_CONTRACT_DELIVERY, variedad: defaultVariety });
         setErrors({});
-    }, [open, delivery]);
+    }, [open, delivery, defaultVariety]);
 
     const update = (field: keyof CampaignContractDeliveryValues, value: string) => {
         setValues((current) => ({ ...current, [field]: value }));
@@ -72,8 +74,8 @@ export default function CampaignContractDeliveryModal({ open, delivery, onOpenCh
                 <InputField id="delivery-kilos" label="Kilos programados" required unit="kg" min={0} step="0.001" placeholder="0.00" value={values.kilosProgramados} error={errors.kilosProgramados} onChange={(value) => update("kilosProgramados", value)} />
                 <FormField id="delivery-variety" label="Variedad comprometida" required>
                     <Combobox
-                        options={VARIEDAD_OPTIONS}
-                        value={values.variedad ?? "Kent"}
+                        options={varietyOptions}
+                        value={values.variedad ?? defaultVariety}
                         onChange={(val) => update("variedad", val)}
                         placeholder="Seleccionar variedad"
                     />

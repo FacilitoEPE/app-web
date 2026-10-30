@@ -29,6 +29,8 @@ import {
 import { PageError, PageLoading } from "@/shared/components/PageState";
 import { formatDisplayDate, formatKg } from "@/shared/utils/format";
 import { paginate } from "@/shared/utils/paginate";
+import { operationsContext } from "@/modules/operations/api/operations-context.api";
+import { usesV1 } from "@/shared/api/data-contract";
 
 type LoadState =
     | { status: "loading" }
@@ -87,6 +89,11 @@ function DeliveriesView({
     contract: CampaignClientContractLocal;
 }) {
     const deliveries = useCampaignContractDeliveries(campaign.campaniaId, relation.clienteNegocioCampanaId, contract.id);
+    const varietyOptions = usesV1()
+        ? operationsContext().varieties
+            .filter((variety) => variety.frutaId === campaign.frutaId)
+            .map((variety) => ({ value: variety.name, label: variety.name }))
+        : undefined;
     const [page, setPage] = useState(1);
     const [editing, setEditing] = useState<{ open: boolean; delivery: CampaignContractDeliveryLocal | null }>({
         open: false,
@@ -213,6 +220,7 @@ function DeliveriesView({
             <CampaignContractDeliveryModal
                 open={editing.open}
                 delivery={editing.delivery}
+                varietyOptions={varietyOptions}
                 onOpenChange={(open) => setEditing((current) => ({ ...current, open }))}
                 onSave={save}
             />

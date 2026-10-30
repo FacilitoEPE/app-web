@@ -99,6 +99,17 @@ export default function QualityCampaignWorkspace({
     const [newLoadDestino, setNewLoadDestino] = useState("Planta Empacadora Paita · Zona Industrial II");
     const [newLoadKilos, setNewLoadKilos] = useState("20000");
 
+    const openGuide = (
+        load: QualityDeliveryLoadItem,
+        guide: QualitySunatRemissionGuide | null = load.guiasRemision[0] ?? null,
+    ) => {
+        if (load.id.startsWith("entrega-")) {
+            setLoadFormModalItem(load);
+            return;
+        }
+        setGuideModal({ open: true, load, guide });
+    };
+
     const campaignLoads = useMemo(
         () =>
             allLoads.filter(
@@ -303,14 +314,9 @@ export default function QualityCampaignWorkspace({
                         onClick: () => setLoadFormModalItem(load),
                     },
                     {
-                        label: "Preparar guía SUNAT",
+                        label: load.id.startsWith("entrega-") ? "Registrar datos antes de guía" : "Preparar guía SUNAT",
                         icon: <FileCheck2 size={18} strokeWidth={2.4} />,
-                        onClick: () =>
-                            setGuideModal({
-                                open: true,
-                                load,
-                                guide: load.guiasRemision[0] ?? null,
-                            }),
+                        onClick: () => openGuide(load),
                     },
                 ],
                 secondary: [],
@@ -337,14 +343,9 @@ export default function QualityCampaignWorkspace({
                     onClick: () => setLoadFormModalItem(load),
                 },
                 {
-                    label: "Preparar guía de remisión SUNAT",
+                    label: load.id.startsWith("entrega-") ? "Registrar datos antes de guía" : "Preparar guía de remisión SUNAT",
                     icon: <FileCheck2 size={16} strokeWidth={2.4} />,
-                    onClick: () =>
-                        setGuideModal({
-                            open: true,
-                            load,
-                            guide: load.guiasRemision[0] ?? null,
-                        }),
+                    onClick: () => openGuide(load),
                 },
             ],
         };
@@ -784,13 +785,7 @@ export default function QualityCampaignWorkspace({
                                     </div>
                                     <Button
                                         size="lg"
-                                        onClick={() =>
-                                            setGuideModal({
-                                                open: true,
-                                                load,
-                                                guide: null,
-                                            })
-                                        }
+                                        onClick={() => openGuide(load, null)}
                                     >
                                         <Plus size={16} strokeWidth={2.5} /> Agregar guía de remisión SUNAT
                                     </Button>
@@ -831,13 +826,7 @@ export default function QualityCampaignWorkspace({
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() =>
-                                                            setGuideModal({
-                                                                open: true,
-                                                                load,
-                                                                guide,
-                                                            })
-                                                        }
+                                                        onClick={() => openGuide(load, guide)}
                                                     >
                                                         <Pencil size={14} /> Configurar datos SUNAT
                                                     </Button>
@@ -927,14 +916,10 @@ export default function QualityCampaignWorkspace({
                 }}
                 load={harvestModalLoad}
                 onSave={saveQualityHarvestWizard}
-                onOpenRemissionGuides={(targetLoad) => {
+                onOpenLoadForm={(targetLoad) => {
                     setHarvestModalLoad(null);
-                    setActiveTab("guias");
-                    setGuideModal({
-                        open: true,
-                        load: targetLoad,
-                        guide: targetLoad.guiasRemision[0] ?? null,
-                    });
+                    setActiveTab("carga");
+                    setLoadFormModalItem(targetLoad);
                 }}
             />
 

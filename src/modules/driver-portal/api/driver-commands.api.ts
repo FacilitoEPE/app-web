@@ -8,18 +8,22 @@ import { writeLoad } from '@/modules/quality/api/quality-commands.api';
 import type { DriverArrivalChecklist, DriverVehicleExitGuide, DriverProviderLoadDetail } from '@/modules/driver-portal/driverPortal.models';
 export const driverCommands = {
     advance: (id: string, note?: string) => commitRemote(async () => {
-        const g = operationsContext(), c = loadContext(id), history = g.histories.filter(h => h.coordinacionEntregaId === c.coordination.coordinacionEntregaId), stages = ['EN_CARGA', 'SALIDA', 'EN_CAMINO', 'LLEGADA', 'CIERRE'] as const, last = history.at(-1), next = stages[stages.indexOf(last?.estado ?? 'EN_CARGA') + 1];
+        const g = operationsContext(), c = loadContext(id), history = g.histories.filter(h => h.coordinacionEntregaId === c.coordination.coordinacionEntregaId), stages = ['EN_CARGA', 'SALIDA', 'EN_CAMINO', 'LLEGADA', 'CIERRE'] as const;
+        if (!history.length) {
+            await historialChoferV1(c.coordination.coordinacionEntregaId).create({ estado: 'EN_CARGA', observacion: 'Inicio de seguimiento del despacho.' });
+        }
+        const last = history.at(-1), next = stages[stages.indexOf(last?.estado ?? 'EN_CARGA') + 1];
         if (!next)
             throw new Error('El despacho ya está cerrado.');
         return historialChoferV1(c.coordination.coordinacionEntregaId).create({ estado: next, observacion: note || null });
     }),
     arrival: (id: string, value: DriverArrivalChecklist) => commitRemote(() => {
-        const old = operationsContext().receipts.find(r => r.cargaId === Number(id));
+        const c = loadContext(id), old = operationsContext().receipts.find(r => r.cargaId === c.load.cargaId);
         return writeReceipt(id, { checklist: { ...old?.checklist, llegada: jsonData({ ...value, registrado: true }) } });
     }),
     exit: (id: string, value: DriverVehicleExitGuide) => commitRemote(() => {
         assertNoNewFiles(value.archivo);
-        const old = operationsContext().receipts.find(r => r.cargaId === Number(id));
+        const c = loadContext(id), old = operationsContext().receipts.find(r => r.cargaId === c.load.cargaId);
         return writeReceipt(id, { checklist: { ...old?.checklist, guiaSalida: jsonData({ ...value, archivo: null }) } });
     }),
     load: (id: string, value: {

@@ -61,7 +61,7 @@ export const qualityCommands = {
         for (const { origin, m } of mtd) {
             const previous = g.measurements.find(r => r.medicionMtdId === Number(m.id));
             if (!previous || previous.valor !== m.mtdCalculado)
-                await medicionMtdV1(origin.cxpId).create({ fincaId: origin.fincaId, valor: m.mtdCalculado, limiteAplicado: previous?.limiteAplicado ?? 0, medidoAt: new Date().toISOString() });
+                await medicionMtdV1(origin.cxpId).create({ fincaId: origin.fincaId, valor: m.mtdCalculado, limiteAplicado: previous?.limiteAplicado ?? m.limiteAplicado ?? 0.5, medidoAt: new Date().toISOString() });
         }
         const estado = payload.estadoRevision === 'Aprobada para cosecha' ? 'APROBADA' : payload.estadoRevision === 'Observada' ? 'OBSERVADA' : 'PENDIENTE';
         if (c.load)

@@ -4,6 +4,33 @@
 
 ---
 
+## Recorrido E2E normal Administrador + Chofer — 2026-10-30 · Parcial: ciclo completado con observaciones
+
+- En Chrome sobre `http://localhost:5173/modules` se completó campaña 6 (`QA E2E Orden Correcto 20261030`) desde el alta hasta **Terminado**, con 1,500 kg, recepción, cobro y liquidaciones registrados. El perfil de Chofer se usó después de cerrar sesión de Administrador; se registraron los cinco eventos, checklist y guía de salida, y luego se volvió a Administrador para el cierre.
+- La evidencia por módulo, identificadores y valores queda en [resultado E2E](pruebas/qa-e2e-flujos-negocio-v1-2026-10-30.md). Los registros de QA se conservaron.
+- La integración de vista/comando/persistencia se comprobó para las operaciones de ese recorrido. La emisión electrónica real de SUNAT, pagos bancarios y carga de adjuntos no fue verificada; los botones de adjuntos estaban deshabilitados y logística permitió cerrar con 2/6 documentos y 0/6 archivos.
+- Se corrigió en el formulario de guía la obligatoriedad de los dos códigos de establecimiento (cuatro dígitos), según respuesta requerida por el backend. También se cambió el paso 5 del asistente para guardar la cosecha y abrir `Datos de carga (Anotador)` antes de la guía; una entrega temporal sin carga ahora lleva al formulario de carga. Ambas correcciones se incorporaron tras el E2E y requieren regresión específica en navegador.
+- Estado: el ciclo de negocio disponible en la app pasó con observaciones. Para aprobación de producción faltan validar con negocio el requisito de documentos de cierre y certificar las integraciones externas correspondientes.
+
+## Catálogos V1, sembrado QA y guía operativa — 2026-10-30 · Completo para alcance probado
+
+### Correcciones aplicadas
+
+- Añadida una migración idempotente para completar catálogos de referencia faltantes en bases `agro` ya instaladas: roles, normas, frutas, variedades y parámetros UIT 2025/2026. No modifica ni borra filas existentes; la instalación nueva conserva sus propios datos iniciales.
+- Alineados los fixtures V1 con el SQL inicial: fruta Banano, 17 variedades, nombre GLOBALG.A.P./GRASP, UIT 2025 y códigos de entrevista válidos (`FVV-MANGO-n`). Las variedades agregadas incluyen sus marcas `createdAt` y `updatedAt` requeridas por OpenAPI.
+- Endurecido el sembrador E2E: exige una base cuyo nombre sea `epe_e2e_*`, valida los códigos FVV antes de truncar y carga fixtures en una transacción. El script ya no oculta fallas por tablas faltantes.
+- Documentado qué entidades sin CRUD son catálogos de solo lectura y cuáles se generan mediante operaciones. Se publicaron dos manuales V1 independientes, uno para Administrador y otro para Chofer, con rutas de pantalla y opciones textuales; el índice común enlaza ambos.
+
+### Verificación
+
+- Contrato OpenAPI: **57 recursos, 117 rutas y 60 tablas fuente**, generado y verificado.
+- Backend: build aprobado; **51 pruebas unitarias** en 14 archivos y **14 pruebas E2E** en 2 archivos aprobadas; oxlint sin hallazgos.
+- Frontend: TypeScript, build de producción y ESLint aprobados; **274 pruebas** en 52 archivos aprobadas. La primera ejecución detectó variedades sin campos de auditoría en los fixtures y se corrigieron antes de repetir la suite. Permanece la advertencia existente del chunk principal de 1.83 MB.
+- Recorrido integrado en QA aislado: alta y relaciones de campaña, proveedor, finca, entrevista y cliente, además de despacho del chofer, contra servicios locales V1. La suite de backend se ejecutó con `DB_DATABASE=E2E_DB_NAME=epe_e2e_20261030`; no se usó la base de desarrollo.
+- El alcance no certifica autenticación productiva ni módulos que la navegación mantiene como **En construcción**. Los usuarios/contraseñas y los movimientos internos no reciben valores iniciales ficticios.
+
+---
+
 ## Correcciones y observaciones del usuario — 2026-10-29 · Completo: correcciones implementadas y verificadas en QA
 
 Esta sección actualiza el resultado de la auditoría anterior; las secciones inferiores conservan el historial original. Se implementaron las observaciones de Sin título-2026-10-13-1630.excalidraw y las aclaraciones del usuario.

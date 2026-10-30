@@ -5,6 +5,7 @@ import {
     ClipboardCheck,
     FileCheck2,
     FlaskConical,
+    PackageCheck,
     Plus,
     Save,
     Sprout,
@@ -51,7 +52,7 @@ interface QualityHarvestWizardModalProps {
             cierreCosecha: QualityHarvestClosure;
         },
     ) => void;
-    onOpenRemissionGuides: (load: QualityDeliveryLoadItem) => void;
+    onOpenLoadForm: (load: QualityDeliveryLoadItem) => void;
 }
 
 const STEPS = [
@@ -67,7 +68,7 @@ export default function QualityHarvestWizardModal({
     onOpenChange,
     load,
     onSave,
-    onOpenRemissionGuides,
+    onOpenLoadForm,
 }: QualityHarvestWizardModalProps) {
     const [step, setStep] = useState<number>(1);
     const [org, setOrg] = useState<QualityHarvestOrganization>({
@@ -591,22 +592,22 @@ export default function QualityHarvestWizardModal({
                                 <CheckCircle2 size={22} className="text-brand" />
                                 <div>
                                     <p className="text-[14px] font-bold text-ink">
-                                        Operación lista para Guía de Remisión Remitente SUNAT
+                                        Registra primero los datos reales de la carga
                                     </p>
                                     <p className="text-[12.5px] text-ink-muted">
-                                        Puedes abrir directamente el configurador de guías con los 8 bloques SUNAT y
-                                        códigos UBIGEO.
+                                        Guarda kilos, proveedores y envases en Datos de carga (Anotador). Luego podrás
+                                        preparar la guía desde la carga creada.
                                     </p>
                                 </div>
                             </div>
                             <Button
                                 type="button"
-                                onClick={() => {
-                                    handleSaveAll();
-                                    onOpenRemissionGuides(load);
+                                onClick={async () => {
+                                    await handleSaveAll();
+                                    onOpenLoadForm(load);
                                 }}
                             >
-                                <FileCheck2 size={18} /> Configurar Guía de Remisión SUNAT
+                                <PackageCheck size={18} /> Registrar datos de carga
                             </Button>
                         </div>
                     </ModalSection>

@@ -7,5 +7,14 @@
     "umbralAlerta": 0.9,
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "parametroUitId": 2,
+    "anio": 2025,
+    "valor": 5350,
+    "limiteUit": 75,
+    "umbralAlerta": 0.9,
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
   }
 ]

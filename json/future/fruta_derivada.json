@@ -38,7 +38,84 @@
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z",
     "frutaDerivadaId": 6,
-    "name": "Banana Cavendish",
+    "name": "Cavendish",
+    "frutaId": 5
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 7,
+    "name": "Mango Haden",
+    "frutaId": 1
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 8,
+    "name": "Mango Tommy Atkins",
+    "frutaId": 1
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 9,
+    "name": "Mango Ataulfo",
+    "frutaId": 1
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 10,
+    "name": "Palta Fuerte",
+    "frutaId": 2
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 11,
+    "name": "Palta Zutano",
+    "frutaId": 2
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 12,
+    "name": "Ventura",
+    "frutaId": 3
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 13,
+    "name": "Emerald",
+    "frutaId": 3
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 14,
+    "name": "Crimson Seedless",
+    "frutaId": 4
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 15,
+    "name": "Sugraone",
+    "frutaId": 4
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 16,
+    "name": "Orgánico",
+    "frutaId": 5
+  },
+  {
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "frutaDerivadaId": 17,
+    "name": "Baby Banano",
     "frutaId": 5
   }
 ]
