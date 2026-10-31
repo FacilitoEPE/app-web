@@ -5,13 +5,16 @@ import { getActionError, subscribeActionError, clearActionError } from '@/shared
 import { PageLoading, PageError } from '@/shared/components/PageState';
 import FormField from '@/shared/components/FormField';
 import { Button } from '@/shared/components/ui/button';
+import { useLocation } from 'react-router-dom';
 export default function FrontendDataBoundary({ children }: {
     children: ReactNode;
 }) {
     const state = useSyncExternalStore(subscribeFrontendData, getFrontendDataStatus), actionError = useSyncExternalStore(subscribeActionError, getActionError);
-    useEffect(() => { if (usesV1())
-        void refreshFrontendData().catch(() => undefined); }, []);
-    if (!usesV1())
+    const { pathname } = useLocation();
+    const needsOperations = pathname !== '/modules';
+    useEffect(() => { if (usesV1() && needsOperations && getFrontendDataStatus().phase === 'idle')
+        void refreshFrontendData().catch(() => undefined); }, [needsOperations]);
+    if (!usesV1() || !needsOperations)
         return children;
     if (state.phase === 'idle' || state.phase === 'loading')
         return <PageLoading label="Cargando datos de la operación…"/>;

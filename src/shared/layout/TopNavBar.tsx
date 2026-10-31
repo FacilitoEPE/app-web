@@ -1,7 +1,8 @@
-import { ChevronDown, LogOut, Settings, Truck, User, ArrowLeft } from "lucide-react";
+import { ChevronDown, LogOut, Settings, User, ArrowLeft } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
@@ -9,7 +10,7 @@ import {
 } from "@/shared/components/ui/dropdown-menu";
 import LogoEmpresaOnly from "@/assets/image/logo_empresa_only.webp";
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import ModuleLauncher from "@/shared/layout/ModuleLauncher";
 import Hint from "@/shared/components/Hint";
 import ConfirmModal from "@/shared/components/ConfirmModal";
@@ -28,7 +29,6 @@ interface TopNavBarProps {
 
 export default function TopNavBar({ onLogout, user }: TopNavBarProps) {
     const location = useLocation();
-    const navigate = useNavigate();
     const goBack = useGoBack();
     const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -101,19 +101,17 @@ export default function TopNavBar({ onLogout, user }: TopNavBarProps) {
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent align="end" sideOffset={8} className="w-56 p-1.5">
-                        <DropdownMenuLabel className="flex flex-col items-start gap-0.5 px-3 py-2.5 normal-case">
-                            <span className="text-sm font-semibold text-ink">{displayName}</span>
-                            <span className="text-xs font-normal text-ink-muted">{user.rol.nombre} · @{user.usuario}</span>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="gap-3 px-3 py-2.5 text-[13px] font-medium text-ink-body" onClick={() => navigate("/chofer")}>
-                            <Truck size={16} className="text-brand" />
-                            Portal Móvil del Chofer
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-3 px-3 py-2.5 text-[13px] font-medium text-ink-body" onClick={() => setIsSettingsOpen(true)}>
-                            <Settings size={16} />
-                            Configuración
-                        </DropdownMenuItem>
+                        <DropdownMenuGroup>
+                            <DropdownMenuLabel className="flex flex-col items-start gap-0.5 px-3 py-2.5 normal-case">
+                                <span className="text-sm font-semibold text-ink">{displayName}</span>
+                                <span className="text-xs font-normal text-ink-muted">{user.rol.nombre} · @{user.usuario}</span>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="gap-3 px-3 py-2.5 text-[13px] font-medium text-ink-body" onClick={() => setIsSettingsOpen(true)}>
+                                <Settings size={16} />
+                                Configuración
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                             variant="destructive"

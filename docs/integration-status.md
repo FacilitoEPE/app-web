@@ -2,6 +2,11 @@
 
 > **Único archivo oficial de seguimiento.** Toda auditoría o conexión de vistas/APIs debe actualizarse aquí indicando fecha ISO (`YYYY-MM-DD`) y estado (`Completo`, `Parcial`, `Sin cambios`), conservando el historial en la sección inferior.
 
+## Carga de datos por vista — 2026-10-30 · Parcial
+
+- El selector `/modules` ya no inicia la carga del contexto operativo; tampoco espera a que termine una carga anterior. La inicialización del contexto evita ejecutarse dos veces por el montaje de StrictMode.
+- Las demás rutas V1 todavía dependen del contexto operativo global: al entrar en una de ellas se consultan recursos de varios dominios y se vuelven a consultar tras operaciones remotas. Separar esas dependencias por vista requiere adaptar las proyecciones y comandos que comparten `operationsContext`; no se considera resuelto el objetivo completo de solicitudes por vista.
+
 ## Verificación de calidad ISO/IEC 25010 — 2026-10-30 · Parcial
 
 **Alcance:** frontend y backend V1 locales. El usuario confirma que probó el flujo completo y que funciona; se acepta esa validación funcional y no se requiere repetir el recorrido como pendiente de esta revisión. Las pruebas técnicas de autenticación de ambos perfiles se detallan abajo. SUNAT real queda fuera del alcance; S3 no se volvió a probar mientras falten permisos. Los resultados siguientes no constituyen una certificación ISO ni una aceptación integral de producción.
