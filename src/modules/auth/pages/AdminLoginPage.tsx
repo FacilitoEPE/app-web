@@ -1,12 +1,12 @@
 import AdminLoginForm from "@/modules/auth/components/AdminLoginForm";
 import { Globe, Sprout, TrendingUp } from "lucide-react";
+import type { AccessProfile } from "@/modules/auth/api/auth.api";
 
 interface AdminLoginPageProps {
-  onLogin: () => void;
-  onDriverLogin?: () => void;
+  onLogin: (profile: AccessProfile, username: string, password: string) => Promise<void>;
 }
 
-export default function AdminLoginPage({ onLogin, onDriverLogin }: AdminLoginPageProps) {
+export default function AdminLoginPage({ onLogin }: AdminLoginPageProps) {
   return (
     <div
       className="min-h-screen w-full flex flex-col lg:flex-row relative bg-cover bg-center bg-no-repeat overflow-hidden"
@@ -57,7 +57,7 @@ export default function AdminLoginPage({ onLogin, onDriverLogin }: AdminLoginPag
       </div>
 
       <div className="flex flex-1 w-full lg:w-1/2 items-center justify-center lg:justify-end px-4 pb-10 sm:px-10 lg:pb-0 lg:pr-12 z-10">
-          <AdminLoginForm onLogin={onLogin} onDriverLogin={onDriverLogin} />
+          <AdminLoginForm onLogin={onLogin} />
       </div>
     </div>
   );

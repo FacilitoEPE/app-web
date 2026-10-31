@@ -1,39 +1,40 @@
-const DATABASE_NAME = 'epe-offline'
-const STORE_NAME = 'session'
-const SESSION_KEY = 'current'
+export interface AuthUser {
+  usuarioId: number
+  usuario: string
+  personaId: number
+  nombres: string
+  apellidos: string
+  correo: string | null
+  rol: { rolId: number; nombre: 'Administrador' | 'Chofer' }
+}
 
 export interface PersistedSession {
-  authenticated: boolean
-  savedAt: number
+  accessToken: string
+  user: AuthUser
 }
 
-function openDatabase(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DATABASE_NAME, 2)
-    request.onupgradeneeded = () => {
-      if (!request.result.objectStoreNames.contains(STORE_NAME)) request.result.createObjectStore(STORE_NAME)
-      if (!request.result.objectStoreNames.contains('actions')) request.result.createObjectStore('actions', { keyPath: 'id', autoIncrement: true })
-    }
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
+const SESSION_KEY = 'epe.auth.session'
+
+export function getSession(): PersistedSession | undefined {
+  try {
+    const serialized = sessionStorage.getItem(SESSION_KEY)
+    if (!serialized) return undefined
+    const session = JSON.parse(serialized) as PersistedSession
+    if (!session.accessToken || !session.user?.rol?.nombre) return undefined
+    return session
+  } catch {
+    return undefined
+  }
 }
 
-export async function getSession(): Promise<PersistedSession | undefined> {
-  const database = await openDatabase()
-  return new Promise((resolve, reject) => {
-    const request = database.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).get(SESSION_KEY)
-    request.onsuccess = () => resolve(request.result as PersistedSession | undefined)
-    request.onerror = () => reject(request.error)
-  })
+export function getAuthToken(): string | undefined {
+  return getSession()?.accessToken
 }
 
-export async function saveSession(session: PersistedSession): Promise<void> {
-  const database = await openDatabase()
-  database.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).put(session, SESSION_KEY)
+export function saveSession(session: PersistedSession): void {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
 }
 
-export async function clearSession(): Promise<void> {
-  const database = await openDatabase()
-  database.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(SESSION_KEY)
+export function clearSession(): void {
+  sessionStorage.removeItem(SESSION_KEY)
 }

@@ -3,6 +3,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
@@ -18,18 +19,21 @@ import CompanyBreadcrumb from "@/shared/layout/CompanyBreadcrumb";
 import ThemeToggle from "@/shared/components/ThemeToggle";
 import NotificationsMenu from "@/shared/layout/NotificationsMenu";
 import SettingsModal from "@/shared/layout/SettingsModal";
+import type { AuthUser } from "@/shared/offline/session";
 
 interface TopNavBarProps {
     onLogout?: () => void;
+    user: AuthUser;
 }
 
-export default function TopNavBar({ onLogout }: TopNavBarProps) {
+export default function TopNavBar({ onLogout, user }: TopNavBarProps) {
     const location = useLocation();
     const navigate = useNavigate();
     const goBack = useGoBack();
     const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const isRoot = location.pathname === '/modules' || location.pathname === '/';
+    const displayName = [user.nombres, user.apellidos].filter(Boolean).join(' ') || user.usuario;
 
     return (
         <header className="shrink-0 bg-card w-full z-20 border-b border-border dark:border-b-brand/15">
@@ -90,13 +94,18 @@ export default function TopNavBar({ onLogout }: TopNavBarProps) {
                         </span>
                         {/* Nombre y rol se ocultan en móvil: el avatar basta como acceso al menú */}
                         <span className="hidden md:flex flex-col items-start">
-                            <span className="text-sm font-bold text-ink leading-tight">Juan Pérez</span>
-                            <span className="text-xs text-ink-muted font-medium">Usuario Normal</span>
+                            <span className="text-sm font-bold text-ink leading-tight">{displayName}</span>
+                            <span className="text-xs text-ink-muted font-medium">{user.rol.nombre}</span>
                         </span>
                         <ChevronDown size={16} className="hidden md:block text-ink-muted ml-1" />
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent align="end" sideOffset={8} className="w-56 p-1.5">
+                        <DropdownMenuLabel className="flex flex-col items-start gap-0.5 px-3 py-2.5 normal-case">
+                            <span className="text-sm font-semibold text-ink">{displayName}</span>
+                            <span className="text-xs font-normal text-ink-muted">{user.rol.nombre} · @{user.usuario}</span>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem className="gap-3 px-3 py-2.5 text-[13px] font-medium text-ink-body" onClick={() => navigate("/chofer")}>
                             <Truck size={16} className="text-brand" />
                             Portal Móvil del Chofer

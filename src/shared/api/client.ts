@@ -1,4 +1,5 @@
 import axios from "axios";
+import { clearSession, getAuthToken } from "@/shared/offline/session";
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -8,8 +9,12 @@ export const apiClient = axios.create({
   },
 });
 
-// TODO: agregar un interceptor de request que adjunte el bearer token
-// una vez exista el flujo de auth (aún no hay mecanismo de token en el codebase).
+apiClient.interceptors.request.use((config) => {
+  const token = getAuthToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  else delete config.headers.Authorization;
+  return config;
+});
 
 apiClient.interceptors.response.use(
   (response) => {
@@ -18,5 +23,11 @@ apiClient.interceptors.response.use(
     }
     return response;
   },
-  (error) => Promise.reject(error.response?.data ?? error),
+  (error) => {
+    if (error.response?.status === 401 && !String(error.config?.url ?? '').includes('/auth/login')) {
+      clearSession();
+      window.dispatchEvent(new Event('epe:auth-expired'));
+    }
+    return Promise.reject(error.response?.data ?? error);
+  },
 );

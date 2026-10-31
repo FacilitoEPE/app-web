@@ -2,6 +2,13 @@
 
 > **Único archivo oficial de seguimiento.** Toda auditoría o conexión de vistas/APIs debe actualizarse aquí indicando fecha ISO (`YYYY-MM-DD`) y estado (`Completo`, `Parcial`, `Sin cambios`), conservando el historial en la sección inferior.
 
+## Autenticación y acceso por perfil — 2026-10-30 · Parcial: defaults definidos; falta iniciar API y confirmar creación en base
+
+- El inicio de sesión consume `POST /api/v1/auth/login`; el perfil y la vigencia del JWT se comprueban con `GET /api/v1/auth/me`. El token queda en `sessionStorage` y el cliente HTTP adjunta Bearer en las llamadas privadas.
+- La interfaz limita Administrador al área de módulos y Chofer al portal de conductor. El backend exige JWT globalmente, restringe las rutas legacy a Administrador y valida los permisos por operación V1 contra `x-roles` del contrato; sin regla explícita, V1 queda reservado a Administrador.
+- En desarrollo se provisionan `admin` y `chofer` con credenciales predeterminadas documentadas en `epe-backend/README.md`. Producción requiere credenciales y datos personales propios para ambas cuentas por variables de entorno; no acepta las credenciales de desarrollo. Falta iniciar la API para confirmar la creación en la base configurada.
+- El token dura una hora por defecto; la desactivación de una cuenta no revoca tokens ya emitidos antes de su expiración. La recuperación de contraseña por correo continúa deshabilitada.
+
 ---
 
 ## Recorrido E2E normal Administrador + Chofer — 2026-10-30 · Parcial: ciclo completado con observaciones

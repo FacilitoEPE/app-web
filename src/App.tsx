@@ -39,6 +39,8 @@ import { useImagesReady } from '@/shared/hooks/useImagesReady'
 import HeroModulesImg from '@/assets/hero_modules.webp'
 import HeroPhraseImg from '@/assets/hero_phrase.webp'
 import { clearSession, getSession, saveSession } from '@/shared/offline/session'
+import type { PersistedSession, AuthUser } from '@/shared/offline/session'
+import { getAuthenticatedUser, login, type AccessProfile } from '@/modules/auth/api/auth.api'
 
 // Imágenes de la portada de módulos: se precargan durante la bienvenida para que aparezca ya pintada
 const MODULES_IMAGES = [
@@ -49,20 +51,27 @@ const MODULES_IMAGES = [
 ]
 
 // Persistent layout wrapper for authenticated routes
-const ProtectedLayout = ({ isAuthenticated, onLogout }: { isAuthenticated: boolean, onLogout: () => void }) => {
-  if (!isAuthenticated) {
+const ProtectedLayout = ({ session, onLogout }: { session: PersistedSession | null, onLogout: () => void }) => {
+  if (!session) {
     return <Navigate to="/login" replace />;
   }
+  if (session.user.rol.nombre !== 'Administrador') return <Navigate to="/chofer" replace />
   return (
-    <DashboardLayout onLogout={onLogout}>
+    <DashboardLayout onLogout={onLogout} user={session.user}>
       <FrontendDataBoundary><Outlet /></FrontendDataBoundary>
     </DashboardLayout>
   );
 };
 
+function RequireDriver({ session, onLogout }: { session: PersistedSession | null; onLogout: () => void }) {
+  if (!session) return <Navigate to="/login" replace />
+  if (session.user.rol.nombre !== 'Chofer') return <Navigate to="/modules" replace />
+  return <DriverPortalPage onLogout={onLogout} />
+}
+
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
-  const [loginTarget, setLoginTarget] = useState<'/modules' | '/chofer'>('/modules')
+  const [session, setSession] = useState<PersistedSession | null>(null)
+  const [sessionReady, setSessionReady] = useState(false)
   const [isOnline, setIsOnline] = useState(() => navigator.onLine)
   const [justReconnected, setJustReconnected] = useState(false)
   // La bienvenida solo se muestra tras un inicio de sesión real, no al recargar con la sesión guardada
@@ -70,7 +79,22 @@ function App() {
   const modulesImagesReady = useImagesReady(MODULES_IMAGES, showWelcome)
 
   useEffect(() => {
-    void getSession().then((session) => setIsAuthenticated(Boolean(session?.authenticated))).catch(() => setIsAuthenticated(false))
+    const saved = getSession()
+    if (!saved) { setSessionReady(true); return }
+    void getAuthenticatedUser()
+      .then((user: AuthUser) => {
+        const restored = { ...saved, user }
+        saveSession(restored)
+        setSession(restored)
+      })
+      .catch(() => clearSession())
+      .finally(() => setSessionReady(true))
+  }, [])
+
+  useEffect(() => {
+    const expireSession = () => setSession(null)
+    window.addEventListener('epe:auth-expired', expireSession)
+    return () => window.removeEventListener('epe:auth-expired', expireSession)
   }, [])
 
   useEffect(() => {
@@ -88,39 +112,35 @@ function App() {
     }
   }, [])
 
-  const handleLogin = () => {
+  const handleLogin = async (profile: AccessProfile, username: string, password: string) => {
+    const authenticated = await login(username, password)
+    if (authenticated.user.rol.nombre !== profile) {
+      throw new Error('El perfil seleccionado no corresponde a esta cuenta.')
+    }
+    saveSession(authenticated)
+    setSession(authenticated)
+    setShowWelcome(profile === 'Administrador')
     // Se llama desde el clic de "Confirmar": es el gesto que el navegador exige para dejar sonar la intro
-    unlockSplashAudio()
-    setLoginTarget('/modules')
-    setShowWelcome(true)
-    setIsAuthenticated(true)
-    void saveSession({ authenticated: true, savedAt: Date.now() })
-  }
-  const handleDriverLogin = () => {
-    setLoginTarget('/chofer')
-    setIsAuthenticated(true)
-    void saveSession({ authenticated: true, savedAt: Date.now() })
+    if (profile === 'Administrador') unlockSplashAudio()
   }
   const handleLogout = () => {
-    setIsAuthenticated(false)
-    setLoginTarget('/modules')
-    void clearSession()
+    setSession(null)
+    clearSession()
   };
 
   if (!isOnline) return <OfflinePage />
-  if (isAuthenticated === null) return null
+  if (!sessionReady) return null
 
   return (
     <BrowserRouter>
       <Routes>
         <Route 
           path="/login" 
-          element={!isAuthenticated ? <AdminLoginPage onLogin={handleLogin} onDriverLogin={handleDriverLogin} /> : <Navigate to={loginTarget} />} 
+          element={!session ? <AdminLoginPage onLogin={handleLogin} /> : <Navigate to={session.user.rol.nombre === 'Chofer' ? '/chofer' : '/modules'} />}
         />
-        
-        <Route element={<ProtectedLayout isAuthenticated={isAuthenticated} onLogout={handleLogout} />}>
+        <Route path="/chofer" element={<RequireDriver session={session} onLogout={handleLogout} />} />
+        <Route element={<ProtectedLayout session={session} onLogout={handleLogout} />}>
           <Route path="/modules" element={<UsersModulesPage />} />
-          <Route path="/chofer" element={<DriverPortalPage onLogout={handleLogout} />} />
           <Route path="/campaigns" element={<CampaignsPage />} />
           <Route path="/campaigns/:id" element={<CampaignDetailsPage />} />
           <Route path="/campaigns/:id/providers" element={<CampaignProvidersPage />} />
@@ -148,8 +168,8 @@ function App() {
           <Route path="/liquidacion-compra" element={<PurchaseSettlementPage />} />
         </Route>
         
-        <Route path="/" element={<Navigate to="/modules" />} />
-        <Route path="*" element={<Navigate to="/modules" />} />
+        <Route path="/" element={<Navigate to={session?.user.rol.nombre === 'Chofer' ? '/chofer' : '/modules'} />} />
+        <Route path="*" element={<Navigate to={session?.user.rol.nombre === 'Chofer' ? '/chofer' : '/modules'} />} />
       </Routes>
       {justReconnected && <div className="online-transition" role="status">Conexión restaurada</div>}
       {showWelcome && <WelcomeSplash ready={modulesImagesReady} onFinished={() => setShowWelcome(false)} />}

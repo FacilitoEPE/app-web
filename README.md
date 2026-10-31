@@ -28,7 +28,7 @@ La experiencia combina tablas y tarjetas, filtros, formularios en modales y una 
 
 > **Estado del proyecto · Frontend en desarrollo**
 >
-> La integración con el backend está en curso: campañas, relaciones de campaña y listados de proveedores/clientes consumen algunas APIs; el CRUD de transporte también quedó conectado. Otras vistas siguen parciales o usan datos de demostración. El acceso aún simula una sesión en IndexedDB y no valida credenciales contra el backend. Consulta el [mapa de integración frontend/backend](docs/integration-status.md) para ver el estado por vista y lo pendiente.
+> La integración con el backend está en curso: campañas, relaciones de campaña y listados de proveedores/clientes consumen algunas APIs; el CRUD de transporte también quedó conectado. Otras vistas siguen parciales o usan datos de demostración. El acceso usa JWT del backend y separa las rutas de Administrador y Chofer. Consulta el [mapa de integración frontend/backend](docs/integration-status.md) para ver el estado por vista y lo pendiente.
 
 <a id="modulos"></a>
 ## 🧭 Un sistema organizado por áreas
@@ -182,7 +182,7 @@ Para cambiar el origen permitido por CORS (por ejemplo, si usas la URL de red en
 docker compose up -d --force-recreate api
 ```
 
-No necesitas reconstruir la imagen del backend para este cambio: `CORS_ORIGIN` se lee al iniciar el contenedor. El backend actualmente permite un solo origen por vez. Para trabajar desde la misma computadora normalmente basta el valor predeterminado `http://localhost:5173`.
+No necesitas reconstruir la imagen del backend para este cambio: `CORS_ORIGIN` se lee al iniciar el contenedor. Admite varios orígenes separados por comas. En desarrollo, `localhost`, `127.0.0.1` y `::1` se aceptan en cualquier puerto; en producción solo se admiten los orígenes configurados. Para trabajar por IP LAN o dominio, agrega el origen exacto y recrea la API.
 
 Los puertos predeterminados son `3000` (API) y `5432` (base). Si alguno ya está ocupado, crea `epe-web/.env` y sobrescribe `API_PORT` o `DB_PORT_HOST`. También puedes establecer `DB_PASSWORD` y `DB_DATABASE` ahí. La contraseña predeterminada solo es para desarrollo local; cámbiala si expones servicios fuera de tu máquina. Si cambias el puerto de la API, configura `VITE_API_BASE_URL` para la web y vuelve a iniciar Vite.
 
