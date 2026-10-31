@@ -18,7 +18,6 @@ import { BRAND_ACTIVE_SURFACE } from "@/shared/styles/brandGradients";
 import { useGoBack } from "@/shared/hooks/useGoBack";
 import CompanyBreadcrumb from "@/shared/layout/CompanyBreadcrumb";
 import ThemeToggle from "@/shared/components/ThemeToggle";
-import NotificationsMenu from "@/shared/layout/NotificationsMenu";
 import SettingsModal from "@/shared/layout/SettingsModal";
 import type { AuthUser } from "@/shared/offline/session";
 
@@ -79,8 +78,6 @@ export default function TopNavBar({ onLogout, user }: TopNavBarProps) {
                 <ModuleLauncher />
 
                 <ThemeToggle />
-
-                <NotificationsMenu />
 
                 <div className="hidden sm:block h-9 w-px bg-border shrink-0"></div>
 

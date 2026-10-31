@@ -7,6 +7,7 @@ import OfflinePage from '@/shared/components/OfflinePage'
 import { PageLoading } from '@/shared/components/PageState'
 import WelcomeSplash from '@/shared/components/WelcomeSplash'
 import { unlockSplashAudio } from '@/shared/components/welcomeSplashSound'
+import { isSplashSkipped } from '@/shared/components/welcomeSplashPreference'
 import { navigationItems } from '@/shared/layout/navigationItems'
 import { useImagesReady } from '@/shared/hooks/useImagesReady'
 import HeroModulesImg from '@/assets/hero_modules.webp'
@@ -121,9 +122,10 @@ function App() {
     }
     saveSession(authenticated)
     setSession(authenticated)
-    setShowWelcome(profile === 'Administrador')
+    const showIntro = profile === 'Administrador' && !isSplashSkipped()
+    setShowWelcome(showIntro)
     // Se llama desde el clic de "Confirmar": es el gesto que el navegador exige para dejar sonar la intro
-    if (profile === 'Administrador') unlockSplashAudio()
+    if (showIntro) unlockSplashAudio()
   }
   const handleLogout = () => {
     setSession(null)
