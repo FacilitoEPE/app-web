@@ -96,6 +96,7 @@ export function FilterSearch({ value, onChange, placeholder = "Buscar..." }: Fil
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
+                aria-label={placeholder}
                 className={cn(
                     "h-14 rounded-xl bg-card pl-11 pr-12 text-[14.5px] shadow-none transition-colors placeholder:text-muted-foreground focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30",
                     value ? "border-brand/60" : "border-border"
@@ -140,6 +141,7 @@ export function FilterDateField({ label, value, onChange }: FilterDateFieldProps
             <DatePicker
                 value={value}
                 onChange={onChange}
+                aria-label={label}
                 placeholder="--/--/----"
                 className="h-full w-full items-end rounded-xl border-0 bg-transparent pb-2.5 pl-11 pr-5 text-[14px] font-semibold text-ink-body hover:bg-transparent aria-expanded:bg-transparent focus-visible:border-0 focus-visible:ring-0 sm:w-auto [&>svg]:hidden"
             />

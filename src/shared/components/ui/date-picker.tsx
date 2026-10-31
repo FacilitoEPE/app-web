@@ -26,6 +26,7 @@ type DatePickerProps = {
   "aria-invalid"?: boolean | "true" | "false"
   "aria-describedby"?: string
   "aria-required"?: boolean
+  "aria-label"?: string
 }
 
 function DatePicker({
@@ -40,6 +41,7 @@ function DatePicker({
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
   "aria-required": ariaRequired,
+  "aria-label": ariaLabel,
 }: DatePickerProps) {
   const [internalValue, setInternalValue] = React.useState(defaultValue ?? "")
   const isControlled = value !== undefined
@@ -64,6 +66,7 @@ function DatePicker({
             aria-invalid={ariaInvalid}
             aria-describedby={ariaDescribedBy}
             aria-required={ariaRequired}
+            aria-label={ariaLabel}
             className={cn(
               "h-11 w-full justify-start gap-2 rounded-lg px-2.5 shadow-none aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20",
               selected ? "text-ink font-medium" : "text-ink-muted font-normal",

@@ -10,6 +10,9 @@
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z",
     "trampaReferencia": "T-01",
-    "fincaId": 1
+    "fincaId": 1,
+    "capturas": null,
+    "trampas": null,
+    "diasExposicion": null
   }
 ]

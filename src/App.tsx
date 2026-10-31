@@ -1,37 +1,10 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import './App.css'
-import AdminLoginPage from './modules/auth/pages/AdminLoginPage'
-import UsersModulesPage from './modules/users/pages/UsersModulesPage'
-import CampaignsPage from './modules/campaigns/pages/CampaignsPage'
-import CampaignDetailsPage from './modules/campaigns/pages/CampaignDetailsPage'
-import CampaignProvidersPage from './modules/campaigns/pages/CampaignProvidersPage'
-import CampaignClientsPage from '@/modules/campaigns/pages/CampaignClientsPage'
-import CampaignClientContractsPage from '@/modules/campaigns/pages/CampaignClientContractsPage'
-import CampaignContractDeliveriesPage from '@/modules/campaigns/pages/CampaignContractDeliveriesPage'
-import CampaignProviderDetailsPage from './modules/campaigns/pages/CampaignProviderDetailsPage'
-import CampaignInterviewsPage from './modules/campaigns/pages/CampaignInterviewsPage'
-import CampaignExamsPage from './modules/campaigns/pages/CampaignExamsPage'
-import CampaignCertificationsPage from './modules/campaigns/pages/CampaignCertificationsPage'
-import CampaignCarriersPage from './modules/campaigns/pages/CampaignCarriersPage'
-import CampaignDeliveriesPage from './modules/campaigns/pages/CampaignDeliveriesPage'
-import CampaignWeeklyDeliveryProgramPage from './modules/campaigns/pages/CampaignWeeklyDeliveryProgramPage'
-import ProvidersPage from './modules/providers/pages/ProvidersPage'
-import ProviderFincasPage from './modules/providers/pages/ProviderFincasPage'
-import ProviderDetailsPage from './modules/providers/pages/ProviderDetailsPage'
-import ProviderCertificadosPage from './modules/providers/pages/ProviderCertificadosPage'
-import CommercialPlanningPage from './modules/commercial-planning/pages/CommercialPlanningPage'
-import ClientDetailsPage from './modules/commercial-planning/pages/ClientDetailsPage'
-import CarriersPage from './modules/carriers/pages/CarriersPage'
-import CarrierDetailsPage from './modules/carriers/pages/CarrierDetailsPage'
-import QualityPage from '@/modules/quality/pages/QualityPage'
-import LogisticsPage from '@/modules/logistics/pages/LogisticsPage'
-import BillingPage from '@/modules/billing/pages/BillingPage'
-import PurchaseSettlementPage from '@/modules/purchase-settlement/pages/PurchaseSettlementPage'
-import DriverPortalPage from '@/modules/driver-portal/pages/DriverPortalPage'
 import DashboardLayout from '@/shared/layout/DashboardLayout'
 import FrontendDataBoundary from '@/FrontendDataBoundary'
 import OfflinePage from '@/shared/components/OfflinePage'
+import { PageLoading } from '@/shared/components/PageState'
 import WelcomeSplash from '@/shared/components/WelcomeSplash'
 import { unlockSplashAudio } from '@/shared/components/welcomeSplashSound'
 import { navigationItems } from '@/shared/layout/navigationItems'
@@ -41,6 +14,35 @@ import HeroPhraseImg from '@/assets/hero_phrase.webp'
 import { clearSession, getSession, saveSession } from '@/shared/offline/session'
 import type { PersistedSession, AuthUser } from '@/shared/offline/session'
 import { getAuthenticatedUser, login, type AccessProfile } from '@/modules/auth/api/auth.api'
+
+const AdminLoginPage = lazy(() => import('@/modules/auth/pages/AdminLoginPage'))
+const UsersModulesPage = lazy(() => import('@/modules/users/pages/UsersModulesPage'))
+const CampaignsPage = lazy(() => import('@/modules/campaigns/pages/CampaignsPage'))
+const CampaignDetailsPage = lazy(() => import('@/modules/campaigns/pages/CampaignDetailsPage'))
+const CampaignProvidersPage = lazy(() => import('@/modules/campaigns/pages/CampaignProvidersPage'))
+const CampaignClientsPage = lazy(() => import('@/modules/campaigns/pages/CampaignClientsPage'))
+const CampaignClientContractsPage = lazy(() => import('@/modules/campaigns/pages/CampaignClientContractsPage'))
+const CampaignContractDeliveriesPage = lazy(() => import('@/modules/campaigns/pages/CampaignContractDeliveriesPage'))
+const CampaignProviderDetailsPage = lazy(() => import('@/modules/campaigns/pages/CampaignProviderDetailsPage'))
+const CampaignInterviewsPage = lazy(() => import('@/modules/campaigns/pages/CampaignInterviewsPage'))
+const CampaignExamsPage = lazy(() => import('@/modules/campaigns/pages/CampaignExamsPage'))
+const CampaignCertificationsPage = lazy(() => import('@/modules/campaigns/pages/CampaignCertificationsPage'))
+const CampaignCarriersPage = lazy(() => import('@/modules/campaigns/pages/CampaignCarriersPage'))
+const CampaignDeliveriesPage = lazy(() => import('@/modules/campaigns/pages/CampaignDeliveriesPage'))
+const CampaignWeeklyDeliveryProgramPage = lazy(() => import('@/modules/campaigns/pages/CampaignWeeklyDeliveryProgramPage'))
+const ProvidersPage = lazy(() => import('@/modules/providers/pages/ProvidersPage'))
+const ProviderFincasPage = lazy(() => import('@/modules/providers/pages/ProviderFincasPage'))
+const ProviderDetailsPage = lazy(() => import('@/modules/providers/pages/ProviderDetailsPage'))
+const ProviderCertificadosPage = lazy(() => import('@/modules/providers/pages/ProviderCertificadosPage'))
+const CommercialPlanningPage = lazy(() => import('@/modules/commercial-planning/pages/CommercialPlanningPage'))
+const ClientDetailsPage = lazy(() => import('@/modules/commercial-planning/pages/ClientDetailsPage'))
+const CarriersPage = lazy(() => import('@/modules/carriers/pages/CarriersPage'))
+const CarrierDetailsPage = lazy(() => import('@/modules/carriers/pages/CarrierDetailsPage'))
+const QualityPage = lazy(() => import('@/modules/quality/pages/QualityPage'))
+const LogisticsPage = lazy(() => import('@/modules/logistics/pages/LogisticsPage'))
+const BillingPage = lazy(() => import('@/modules/billing/pages/BillingPage'))
+const PurchaseSettlementPage = lazy(() => import('@/modules/purchase-settlement/pages/PurchaseSettlementPage'))
+const DriverPortalPage = lazy(() => import('@/modules/driver-portal/pages/DriverPortalPage'))
 
 // Imágenes de la portada de módulos: se precargan durante la bienvenida para que aparezca ya pintada
 const MODULES_IMAGES = [
@@ -71,7 +73,7 @@ function RequireDriver({ session, onLogout }: { session: PersistedSession | null
 
 function App() {
   const [session, setSession] = useState<PersistedSession | null>(null)
-  const [sessionReady, setSessionReady] = useState(false)
+  const [sessionReady, setSessionReady] = useState(() => !getSession())
   const [isOnline, setIsOnline] = useState(() => navigator.onLine)
   const [justReconnected, setJustReconnected] = useState(false)
   // La bienvenida solo se muestra tras un inicio de sesión real, no al recargar con la sesión guardada
@@ -80,7 +82,7 @@ function App() {
 
   useEffect(() => {
     const saved = getSession()
-    if (!saved) { setSessionReady(true); return }
+    if (!saved) return
     void getAuthenticatedUser()
       .then((user: AuthUser) => {
         const restored = { ...saved, user }
@@ -133,7 +135,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
+      <Suspense fallback={<PageLoading label="Cargando pantalla…" />}><Routes>
         <Route 
           path="/login" 
           element={!session ? <AdminLoginPage onLogin={handleLogin} /> : <Navigate to={session.user.rol.nombre === 'Chofer' ? '/chofer' : '/modules'} />}
@@ -170,7 +172,7 @@ function App() {
         
         <Route path="/" element={<Navigate to={session?.user.rol.nombre === 'Chofer' ? '/chofer' : '/modules'} />} />
         <Route path="*" element={<Navigate to={session?.user.rol.nombre === 'Chofer' ? '/chofer' : '/modules'} />} />
-      </Routes>
+      </Routes></Suspense>
       {justReconnected && <div className="online-transition" role="status">Conexión restaurada</div>}
       {showWelcome && <WelcomeSplash ready={modulesImagesReady} onFinished={() => setShowWelcome(false)} />}
     </BrowserRouter>
