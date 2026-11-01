@@ -10,7 +10,7 @@ export default function HeroModules() {
   return (
     /* Alto compacto y proporcional: el hero ya no ocupa un alto excesivo fijo
        y cede espacio limpio a la cuadrícula de módulos en cualquier pantalla. */
-    <section className="relative w-full shrink-0 overflow-hidden py-5 sm:py-6 lg:h-[165px] xl:h-[185px] lg:py-0">
+    <section className="modules-hero relative w-full shrink-0 overflow-hidden py-5 sm:py-6 lg:h-[165px] xl:h-[185px] lg:py-0">
       {/* Foto. El borde curvo se recorta por CSS (no viene incrustado en el asset),
           así la altura del hero y la forma de la curva se ajustan por separado.
           En móvil se oculta: el recorte curvo y el 67% de ancho dejarían el texto
@@ -60,8 +60,8 @@ export default function HeroModules() {
           </span>
         </div>
 
-        <h1 className="text-[24px] font-semibold leading-[1.12] tracking-tight text-brand-dark sm:text-3xl lg:text-[32px] xl:text-[36px]">
-          <span className="block whitespace-nowrap">Centro de operaciones</span>
+        <h1 className="modules-title text-[24px] font-semibold leading-[1.12] tracking-tight text-brand-dark sm:text-3xl lg:text-[32px] xl:text-[36px]">
+          <span className="block">Centro de operaciones</span>
           <span className="block text-brand font-medium">Agro F.V.</span>
         </h1>
       </div>

@@ -1,0 +1,64 @@
+.route-surface {
+  background: var(--surface-page);
+  min-height: 100%;
+}
+html[data-route-transition]::view-transition-group(route-surface),
+html[data-route-transition]::view-transition-group(route-photo) {
+  animation-duration: 1000ms;
+  animation-timing-function: linear;
+  overflow: clip;
+  border-radius: 20px;
+}
+html[data-route-transition]::view-transition-group(route-surface) { background: var(--surface-page); }
+html[data-route-transition]::view-transition-old(route-surface),
+html[data-route-transition]::view-transition-new(route-surface) {
+  width: 100%; height: 100%; object-fit: none; object-position: top left; mix-blend-mode: normal;
+}
+html[data-route-transition]::view-transition-old(route-surface) { animation: route-leave 1000ms linear both; }
+html[data-route-transition]::view-transition-new(route-surface) { animation: route-arrive 1000ms linear both; }
+html[data-route-transition]::view-transition-old(route-photo) {
+  width: 100%; height: 100%; object-fit: cover;
+  animation: route-photo-leave 1000ms linear both;
+}
+html[data-route-transition]::view-transition-new(route-photo) { animation: none; opacity: 0; }
+html[data-route-transition="return"]::view-transition-new(route-photo) {
+  width: 100%; height: 100%; object-fit: cover;
+  animation: route-photo-return 1000ms linear both;
+}
+html[data-route-transition]::view-transition-old(root) { animation: none; opacity: 0; }
+html[data-route-transition]::view-transition-new(root) { animation: none; }
+.route-photo-destination { position: fixed; pointer-events: none; }
+/* Text is stationary whenever visible: geometry moves between 12% and 90%. */
+@keyframes route-leave { 0% { opacity: 1; } 12%, 100% { opacity: 0; } }
+@keyframes route-arrive { 0%, 90% { opacity: 0; } 99.5%, 100% { opacity: 1; } }
+@keyframes route-photo-leave { 0%, 55% { opacity: 1; } 90%, 100% { opacity: 0; } }
+@keyframes route-photo-return { 0%, 12% { opacity: 0; } 55%, 100% { opacity: 1; } }
+.motion-dialog-surface {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  overflow: hidden;
+  contain: layout paint style;
+}
+[data-container-motion] {
+  animation: none !important;
+  opacity: 1;
+  transition: none;
+}
+/* Presence guard only; the shared spring unmounts through Base UI when it settles. */
+[data-container-motion][data-ending-style] { animation: motion-presence 1200ms linear both !important; }
+@keyframes motion-presence { from { visibility: visible; } to { visibility: visible; } }
+[data-container-motion-backdrop] {
+  animation: none !important;
+  opacity: 1;
+  transition: none;
+}
+[data-container-motion-backdrop][data-starting-style],
+[data-container-motion-backdrop][data-ending-style] { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  [data-container-motion], [data-container-motion-backdrop] { transition: none; }
+  [data-container-motion][data-ending-style] { animation: none !important; }
+}
+
+/* Start confirmation timers and decorative check animation after arrival. */
+[data-motion-phase="opening"] [style*="success-"] { animation-play-state: paused !important; }

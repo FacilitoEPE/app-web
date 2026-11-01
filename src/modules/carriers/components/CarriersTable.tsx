@@ -75,8 +75,8 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
             { label: "Eliminar", icon: <Trash2 size={18} strokeWidth={2.5} />, variant: "destructive", onClick: () => setDeleting({ open: true, carrier: row }) },
         ];
         const secondary: RowAction[] = [
-            { label: "Vehículos", icon: <Truck size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => navigate("/transportistas/" + row.id + "?tab=vehiculos") },
-            { label: "Choferes", icon: <UserRound size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => navigate("/transportistas/" + row.id + "?tab=choferes") },
+            { label: "Vehículos", icon: <Truck size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => navigate("/transportistas/" + row.id + "/vehiculos") },
+            { label: "Choferes", icon: <UserRound size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => navigate("/transportistas/" + row.id + "/choferes") },
         ];
         return { primary, secondary };
     };

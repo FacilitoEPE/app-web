@@ -119,6 +119,63 @@ export function createMockMiddleware(directory: string): Connect.NextHandleFunct
     if (/\/documentos\/|\/documento\//.test(pathname)) {
       throw new MockError(501, 'La API ficticia no simula subidas ni descargas de S3.')
     }
+    if ((pathname === '/api/v1/auth/login' || pathname === '/auth/login') && method === 'POST') {
+      const body = await readBody(request)
+      const username = String(body.usuario ?? '').trim().toLowerCase()
+      const isDriver = username.includes('chofer')
+      const user = isDriver
+        ? {
+            usuarioId: 2,
+            usuario: 'chofer-demo',
+            personaId: 2,
+            nombres: 'Miguel',
+            apellidos: 'Torres Ramos',
+            correo: 'chofer@transnorte.com',
+            rol: { rolId: 2, nombre: 'Chofer' as const },
+          }
+        : {
+            usuarioId: 1,
+            usuario: 'admin-demo',
+            personaId: 5,
+            nombres: 'Administrador',
+            apellidos: 'Demo',
+            correo: 'admin@agroexportacionesfv.pe',
+            rol: { rolId: 1, nombre: 'Administrador' as const },
+          }
+      return {
+        status: 200,
+        data: {
+          accessToken: isDriver ? 'mock-chofer-token' : 'mock-admin-token',
+          user,
+        },
+      }
+    }
+    if ((pathname === '/api/v1/auth/me' || pathname === '/auth/me') && method === 'GET') {
+      const authHeader = String(request.headers.authorization ?? '')
+      const isDriver = authHeader.includes('chofer')
+      return {
+        status: 200,
+        data: isDriver
+          ? {
+              usuarioId: 2,
+              usuario: 'chofer-demo',
+              personaId: 2,
+              nombres: 'Miguel',
+              apellidos: 'Torres Ramos',
+              correo: 'chofer@transnorte.com',
+              rol: { rolId: 2, nombre: 'Chofer' as const },
+            }
+          : {
+              usuarioId: 1,
+              usuario: 'admin-demo',
+              personaId: 5,
+              nombres: 'Administrador',
+              apellidos: 'Demo',
+              correo: 'admin@agroexportacionesfv.pe',
+              rol: { rolId: 1, nombre: 'Administrador' as const },
+            },
+      }
+    }
     const campaignProviders = /^\/campanias-proveedores\/campania\/(\d+)$/.exec(pathname)
     if (campaignProviders && method === 'GET') {
       const id = Number(campaignProviders[1])
@@ -236,3 +293,4 @@ export function mockApiPlugin(apiBaseUrl: string | undefined): Plugin {
     },
   }
 }
+

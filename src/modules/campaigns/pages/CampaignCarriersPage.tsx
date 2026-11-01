@@ -1,8 +1,8 @@
 import { usesV1 } from "@/shared/api/data-contract";
 import { campaignCarrierAssignments } from "@/modules/campaigns/api/carrier-assignments";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Eye, Link2, Link2Off, ListFilter, Pencil, RotateCw, SearchX, Truck, TriangleAlert, Wallet } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { Eye, Link2, Link2Off, ListFilter, RotateCw, SearchX, Truck, TriangleAlert, Wallet } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Spinner } from "@/shared/components/ui/spinner";
@@ -47,7 +47,7 @@ import {
 } from "@/modules/campaigns/campaignCarriers.store";
 import { useCampaign } from "@/modules/campaigns/useCampaign";
 
-type SuccessMode = "carrier" | "carrierAgreement" | "carrierSettled";
+type SuccessMode = "carrier" | "carrierAgreement";
 interface Row {
     link: CampaignCarrierLink;
     /** Ficha de Gestión de Transporte; `null` si el transportista ya no existe allí */
@@ -69,7 +69,6 @@ function agreementCaption(link: CampaignCarrierLink): string | null {
 
 /** Transportistas vinculados a una campaña en ejecución, con su cotización y su acuerdo de pago. */
 export default function CampaignCarriersPage() {
-    const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const campaniaId = Number(id);
     const isValidCampaign = Number.isInteger(campaniaId) && campaniaId > 0;
@@ -77,7 +76,6 @@ export default function CampaignCarriersPage() {
     const links = useCampaignCarriers(campaniaId);
     const extras = useCarrierExtras();
     const quotations = useCarrierQuotations();
-
 
     const [carriers, setCarriers] = useState<Carrier[]>([]);
     const [isLoading, setIsLoading] = useState(isValidCampaign);
@@ -138,15 +136,11 @@ export default function CampaignCarriersPage() {
                 unitAndDriver: `${match.vehiculoAsignadoPlaca || "Por asignar"} · ${match.choferAsignadoNombre || "Chofer pendiente"}`,
             };
         }
-        const firstVeh = row.carrier?.vehiculos[0];
-        const firstDrv = row.carrier?.choferes[0];
-        return {
-            unitAndDriver: [firstVeh?.placa, firstDrv?.nombre].filter(Boolean).join(" · ") || "Flota disponible",
-        };
+        return { unitAndDriver: "Por asignar · Chofer pendiente" };
     };
 
     const getExportData = (): TableExport => ({
-        filename: "transportistas_campana",
+        filename: `transportistas_campania_${campaniaId}`,
         title: "Transportistas de la campaña",
         header: ["Transportista", "Tipo", "Documento", "Teléfono", "Unidad / Chofer", "Fecha de vinculación", "Acuerdo de pago"],
         rows: filtered.map((row) => [
@@ -165,10 +159,8 @@ export default function CampaignCarriersPage() {
         const secondary: RowAction[] = [];
         if (!acuerdo) {
             secondary.push({ label: "Registrar acuerdo de pago", icon: <Wallet size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setAgreement({ open: true, mode: "create", row }) });
-        } else if (isAgreementClosed(acuerdo)) {
-            secondary.push({ label: "Ver acuerdo de pago", icon: <Wallet size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setAgreement({ open: true, mode: "view", row }) });
         } else {
-            secondary.push({ label: "Editar acuerdo de pago", icon: <Pencil size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setAgreement({ open: true, mode: "edit", row }) });
+            secondary.push({ label: "Ver acuerdo de pago", icon: <Wallet size={16} strokeWidth={2.5} />, variant: "brand", onClick: () => setAgreement({ open: true, mode: "view", row }) });
         }
         const hasLockedAgreement = Boolean(acuerdo && isAgreementClosed(acuerdo));
         return {
@@ -248,12 +240,9 @@ export default function CampaignCarriersPage() {
                 title="Transportistas de la Campaña"
                 description="Vincula transportistas, asigna sus unidades y registra el acuerdo de pago de cada uno."
                 action={
-                    <div className="flex flex-wrap items-center gap-2.5">
-                        <Button variant="outline" size="xl" onClick={() => navigate("/campaigns/" + campaniaId + "/deliveries")}>Asignar camión y chofer</Button>
-                        <Button size="xl" onClick={() => setLinkOpen(true)} disabled={!isValidCampaign}>
-                            <Link2 size={20} strokeWidth={2.5} /> Vincular transportista
-                        </Button>
-                    </div>
+                    <Button size="xl" onClick={() => setLinkOpen(true)} disabled={!isValidCampaign}>
+                        <Link2 size={20} strokeWidth={2.5} /> Vincular transportista
+                    </Button>
                 }
             />
 
@@ -305,45 +294,41 @@ export default function CampaignCarriersPage() {
                 </div>
 
                 {viewMode === "table" && (
-                    <div className="hidden overflow-hidden rounded-xl border border-border sm:block">
-                        <Table>
+                    <div className="hidden sm:block rounded-xl overflow-hidden border border-border">
+                        <Table className="table-fixed w-full">
                             <TableHeader className={TABLE_HEAD_BG}>
                                 <TableRow className="border-b border-border hover:bg-transparent">
-                                    <TableHead className="h-14 px-6 font-semibold text-ink">Transportista</TableHead>
-                                    <TableHead className="h-14 font-semibold text-ink">Tipo</TableHead>
-                                    <TableHead className="h-14 font-semibold text-ink">Contacto</TableHead>
-                                    <TableHead className="h-14 font-semibold text-ink">Unidad / Chofer</TableHead>
-                                    <TableHead className="h-14 font-semibold text-ink">Vinculado</TableHead>
+                                    <TableHead className="h-14 font-semibold text-ink px-6">Transportista</TableHead>
+                                    <TableHead className="h-14 font-semibold text-ink w-32">Tipo</TableHead>
+                                    <TableHead className="h-14 font-semibold text-ink w-48">Documento</TableHead>
+                                    <TableHead className="h-14 font-semibold text-ink w-64">Unidad / Chofer</TableHead>
+                                    <TableHead className="h-14 font-semibold text-ink w-40">Vinculado</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Acuerdo de pago</TableHead>
-                                    <TableHead className="h-14 w-44 px-6 text-center font-semibold text-ink">Acciones</TableHead>
+                                    <TableHead className="h-14 font-semibold text-ink w-56 text-center px-6">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {visible.map((row) => {
                                     const qInfo = quotationInfoFor(row);
                                     return (
-                                        <TableRow key={row.link.id} className="border-b border-border transition-colors hover:bg-surface-page/60">
-                                            <TableCell className="relative h-20 px-6">
+                                        <TableRow key={row.link.id} className="border-b border-border hover:bg-surface-page/60 transition-colors">
+                                            <TableCell className="h-20 px-6 relative">
                                                 <TableRowAccent color="bg-brand" />
-                                                <TableRowLead icon={<Truck size={18} />} title={rowName(row)} subtitle={row.carrier ? carrierIdentification(row.carrier) : undefined} />
+                                                <TableRowLead icon={<Truck size={20} strokeWidth={2} className="text-brand" />} title={rowName(row)} subtitle={row.carrier ? carrierIdentification(row.carrier) : undefined} />
                                             </TableCell>
                                             <TableCell>{tipoBadge(row)}</TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">
-                                                    <span className="text-[13.5px] font-semibold tabular-nums leading-tight text-ink-body">{row.carrier?.numero || "—"}</span>
-                                                    <span className="mt-0.5 text-[12px] font-medium text-ink-muted">{row.carrier?.correo || "—"}</span>
+                                                    <span className="font-semibold text-[13.5px] text-ink-body leading-tight">{row.carrier ? carrierIdentification(row.carrier) : "—"}</span>
+                                                    {row.carrier?.numero && <span className="text-[12.5px] font-medium text-ink-muted mt-0.5">{row.carrier.numero}</span>}
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex flex-col">
-                                                    <span className="text-[13px] font-semibold text-ink">{qInfo.unitAndDriver}</span>
-                                                </div>
+                                                <span className="font-semibold text-[13.5px] text-ink-body leading-tight">{qInfo.unitAndDriver}</span>
                                             </TableCell>
-                                            <TableCell className="whitespace-nowrap font-medium text-ink-body">{formatDisplayDate(row.link.fechaVinculacion)}</TableCell>
+                                            <TableCell className="font-medium text-[13.5px] text-ink-body tabular-nums">{formatDisplayDate(row.link.fechaVinculacion)}</TableCell>
                                             <TableCell>{agreementCell(row)}</TableCell>
-                                            <TableCell className="px-6">
-                                                <RowActions {...getRowActions(row)} className="justify-center text-ink-muted" />
-                                            </TableCell>
+                                            <TableCell className="px-6 text-center"><RowActions {...getRowActions(row)} /></TableCell>
                                         </TableRow>
                                     );
                                 })}
@@ -359,8 +344,8 @@ export default function CampaignCarriersPage() {
                 campaignName={campaign?.nombre ?? "Campaña"}
                 carriers={available}
                 isLoading={isLoading}
-                onSave={async (carrierId) => {
-                    await linkCampaignCarrier(campaniaId, carrierId, null);
+                onSave={async (carrierId, cotizacion) => {
+                    await linkCampaignCarrier(campaniaId, carrierId, usesV1() ? null : cotizacion);
                     setLinkOpen(false);
                     showSuccess("carrier");
                 }}

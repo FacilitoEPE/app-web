@@ -58,6 +58,8 @@ export function getBreadcrumbLevels(pathname: string): BreadcrumbLevel[] {
         levels.push({ label: "Fincas" });
     } else if (rootSegment === "proveedores" && segments[2] === "certificados") {
         levels.push({ label: "Certificados" });
+    } else if (rootSegment === "transportistas" && (segments[2] === "vehiculos" || segments[2] === "choferes")) {
+        levels.push({ label: segments[2] === "vehiculos" ? "Vehículos" : "Choferes" });
     } else if (segments.length > 1) {
         levels.push({ label: "Detalle" });
     }
@@ -89,13 +91,25 @@ const BACK_LADDER: string[][] = [
     ["proveedores", ":x", "certificados"],
     ["planificacion-comercial", ":x"],
     ["transportistas", ":x"],
+    ["transportistas", ":x", "vehiculos"],
+    ["transportistas", ":x", "choferes"],
 ];
 
 const matches = (pattern: string[], segments: string[]) =>
     pattern.length === segments.length && pattern.every((part, index) => part === ":x" || part === segments[index]);
 
+/** These management pages are opened from the transport directory, independently of the detail page. */
+export function getDirectBackHref(pathname: string): string | undefined {
+    const segments = pathname.split("/").filter(Boolean);
+    if (matches(["transportistas", ":x", "vehiculos"], segments)
+        || matches(["transportistas", ":x", "choferes"], segments)) return "/transportistas";
+    return undefined;
+}
+
 /** A dónde lleva "Regresar": la vista inmediata anterior de la escalera; desde la raíz de un módulo, al selector de módulos. */
 export function getParentHref(pathname: string): string {
+    const directBack = getDirectBackHref(pathname);
+    if (directBack) return directBack;
     const segments = pathname.split("/").filter(Boolean);
     if (!ROOT_ROUTES[segments[0]]) return "/modules";
     for (let length = segments.length - 1; length >= 2; length--) {

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, MouseEventHandler } from "react";
 import { MoreVertical } from "lucide-react";
 import Hint from "@/shared/components/Hint";
 import {
@@ -10,9 +10,10 @@ import {
 import { cn } from "@/lib/utils";
 
 export interface RowAction {
+    motionKey?: string;
     label: string;
     icon: ReactNode;
-    onClick?: () => void;
+    onClick?: MouseEventHandler<HTMLElement>;
     /** "destructive" pinta la acción en rojo; "brand" (solo en el menú "secondary") la resalta en verde */
     variant?: "default" | "brand" | "destructive";
 }
@@ -33,6 +34,7 @@ export default function RowActions({ primary, secondary = [], align = "end", cla
             {primary.map((action) => (
                 <Hint key={action.label} label={action.label}>
                     <button
+                        data-motion-key={action.motionKey}
                         onClick={action.onClick}
                         aria-label={action.label}
                         className={cn(

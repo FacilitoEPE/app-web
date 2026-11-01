@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { TriangleAlert, CircleHelp, X } from "lucide-react";
+import { TriangleAlert, CircleHelp, X, Timer } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -10,6 +10,7 @@ import {
 } from "@/shared/components/ui/alert-dialog";
 import { BRAND_ACTIVE_SURFACE } from "@/shared/styles/brandGradients";
 import { cn } from "@/lib/utils";
+import HoldToConfirmButton, { DEFAULT_HOLD_DURATION_MS } from "@/shared/components/HoldToConfirmButton";
 
 type ConfirmTone = "danger" | "warning";
 
@@ -27,6 +28,13 @@ interface ConfirmModalProps {
     badgeLabel?: string;
     confirmLabel?: string;
     cancelLabel?: string;
+    /**
+     * Si requiere mantener presionado el botón para confirmar.
+     * Por defecto `true` para acciones destructivas (`tone === "danger"`).
+     */
+    requireHold?: boolean;
+    /** Duración requerida de la pulsación en milisegundos (por defecto 1500 ms) */
+    holdDurationMs?: number;
     onConfirm: () => void;
 }
 
@@ -86,9 +94,12 @@ export default function ConfirmModal({
     badgeLabel,
     confirmLabel = "Confirmar",
     cancelLabel = "Cancelar",
+    requireHold,
+    holdDurationMs = DEFAULT_HOLD_DURATION_MS,
     onConfirm,
 }: ConfirmModalProps) {
     const t = TONES[tone];
+    const isHoldActive = requireHold ?? (tone === "danger");
 
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -154,19 +165,41 @@ export default function ConfirmModal({
                         <AlertDialogCancel size="xl" className="border-border text-ink-body hover:bg-muted hover:text-ink sm:flex-1">
                             {cancelLabel}
                         </AlertDialogCancel>
-                        <AlertDialogAction
-                            variant={t.confirmVariant}
-                            size="xl"
-                            className="sm:flex-[1.4]"
-                            style={t.confirmVariant === "default" ? BRAND_ACTIVE_SURFACE : undefined}
-                            onClick={() => {
-                                onConfirm();
-                                onOpenChange(false);
-                            }}
-                        >
-                            {confirmLabel}
-                        </AlertDialogAction>
+
+                        {isHoldActive ? (
+                            <HoldToConfirmButton
+                                variant={t.confirmVariant}
+                                size="xl"
+                                className="sm:flex-[1.4]"
+                                durationMs={holdDurationMs}
+                                idleLabel={confirmLabel}
+                                onConfirm={() => {
+                                    onConfirm();
+                                    onOpenChange(false);
+                                }}
+                            />
+                        ) : (
+                            <AlertDialogAction
+                                variant={t.confirmVariant}
+                                size="xl"
+                                className="sm:flex-[1.4]"
+                                style={t.confirmVariant === "default" ? BRAND_ACTIVE_SURFACE : undefined}
+                                onClick={() => {
+                                    onConfirm();
+                                    onOpenChange(false);
+                                }}
+                            >
+                                {confirmLabel}
+                            </AlertDialogAction>
+                        )}
                     </div>
+
+                    {isHoldActive && (
+                        <p className="mt-3.5 flex items-center justify-center gap-1.5 text-[12px] font-medium text-ink-muted select-none">
+                            <Timer size={13.5} className="text-destructive shrink-0" strokeWidth={2.25} />
+                            <span>Mantén presionado durante {(holdDurationMs / 1000).toFixed(1).replace('.0', '')} s para confirmar</span>
+                        </p>
+                    )}
                 </div>
             </AlertDialogContent>
         </AlertDialog>

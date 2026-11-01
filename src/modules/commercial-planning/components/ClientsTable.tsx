@@ -1,3 +1,4 @@
+import { containerNavigate } from "@/shared/utils/containerNavigation";
 import CampaignLinkClientModal from "@/modules/campaigns/components/CampaignLinkClientModal";
 import { usesV1 } from '@/shared/api/data-contract';
 import { clientOperationalSummary } from '@/modules/commercial-planning/api/client-summary';
@@ -77,7 +78,7 @@ export default function ClientsTable({ data, isLoading, loadError, onRetry, hasA
 
     const getRowActions = (row: ClienteNegocio): { primary: RowAction[]; secondary: RowAction[] } => ({
         primary: [
-            { label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: () => navigate(`/planificacion-comercial/${row.clienteNegocioId}`) },
+            { motionKey: `client-eye-${row.clienteNegocioId}`, label: "Ver detalles", icon: <Eye size={18} strokeWidth={2.5} />, onClick: (event) => containerNavigate(event.currentTarget, () => { void navigate(`/planificacion-comercial/${row.clienteNegocioId}`, {state: {motionFrom: "/planificacion-comercial"}}); }) },
             { label: "Editar", icon: <Pencil size={18} strokeWidth={2.5} />, onClick: () => setEditing({ open: true, client: row }) },
             { label: "Eliminar", icon: <Trash2 size={18} strokeWidth={2.5} />, variant: "destructive", onClick: () => setDeleting({ open: true, client: row }) },
         ],
@@ -201,7 +202,8 @@ export default function ClientsTable({ data, isLoading, loadError, onRetry, hasA
                                         <TableCell>
                                             <button
                                                 type="button"
-                                                onClick={() => navigate("/planificacion-comercial/" + row.clienteNegocioId)}
+                                                data-motion-key={`client-summary-${row.clienteNegocioId}`}
+                                                onClick={(event) => containerNavigate(event.currentTarget, () => { void navigate("/planificacion-comercial/" + row.clienteNegocioId, {state: {motionFrom: "/planificacion-comercial"}}); })}
                                                 className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-page/60 px-2.5 py-1 text-[12px] font-semibold text-ink hover:border-brand hover:text-brand transition-colors"
                                             >
                                                 <FileText size={13} className="text-brand" />

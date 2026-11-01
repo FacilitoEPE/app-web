@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertCircle, Building2, Truck } from "lucide-react";
+import { AlertCircle, Building2, Truck, UserRound } from "lucide-react";
+import SegmentedTabs from "@/shared/components/SegmentedTabs";
 import CarriersFilters from "@/modules/carriers/components/CarriersFilters";
 import CarriersTable from "@/modules/carriers/components/CarriersTable";
 import CarrierFormModal from "@/modules/carriers/components/CarrierFormModal";
@@ -62,10 +63,9 @@ export default function CarriersPage() {
         void loadCarriers();
     }, [loadCarriers]);
 
-    const hasActiveFilters = search !== "" || typeFilter !== "all";
+    const hasActiveFilters = search !== "";
     const clearFilters = () => {
         setSearch("");
-        setTypeFilter("all");
     };
 
     const filteredData = useMemo(() => {
@@ -130,11 +130,21 @@ export default function CarriersPage() {
                 </Alert>
             )}
 
+            <SegmentedTabs
+                tabs={[
+                    { id: "all", label: "Todos", icon: Truck, count: profiles.length },
+                    { id: "publico", label: "Público", icon: Building2, count: profiles.filter(carrier => carrier.tipo === "publico").length },
+                    { id: "privado", label: "Privado", icon: UserRound, count: profiles.filter(carrier => carrier.tipo === "privado").length },
+                ]}
+                value={typeFilter}
+                onChange={setTypeFilter}
+                showLabelsOnMobile
+                className="mt-4 mb-6"
+            />
+
                     <CarriersFilters
                         search={search}
                         onSearchChange={setSearch}
-                        typeFilter={typeFilter}
-                        onTypeFilterChange={setTypeFilter}
                         hasActiveFilters={hasActiveFilters}
                         onClear={clearFilters}
                     />

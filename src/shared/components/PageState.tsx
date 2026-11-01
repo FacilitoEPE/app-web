@@ -11,7 +11,7 @@ import { Spinner } from "@/shared/components/ui/spinner";
  */
 export function PageLoading({ label }: { label: string }) {
     return (
-        <div role="status" className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-ink-muted">
+        <div data-route-loading role="status" className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-ink-muted">
             <Spinner className="size-8 text-brand" />
             <p className="text-[14px] font-medium">{label}</p>
         </div>

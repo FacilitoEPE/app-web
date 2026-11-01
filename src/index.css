@@ -193,12 +193,12 @@
 
 /* Cambio de tema: el nuevo tema se revela en un círculo que crece desde el botón (View Transitions API).
    --theme-x/--theme-y/--theme-r las fija ThemeToggle con la posición del clic. */
-::view-transition-old(root),
-::view-transition-new(root) {
+html[data-theme-transition]::view-transition-old(root),
+html[data-theme-transition]::view-transition-new(root) {
     animation: none;
     mix-blend-mode: normal;
 }
-::view-transition-new(root) {
+html[data-theme-transition]::view-transition-new(root) {
     animation: theme-reveal 520ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 @keyframes theme-reveal {

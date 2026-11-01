@@ -33,7 +33,11 @@ export default function ThemeToggle({ className }: { className?: string }) {
         root.setProperty("--theme-y", `${y}px`);
         root.setProperty("--theme-r", `${radius}px`);
 
-        document.startViewTransition(() => flushSync(() => setTheme(next)));
+        document.documentElement.dataset.themeTransition = '';
+        const transition = document.startViewTransition(() => flushSync(() => setTheme(next)));
+        void transition.finished.catch(() => undefined).finally(() => {
+            delete document.documentElement.dataset.themeTransition;
+        });
     };
 
     return (

@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { plural } from "@/shared/utils/plural";
 import { exportCsv, exportPdf, type TableExport } from "@/shared/utils/exportTable";
+import { BRAND_ACTIVE_SURFACE } from "@/shared/styles/brandGradients";
 
 /**
  * Fila de controles a la derecha del título de una tabla (TableCard `headerRight`).
@@ -96,21 +97,42 @@ interface TableViewToggleProps {
 
 /** Alterna entre vista de tabla y de tarjetas en grilla. Se omite en tablas que no ofrecen grilla. */
 export function TableViewToggle({ value, onChange }: TableViewToggleProps) {
+    const isTable = value === "table";
+    const isGrid = value === "grid";
+
     return (
-        <div className="hidden sm:flex h-14 items-center gap-1 rounded-xl border border-border bg-surface-page p-1.5">
+        <div className="relative hidden sm:flex h-14 items-center gap-1 rounded-xl border border-border bg-surface-page p-1.5 select-none">
+            {/* Píldora deslizante fluida con degradado de marca */}
+            <span
+                aria-hidden="true"
+                className="absolute inset-y-1.5 left-1.5 w-11 rounded-lg border border-transparent pointer-events-none transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+                style={{
+                    ...BRAND_ACTIVE_SURFACE,
+                    transform: isGrid ? "translateX(calc(100% + 4px))" : "translateX(0)",
+                }}
+            />
+
             <button
+                type="button"
                 onClick={() => onChange("table")}
                 aria-label="Vista de tabla"
-                aria-pressed={value === "table"}
-                className={cn("flex h-full w-11 items-center justify-center rounded-lg transition-colors", value === "table" ? "bg-card shadow-sm text-ink font-semibold dark:bg-brand-surface dark:text-brand" : "text-ink-muted hover:text-ink")}
+                aria-pressed={isTable}
+                className={cn(
+                    "relative z-10 flex h-full w-11 items-center justify-center rounded-lg transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-brand/30 active:scale-95",
+                    isTable ? "text-white" : "text-ink-muted hover:text-ink"
+                )}
             >
                 <List size={18} strokeWidth={2.5} />
             </button>
             <button
+                type="button"
                 onClick={() => onChange("grid")}
                 aria-label="Vista de grilla"
-                aria-pressed={value === "grid"}
-                className={cn("flex h-full w-11 items-center justify-center rounded-lg transition-colors", value === "grid" ? "bg-card shadow-sm text-ink font-semibold dark:bg-brand-surface dark:text-brand" : "text-ink-muted hover:text-ink")}
+                aria-pressed={isGrid}
+                className={cn(
+                    "relative z-10 flex h-full w-11 items-center justify-center rounded-lg transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-brand/30 active:scale-95",
+                    isGrid ? "text-white" : "text-ink-muted hover:text-ink"
+                )}
             >
                 <LayoutGrid size={18} strokeWidth={2.5} />
             </button>

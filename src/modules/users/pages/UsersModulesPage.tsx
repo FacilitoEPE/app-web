@@ -1,3 +1,4 @@
+import "@/modules/users/modules-responsive.css";
 import ModulesGrid from "@/modules/users/components/ModulesGrid";
 import HeroModules from "@/modules/users/components/HeroModules";
 import ModulesFooter from "@/modules/users/components/ModulesFooter";
@@ -20,7 +21,7 @@ export default function UsersModulesPage() {
         ></div>
       </div>
 
-      <div className="relative z-10 w-full min-h-full flex flex-col justify-between">
+      <div className="modules-home relative z-10 w-full min-h-full flex flex-col justify-between">
         <HeroModules />
         <ModulesGrid />
         <ModulesFooter />

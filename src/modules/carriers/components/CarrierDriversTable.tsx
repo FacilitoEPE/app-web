@@ -12,6 +12,9 @@ import { paginate } from "@/shared/utils/paginate";
 
 interface CarrierDriversTableProps {
     data: Driver[];
+    isLoading?: boolean;
+    error?: string | null;
+    onRetry?: () => void;
     hasActiveFilters: boolean;
     onClearFilters: () => void;
     onEdit: (driver: Driver) => void;
@@ -19,7 +22,7 @@ interface CarrierDriversTableProps {
     onDelete: (id: number) => void;
 }
 
-export default function CarrierDriversTable({ data, hasActiveFilters, onClearFilters, onEdit, onAdd, onDelete }: CarrierDriversTableProps) {
+export default function CarrierDriversTable({ data, isLoading = false, error, onRetry, hasActiveFilters, onClearFilters, onEdit, onAdd, onDelete }: CarrierDriversTableProps) {
     const [page, setPage] = useState(1);
     // Se guarda el chofer completo: al confirmar sale de `data` y el texto no debe vaciarse mientras el modal se cierra
     const [deleting, setDeleting] = useState<{ open: boolean; driver: Driver | null }>({ open: false, driver: null });
@@ -44,16 +47,16 @@ export default function CarrierDriversTable({ data, hasActiveFilters, onClearFil
                     <TableCountPill icon={<UserRound size={16} strokeWidth={2.5} className="text-brand" />} count={data.length} singular="chofer" plural="choferes" />
                 </TableToolbar>
             }
-            isEmpty={visibleData.length === 0}
+            isEmpty={isLoading || !!error || visibleData.length === 0}
             emptyIcon={<UserRound size={28} strokeWidth={2} />}
-            emptyTitle={hasActiveFilters ? "Sin resultados" : "Aún no hay choferes"}
+            emptyTitle={isLoading ? "Cargando registros..." : error ? "Registros no disponibles" : hasActiveFilters ? "Sin resultados" : "Aún no hay choferes"}
             emptyDescription={
-                hasActiveFilters
+                isLoading ? "Consultando los datos del transportista." : error ?? (hasActiveFilters
                     ? "Ningún chofer coincide con la búsqueda. Prueba con otro nombre o placa."
-                    : "Esta empresa todavía no tiene choferes registrados."
+                    : "Esta empresa todavía no tiene choferes registrados.")
             }
             emptyAction={
-                hasActiveFilters
+                isLoading ? undefined : error ? { label: "Reintentar", onClick: () => onRetry?.(), tone: "secondary" } : hasActiveFilters
                     ? { label: "Limpiar filtros", icon: <ListFilter size={18} />, onClick: onClearFilters, tone: "secondary" }
                     : { label: "Registrar chofer", icon: <UserRound size={18} />, onClick: onAdd }
             }

@@ -1,3 +1,4 @@
+import { useSectionMotion } from '@/shared/hooks/useSectionMotion';
 import { useMemo, useState } from "react";
 import { Plus, ShieldCheck } from "lucide-react";
 import PageHeader from "@/shared/layout/PageHeader";
@@ -21,6 +22,7 @@ export default function QualityPage() {
     const [scope, setScope] = useState<QualityScope>("exportador");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [activeCampaign, setActiveCampaign] = useState<QualityCampaign | null>(null);
+    useSectionMotion(String(activeCampaign?.campaniaId ?? 'list'));
     const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<QualityWorkspaceTab | undefined>(
         undefined,
     );

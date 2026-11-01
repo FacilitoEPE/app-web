@@ -7,6 +7,7 @@ import SegmentedControl from "@/shared/components/SegmentedControl";
 import FormField from "@/shared/components/FormField";
 import { Button } from "@/shared/components/ui/button";
 import { Combobox } from "@/shared/components/ui/combobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { getProveedores } from "@/modules/providers/api/proveedor.api";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
@@ -354,14 +355,18 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     {renderField({ field: "precioEstimado", label: "Precio estimado o acordado", step: "0.01", placeholder: "0.00", leading: currencySymbol })}
-                    <FormField label="Moneda" required>
-                        <Combobox
-                            options={usesV1() ? MONEDA_OPTIONS.filter(o=>o.value==="PEN") : MONEDA_OPTIONS}
-                            value={draft.moneda}
-                            onChange={(value) => updateDraft("moneda", value)}
-                            disabled={isLocked}
-                            placeholder="Seleccionar moneda"
-                        />
+                    <FormField id="link-provider-moneda" label="Moneda" required>
+                        <Select items={usesV1() ? MONEDA_OPTIONS.filter(option => option.value === "PEN") : MONEDA_OPTIONS}
+                            value={draft.moneda || null} onValueChange={value => updateDraft("moneda", value ?? "")} disabled={isLocked}>
+                            <SelectTrigger id="link-provider-moneda" className="w-full">
+                                <SelectValue placeholder="Seleccionar moneda" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {(usesV1() ? MONEDA_OPTIONS.filter(option => option.value === "PEN") : MONEDA_OPTIONS).map(option => (
+                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </FormField>
                 </div>
 

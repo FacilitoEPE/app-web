@@ -1,20 +1,34 @@
+import { containerNavigate } from "@/shared/utils/containerNavigation";
 import { useNavigate } from "react-router-dom";
 import ModuleCard from "@/modules/users/components/ModuleCard";
 import { navigationItems } from "@/shared/layout/navigationItems";
+import { preloadModule } from '@/routePreload';
 
 export default function ModulesGrid() {
   const navigate = useNavigate();
 
   return (
-    <div className="grid w-full auto-rows-[225px] sm:auto-rows-[235px] xl:auto-rows-[240px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-5 xl:gap-6 px-4 sm:px-8 lg:px-12 xl:px-14 py-2 sm:py-3 my-auto">
+    <div className="modules-grid grid w-full px-4 sm:px-8 lg:px-12 xl:px-14"
+      onPointerOver={event => {
+        const path = (event.target as Element).closest<HTMLElement>('[data-module-path]')?.dataset.modulePath;
+        if (path) preloadModule(path);
+      }}
+      onFocusCapture={event => {
+        const path = event.target.closest<HTMLElement>('[data-module-path]')?.dataset.modulePath;
+        if (path) preloadModule(path);
+      }}
+    >
       {navigationItems.map((module) => (
         <ModuleCard
           key={module.id}
+          path={module.url}
           title={module.title}
           description={module.description}
           icon={<module.icon size={25} strokeWidth={1.85} />}
           image={module.image}
-          onClick={() => navigate(module.url)}
+          onClick={(event) => {
+            containerNavigate(event.currentTarget, () => { void navigate(module.url); });
+          }}
         />
       ))}
     </div>

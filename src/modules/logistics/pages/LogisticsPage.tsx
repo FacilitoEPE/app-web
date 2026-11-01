@@ -1,3 +1,4 @@
+import { useSectionMotion } from '@/shared/hooks/useSectionMotion';
 import { useMemo, useState } from "react";
 import {
     ArrowLeft,
@@ -86,6 +87,7 @@ export default function LogisticsPage() {
     const loads = useLogisticsLoads();
 
     const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
+    useSectionMotion(String(selectedCampaignId));
     const [search, setSearch] = useState("");
     const [campaignFilter, setCampaignFilter] = useState("");
     const [stageFilter, setStageFilter] = useState("");

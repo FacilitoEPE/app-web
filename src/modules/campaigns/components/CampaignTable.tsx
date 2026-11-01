@@ -24,7 +24,7 @@ import CampaignFormModal from "@/modules/campaigns/components/CampaignFormModal"
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { CampanaEstado } from "@/modules/campaigns/api/campaign.dto";
-import { getCampaignFruitIcon } from "@/modules/campaigns/campaignFruit";
+import { getCampaignFruitVisual } from "@/modules/campaigns/campaignFruit";
 import { formatCampaignNumber, getCampaignDurationLabel } from "@/modules/campaigns/campaignDetails.utils";
 import type { TableExport } from "@/shared/utils/exportTable";
 import { paginate } from "@/shared/utils/paginate";
@@ -192,12 +192,19 @@ export default function CampaignTable({ data, isLoading, loadError, onRetry, onC
                 {/* ─── Mobile / Grid Cards ─── */}
                 <div className={`flex flex-col gap-3 ${viewMode === "grid" ? "sm:grid sm:grid-cols-2 lg:grid-cols-3" : "sm:hidden"}`}>
                     {visibleData.map((row) => {
-                        const FruitIcon = getCampaignFruitIcon(row.nombre, row.fruta?.name);
+                        const fruit = getCampaignFruitVisual(row.nombre, row.fruta?.name);
                         return (
                             <TableGridCard
                                 key={row.campaniaId}
                                 accentColor={STATUS_ACCENT_BORDER[row.estado]}
-                                icon={<FruitIcon className="text-brand" size={22} strokeWidth={2} />}
+                                icon={
+                                    <img
+                                        src={fruit.image}
+                                        alt={fruit.alt}
+                                        className="w-full h-full object-cover"
+                                        loading="lazy"
+                                    />
+                                }
                                 title={row.nombre}
                                 subtitle={campaignCode(row)}
                                 badge={<StatusBadge status={STATUS_LABEL[row.estado]} />}
@@ -245,13 +252,20 @@ export default function CampaignTable({ data, isLoading, loadError, onRetry, onC
                             </TableHeader>
                             <TableBody>
                                 {visibleData.map((row) => {
-                                    const FruitIcon = getCampaignFruitIcon(row.nombre, row.fruta?.name);
+                                    const fruit = getCampaignFruitVisual(row.nombre, row.fruta?.name);
                                     return (
                                         <TableRow key={row.campaniaId} className="border-b border-border hover:bg-surface-page/60 transition-colors">
                                             <TableCell className="h-20 px-6 relative">
                                                 <TableRowAccent color={STATUS_ACCENT_COLORS[row.estado]} />
                                                 <TableRowLead
-                                                    icon={<FruitIcon className="text-brand" size={22} strokeWidth={2} />}
+                                                    icon={
+                                                        <img
+                                                            src={fruit.image}
+                                                            alt={fruit.alt}
+                                                            className="w-full h-full object-cover"
+                                                            loading="lazy"
+                                                        />
+                                                    }
                                                     title={row.nombre}
                                                     subtitle={row.fruta?.name ? `${row.fruta.name} · ${campaignCode(row)}` : campaignCode(row)}
                                                 />

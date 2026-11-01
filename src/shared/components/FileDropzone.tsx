@@ -29,6 +29,8 @@ export interface FileDropzoneProps {
     hasColon?: boolean;
     optional?: boolean;
     required?: boolean;
+    /** Permite elegir y previsualizar un archivo en V1 cuando el formulario advierte que no se persistirá. */
+    allowLocalSelection?: boolean;
 }
 
 /**
@@ -53,8 +55,9 @@ export default function FileDropzone({
     hasColon,
     optional,
     required,
+    allowLocalSelection = false,
 }: FileDropzoneProps) {
-    if (usesV1()) {
+    if (usesV1() && !allowLocalSelection) {
         disabled = true;
         required = false;
         optional = true;

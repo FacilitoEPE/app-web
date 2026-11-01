@@ -58,9 +58,9 @@ export function saveCampaignCarrierAgreement(campaniaId: number, linkId: number,
 }
 
 /** Marca el saldo de un acuerdo con adelanto como pagado: el acuerdo queda cerrado, solo de consulta. */
-export function settleCampaignCarrierAgreement(campaniaId: number, linkId: number) {
+export function settleCampaignCarrierAgreement(campaniaId: number, linkId: number, boleta: File | null = null) {
     if (usesV1()) return campaignCommands.settleAgreement();
-    patch(campaniaId, linkId, (link) => (link.acuerdo?.tipo === "adelanto" ? { ...link, acuerdo: { ...link.acuerdo, saldoPagado: true } } : link));
+    patch(campaniaId, linkId, (link) => (link.acuerdo?.tipo === "adelanto" ? { ...link, acuerdo: { ...link.acuerdo, saldoPagado: true, boleta: boleta ?? link.acuerdo.boleta } } : link));
 }
 
 export function hydrateCampaignCarriers(value: Record<number, CampaignCarrierLink[]>) { update(value); }

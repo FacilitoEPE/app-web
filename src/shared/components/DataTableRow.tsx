@@ -26,7 +26,7 @@ interface TableRowLeadProps {
 export function TableRowLead({ icon, title, subtitle, className }: TableRowLeadProps) {
     return (
         <div className={cn("flex items-center gap-3.5", className)}>
-            <div className="w-11 h-11 rounded-full bg-brand-surface flex items-center justify-center shrink-0 border border-brand-border/50 font-bold text-[14px]" style={{ color: "var(--brand-gradient-mid)" }}>
+            <div className="w-11 h-11 rounded-full bg-brand-surface flex items-center justify-center shrink-0 border border-brand-border/50 font-bold text-[14px] overflow-hidden" style={{ color: "var(--brand-gradient-mid)" }}>
                 {icon}
             </div>
             <div className="flex flex-col min-w-0">

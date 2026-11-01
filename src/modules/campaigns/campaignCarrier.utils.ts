@@ -23,7 +23,7 @@ export interface CarrierPaymentAgreement {
     adelanto: number | null;
     /** Solo en "Con adelanto": cuándo se entrega el adelanto (yyyy-MM-dd) */
     fechaAdelanto: string;
-    /** Pago único: fecha de pago. Con adelanto: fecha del saldo (yyyy-MM-dd) */
+    /** Fecha de pago (final) (yyyy-MM-dd) */
     fechaPago: string;
     boleta: File | null;
     /** Solo en "Con adelanto": el saldo ya se pagó y el acuerdo quedó cerrado */
@@ -68,9 +68,9 @@ export function getAgreementStatus(agreement: CarrierPaymentAgreement | null): A
     return agreement.saldoPagado ? "Pagado" : "Con adelanto";
 }
 
-/** Un acuerdo cerrado (pago único o saldo ya pagado) solo se consulta; el resto se puede editar */
+/** Una vez registrado el acuerdo de pago, ya no es editable: solo se consulta */
 export const isAgreementClosed = (agreement: CarrierPaymentAgreement | null) =>
-    agreement !== null && (agreement.tipo === "unico" || agreement.saldoPagado);
+    agreement !== null;
 
 /** Lo que falta por pagar: el total menos el adelanto, nunca negativo */
 export function getAgreementBalance(total: number, adelanto: number | null): number {
@@ -93,15 +93,16 @@ export function validateAgreement(values: AgreementFormValues): AgreementErrors 
         if (adelanto === null) errors.adelanto = "Ingresa el monto del adelanto.";
         else if (total !== null && adelanto >= total) errors.adelanto = "El adelanto debe ser menor que el total.";
         if (!values.fechaAdelanto) errors.fechaAdelanto = "Indica la fecha del adelanto.";
-        if (!values.fechaPago) errors.fechaPago = "Indica la fecha del saldo.";
+        if (!values.fechaPago) errors.fechaPago = "Indica la fecha de pago (final).";
         else if (values.fechaAdelanto && values.fechaPago < values.fechaAdelanto) errors.fechaPago = "Debe ser igual o posterior al adelanto.";
     } else if (!values.fechaPago) {
-        errors.fechaPago = "Indica la fecha de pago.";
+        errors.fechaPago = "Indica la fecha de pago (final).";
     }
+
     return errors;
 }
 
-/** Del formulario al acuerdo guardado. Cambiar a "Pago único" descarta lo que solo aplica al adelanto. */
+/** Del formulario al acuerdo guardado. El comprobante solo aplica cuando se registra con adelanto. */
 export function toAgreement(values: AgreementFormValues, boleta: File | null, saldoPagado = false): CarrierPaymentAgreement {
     const isAdvance = values.tipo === "adelanto";
     return {
@@ -111,12 +112,12 @@ export function toAgreement(values: AgreementFormValues, boleta: File | null, sa
         adelanto: isAdvance ? Number(values.adelanto) : null,
         fechaAdelanto: isAdvance ? values.fechaAdelanto : "",
         fechaPago: values.fechaPago,
-        boleta,
+        boleta: isAdvance ? boleta : null,
         saldoPagado: isAdvance && saldoPagado,
     };
 }
 
-/** Del acuerdo guardado al formulario, para editarlo */
+/** Del acuerdo guardado al formulario */
 export function toAgreementValues(agreement: CarrierPaymentAgreement | null): AgreementFormValues {
     if (!agreement) return EMPTY_AGREEMENT;
     return {

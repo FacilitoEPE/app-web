@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { hasPreviousView } from "@/shared/hooks/useGoBack";
+import { getGoBackTarget, hasPreviousView } from "@/shared/hooks/useGoBack";
+
+describe("transport management back navigation", () => {
+    it.each(["vehiculos", "choferes"])("returns from %s to the directory with or without history", section => {
+        for (const state of [null, { idx: 0 }, { idx: 3 }]) {
+            expect(getGoBackTarget(`/transportistas/7/${section}`, state)).toBe("/transportistas");
+        }
+    });
+    it("preserves history navigation and parent fallback elsewhere", () => {
+        expect(getGoBackTarget("/campaigns/7", { idx: 2 })).toBe(-1);
+        expect(getGoBackTarget("/campaigns/7", { idx: 0 })).toBe("/campaigns");
+        expect(getGoBackTarget("/transportistas/7", null)).toBe("/transportistas");
+    });
+});
 
 describe("hasPreviousView", () => {
     it("es verdadero cuando se llegó navegando desde otra vista de la app", () => {

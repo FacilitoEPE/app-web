@@ -28,6 +28,7 @@ const SIZE_CLASS: Record<AppModalSize, string> = {
 interface AppModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onOpenChangeComplete?: (open: boolean) => void;
     title: string;
     description?: string;
     /** Ícono en un círculo a la izquierda del título. Todos los modales llevan uno: identifica qué se está gestionando. */
@@ -122,7 +123,7 @@ function AnimatedModalBody({ children, ready = true }: { children: ReactNode; re
 }
 
 /** Shared shell only: each module owns its content; the footer (if any) always sits bottom-right, pinned outside the scroll area. */
-export default function AppModal({ open, onOpenChange, title, description, icon, children, footer, size = "md", busy = false, className, ready = true }: AppModalProps & { ready?: boolean }) {
+export default function AppModal({ open, onOpenChange, onOpenChangeComplete, title, description, icon, children, footer, size = "md", busy = false, className, ready = true }: AppModalProps & { ready?: boolean }) {
     const action = useModalActionController(open);
     busy = busy || action.pending;
     const handleOpenChange = (nextOpen: boolean) => {
@@ -132,7 +133,7 @@ export default function AppModal({ open, onOpenChange, title, description, icon,
 
     return (
         <ModalActionContext value={{pending:busy,run:action.run}}>
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog open={open} onOpenChange={handleOpenChange} onOpenChangeComplete={onOpenChangeComplete}>
             <DialogContent
                 showCloseButton={false}
                 aria-busy={busy || undefined}

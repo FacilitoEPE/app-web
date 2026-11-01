@@ -24,11 +24,11 @@ interface TableGridCardProps {
  */
 export default function TableGridCard({ accentColor, icon, title, subtitle, badge, children, actions, className }: TableGridCardProps) {
     return (
-        <div className={cn("rounded-xl border border-border bg-card overflow-hidden", accentColor && cn("border-l-[3px]", accentColor), className)}>
+        <div data-motion-row className={cn("rounded-xl border border-border bg-card overflow-hidden", accentColor && cn("border-l-[3px]", accentColor), className)}>
             <div className="flex items-start justify-between gap-3 p-4 pb-3">
                 <div className="flex items-center gap-3 min-w-0">
                     {icon && (
-                        <div className="w-10 h-10 rounded-full bg-brand-surface border border-brand-border flex items-center justify-center shrink-0 font-bold text-[13px]" style={{ color: "var(--brand-gradient-mid)" }}>
+                        <div className="w-10 h-10 rounded-full bg-brand-surface border border-brand-border flex items-center justify-center shrink-0 font-bold text-[13px] overflow-hidden" style={{ color: "var(--brand-gradient-mid)" }}>
                             {icon}
                         </div>
                     )}

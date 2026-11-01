@@ -1,11 +1,14 @@
 import * as React from "react"
+import { DialogMotionLifecycle, useContainerMotionRef, useContainerMotionEnabled } from "@/shared/hooks/container-motion"
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/shared/components/ui/button"
 
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
-  return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
+  const actions = React.useRef<AlertDialogPrimitive.Root.Actions | null>(null)
+  const finish = React.useCallback(() => actions.current?.unmount(), [])
+  return <DialogMotionLifecycle value={finish}><AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} actionsRef={props.actionsRef ?? actions} /></DialogMotionLifecycle>
 }
 
 function AlertDialogTrigger({ ...props }: AlertDialogPrimitive.Trigger.Props) {
@@ -24,9 +27,11 @@ function AlertDialogOverlay({
   className,
   ...props
 }: AlertDialogPrimitive.Backdrop.Props) {
+  const morph = useContainerMotionEnabled()
   return (
     <AlertDialogPrimitive.Backdrop
       data-slot="alert-dialog-overlay"
+      data-container-motion-backdrop={morph ? "" : undefined}
       className={cn(
         "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
@@ -43,10 +48,12 @@ function AlertDialogContent({
 }: AlertDialogPrimitive.Popup.Props & {
   size?: "default" | "sm"
 }) {
+  const motionRef = useContainerMotionRef()
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Popup
+        ref={motionRef}
         data-slot="alert-dialog-content"
         data-size={size}
         className={cn(

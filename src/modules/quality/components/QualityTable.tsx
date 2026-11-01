@@ -9,7 +9,6 @@ import {
     PackageCheck,
     SearchX,
     ShieldCheck,
-    Sprout,
 } from "lucide-react";
 import {
     Table,
@@ -36,7 +35,7 @@ import { nextSort, type SortState } from "@/shared/utils/tableSort";
 import { formatDisplayDate, formatKg } from "@/shared/utils/format";
 import { paginate } from "@/shared/utils/paginate";
 import type { TableExport } from "@/shared/utils/exportTable";
-import { getCampaignFruitIcon } from "@/modules/campaigns/campaignFruit";
+import { getCampaignFruitVisual } from "@/modules/campaigns/campaignFruit";
 import { useQualityDeliveryLoads } from "@/modules/quality/qualityOperations.store";
 import type { QualityCampaign, QualityScope } from "@/modules/quality/quality.utils";
 
@@ -202,12 +201,19 @@ export default function QualityTable({
             {/* Grid / Mobile Cards */}
             <div className={`flex flex-col gap-3 ${viewMode === "grid" ? "sm:grid sm:grid-cols-2 lg:grid-cols-3" : "sm:hidden"}`}>
                 {visibleData.map((row) => {
-                    const FruitIcon = getCampaignFruitIcon(row.nombre, row.fruta) || Sprout;
+                    const fruit = getCampaignFruitVisual(row.nombre, row.fruta);
                     const m = campaignMetricsFor(row);
                     return (
                         <TableGridCard
                             key={row.id}
-                            icon={<FruitIcon className="text-brand" size={22} strokeWidth={2} />}
+                            icon={
+                                <img
+                                    src={fruit.image}
+                                    alt={fruit.alt}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                />
+                            }
                             title={row.nombre}
                             subtitle={`Fruta: ${row.fruta}`}
                             badge={<StatusBadge status={row.estado} />}
@@ -218,14 +224,23 @@ export default function QualityTable({
                                     <Calendar size={16} strokeWidth={2.5} className="text-ink-muted shrink-0" />
                                     <div className="flex flex-col">
                                         <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">Periodo</span>
-                                        <span className="text-[12.5px] font-semibold text-ink">
+                                        <span className="text-[12px] font-semibold text-ink">
                                             {formatDisplayDate(row.fechaInicio)} → {formatDisplayDate(row.fechaFin)}
                                         </span>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between border-t border-border pt-2 text-[12px]">
+                                <div className="h-px w-full bg-border" />
+                                <div className="flex items-center justify-between text-[12px]">
+                                    <span className="font-medium text-ink-muted">{scope === "exportador" ? "Revisión:" : "Ingreso:"}</span>
+                                    <span className="font-semibold text-ink">{m.reviewsLabel}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-[12px]">
+                                    <span className="font-medium text-ink-muted">Cargas registradas:</span>
                                     <span className="font-semibold text-ink">{m.loadsLabel}</span>
-                                    <span className="font-medium text-ink-muted">{m.guidesLabel}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-[12px]">
+                                    <span className="font-medium text-ink-muted">Guías de remisión:</span>
+                                    <span className="font-semibold text-ink">{m.guidesLabel}</span>
                                 </div>
                             </div>
                         </TableGridCard>
@@ -234,28 +249,13 @@ export default function QualityTable({
             </div>
 
             {/* Desktop Table */}
-            <div className={`hidden ${viewMode === "table" ? "sm:block" : ""} overflow-hidden rounded-xl border border-border`}>
+            <div className={`hidden ${viewMode === "table" ? "sm:block" : "hidden"} overflow-x-auto`}>
                 <Table>
                     <TableHeader className={TABLE_HEAD_BG}>
                         <TableRow className="border-b border-border hover:bg-transparent">
-                            <SortableHead
-                                label="Campaña"
-                                sortKey="nombre"
-                                sort={sort}
-                                onToggle={toggleSort}
-                            />
-                            <SortableHead
-                                label="Fruta"
-                                sortKey="fruta"
-                                sort={sort}
-                                onToggle={toggleSort}
-                            />
-                            <SortableHead
-                                label="Inicio / Fin"
-                                sortKey="inicio"
-                                sort={sort}
-                                onToggle={toggleSort}
-                            />
+                            <SortableHead label="Campaña" sortKey="nombre" sort={sort} onToggle={toggleSort} className="h-14" />
+                            <SortableHead label="Fruta" sortKey="fruta" sort={sort} onToggle={toggleSort} className="h-14" />
+                            <SortableHead label="Inicio / Fin" sortKey="inicio" sort={sort} onToggle={toggleSort} className="h-14" />
                             <TableHead className="h-14 font-semibold text-ink">
                                 {scope === "exportador" ? "Revisión MTD / Cargas" : "Cargas Industria"}
                             </TableHead>
@@ -272,13 +272,20 @@ export default function QualityTable({
                     </TableHeader>
                     <TableBody>
                         {visibleData.map((row) => {
-                            const FruitIcon = getCampaignFruitIcon(row.nombre, row.fruta) || Sprout;
+                            const fruit = getCampaignFruitVisual(row.nombre, row.fruta);
                             const m = campaignMetricsFor(row);
                             return (
                                 <TableRow key={row.id} className="border-b border-border hover:bg-surface-page/60 transition-colors">
                                     <TableCell className="h-20">
                                         <TableRowLead
-                                            icon={<FruitIcon size={20} strokeWidth={2} />}
+                                            icon={
+                                                <img
+                                                    src={fruit.image}
+                                                    alt={fruit.alt}
+                                                    className="w-full h-full object-cover"
+                                                    loading="lazy"
+                                                />
+                                            }
                                             title={row.nombre}
                                         />
                                     </TableCell>

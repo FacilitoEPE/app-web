@@ -2,6 +2,55 @@
 
 > **Único archivo oficial de seguimiento.** Toda auditoría o conexión de vistas/APIs debe actualizarse aquí indicando fecha ISO (`YYYY-MM-DD`) y estado (`Completo`, `Parcial`, `Sin cambios`), conservando el historial en la sección inferior.
 
+## Cotización al vincular transportista — 2026-11-01 · Parcial
+
+- En el modal de transportistas de campaña se retiró el bloque de ubicación y contacto que aparecía al elegir un transportista. Se añadió el selector y la vista previa de la cotización.
+- Por elección del usuario, en V1 el archivo seleccionado es solo local y el formulario lo advierte: el vínculo se guarda sin archivo. No se amplió el backend ni se modificó la restricción general de adjuntos; `FileDropzone` permite esta selección local únicamente mediante una propiedad explícita.
+- La cotización se exige antes de vincular en ambos modos. En legacy se conserva en el almacén local en memoria. La persistencia del archivo en V1 queda pendiente de contrato de subida y asociación al acuerdo.
+
+## Regreso al selector de módulos sin recrear imágenes — 2026-11-01 · Parcial
+
+- El selector se desmontaba al salir de `/modules`; la precarga durante la bienvenida no conservaba sus nodos de imagen. Se mueve la portada al layout autenticado dentro de `Activity` de React: visible en `/modules` y oculta en las demás rutas, conservando su DOM durante la sesión. Su Suspense queda aislado del contenido operativo.
+- La ruta `/modules` deja de montar una segunda portada. El selector permanece fuera de `FrontendDataBoundary`, por lo que mostrarlo no depende de las solicitudes operativas. Se conserva la configuración sin caché ni Service Worker y no se modifican consultas ni datos de negocio.
+- Verificado en Brave: selector → Campañas → Mango 2026 → Gestión de Clientes → selector mediante el logo. Las diez imágenes de la portada permanecieron en el DOM bajo ancestros ocultos durante la navegación y estaban completas, con dimensiones naturales válidas, al regresar. Captura visual revisada. No se midieron tiempos de pintado ni tráfico de red; no se garantiza el comportamiento bajo presión de memoria del navegador.
+- Pruebas: 280 aprobadas en 53 archivos; tipos y ESLint de `App.tsx` aprobados. El cambio conserva la portada en memoria mientras siga montada la sesión autenticada; no evita la carga inicial de una pestaña nueva o una recarga completa.
+
+## Cierre de acuerdo de transporte con adelanto — 2026-11-01 · Sin cambios / requiere definición
+
+- El usuario solicita recuperar Marcar saldo como pagado solo para acuerdos con adelanto y bloquear su edición y nuevos adelantos al finalizar.
+- El contrato V1 de acuerdo admite BORRADOR/CONFIRMADO; no incluye cierre manual ni un campo saldoPagado persistible. La proyección actual calcula saldoPagado con pagos reales y `settleAgreement` rechaza explícitamente el cierre manual, remitiendo a Liquidación de compra.
+- Requiere definir si la acción registra un pago real del saldo o constituye un cierre administrativo independiente, y ajustar el contrato/backend correspondiente. No se reactivó un botón sin persistencia ni se simuló un pago o cierre local.
+
+## Breadcrumb y regreso de gestiones de transporte — 2026-11-01 · Completo
+
+- Corregida la jerarquía de las páginas independientes: Transporte → Vehículos y Transporte → Choferes, sin el nivel Detalle. El enlace Transporte lleva a `/transportistas`.
+- Regresar desde ambas gestiones lleva directamente al listado `/transportistas`, tanto con historial de navegación como al abrir/recargar una URL directa. Las demás vistas mantienen su comportamiento de regreso.
+- Pruebas de regresión cubren ambas páginas, con/sin historial y conservación del comportamiento fuera de estas rutas. Comprobación automatizada; sin recorrido manual en navegador en esta corrección.
+
+## Páginas independientes de vehículos y choferes — 2026-10-31 · Parcial
+
+- Por corrección expresa del usuario, se revierte la restauración de pestañas globales descrita abajo: `CarriersPage`, cotizaciones, solicitud de transporte y sub-vistas globales vuelven al estado del pull. El historial inferior registra el trabajo anterior, no la interfaz vigente.
+- Añadidas `CarrierVehiclesPage` (`/transportistas/:id/vehiculos`) y `CarrierDriversPage` (`/transportistas/:id/choferes`). Las acciones Vehículos y Choferes del listado abren estas páginas independientes; Ver detalles conserva la ficha del pull.
+- Cada página muestra contexto del transportista, título de gestión, botón Agregar, buscador y tabla propia. Se reutilizan las tablas y formularios actuales del detalle, sin las pestañas ni los padrones globales antiguos. Altas, ediciones y eliminaciones usan los servicios existentes de `carrier.api`, incluida su conexión V1; se mantienen validación, confirmación de borrado y errores reales sin fallback mock.
+- Registradas ambas rutas en breadcrumbs y escalera de regreso. Las tablas conservan su marco al cargar o fallar y ofrecen reintento. La edición de vehículo precarga su volumen explícito.
+- Verificación: 277 pruebas aprobadas en 53 archivos, tipos y ESLint sin hallazgos. Build aprobado usando `VITE_API_BASE_URL=http://localhost:3000` solo en el proceso, sin modificar `.env`; permanece el aviso de tamaño de chunk. Pendiente recorrido en navegador y persistencia contra backend activo. Los cambios locales previos en `dev/mock-api.ts` y `navigationItems.ts` se conservan.
+
+## Restauración de gestiones de transporte — 2026-10-31 · Parcial
+
+- Restauradas en `/transportistas` las sub-vistas Vehículos, Choferes y Requerimientos y cotizaciones. Las acciones de cada transportista abren los padrones independientes con filtro por empresa (`?tab=vehiculos&carrier=:id` / `?tab=choferes&carrier=:id`); Ver detalles conserva la ficha general.
+- Los padrones reutilizan `carrier.api` y los recursos V1 existentes para altas, edición y eliminación. Incluyen confirmación al eliminar, bloqueo de eliminaciones repetidas y estados de carga/error con reintento. La edición de vehículo conserva su volumen independiente de las dimensiones.
+- Eliminada la generación ficticia de DNI/licencias del padrón: documento indica No disponible y licencia usa `numeroLicencia` de la API, si existe. No se agregaron campos de escritura ni endpoints.
+- Recuperado el registro de solicitudes con selección de destinatarios dentro del modal y las respuestas de cotización mediante los comandos V1 existentes. El guardado muestra errores y evita envíos duplicados. La asignación de unidades continúa en la coordinación de entregas de la campaña, según el contrato vigente.
+- Adjuntos y correo siguen pendientes de soporte; la UI no presenta el registro de una invitación como un correo enviado. No se verificó persistencia contra un backend en ejecución ni se realizó recorrido en navegador.
+- Verificación: 278 pruebas aprobadas en 53 archivos, tipos y ESLint de los archivos modificados aprobados. Build aprobado usando `VITE_API_BASE_URL=http://localhost:3000` solo en el proceso de compilación, sin cambiar `.env`; la configuración local de mock no admite build productivo. Permanece la advertencia de tamaño de chunk.
+
+## Auditoría de navegación de transportistas — 2026-10-31 · Sin cambios
+
+- El reflog local confirma que el pull de `master` pasó de `7589cef` a `60c1a5a`. Dentro de ese rango, `4414ac0` retiró de `CarriersPage` las pestañas globales Vehículos, Choferes y Requerimientos y cotizaciones. Sus componentes `CarriersGlobalVehiclesSubView`, `CarriersGlobalDriversSubView` y `CarriersQuotationsSubView` siguen presentes, pero no tienen consumidores en `src`.
+- Ese mismo commit sustituyó las acciones de fila Registrar vehículo / Registrar chofer (modales directos) por Vehículos / Choferes, que navegan al detalle `/transportistas/:id?tab=vehiculos` o `?tab=choferes`.
+- En el historial disponible no se encontraron páginas de ruta eliminadas dentro de `src/modules/carriers/pages`: las gestiones globales eran sub-vistas en `components`, no páginas adicionales. Las pestañas globales existían antes de `4414ac0`, aunque no estaban aún en el checkout local previo al pull (`7589cef`).
+- Auditoría de código e historial; no se restauraron vistas ni se alteraron flujos o contratos.
+
 ## Carga de datos por vista — 2026-10-30 · Parcial
 
 - El selector `/modules` ya no inicia la carga del contexto operativo; tampoco espera a que termine una carga anterior. La inicialización del contexto evita ejecutarse dos veces por el montaje de StrictMode.

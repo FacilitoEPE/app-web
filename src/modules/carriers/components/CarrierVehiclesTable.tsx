@@ -18,6 +18,9 @@ const formatMeters = (value: number) => value.toFixed(2);
 
 interface CarrierVehiclesTableProps {
     data: Vehicle[];
+    isLoading?: boolean;
+    error?: string | null;
+    onRetry?: () => void;
     hasActiveFilters: boolean;
     onClearFilters: () => void;
     onEdit: (vehicle: Vehicle) => void;
@@ -25,7 +28,7 @@ interface CarrierVehiclesTableProps {
     onDelete: (id: number) => void;
 }
 
-export default function CarrierVehiclesTable({ data, hasActiveFilters, onClearFilters, onEdit, onAdd, onDelete }: CarrierVehiclesTableProps) {
+export default function CarrierVehiclesTable({ data, isLoading = false, error, onRetry, hasActiveFilters, onClearFilters, onEdit, onAdd, onDelete }: CarrierVehiclesTableProps) {
     const [page, setPage] = useState(1);
     const [sort, setSort] = useState<SortState<SortKey> | null>(null);
     // Se guarda el vehículo completo: al confirmar sale de `data` y el texto no debe vaciarse mientras el modal se cierra
@@ -64,16 +67,16 @@ export default function CarrierVehiclesTable({ data, hasActiveFilters, onClearFi
                     <TableCountPill icon={<Truck size={16} strokeWidth={2.5} className="text-brand" />} count={data.length} singular="vehículo" plural="vehículos" />
                 </TableToolbar>
             }
-            isEmpty={visibleData.length === 0}
+            isEmpty={isLoading || !!error || visibleData.length === 0}
             emptyIcon={<Truck size={28} strokeWidth={2} />}
-            emptyTitle={hasActiveFilters ? "Sin resultados" : "Aún no hay vehículos"}
+            emptyTitle={isLoading ? "Cargando registros..." : error ? "Registros no disponibles" : hasActiveFilters ? "Sin resultados" : "Aún no hay vehículos"}
             emptyDescription={
-                hasActiveFilters
+                isLoading ? "Consultando los datos del transportista." : error ?? (hasActiveFilters
                     ? "Ningún vehículo coincide con la búsqueda. Prueba con otra placa."
-                    : "Esta empresa todavía no tiene vehículos registrados."
+                    : "Esta empresa todavía no tiene vehículos registrados.")
             }
             emptyAction={
-                hasActiveFilters
+                isLoading ? undefined : error ? { label: "Reintentar", onClick: () => onRetry?.(), tone: "secondary" } : hasActiveFilters
                     ? { label: "Limpiar filtros", icon: <ListFilter size={18} />, onClick: onClearFilters, tone: "secondary" }
                     : { label: "Registrar vehículo", icon: <Truck size={18} />, onClick: onAdd }
             }

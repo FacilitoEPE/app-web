@@ -1,3 +1,4 @@
+import { useSectionMotion } from '@/shared/hooks/useSectionMotion';
 import { useNavigate } from 'react-router-dom';
 import { usesV1 } from '@/shared/api/data-contract';
 import { useMemo, useState } from "react";
@@ -93,6 +94,7 @@ export default function PurchaseSettlementPage() {
 
     const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
     const [selectedLoadId, setSelectedLoadId] = useState<string | null>(null);
+    useSectionMotion(`${selectedCampaignId}/${selectedLoadId}`);
     const [subView, setSubView] = useState<"proveedores" | "transportista" | null>(null);
     const [providerStatusTab, setProviderStatusTab] = useState<SettlementStatus>("Por liquidar");
 

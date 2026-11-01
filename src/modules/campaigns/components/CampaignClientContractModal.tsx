@@ -6,7 +6,7 @@ import FormField from "@/shared/components/FormField";
 import { InfoField } from "@/shared/components/InfoField";
 import InputField from "@/shared/components/InputField";
 import { Button } from "@/shared/components/ui/button";
-import { Combobox } from "@/shared/components/ui/combobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Textarea } from "@/shared/components/ui/textarea";
 import {
     CONTRACT_CURRENCIES,
@@ -86,8 +86,15 @@ export default function CampaignClientContractModal({ open, mode, contract, onOp
             ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <InputField id="contract-price" label="Precio por kg" required leading={symbol} min={0} step="0.0001" placeholder="0.00" value={values.precioKg} error={errors.precioKg} onChange={(value) => update("precioKg", value)} />
-                    <FormField label="Moneda" required error={errors.moneda}>
-                        <Combobox options={CONTRACT_CURRENCIES} value={values.moneda} onChange={(value) => update("moneda", value)} placeholder="Seleccionar moneda" />
+                    <FormField id="client-contract-moneda" label="Moneda" required error={errors.moneda}>
+                        <Select items={CONTRACT_CURRENCIES} value={values.moneda || null} onValueChange={value => update("moneda", value ?? "")}>
+                            <SelectTrigger id="client-contract-moneda" className="w-full" aria-invalid={errors.moneda ? true : undefined}>
+                                <SelectValue placeholder="Seleccionar moneda" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {CONTRACT_CURRENCIES.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
                     </FormField>
                     <InputField id="contract-quantity" label="Cantidad propuesta" required unit="kg" min={0} step="0.001" placeholder="0.00" hint="Al registrar, esta cantidad se considera como kilos acordados." value={values.cantidadPropuestaKg} error={errors.cantidadPropuestaKg} onChange={(value) => update("cantidadPropuestaKg", value)} />
                     <InputField id="contract-payment" label="Condiciones de pago" required placeholder="Ej. 50% adelanto y saldo contra entrega" value={values.condicionesPago} error={errors.condicionesPago} onChange={(value) => update("condicionesPago", value)} />

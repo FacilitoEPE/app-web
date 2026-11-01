@@ -57,6 +57,7 @@ export default function ClientFormModal({
         onSubmit: async (current) => {
             const input = toClienteNegocioInput(current);
             const saved = isEdit && clientId ? await updateClienteNegocio(clientId, input) : await createClienteNegocio(input);
+            onOpenChange(false);
             onSuccess?.(saved);
         },
         backendFields: BACKEND_FIELDS,

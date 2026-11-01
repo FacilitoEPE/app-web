@@ -42,11 +42,11 @@ describe("validateAgreement", () => {
 });
 
 describe("estado del acuerdo", () => {
-    it("recorre sin registrar → con adelanto → pagado, y el pago único queda cerrado", () => {
+    it("recorre sin registrar → con adelanto / pagado, y todo acuerdo registrado queda cerrado (solo lectura)", () => {
         expect(getAgreementStatus(null)).toBe("Sin registrar");
         const withAdvance = toAgreement(advance, null);
         expect(getAgreementStatus(withAdvance)).toBe("Con adelanto");
-        expect(isAgreementClosed(withAdvance)).toBe(false);
+        expect(isAgreementClosed(withAdvance)).toBe(true);
         const settled = { ...withAdvance, saldoPagado: true };
         expect(getAgreementStatus(settled)).toBe("Pagado");
         expect(isAgreementClosed(settled)).toBe(true);
@@ -64,9 +64,16 @@ describe("estado del acuerdo", () => {
 });
 
 describe("conversión formulario ↔ acuerdo", () => {
-    it("pasar a pago único descarta lo del adelanto", () => {
-        const agreement = toAgreement({ ...advance, tipo: "unico" }, null);
-        expect(agreement).toMatchObject({ tipo: "unico", adelanto: null, fechaAdelanto: "", saldoPagado: false });
+    it("pasar a pago único descarta lo del adelanto y boleta", () => {
+        const dummyFile = new File(["dummy"], "recibo.pdf", { type: "application/pdf" });
+        const agreement = toAgreement({ ...advance, tipo: "unico" }, dummyFile);
+        expect(agreement).toMatchObject({ tipo: "unico", adelanto: null, fechaAdelanto: "", boleta: null, saldoPagado: false });
+    });
+
+    it("guarda la boleta cuando es con adelanto", () => {
+        const dummyFile = new File(["dummy"], "recibo.pdf", { type: "application/pdf" });
+        const agreement = toAgreement(advance, dummyFile);
+        expect(agreement.boleta).toBe(dummyFile);
     });
 
     it("ida y vuelta conserva los valores", () => {
