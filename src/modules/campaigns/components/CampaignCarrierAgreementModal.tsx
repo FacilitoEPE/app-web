@@ -52,12 +52,12 @@ const TITLES: Record<AgreementModalMode, string> = {
 export default function CampaignCarrierAgreementModal({ open, onOpenChange, mode, carrierName, campaignName, agreement, onSave }: CampaignCarrierAgreementModalProps) {
     const isView = mode === "view";
     const [values, , set] = useModalForm<AgreementFormValues>(open, toAgreementValues(agreement));
-    const [boleta, setBoleta] = useState<File | null>(agreement?.boleta ?? null);
+    const [boleta, setBoleta] = useState<File | null>(null);
     const [errors, setErrors] = useState<AgreementErrors>({});
 
     useResetOnToggle(open, () => {
         setErrors({});
-        setBoleta(agreement?.boleta ?? null);
+        setBoleta(null);
     });
 
     const update = <K extends keyof AgreementFormValues>(field: K, value: AgreementFormValues[K]) => {
@@ -147,12 +147,12 @@ export default function CampaignCarrierAgreementModal({ open, onOpenChange, mode
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField id="carrier-agreement-moneda" label="Moneda" required error={errors.moneda}>
-                            <Select items={usesV1() ? MONEDA_OPTIONS.filter(o=>o.value==="PEN") : MONEDA_OPTIONS} value={values.moneda || null} onValueChange={(next) => update("moneda", (next as string | null) ?? "")}>
+                            <Select items={MONEDA_OPTIONS.filter(o => o.value === "PEN" || o.value === "USD")} value={values.moneda || null} onValueChange={(next) => update("moneda", (next as string | null) ?? "")}>
                                 <SelectTrigger id="carrier-agreement-moneda" className="w-full" aria-invalid={errors.moneda ? true : undefined}>
                                     <SelectValue placeholder="Seleccionar" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {(usesV1() ? MONEDA_OPTIONS.filter(o=>o.value==="PEN") : MONEDA_OPTIONS).map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                                    {MONEDA_OPTIONS.filter(o => o.value === "PEN" || o.value === "USD").map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </FormField>
@@ -183,7 +183,7 @@ export default function CampaignCarrierAgreementModal({ open, onOpenChange, mode
                             variant="horizontal"
                             optional
                             hint="PDF o Imagen · Máx. 10 MB"
-                            file={boleta}
+                            file={boleta ?? agreement?.boleta ?? null}
                             replaceable={mode === "edit" && agreement?.boleta != null}
                             onChange={setBoleta}
                         />

@@ -795,16 +795,16 @@ export default function PurchaseSettlementPage() {
                                                     },
                                                     {
                                                         label: "Precio / kg",
-                                                        value: `S/ ${prov.precioKg.toFixed(2)}`,
+                                                        value: `${prov.moneda === 'USD' ? 'US$' : 'S/'} ${prov.precioKg.toFixed(2)}`,
                                                     },
                                                     {
                                                         label: "Total",
-                                                        value: `S/ ${prov.total.toLocaleString("es-PE")}`,
+                                                        value: `${prov.moneda === 'USD' ? 'US$' : 'S/'} ${prov.total.toLocaleString("es-PE")}`,
                                                         tone: "brand",
                                                     },
                                                     {
                                                         label: "Saldo por pagar",
-                                                        value: `S/ ${saldo.toLocaleString("es-PE")}`,
+                                                        value: `${prov.moneda === 'USD' ? 'US$' : 'S/'} ${saldo.toLocaleString("es-PE")}`,
                                                         tone: saldo > 0 ? "highlight" : "brand",
                                                     },
                                                 ]}
@@ -979,20 +979,20 @@ export default function PurchaseSettlementPage() {
                                             items={[
                                                 {
                                                     label: "Flete de la carga",
-                                                    value: `S/ ${t.fleteCarga.toLocaleString("es-PE")}`,
+                                                    value: `${t.moneda === 'USD' ? 'US$' : 'S/'} ${t.fleteCarga.toLocaleString("es-PE")}`,
                                                 },
                                                 {
                                                     label: "Gastos reales ruta",
-                                                    value: `S/ ${totalGastosReales.toLocaleString("es-PE")}`,
+                                                    value: `${t.moneda === 'USD' ? 'US$' : 'S/'} ${totalGastosReales.toLocaleString("es-PE")}`,
                                                 },
                                                 {
                                                     label: "Total liquidado",
-                                                    value: `S/ ${totalLiquidado.toLocaleString("es-PE")}`,
+                                                    value: `${t.moneda === 'USD' ? 'US$' : 'S/'} ${totalLiquidado.toLocaleString("es-PE")}`,
                                                     tone: "brand",
                                                 },
                                                 {
                                                     label: "Saldo por pagar",
-                                                    value: `S/ ${saldoPendiente.toLocaleString("es-PE")}`,
+                                                    value: `${t.moneda === 'USD' ? 'US$' : 'S/'} ${saldoPendiente.toLocaleString("es-PE")}`,
                                                     tone: saldoPendiente > 0 ? "highlight" : "brand",
                                                 },
                                             ]}
@@ -1005,11 +1005,11 @@ export default function PurchaseSettlementPage() {
                                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                                 <InfoField
                                                     label="Total contratado en campaña"
-                                                    value={`S/ ${t.totalContratadoCampania.toLocaleString("es-PE")}`}
+                                                    value={`${t.moneda === 'USD' ? 'US$' : 'S/'} ${t.totalContratadoCampania.toLocaleString("es-PE")}`}
                                                 />
                                                 <InfoField
                                                     label="Adelanto disponible para descontar"
-                                                    value={`S/ ${totalAdelantoDisp.toLocaleString("es-PE")}`}
+                                                    value={`${t.moneda === 'USD' ? 'US$' : 'S/'} ${totalAdelantoDisp.toLocaleString("es-PE")}`}
                                                 />
                                                 <InfoField
                                                     label="N° Liquidación de transporte"
@@ -1086,6 +1086,7 @@ export default function PurchaseSettlementPage() {
             />
 
             <SettlementPaymentModal
+                moneda={paymentTarget?.type === 'carrier' ? activeLoad?.transporte.moneda : paymentTarget?.prov.moneda}
                 open={paymentTarget !== null}
                 onOpenChange={(open) => !open && setPaymentTarget(null)}
                 title={
@@ -1138,6 +1139,7 @@ export default function PurchaseSettlementPage() {
             />
 
             <SettlementPaymentHistoryModal
+                moneda={historyTarget?.type === 'carrier' ? activeLoad?.transporte.moneda : historyTarget?.prov.moneda}
                 open={historyTarget !== null}
                 onOpenChange={(open) => !open && setHistoryTarget(null)}
                 beneficiaryName={

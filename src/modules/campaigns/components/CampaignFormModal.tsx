@@ -1,13 +1,18 @@
-import { usesV1 } from '@/shared/api/data-contract';
+import { refreshRemoteData, usesV1 } from '@/shared/api/data-contract';
 import { useEffect, useState } from "react";
 import { X, Save, Sprout } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import RemovableChip from "@/shared/components/RemovableChip";
 import FormField from "@/shared/components/FormField";
 import InputField from "@/shared/components/InputField";
+import { InfoField } from "@/shared/components/InfoField";
+import { getSession } from "@/shared/offline/session";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import FileDropzone from "@/shared/components/FileDropzone";
+import type { FileSource } from '@/shared/utils/fileSource';
+import { linkLocalDocument, unlinkLocalDocument, uploadLocalDocument } from '@/shared/api/uploadDocument';
+import { operationsContext } from '@/modules/operations/api/operations-context.api';
 import { Button } from "@/shared/components/ui/button";
 import { createCampana, getCampana, getFrutaDerivadas, getFrutas, updateCampana } from "@/modules/campaigns/api/campaign.api";
 import type { CampanaEstado, FrutaDerivadaDto, FrutaDto } from "@/modules/campaigns/api/campaign.dto";
@@ -25,7 +30,7 @@ interface CampaignFormValues {
     responsable: string;
     observaciones: string;
     estado: CampanaEstado;
-    lineamientos: File | null;
+    lineamientos: FileSource | null;
 }
 
 const EMPTY_CAMPAIGN: CampaignFormValues = {
@@ -59,6 +64,7 @@ export default function CampaignFormModal({
     campaniaId = null,
 }: CampaignFormModalProps) {
     const isEdit = mode === "edit";
+    const user = getSession()?.user;
     const [values, setValues] = useState<CampaignFormValues>(EMPTY_CAMPAIGN);
     const [frutas, setFrutas] = useState<FrutaDto[]>([]);
     const [derivadas, setDerivadas] = useState<FrutaDerivadaDto[]>([]);
@@ -84,11 +90,14 @@ export default function CampaignFormModal({
             getCampana(campaniaId)
                 .then((campana) => {
                     if (!active) return;
+                    const file = usesV1() ? operationsContext().localDocuments?.find(item => item.tipo === 'campana' && item.entidadId === campana.campaniaId) : undefined;
                     setValues({
                         ...EMPTY_CAMPAIGN,
                         nombre: campana.nombre,
                         añoTemporada: campana.temporada ?? "",
                         observaciones: campana.observaciones ?? "",
+                        lineamientos: file ? { url: file.url, name: file.name, type: file.type, size: file.size } : null,
+                        responsable: campana.responsableUsuarioId == null ? "Sin asignar" : campana.responsableUsuarioId === user?.usuarioId ? `${user.nombres} ${user.apellidos}`.trim() : `Usuario #${campana.responsableUsuarioId}`,
                         frutaId: campana.frutaId,
                         fechaInicio: formatFecha(campana.fechaInicio),
                         fechaFin: formatFecha(campana.fechaFin),
@@ -100,7 +109,7 @@ export default function CampaignFormModal({
                 .finally(() => { if (active) setIsLoading(false); });
         }
         return () => { active = false; };
-    }, [open, isEdit, campaniaId]);
+    }, [open, isEdit, campaniaId, user?.usuarioId, user?.nombres, user?.apellidos]);
 
     // Las frutas derivadas salen del catálogo de la fruta elegida; son informativas
     useEffect(() => {
@@ -135,14 +144,17 @@ export default function CampaignFormModal({
         setSaving(true);
         setErrors({});
         try {
+            if (usesV1() && !isEdit && !user?.usuarioId) throw new Error("No se pudo identificar al administrador de la sesión.");
             const input = {
                 ...validation.data,
-                ...(usesV1() ? {temporada:values.añoTemporada.trim()||null,observaciones:values.observaciones.trim()||null} : {}),
+                ...(usesV1() ? {temporada:values.añoTemporada.trim()||null,observaciones:values.observaciones.trim()||null, ...(!isEdit ? { responsableUsuarioId: user?.usuarioId } : {})} : {}),
                 fechaInicio: parseFecha(validation.data.fechaInicio),
                 fechaFin: parseFecha(validation.data.fechaFin),
             };
-            if (isEdit && campaniaId !== null) await updateCampana(campaniaId, input);
-            else await createCampana(input);
+            const uploaded = usesV1() && values.lineamientos instanceof File ? await uploadLocalDocument(values.lineamientos) : undefined;
+            const saved = isEdit && campaniaId !== null ? await updateCampana(campaniaId, input) : await createCampana(input);
+            if (uploaded) { await linkLocalDocument('campana', saved.campaniaId, uploaded.id); await refreshRemoteData(); }
+            else if (usesV1() && isEdit && !values.lineamientos) { await unlinkLocalDocument('campana', saved.campaniaId); await refreshRemoteData(); }
             onSuccess?.();
         } catch (requestError) {
             const apiErrors = getBadRequestFieldErrors(requestError, BACKEND_FIELDS);
@@ -189,7 +201,7 @@ export default function CampaignFormModal({
                 {/* Fila 1 */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InputField id="campaign-nombre" label="Nombre de Campaña:" placeholder="Ej: Campaña Mango 2026" value={values.nombre} onChange={(value) => set("nombre", value)} error={errors.nombre} />
-                    <InputField id="campaign-responsable" disabled={usesV1()} hint={usesV1() ? "Pendiente de asignación por usuario" : undefined} label="Responsable:" placeholder="Nombre del administrador" value={values.responsable} onChange={(value) => set("responsable", value)} error={errors.responsable} />
+                    {usesV1() ? <InfoField label="Responsable" value={isEdit ? values.responsable : `${user?.nombres ?? ""} ${user?.apellidos ?? ""}`.trim() || "Sesión no disponible"} /> : <InputField id="campaign-responsable" label="Responsable:" placeholder="Nombre del administrador" value={values.responsable} onChange={(value) => set("responsable", value)} error={errors.responsable} />}
                 </div>
 
                 {/* Fila 2 */}

@@ -6,6 +6,8 @@
  * copian: se leen de Gestión de Transporte por `carrierId`, así siempre están al día.
  */
 
+import type { FileSource } from '@/shared/utils/fileSource';
+
 export type PaymentType = "unico" | "adelanto";
 
 /** Palabras pensadas para quien registra: "único" y "con adelanto" se entienden sin explicación */
@@ -25,7 +27,7 @@ export interface CarrierPaymentAgreement {
     fechaAdelanto: string;
     /** Pago único: fecha de pago. Con adelanto: fecha del saldo (yyyy-MM-dd) */
     fechaPago: string;
-    boleta: File | null;
+    boleta: FileSource | null;
     /** Solo en "Con adelanto": el saldo ya se pagó y el acuerdo quedó cerrado */
     saldoPagado: boolean;
 }
@@ -35,7 +37,7 @@ export interface CampaignCarrierLink {
     carrierId: number;
     /** yyyy-MM-dd */
     fechaVinculacion: string;
-    cotizacion: File | null;
+    cotizacion: FileSource | null;
     acuerdo: CarrierPaymentAgreement | null;
 }
 
@@ -102,7 +104,7 @@ export function validateAgreement(values: AgreementFormValues): AgreementErrors 
 }
 
 /** Del formulario al acuerdo guardado. Cambiar a "Pago único" descarta lo que solo aplica al adelanto. */
-export function toAgreement(values: AgreementFormValues, boleta: File | null, saldoPagado = false): CarrierPaymentAgreement {
+export function toAgreement(values: AgreementFormValues, boleta: FileSource | null, saldoPagado = false): CarrierPaymentAgreement {
     const isAdvance = values.tipo === "adelanto";
     return {
         tipo: values.tipo,

@@ -27,6 +27,7 @@ export function createFutureMockMiddleware(root: string, clock: () => Date = () 
   const loaded = loadFutureContract(root)
   const contract = loaded.contract
   let db = loaded.database
+  const farmVarieties = new Map<number, number[]>()
   const meta = contract['x-database']
   const nextIds = Object.fromEntries(Object.entries(meta).map(([table, def]) => [table, Math.max(0, ...db[table].map(row => Number(row[def.id]))) + 1]))
   const find = (table: string, id: unknown): Row => {
@@ -311,7 +312,24 @@ export function createFutureMockMiddleware(root: string, clock: () => Date = () 
 
   async function handle(request: IncomingMessage, url: URL) {
     refreshCampaignStatuses()
-    const pathname = url.pathname.slice('/mock-api/v1'.length) || '/'
+    const pathname = url.pathname.slice('/mock-api/api'.length) || '/'
+    if (pathname === '/archivos-locales/vinculos' && request.method === 'GET') return { status: 200, data: [] }
+    const farmVarietiesRoute = /^\/proveedores\/(\d+)\/fincas\/(\d+)\/variedades$/.exec(pathname)
+    if (farmVarietiesRoute) {
+      const providerId = Number(farmVarietiesRoute[1]), farmId = Number(farmVarietiesRoute[2])
+      const farm = db.finca.find(row => row.fincaId === farmId && row.proveedorId === providerId)
+      if (!farm) throw new FutureError(404, 'NOT_FOUND', 'Finca no encontrada.')
+      if (request.method === 'GET') return { status: 200, data: farmVarieties.get(farmId) ?? (farm.frutaDerivadaId ? [farm.frutaDerivadaId] : []) }
+      if (request.method === 'PUT') {
+        const ids = await readJson(request)
+        if (!Array.isArray(ids) || ids.some(id => !Number.isSafeInteger(id) || !db.fruta_derivada.some(row => row.frutaDerivadaId === id)) || new Set(ids).size !== ids.length)
+          throw new FutureError(400, 'INVALID_VARIETIES', 'Selecciona variedades válidas sin duplicados.')
+        farmVarieties.set(farmId, ids)
+        farm.frutaDerivadaId = ids[0] ?? null
+        return { status: 200, data: ids }
+      }
+      throw new FutureError(405, 'METHOD_NOT_ALLOWED', 'Método no permitido.')
+    }
     const route = compiled.find(item => item.pattern.test(pathname))
     if (!route) throw new FutureError(404,'ROUTE_NOT_FOUND','Ruta V1 no documentada.')
     const method = (request.method ?? 'GET').toLowerCase() as 'get'|'post'|'patch'|'delete'
@@ -393,7 +411,7 @@ export function createFutureMockMiddleware(root: string, clock: () => Date = () 
   let queue = Promise.resolve()
   return (request,response,next) => {
     const url = new URL(request.url ?? '/','http://mock.local')
-    if (url.pathname !== '/mock-api/v1' && !url.pathname.startsWith('/mock-api/v1/')) return next()
+    if (url.pathname !== '/mock-api/api' && !url.pathname.startsWith('/mock-api/api/')) return next()
     response.setHeader('Content-Type','application/json; charset=utf-8')
     response.setHeader('Cache-Control','no-store')
     response.setHeader('Pragma','no-cache')

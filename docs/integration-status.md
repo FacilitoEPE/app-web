@@ -2,6 +2,29 @@
 
 > **Único archivo oficial de seguimiento.** Toda auditoría o conexión de vistas/APIs debe actualizarse aquí indicando fecha ISO (`YYYY-MM-DD`) y estado (`Completo`, `Parcial`, `Sin cambios`), conservando el historial en la sección inferior.
 
+## Plan de cierre funcional — 2026-11-01 · Pendiente
+
+1. Fincas — Parcial: tabla de relación y migración aplicadas en `desarrolloEPE`; selección múltiple con guardado y recarga y pruebas de integración. Falta completar y probar los flujos de campaña, calidad y chofer que antes suponían una única variedad.
+2. Documentos — Parcial: servicio local autenticado y prueba real de subida/descarga. Se conectaron contratos, lineamientos, certificados, liquidaciones, pagos, facturas, cobros, análisis, cosecha, logística, chofer y cotizaciones de transporte. Los archivos y vínculos se guardan en `epe-backend/uploads`, que debe incluirse en los respaldos. Falta inventariar asteriscos y verificar cada recorrido con recarga; cosecha y cotizaciones aún requieren prueba funcional específica.
+3. API única — Parcial: la aplicación usa la API actual sin seleccionar versión y las rutas operativas usan `/api`; permanecen ramas históricas en código y rutas anteriores del backend. Falta retirarlas sin perder servicios y comprobar todos los permisos de administrador y chofer.
+4. Monedas: completar los flujos PEN/USD, evitar mezclar monedas en cálculos, verificar UIT y probar liquidación y pagos de principio a fin.
+5. Revisar las restricciones visibles restantes, conectar los campos que correspondan y probar responsable de campaña, relaciones y edición tras recargar.
+6. Ejecutar pruebas y recorridos completos en datos de prueba aislados; documentar bloqueos externos, errores y resultados. El portal del chofer carga su propio contexto y guarda datos de carga con validación de asignación; falta validar visualmente el recorrido completo. La cuenta `chofer` fue elegida para vincular los conductores activos y los nuevos; las asignaciones anteriores se respaldaron en `epe-backend/tmp/driver-links-1793569821647.json`.
+7. Correo — Parcial: el usuario eligió Resend para solicitudes a transportistas y recuperación de contraseña. Se preparó un servicio de envío y sus pruebas, pero todavía no está conectado a esos flujos. Falta implementar y probar ambos recorridos, configurar `RESEND_API_KEY` y `RESEND_FROM` en el servidor y validar el envío con una cuenta y dominio adecuados. No se han enviado correos reales.
+
+Solicitud de transporte: el documento ahora se exige, se guarda localmente y se recupera en la proyección; el backend acepta también Word. La operación sigue registrando invitaciones sin enviar correos. Falta comprobar el recorrido funcional completo y conectar Resend.
+
+Verificación de esta etapa: 279 pruebas del frontend y 89 del backend aprobadas; 22 pruebas E2E del backend aprobadas en una base temporal creada y eliminada para la ejecución previa a los últimos ajustes. La subida, descarga y protección de un archivo temporal se verificaron contra el backend local. El portal abrió con la cuenta `chofer` y presentó la carga asignada. Estas pruebas no demuestran que todos los recorridos visuales ni todos los adjuntos estén terminados.
+
+## Responsable de campaña — 2026-11-01 · Parcial
+
+- En el contrato actual, el alta envía `responsableUsuarioId` con el administrador de la sesión; la edición no sustituye el responsable guardado. La vista muestra el nombre de la sesión si coincide, o el identificador del usuario asignado.
+- Verificación: prueba del adaptador de responsable, 276 pruebas del frontend y comprobación de tipos y ESLint de los archivos modificados aprobadas; no se ha probado el alta real desde el navegador.
+- Pendiente verificar el ciclo completo contra el backend y resolver la visualización del nombre de otro usuario. La unificación de API sin versión, monedas, relaciones y adjuntos sigue pendiente.
+- Monedas — Parcial: controles de compra y acuerdo aceptan PEN y USD; el backend comprueba la moneda de origen de las liquidaciones y la interfaz calcula UIT a S/ 3,70 por USD. La migración se probó en PGlite y se aplicó de forma aislada a `desarrolloEPE`; las demás migraciones figuraban pendientes y no se ejecutaron. Falta verificar el flujo real completo, reiniciar el backend si no recarga automáticamente y revisar otras pantallas y contratos.
+- Pruebas de esta revisión: 277 frontend y 78 backend aprobadas; tipos de ambos proyectos aprobados.
+- Rutas — Parcial: autenticación y controladores operativos migrados a `/api` sin número de versión; se reinició el backend local y se comprobó `401` sin credenciales en campañas. Persisten el selector interno de contrato, nombres históricos y rutas anteriores del backend; falta retirarlos y validar recorridos completos de ambos perfiles.
+
 ## Carga de datos por vista — 2026-10-30 · Parcial
 
 - El selector `/modules` ya no inicia la carga del contexto operativo; tampoco espera a que termine una carga anterior. La inicialización del contexto evita ejecutarse dos veces por el montaje de StrictMode.

@@ -24,6 +24,7 @@ export interface SettlementLinkedPerson {
     acumuladosPorAnio?: Record<string, number>;
 }
 export interface SettlementProviderEntry {
+    moneda?: string;
     kilosReconocidos?: number;
     id: string;
     proveedorId: string;
@@ -60,6 +61,7 @@ export interface CarrierAdvanceItem {
     saldoDisponible: number;
 }
 export interface SettlementCarrierEntry {
+    moneda?: string;
     id: string;
     transportista: string;
     ruc: string;

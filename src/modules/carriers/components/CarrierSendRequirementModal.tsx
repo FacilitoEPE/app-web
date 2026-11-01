@@ -38,6 +38,8 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
     const [file, setFile] = useState<File | null>(null);
     const [fileError, setFileError] = useState("");
     const [recipientsError, setRecipientsError] = useState("");
+    const [submitError, setSubmitError] = useState("");
+    const [saving, setSaving] = useState(false);
     const [detail, setDetail] = useState("");
     const [campaignId,setCampaignId]=useState(''),[reference,setReference]=useState(''),[origin,setOrigin]=useState(''),[destination,setDestination]=useState('');
 
@@ -45,6 +47,7 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
         setFile(null);
         setFileError("");
         setRecipientsError("");
+        setSubmitError("");
         setDetail("");
         setCampaignId('');setReference(`SOL-${Date.now()}`);setOrigin('');setDestination('');
     });
@@ -65,15 +68,23 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
     // Sin botón desactivado: al enviar, lo que falta se indica bajo su bloque
     const handleSend = async () => {
         const noRecipients = count === 0;
-        const noFile = !usesV1() && file === null;
+        const noFile = file === null;
         setRecipientsError(noRecipients ? "Selecciona al menos una empresa en la tabla." : "");
         setFileError(noFile ? "Adjunta el documento del requerimiento." : "");
         if (noRecipients || noFile) return;
-        if(usesV1()) {
-            if(!campaignId||!reference.trim()||!origin.trim()||!destination.trim())throw new Error('Completa la campaña, referencia, origen y destino de la solicitud.');
-            await quotationCommands.send({campaniaId:Number(campaignId),referencia:reference.trim(),origen:origin.trim(),destino:destination.trim(),mensaje:detail,carrierIds:selectedCarriers.map(c=>c.id)});
+        setSubmitError("");
+        setSaving(true);
+        try {
+            if(usesV1()) {
+                if(!campaignId||!reference.trim()||!origin.trim()||!destination.trim())throw new Error('Completa la campaña, referencia, origen y destino de la solicitud.');
+                await quotationCommands.send({campaniaId:Number(campaignId),referencia:reference.trim(),origen:origin.trim(),destino:destination.trim(),mensaje:detail,carrierIds:selectedCarriers.map(c=>c.id),documento:file!});
+            }
+            onSuccess?.();
+        } catch (error) {
+            setSubmitError(error instanceof Error ? error.message : 'No se pudo registrar la solicitud.');
+        } finally {
+            setSaving(false);
         }
-        onSuccess?.();
     };
 
     return (
@@ -95,13 +106,14 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={20} strokeWidth={2.5} /> Cancelar
                     </Button>
-                    <Button size="xl" onClick={handleSend}>
-                        <Send size={20} strokeWidth={2.5} /> {usesV1() ? "Registrar solicitud" : "Enviar requerimiento"}
+                    <Button size="xl" onClick={handleSend} disabled={saving}>
+                        <Send size={20} strokeWidth={2.5} /> {saving ? "Guardando..." : usesV1() ? "Registrar solicitud" : "Enviar requerimiento"}
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-6">
+                {submitError && <p role="alert" className="text-sm text-destructive">{submitError}</p>}
                 {usesV1()&&<div className="grid gap-4 sm:grid-cols-2"><FormField label="Campaña" required><Combobox options={requestCampaignOptions()} value={campaignId} onChange={setCampaignId} placeholder="Seleccionar campaña" /></FormField><InputField id="solicitud-referencia" label="Referencia" required value={reference} onChange={setReference} /><InputField id="solicitud-origen" label="Origen" required value={origin} onChange={setOrigin} /><InputField id="solicitud-destino" label="Destino" required value={destination} onChange={setDestination} /></div>}
                 <div className="flex flex-col gap-4 rounded-2xl border border-brand-border/60 bg-brand-surface p-4 sm:flex-row sm:items-center sm:gap-5">
                     <div className="flex items-center gap-4">

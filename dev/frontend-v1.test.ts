@@ -152,7 +152,7 @@ describe('existing frontend with the future HTTP contract', () => {
     expect(billing[0].cargas[0].facturas[0]).toMatchObject({ total: 1495, estado: 'Cobrado parcial' })
     const drivers = projectDriverData(graph)
     expect(drivers.loads[0].destinoLatitud).toBeNull()
-    expect(requested.every(url => url.startsWith('/mock-api/v1/'))).toBe(true)
+    expect(requested.every(url => url.startsWith('/mock-api/api/'))).toBe(true)
   })
 
   it('saves and reloads farms through the existing frontend store, preserving server identifiers', async () => {
@@ -164,7 +164,18 @@ describe('existing frontend with the future HTTP contract', () => {
     await updateFinca(1, index, { ...added, haCultivo: 1.5 })
     await refreshFrontendData()
     expect(getProviderLocalData().fincas[1].find(f => f.fincaId === added.fincaId)?.haCultivo).toBe(1.5)
-    expect(requested.some(url => url.startsWith('/mock-api/v1/proveedores/1/fincas'))).toBe(true)
+    expect(requested.some(url => url.startsWith('/mock-api/api/proveedores/1/fincas'))).toBe(true)
+  })
+
+  it('persists several farm varieties and restores them after refresh', async () => {
+    const source = getProviderLocalData().fincas[1][0]
+    const g = operationsContext()
+    const varieties = g.varieties.slice(0, 2)
+    const cultivos = varieties.map(v => ({ fruta: g.fruits.find(f => f.frutaId === v.frutaId)!.name, variedades: [v.name] }))
+    await addFinca(1, { ...source, nombre: 'Finca con varios cultivos', fincaId: undefined, cultivos })
+    await refreshFrontendData()
+    const saved = getProviderLocalData().fincas[1].find(f => f.nombre === 'Finca con varios cultivos')!
+    expect(saved.cultivos.flatMap(c => c.variedades).sort()).toEqual(varieties.map(v => v.name).sort())
   })
 
   it('preserves leading zeros when the actual provider adapter writes data', async () => {

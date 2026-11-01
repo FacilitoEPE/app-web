@@ -17,7 +17,7 @@ export interface FutureApiError {
 }
 export type ListQuery = Record<string, string | number | boolean | undefined>;
 function endpoint(resource: string) {
-    return `/v1/${resource.replace(/^\/+/, '')}`;
+    return `/api/${resource.replace(/^\/+/, '')}`;
 }
 /** VITE_API_BASE_URL selects real backend or /mock-api/. No fallback after errors. */
 export function createV1ReadResource<T>(resource: string) {

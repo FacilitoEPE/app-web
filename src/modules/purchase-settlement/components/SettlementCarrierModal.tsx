@@ -55,6 +55,7 @@ export default function SettlementCarrierModal({
 
     if (!load) return null;
 
+    const symbol = load.transporte.moneda === 'USD' ? 'US$' : 'S/';
     const fleteNum = Number(fleteCarga) || 0;
     const totalGastosReales = gastosReales.reduce((s, g) => s + (Number(g.monto) || 0), 0);
     const totalLiquidar = fleteNum + totalGastosReales;
@@ -107,16 +108,16 @@ export default function SettlementCarrierModal({
                     items={[
                         {
                             label: "Flete de la carga",
-                            value: `S/ ${fleteNum.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+                            value: `${symbol} ${fleteNum.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                         },
                         {
                             label: "Gastos reales sustentados",
-                            value: `S/ ${totalGastosReales.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+                            value: `${symbol} ${totalGastosReales.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                             tone: "highlight",
                         },
                         {
                             label: "Total liquidación",
-                            value: `S/ ${totalLiquidar.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+                            value: `${symbol} ${totalLiquidar.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                             tone: "brand",
                         },
                     ]}
@@ -148,7 +149,7 @@ export default function SettlementCarrierModal({
                             required
                             step="0.01"
                             min={0}
-                            unit="S/"
+                            unit={symbol}
                             value={fleteCarga}
                             onChange={setFleteCarga}
                         />
@@ -201,7 +202,7 @@ export default function SettlementCarrierModal({
                                         variant="compact"
                                         step="0.01"
                                         min={0}
-                                        unit="S/"
+                                        unit={symbol}
                                         value={String(g.monto)}
                                         onChange={(val) =>
                                             setGastosReales((curr) =>

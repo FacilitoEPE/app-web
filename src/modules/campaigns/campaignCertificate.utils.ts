@@ -28,6 +28,8 @@ export const getTramiteLabel = (value: string) => TRAMITE_OPTIONS.find((option) 
 // Registro y edición
 // ---------------------------------------------------------------------------------------------
 
+import type { FileSource } from '@/shared/utils/fileSource';
+
 export interface CertificadoCampanaFormValues {
     tipo: string;
     nombre: string;
@@ -124,7 +126,7 @@ export interface PagoCertificado {
     /** yyyy-MM-dd */
     fecha: string;
     referencia: string;
-    evidencia: File | null;
+    evidencia: FileSource | null;
 }
 
 export interface CertificadoCampanaLocal {
@@ -140,8 +142,8 @@ export interface CertificadoCampanaLocal {
     kilosIniciales: number;
     productores: ProductorCubierto[];
     observaciones: string;
-    documento: File | null;
-    cotizacion: File | null;
+    documento: FileSource | null;
+    cotizacion: FileSource | null;
     ampliaciones: AmpliacionCertificado[];
     pagos: PagoCertificado[];
 }

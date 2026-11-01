@@ -24,7 +24,7 @@ function campaignInput(input: Partial<CampaignFormInput>) {
     if (input.estado === 'terminado')
         throw new Error('Usa Cerrar campaña para registrar el motivo y comprobar sus pendientes.');
     return {
-        temporada: input.temporada, observaciones: input.observaciones, nombre: input.nombre, frutaId: input.frutaId, estado: input.estado,
+        temporada: input.temporada, observaciones: input.observaciones, responsableUsuarioId: input.responsableUsuarioId, nombre: input.nombre, frutaId: input.frutaId, estado: input.estado,
         fechaInicio: input.fechaInicio ? formatFecha(input.fechaInicio) : undefined, fechaFin: input.fechaFin ? formatFecha(input.fechaFin) : undefined,
         requerimientoComercial: input.requerimientoComercial === undefined ? undefined : Number(input.requerimientoComercial),
     };

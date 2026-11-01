@@ -1,5 +1,5 @@
 import { usesV1 } from '@/shared/api/data-contract';
-import { annualBeforeSettlement } from '@/modules/purchase-settlement/settlementUit.utils';
+import { annualBeforeSettlement, importeParaUit } from '@/modules/purchase-settlement/settlementUit.utils';
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { useState } from "react";
 import { AlertTriangle, FileSpreadsheet, Save, Scale, UserPlus, X } from "lucide-react";
@@ -98,11 +98,12 @@ export default function SettlementProviderModal({
         providerEntry.personasVinculadas[0];
 
     const priceNum = Number(precioKg) || 0;
+    const symbol = providerEntry.moneda === 'USD' ? 'US$' : 'S/';
     const totalCompra = (providerEntry.kilosReconocidos ?? providerEntry.kilosCargados) * priceNum;
     const previoPen = usesV1()
         ? annualBeforeSettlement(providerEntry, selectedPerson?.id ?? '', Number(fechaLiquidacion.slice(0, 4)) || new Date().getFullYear())
         : selectedPerson?.acumuladoAnualPen ?? 0;
-    const proyectadoPen = previoPen + totalCompra;
+    const proyectadoPen = previoPen + importeParaUit(totalCompra, providerEntry.moneda ?? 'PEN');
     const proyectadoUit = proyectadoPen / UIT_VALOR_2026;
     const pctUit = Math.min(100, (proyectadoPen / UIT_LIMITE_SOLES) * 100);
     const nearOrAboveUit = pctUit >= 90;
@@ -177,11 +178,11 @@ export default function SettlementProviderModal({
                         },
                         {
                             label: "Precio de compra / kg",
-                            value: `S/ ${priceNum.toFixed(2)}`,
+                            value: `${symbol} ${priceNum.toFixed(2)}`,
                         },
                         {
                             label: "Total a liquidar",
-                            value: `S/ ${totalCompra.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+                            value: `${symbol} ${totalCompra.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                             tone: "brand",
                         },
                     ]}
@@ -210,7 +211,7 @@ export default function SettlementProviderModal({
                             required
                             step="0.01"
                             min={0}
-                            unit="S/"
+                            unit={symbol}
                             value={precioKg}
                             onChange={setPrecioKg}
                         />
@@ -337,7 +338,7 @@ export default function SettlementProviderModal({
                                     Compra actual
                                 </span>
                                 <span className="text-[14px] font-bold tabular-nums text-brand">
-                                    + S/ {totalCompra.toLocaleString("es-PE")}
+                                    + S/ {importeParaUit(totalCompra, providerEntry.moneda ?? 'PEN').toLocaleString("es-PE")}
                                 </span>
                             </div>
                             <div>

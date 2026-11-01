@@ -111,7 +111,7 @@ export default function ProviderFincaModal({ open, onOpenChange, providerName, r
                         <InputField {...bind("edadCultivo")} label="Edad del cultivo" optional placeholder="0" step="0.5" min={0} unit="años" className="sm:col-span-2" />
 
                         <FormField label="Cultivos y variedades" required error={errors.cultivos} className="sm:col-span-6">
-                            <FruitVarietyPicker single={usesV1()}
+                            <FruitVarietyPicker
                                 fruits={CATALOGO_FRUTAS}
                                 value={values.cultivos}
                                 onChange={(next) => { set("cultivos")(next); clearError("cultivos"); }}

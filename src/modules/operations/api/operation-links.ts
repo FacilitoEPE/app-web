@@ -27,6 +27,12 @@ export function providerName(id: number, g: OperationsContext = operationsContex
     const provider = g.providers.find(row => row.proveedorId === id);
     return provider ? `${provider.nombres} ${provider.apellido}`.trim() : '';
 }
+export function singleFarmVariety(farmId: number, fruitId: number, g: OperationsContext): number | undefined {
+    const farm = g.farms.find(row => row.fincaId === farmId);
+    const ids = farm?.variedadesIds ?? (farm?.frutaDerivadaId ? [farm.frutaDerivadaId] : []);
+    const matches = g.varieties.filter(row => row.frutaId === fruitId && ids.includes(row.frutaDerivadaId));
+    return matches.length === 1 ? matches[0].frutaDerivadaId : undefined;
+}
 export function farmNames(providerId: number, loadId: number, g: OperationsContext = operationsContext()) {
     const ids = new Set(g.loadOrigins.filter(origin => g.loadProviders.some(row => row.proveedorCargaId === origin.proveedorCargaId && row.cargaId === loadId && g.participations.some(p => p.cxpId === row.cxpId && p.proveedorId === providerId))).map(row => row.fincaId));
     return g.farms.filter(row => ids.has(row.fincaId)).map(row => row.nombreFinca).join(', ');
