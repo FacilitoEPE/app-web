@@ -6,7 +6,6 @@ import Hint from "@/shared/components/Hint";
 import { INFO_LABEL_CLASS } from "@/shared/components/InfoField";
 import { cn } from "@/lib/utils";
 import { BRAND_ACTIVE_SURFACE } from "@/shared/styles/brandGradients";
-import { usesV1 } from '@/shared/api/data-contract';
 export type { StoredFile };
 
 export interface FileDropzoneProps {
@@ -55,14 +54,7 @@ export default function FileDropzone({
     hasColon,
     optional,
     required,
-    allowLocalSelection = false,
 }: FileDropzoneProps) {
-    if (usesV1() && !allowLocalSelection) {
-        disabled = true;
-        required = false;
-        optional = true;
-        hint = 'Adjuntos pendientes de habilitación. Puedes guardar los demás datos.';
-    }
     const [previewOpen, setPreviewOpen] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const inputId = `file-dropzone-${label.replace(/\s+/g, "-").toLowerCase()}`;

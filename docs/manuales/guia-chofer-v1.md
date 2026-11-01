@@ -7,13 +7,13 @@
 
 1. Abra `/login`.
 2. En **Perfil de acceso**, escoja **Chofer**.
-3. En **Chofer registrado**, seleccione su nombre y la placa asignada.
+3. Ingrese su **Usuario** y **Contraseña** asignados.
 4. Elija **Ingresar al Portal del Chofer**.
 
-Si no aparece su nombre o vehículo, comuníquese con el Administrador para que registre el chofer y lo asigne al transportista y vehículo correctos.
+Si no puede ingresar o no aparecen sus viajes asignados, comuníquese con el Administrador para revisar su cuenta y asignación.
 
 **Dirección:** `/login > Perfil de acceso: Chofer`.  
-**Opción:** seleccione únicamente su perfil y la placa de la unidad que conducirá.
+**Opción:** use las credenciales de su cuenta de chofer y revise la placa al consultar el viaje.
 
 ## 2. Revisar el viaje
 
