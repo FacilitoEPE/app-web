@@ -19,9 +19,11 @@ const root = path.resolve(import.meta.dirname, '..')
 let server: Server
 let base: string | undefined
 let origin: string
+let now: Date
 
 beforeEach(async () => {
-  const middleware = createFutureMockMiddleware(root)
+  now = new Date('2026-11-01T12:00:00Z')
+  const middleware = createFutureMockMiddleware(root, () => now)
   server = createServer((request,response) => middleware(request,response,() => {
     response.statusCode = 418
     response.end('outside v1')
@@ -37,6 +39,20 @@ afterEach(async () => {
 })
 
 describe('future API contract', () => {
+  it('calcula el estado por fecha de Lima al crear, editar y consultar', async () => {
+    const created = await campanaV1.create({ nombre:'Prueba', frutaId:4, fechaInicio:'2026-11-02', fechaFin:'2026-11-03', requerimientoComercial:100 })
+    expect(created.estado).toBe('planificacion')
+    now = new Date('2026-11-02T04:59:59Z')
+    expect((await campanaV1.get(created.campaniaId)).estado).toBe('planificacion')
+    now = new Date('2026-11-02T05:00:00Z')
+    expect((await campanaV1.get(created.campaniaId)).estado).toBe('en proceso')
+    expect((await campanaV1.update(created.campaniaId, { fechaInicio:'2026-11-04', fechaFin:'2026-11-05' })).estado).toBe('planificacion')
+    now = new Date('2026-11-06T05:00:00Z')
+    expect((await campanaV1.get(created.campaniaId)).estado).toBe('terminado')
+    now = new Date('2026-11-01T12:00:00Z')
+    expect((await campanaV1.get(created.campaniaId)).estado).toBe('terminado')
+  })
+
   it('serves every documented collection with a response that matches OpenAPI', async () => {
     const { contract,database } = loadFutureContract(root)
     for (const [template,item] of Object.entries(contract.paths)) {

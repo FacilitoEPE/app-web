@@ -23,7 +23,7 @@ async function readJson(request: IncomingMessage): Promise<unknown> {
 }
 
 /** Contract-driven V1 mock. Auth/storage/PostgreSQL remain responsibilities of the real backend. */
-export function createFutureMockMiddleware(root: string): Connect.NextHandleFunction {
+export function createFutureMockMiddleware(root: string, clock: () => Date = () => new Date()): Connect.NextHandleFunction {
   const loaded = loadFutureContract(root)
   const contract = loaded.contract
   let db = loaded.database
@@ -51,6 +51,13 @@ export function createFutureMockMiddleware(root: string): Connect.NextHandleFunc
     }
   }
   const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+  const campaignStatus = (row: Row) => {
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Lima', year:'numeric', month:'2-digit', day:'2-digit' }).format(clock())
+    return today < String(row.fechaInicio).slice(0,10) ? 'planificacion' : today > String(row.fechaFin).slice(0,10) ? 'terminado' : 'en proceso'
+  }
+  const refreshCampaignStatuses = () => {
+    for (const row of db.campana) if (row.estado !== 'terminado') row.estado = campaignStatus(row)
+  }
 
   function references(table: string, row: Row) {
     for (const ref of meta[table].references) {
@@ -98,6 +105,7 @@ export function createFutureMockMiddleware(root: string): Connect.NextHandleFunc
   }
 
   function compute(table: string, row: Row, current?: Row) {
+    if (table === 'campana') row.estado = campaignStatus(row)
     if (table === 'recepcion_planta') row.idChoferTransporteExterno = coordination(row.cargaId).idChoferTransporteExterno
     if (table === 'historial_chofer') {
       row.idChoferTransporteExterno = find('coordinacion_entrega',row.coordinacionEntregaId).idChoferTransporteExterno
@@ -302,6 +310,7 @@ export function createFutureMockMiddleware(root: string): Connect.NextHandleFunc
   const resourceFor = (template: string): Resource => contract.paths[template.replace(/\/\{id\}$/,'')]['x-resource']!
 
   async function handle(request: IncomingMessage, url: URL) {
+    refreshCampaignStatuses()
     const pathname = url.pathname.slice('/mock-api/v1'.length) || '/'
     const route = compiled.find(item => item.pattern.test(pathname))
     if (!route) throw new FutureError(404,'ROUTE_NOT_FOUND','Ruta V1 no documentada.')
