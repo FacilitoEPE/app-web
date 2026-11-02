@@ -7,8 +7,9 @@ import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import './App.css'
 import DashboardLayout from '@/shared/layout/DashboardLayout'
 import FrontendDataBoundary from '@/FrontendDataBoundary'
+import { resetFrontendData } from '@/frontend-data'
 import OfflinePage from '@/shared/components/OfflinePage'
-import { PageLoading } from '@/shared/components/PageState'
+import { PageError, PageLoading } from '@/shared/components/PageState'
 import WelcomeSplash from '@/shared/components/WelcomeSplash'
 import { unlockSplashAudio } from '@/shared/components/welcomeSplashSound'
 import { isSplashSkipped } from '@/shared/components/welcomeSplashPreference'
@@ -87,6 +88,21 @@ const ProtectedLayout = ({ session, onLogout }: { session: PersistedSession | nu
 function RequireDriver({ session, onLogout }: { session: PersistedSession | null; onLogout: () => void }) {
   if (!session) return <Navigate to="/login" replace />
   if (session.user.rol.nombre !== 'Chofer') return <Navigate to="/modules" replace />
+  return <DriverDataBoundary onLogout={onLogout} />
+}
+
+function DriverDataBoundary({ onLogout }: { onLogout: () => void }) {
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    let active = true
+    void import('@/modules/driver-portal/api/driver-context.api').then(({ refreshDriverData }) => refreshDriverData())
+      .then(() => { if (active) setState('ready') })
+      .catch(() => { if (active) setState('error') })
+    return () => { active = false }
+  }, [attempt])
+  if (state === 'loading') return <PageLoading label="Cargando tus cargas…" />
+  if (state === 'error') return <PageError title="No se pudieron cargar tus cargas" message="Comprueba tu conexión e inténtalo nuevamente." onRetry={() => { setState('loading'); setAttempt(value => value + 1) }} />
   return <DriverPortalPage onLogout={onLogout} />
 }
 
@@ -113,7 +129,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const expireSession = () => setSession(null)
+    const expireSession = () => { resetFrontendData(); setSession(null) }
     window.addEventListener('epe:auth-expired', expireSession)
     return () => window.removeEventListener('epe:auth-expired', expireSession)
   }, [])
@@ -146,6 +162,7 @@ function App() {
     if (showIntro) unlockSplashAudio()
   }
   const handleLogout = () => {
+    resetFrontendData()
     setSession(null)
     clearSession()
   };

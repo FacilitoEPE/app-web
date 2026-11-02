@@ -1,3 +1,5 @@
+import type { FileSource } from '@/shared/utils/fileSource';
+
 export type QualityAnalysisType = "Residuos de Plaguicidas" | "Materia seca" | "Metales pesados" | "Microbiológico";
 
 export type QualityAnalysisResultState = "conforme" | "no_conforme" | "pendiente";
@@ -14,7 +16,7 @@ export interface QualityAnalysisRecord {
     resultado: string; // "Conforme", "No conforme", o valor numérico "22.4"
     unidad?: string; // "%", "mg/kg", etc.
     estadoResultado: QualityAnalysisResultState;
-    documento?: File | null;
+    documento?: FileSource | null;
     documentoNombre?: string;
     observaciones?: string;
 }

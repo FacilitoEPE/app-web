@@ -9,8 +9,11 @@ import type * as Billing from '@/modules/billing/api/future.dto';
 import type { ClienteNegocioV1 } from '@/modules/clients/api/future.dto';
 import type { RecepcionPlantaV1 } from '@/modules/logistics/api/future.dto';
 import type { HistorialChoferV1 } from '@/modules/driver-portal/api/future.dto';
+import { getLocalDocumentLinks, type LocalDocumentLink } from '@/shared/api/uploadDocument';
+import { getAuthToken } from '@/shared/offline/session';
 /** Remote operational context shared by the existing screens. No fixtures are imported here. */
 export interface OperationsContext {
+    localDocuments?: LocalDocumentLink[];
     campaigns: Campaign.CampanaV1[];
     fruits: Campaign.FrutaV1[];
     varieties: Campaign.FrutaDerivadaV1[];
@@ -68,6 +71,8 @@ export interface OperationsContext {
     collections: Billing.CobroVentaV1[];
 }
 let current: OperationsContext | undefined;
+export function setOperationsContext(value: OperationsContext): void { current = value; }
+export function clearOperationsContext(): void { current = undefined; }
 export function operationsContext(): OperationsContext {
     if (!current)
         throw new Error('Los datos de operación todavía no se han cargado.');
@@ -86,12 +91,14 @@ export async function readAllV1<T>(path: string): Promise<T[]> {
     return result;
 }
 export async function loadOperationsContext(): Promise<OperationsContext> {
+    const token = getAuthToken();
     const data = {} as OperationsContext;
-    async function load<K extends keyof OperationsContext>(key: K, paths: string[]) {
+    data.localDocuments = await getLocalDocumentLinks();
+    async function load<K extends Exclude<keyof OperationsContext, 'localDocuments'>>(key: K, paths: string[]) {
         const rows = (await Promise.all(paths.map(path => readAllV1<OperationsContext[K][number]>(path)))).flat();
         Object.assign(data, { [key]: rows });
     }
-    const children = async <K extends keyof OperationsContext>(key: K, parents: number[], path: (id: number) => string) => load(key, parents.map(path));
+    const children = async <K extends Exclude<keyof OperationsContext, 'localDocuments'>>(key: K, parents: number[], path: (id: number) => string) => load(key, parents.map(path));
     await Promise.all([
         load('campaigns', ['/campanas']), load('fruits', ['/frutas']), load('providers', ['/proveedores']), load('people', ['/personas']),
         load('clients', ['/clientes-negocio']), load('carriers', ['/transportistas']), load('uit', ['/parametros-uit']), load('standards', ['/normas']),
@@ -135,6 +142,7 @@ export async function loadOperationsContext(): Promise<OperationsContext> {
         children('applications', data.transportSettlements.map(row => row.liquidacionTransporteId), id => `/liquidaciones-transporte/${id}/aplicaciones-adelanto`),
         children('collections', data.invoices.map(row => row.facturaVentaId), id => `/facturas/${id}/cobros`),
     ]);
+    if (getAuthToken() !== token) throw new Error('La sesión cambió durante la carga.');
     current = data;
     return data;
 }

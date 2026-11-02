@@ -35,6 +35,7 @@ export default function LogisticsDocumentsClosureModal({
     const [cierreAdmin, setCierreAdmin] = useState(false);
     const [fechaCierreAdmin, setFechaCierreAdmin] = useState("");
     const [observacionesCierre, setObservacionesCierre] = useState("");
+    const [validationError, setValidationError] = useState("");
 
     useResetOnToggle(open, () => {
         if (!load || !open) return;
@@ -50,9 +51,18 @@ export default function LogisticsDocumentsClosureModal({
         setCierreAdmin(d.cierreAdministrativoConfirmado);
         setFechaCierreAdmin(d.fechaCierreAdministrativo);
         setObservacionesCierre(d.observacionesCierre);
+        setValidationError("");
     });
 
     if (!load) return null;
+
+    const hasAllRequiredDocuments = Boolean(
+        guiaRemisionFruta &&
+        guiaTransportista &&
+        reporteRecepcionPlanta &&
+        ticketBalanza &&
+        guiaSalidaFirmada,
+    );
 
     const checklist = [
         {
@@ -90,11 +100,21 @@ export default function LogisticsDocumentsClosureModal({
     };
 
     const handleConfirmPhysical = () => {
+        if (!hasAllRequiredDocuments) {
+            setValidationError("Adjunta los 5 documentos obligatorios (*) antes de confirmar el cierre.");
+            return;
+        }
+        setValidationError("");
         setCierreFisico(true);
         if (!fechaCierreFisico) setFechaCierreFisico(nowFormatted());
     };
 
     const handleConfirmAdmin = () => {
+        if (!hasAllRequiredDocuments) {
+            setValidationError("Adjunta los 5 documentos obligatorios (*) antes de confirmar el cierre.");
+            return;
+        }
+        setValidationError("");
         setCierreFisico(true);
         if (!fechaCierreFisico) setFechaCierreFisico(nowFormatted());
         setCierreAdmin(true);
@@ -102,6 +122,11 @@ export default function LogisticsDocumentsClosureModal({
     };
 
     const handleSubmit = async () => {
+        if ((cierreFisico || cierreAdmin) && !hasAllRequiredDocuments) {
+            setValidationError("Adjunta los 5 documentos obligatorios (*) antes de guardar el cierre.");
+            return;
+        }
+        setValidationError("");
         await onSave(load.id, {
             guiaRemisionFruta,
             guiaTransportista,
@@ -138,8 +163,13 @@ export default function LogisticsDocumentsClosureModal({
             }
         >
             <div className="flex flex-col gap-6">
+                {validationError && (
+                    <p role="alert" className="text-sm font-medium text-danger">
+                        {validationError}
+                    </p>
+                )}
                 <ModalSection
-                    title="1. Documentos obligatorios de respaldo (6 archivos)"
+                    title="1. Documentos obligatorios de respaldo (5 obligatorios *, 1 opcional)"
                     aside={`${[guiaRemisionFruta, guiaTransportista, reporteRecepcionPlanta, ticketBalanza, guiaSalidaFirmada, actaDescarte].filter(Boolean).length} de 6 adjuntos`}
                 >
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -147,7 +177,10 @@ export default function LogisticsDocumentsClosureModal({
                             label="1. Guía de remisión de fruta (SUNAT)"
                             required
                             file={guiaRemisionFruta}
-                            onChange={(f) => setGuiaRemisionFruta(f)}
+                            onChange={(f) => {
+                                setGuiaRemisionFruta(f);
+                                setValidationError("");
+                            }}
                             variant="horizontal"
                             replaceable
                         />
@@ -155,7 +188,10 @@ export default function LogisticsDocumentsClosureModal({
                             label="2. Guía de remisión del transportista"
                             required
                             file={guiaTransportista}
-                            onChange={(f) => setGuiaTransportista(f)}
+                            onChange={(f) => {
+                                setGuiaTransportista(f);
+                                setValidationError("");
+                            }}
                             variant="horizontal"
                             replaceable
                         />
@@ -163,7 +199,10 @@ export default function LogisticsDocumentsClosureModal({
                             label="3. Reporte de recepción en planta"
                             required
                             file={reporteRecepcionPlanta}
-                            onChange={(f) => setReporteRecepcionPlanta(f)}
+                            onChange={(f) => {
+                                setReporteRecepcionPlanta(f);
+                                setValidationError("");
+                            }}
                             variant="horizontal"
                             replaceable
                         />
@@ -171,7 +210,10 @@ export default function LogisticsDocumentsClosureModal({
                             label="4. Ticket de balanza"
                             required
                             file={ticketBalanza}
-                            onChange={(f) => setTicketBalanza(f)}
+                            onChange={(f) => {
+                                setTicketBalanza(f);
+                                setValidationError("");
+                            }}
                             variant="horizontal"
                             replaceable
                         />
@@ -179,7 +221,10 @@ export default function LogisticsDocumentsClosureModal({
                             label="5. Guía de salida firmada (envases)"
                             required
                             file={guiaSalidaFirmada}
-                            onChange={(f) => setGuiaSalidaFirmada(f)}
+                            onChange={(f) => {
+                                setGuiaSalidaFirmada(f);
+                                setValidationError("");
+                            }}
                             variant="horizontal"
                             replaceable
                         />

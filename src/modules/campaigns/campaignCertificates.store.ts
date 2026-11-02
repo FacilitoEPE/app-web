@@ -40,7 +40,7 @@ export interface CertificadoArchivos {
     cotizacion: File | null;
 }
 
-function toLocal(id: number, values: CertificadoCampanaFormValues, productores: ProductorCubierto[], archivos: CertificadoArchivos) {
+function toLocal(id: number, values: CertificadoCampanaFormValues, productores: ProductorCubierto[], archivos: Pick<CertificadoCampanaLocal, 'documento' | 'cotizacion'>) {
     return {
         id,
         tipo: values.tipo,

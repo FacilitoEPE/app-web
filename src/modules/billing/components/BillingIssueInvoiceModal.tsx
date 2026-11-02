@@ -46,6 +46,12 @@ export default function BillingIssueInvoiceModal({
     const [fechaVencimiento, setFechaVencimiento] = useState("");
     const [archivoFacturaEmitida, setArchivoFacturaEmitida] = useState<FileSource | null>(null);
     const [observaciones, setObservaciones] = useState("");
+    const [errors, setErrors] = useState<{
+        numero?: string;
+        fechaEmision?: string;
+        fechaVencimiento?: string;
+        archivo?: string;
+    }>({});
 
     useResetOnToggle(open, () => {
         if (!invoice || !open) return;
@@ -54,15 +60,34 @@ export default function BillingIssueInvoiceModal({
         setFechaVencimiento(invoice.fechaVencimiento);
         setArchivoFacturaEmitida(invoice.archivoFacturaEmitida);
         setObservaciones(invoice.observaciones);
+        setErrors({});
     });
 
     if (!client || !load || !invoice) return null;
 
-    const symbol = invoice.moneda === "EUR" ? "€" : invoice.moneda === "USD" ? "US$" : "S/";
+    const symbol = invoice.moneda === "USD" ? "US$" : "S/";
 
-    const handleSubmit = () => {
-        onIssue(client.id, load.id, invoice.id, {
-            numeroFacturaElectronica: numeroFacturaElectronica.trim() || "",
+    const handleSubmit = async () => {
+        const nextErrors: typeof errors = {};
+        if (!numeroFacturaElectronica.trim()) {
+            nextErrors.numero = "Ingresa el número de la factura electrónica.";
+        }
+        if (!fechaEmision) {
+            nextErrors.fechaEmision = "Ingresa la fecha de emisión.";
+        }
+        if (!fechaVencimiento) {
+            nextErrors.fechaVencimiento = "Ingresa la fecha de vencimiento.";
+        } else if (fechaEmision && fechaVencimiento < fechaEmision) {
+            nextErrors.fechaVencimiento = "El vencimiento no puede ser anterior a la emisión.";
+        }
+        if (!archivoFacturaEmitida) {
+            nextErrors.archivo = "Adjunta el archivo de la factura electrónica emitida.";
+        }
+        setErrors(nextErrors);
+        if (Object.keys(nextErrors).length > 0) return;
+
+        await onIssue(client.id, load.id, invoice.id, {
+            numeroFacturaElectronica: numeroFacturaElectronica.trim(),
             fechaEmision,
             fechaVencimiento,
             archivoFacturaEmitida,
@@ -111,7 +136,11 @@ export default function BillingIssueInvoiceModal({
                             required
                             placeholder="Ej. F001-000490"
                             value={numeroFacturaElectronica}
-                            onChange={setNumeroFacturaElectronica}
+                            error={errors.numero}
+                            onChange={(v) => {
+                                setNumeroFacturaElectronica(v);
+                                setErrors((curr) => ({ ...curr, numero: undefined }));
+                            }}
                         />
                         <InputField
                             id="iss-emision"
@@ -119,7 +148,11 @@ export default function BillingIssueInvoiceModal({
                             label="Fecha de emisión"
                             required
                             value={fechaEmision}
-                            onChange={setFechaEmision}
+                            error={errors.fechaEmision}
+                            onChange={(v) => {
+                                setFechaEmision(v);
+                                setErrors((curr) => ({ ...curr, fechaEmision: undefined }));
+                            }}
                         />
                         <InputField
                             id="iss-venc"
@@ -127,17 +160,26 @@ export default function BillingIssueInvoiceModal({
                             label="Fecha de vencimiento"
                             required
                             value={fechaVencimiento}
-                            onChange={setFechaVencimiento}
+                            error={errors.fechaVencimiento}
+                            onChange={(v) => {
+                                setFechaVencimiento(v);
+                                setErrors((curr) => ({ ...curr, fechaVencimiento: undefined }));
+                            }}
                         />
                         <div className="sm:col-span-3">
-                            <FileDropzone
-                                label="Factura electrónica emitida (PDF / XML)"
-                                required
-                                file={archivoFacturaEmitida}
-                                onChange={(f) => setArchivoFacturaEmitida(f)}
-                                variant="horizontal"
-                                replaceable
-                            />
+                            <FormField error={errors.archivo}>
+                                <FileDropzone
+                                    label="Factura electrónica emitida (PDF / XML)"
+                                    required
+                                    file={archivoFacturaEmitida}
+                                    onChange={(f) => {
+                                        setArchivoFacturaEmitida(f);
+                                        setErrors((curr) => ({ ...curr, archivo: undefined }));
+                                    }}
+                                    variant="horizontal"
+                                    replaceable
+                                />
+                            </FormField>
                         </div>
                         <FormField
                             id="iss-obs"

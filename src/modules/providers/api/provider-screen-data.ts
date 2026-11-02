@@ -9,10 +9,11 @@ export function projectProviderData(g: OperationsContext) {
     for (const provider of g.providers) {
         const id = provider.proveedorId;
         fincas[id] = g.farms.filter(row => row.proveedorId === id).map(row => {
-            const variety = g.varieties.find(v => v.frutaDerivadaId === row.frutaDerivadaId), fruit = g.fruits.find(f => f.frutaId === variety?.frutaId);
-            return { fincaId: row.fincaId, nombre: row.nombreFinca, codigoSenasa: row.codigoLugarProduccion ?? '', codigoCatastral: row.codigoCatastral ?? '', departamento: row.departamento, provincia: row.provincia, distrito: row.distrito, latitud: row.latitud, longitud: row.longitud, haTotal: row.haTotalFinca, haCultivo: row.haCultivo, edadCultivo: row.edadCultivoAnios, cultivos: fruit && variety ? [{ fruta: fruit.name, variedades: [variety.name] }] : [] };
+            const ids = row.frutaDerivadaId ? [row.frutaDerivadaId] : [];
+            const cultivos = g.fruits.map(fruit => ({ fruta: fruit.name, variedades: g.varieties.filter(v => v.frutaId === fruit.frutaId && ids.includes(v.frutaDerivadaId)).map(v => v.name) })).filter(c => c.variedades.length > 0);
+            return { fincaId: row.fincaId, nombre: row.nombreFinca, codigoSenasa: row.codigoLugarProduccion ?? '', codigoCatastral: row.codigoCatastral ?? '', departamento: row.departamento, provincia: row.provincia, distrito: row.distrito, latitud: row.latitud, longitud: row.longitud, haTotal: row.haTotalFinca, haCultivo: row.haCultivo, edadCultivo: row.edadCultivoAnios, cultivos };
         });
-        certificados[id] = g.providerCertificates.filter(row => row.proveedorId === id).map(row => ({ certificadoId: row.certificadoProveedorId, nombre: row.nombre, fechaRevisionSenasa: row.fechaRevisionSenasa, documento: null }));
+        certificados[id] = g.providerCertificates.filter(row => row.proveedorId === id).map(row => { const file = g.localDocuments?.find(item => item.tipo === 'certificado_proveedor' && item.entidadId === row.certificadoProveedorId); return { certificadoId: row.certificadoProveedorId, nombre: row.nombre, fechaRevisionSenasa: row.fechaRevisionSenasa, documento: file ? { url: file.url, name: file.name, type: file.type, size: file.size } : null }; });
         produccion[id] = { estadoSanidad: provider.estadoExamenSanidadAgraria ?? '', frutas: g.providerFruits.filter(row => row.proveedorId === id).map(link => ({ nombre: g.fruits.find(f => f.frutaId === link.frutaId)?.name ?? '', variedades: g.providerVarieties.filter(row => row.proveedorId === id).flatMap(row => { const v = g.varieties.find(v => v.frutaDerivadaId === row.frutaDerivadaId && v.frutaId === link.frutaId); return v ? [v.name] : []; }) })) };
     }
     return { fincas, certificados, produccion };

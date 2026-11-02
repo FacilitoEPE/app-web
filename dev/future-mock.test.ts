@@ -19,9 +19,11 @@ const root = path.resolve(import.meta.dirname, '..')
 let server: Server
 let base: string | undefined
 let origin: string
+let now: Date
 
 beforeEach(async () => {
-  const middleware = createFutureMockMiddleware(root)
+  now = new Date('2026-11-01T12:00:00Z')
+  const middleware = createFutureMockMiddleware(root, () => now)
   server = createServer((request,response) => middleware(request,response,() => {
     response.statusCode = 418
     response.end('outside v1')
@@ -37,6 +39,20 @@ afterEach(async () => {
 })
 
 describe('future API contract', () => {
+  it('calcula el estado por fecha de Lima al crear, editar y consultar', async () => {
+    const created = await campanaV1.create({ nombre:'Prueba', frutaId:4, fechaInicio:'2026-11-02', fechaFin:'2026-11-03', requerimientoComercial:100 })
+    expect(created.estado).toBe('planificacion')
+    now = new Date('2026-11-02T04:59:59Z')
+    expect((await campanaV1.get(created.campaniaId)).estado).toBe('planificacion')
+    now = new Date('2026-11-02T05:00:00Z')
+    expect((await campanaV1.get(created.campaniaId)).estado).toBe('en proceso')
+    expect((await campanaV1.update(created.campaniaId, { fechaInicio:'2026-11-04', fechaFin:'2026-11-05' })).estado).toBe('planificacion')
+    now = new Date('2026-11-06T05:00:00Z')
+    expect((await campanaV1.get(created.campaniaId)).estado).toBe('terminado')
+    now = new Date('2026-11-01T12:00:00Z')
+    expect((await campanaV1.get(created.campaniaId)).estado).toBe('terminado')
+  })
+
   it('serves every documented collection with a response that matches OpenAPI', async () => {
     const { contract,database } = loadFutureContract(root)
     for (const [template,item] of Object.entries(contract.paths)) {
@@ -44,7 +60,7 @@ describe('future API contract', () => {
       if (!resource) continue
       const parentId = resource.parentTable ? database[resource.parentTable][0]?.[contract['x-database'][resource.parentTable].id] ?? 1 : 1
       const route = template.replace('{parentId}',String(parentId))
-      const { data } = await apiClient.get(`/v1${route}`)
+      const { data } = await apiClient.get(`/api${route}`)
       expect(validateFutureSchema(contract,item.get!.responses['200'].content!['application/json'].schema,data),route).toEqual({})
     }
   })
@@ -62,9 +78,9 @@ describe('future API contract', () => {
   it('preserves textual documents and leading zeros, rejects unknown fields and incorrect types', async () => {
     expect((await proveedorV1.get(1)).nmrDocumento).toBe('04000001')
     await expect(proveedorV1.update(1,{ telefono:'090012345' })).resolves.toMatchObject({ telefono:'090012345' })
-    await expect(apiClient.patch('/v1/proveedores/1',{ telefono:90012345 })).rejects.toMatchObject({ statusCode:422,fieldErrors:{ telefono:expect.any(String) } })
-    await expect(apiClient.patch('/v1/proveedores/1',{ proveedorId:999 })).rejects.toMatchObject({ statusCode:422 })
-    await expect(apiClient.patch('/v1/proveedores/1',{ documentoArchivoId:999 })).rejects.toMatchObject({ statusCode:422 })
+    await expect(apiClient.patch('/api/proveedores/1',{ telefono:90012345 })).rejects.toMatchObject({ statusCode:422,fieldErrors:{ telefono:expect.any(String) } })
+    await expect(apiClient.patch('/api/proveedores/1',{ proveedorId:999 })).rejects.toMatchObject({ statusCode:422 })
+    await expect(apiClient.patch('/api/proveedores/1',{ documentoArchivoId:999 })).rejects.toMatchObject({ statusCode:422 })
     await expect(campanaV1.update(1,{ fechaFin:'2026-02-30' })).rejects.toMatchObject({ statusCode:422 })
   })
 
@@ -73,7 +89,7 @@ describe('future API contract', () => {
     const created = await clienteNegocioCampanaV1(1).create({ clienteNegocioId:1,fechaRegistro:'2026-10-29',kilosAcordados:200 })
     expect(created.clienteNegocioCampanaId).toBeGreaterThan(2)
     await expect(campaniaXProveedoresV1(1).create({ proveedorId:1,cantidadProveedor:100,tipoProveedor:'productor' })).rejects.toMatchObject({ code:'DUPLICATE' })
-    await expect(apiClient.patch('/v1/campanas/1/proveedores/1',{ fincaId:1 })).rejects.toMatchObject({ statusCode:422 })
+    await expect(apiClient.patch('/api/campanas/1/proveedores/1',{ fincaId:1 })).rejects.toMatchObject({ statusCode:422 })
   })
 
   it('returns scoped 404 and rejects invalid references without corrupting the existing record', async () => {
@@ -93,13 +109,14 @@ describe('future API contract', () => {
     await expect(acuerdoTransporteV1(1).update(2,{ estado:'CONFIRMADO' })).rejects.toMatchObject({ code:'AGREEMENT_INCOMPLETE' })
   })
 
-  it('enforces one active campaign per fruit and PEN for purchase/transport', async () => {
+  it('enforces one active campaign per fruit and PEN or USD for purchase/transport', async () => {
     await expect(campanaV1.create({ nombre:'Otra Mango',frutaId:1,fechaInicio:'2026-10-29',fechaFin:'2026-12-31',requerimientoComercial:100 })).rejects.toMatchObject({ code:'ACTIVE_CAMPAIGN_EXISTS' })
-    await expect(acuerdoTransporteV1(1).update(2,{ moneda:'USD' })).rejects.toMatchObject({ code:'PEN_REQUIRED' })
+    await expect(acuerdoTransporteV1(1).update(2,{ moneda:'USD' })).resolves.toMatchObject({ moneda:'USD' })
+    await expect(acuerdoTransporteV1(1).update(2,{ moneda:'EUR' as 'PEN' })).rejects.toMatchObject({ code:'INVALID_CURRENCY' })
   })
 
   it('allows consecutive trips and rejects overlapping driver intervals', async () => {
-    const endpoint='/v1/entregas/2/coordinaciones/2'
+    const endpoint='/api/entregas/2/coordinaciones/2'
     await expect(apiClient.patch(endpoint,{ inicioProgramado:'2026-10-29T14:00:00Z',finProgramado:'2026-10-29T16:00:00Z' })).rejects.toMatchObject({ code:'DRIVER_OVERLAP' })
     const result = await apiClient.patch(endpoint,{ inicioProgramado:'2026-10-29T15:00:00Z',finProgramado:'2026-10-29T17:00:00Z' })
     expect(result.data.inicioProgramado).toBe('2026-10-29T15:00:00Z')
@@ -111,7 +128,7 @@ describe('future API contract', () => {
     expect(document.importeCompra).toBe(1160)
     await proveedorV1.update(1,{ nombres:'Nombre nuevo' })
     expect((await liquidacionProveedorV1(1).get(1)).personaSnapshot.nombres).toBe('José Luis')
-    await expect(apiClient.patch('/v1/cargas/1/recepciones/1',{ compras:[{ providerId:1,recognizedQuantity:9999 }] })).rejects.toMatchObject({ code:'RECEIPT_HAS_SETTLEMENTS' })
+    await expect(apiClient.patch('/api/cargas/1/recepciones/1',{ compras:[{ providerId:1,recognizedQuantity:9999 }] })).rejects.toMatchObject({ code:'RECEIPT_HAS_SETTLEMENTS' })
   })
 
   it('prevents overpayments, protects documents, and serializes concurrent balance consumption', async () => {
@@ -124,8 +141,8 @@ describe('future API contract', () => {
     expect((await pagoProveedorV1(1).list()).total).toBe(2)
     await expect(liquidacionProveedorV1(1).remove(1)).rejects.toMatchObject({ code:'DOCUMENT_HAS_MOVEMENTS' })
     await expect(aplicacionAdelantoV1(1).create({ adelantoTransporteId:1,fecha:'2026-10-29',monto:101 })).rejects.toMatchObject({ code:'DUPLICATE' })
-    const load = await apiClient.post('/v1/coordinaciones/2/cargas',{ codigo:'CAR-2',fechaCarga:'2026-10-30',anotadorNombre:'Ana' })
-    const settlement = await apiClient.post(`/v1/cargas/${load.data.cargaId}/liquidaciones-transporte`,{ numero:'LT-2',fecha:'2026-10-30' })
+    const load = await apiClient.post('/api/coordinaciones/2/cargas',{ codigo:'CAR-2',fechaCarga:'2026-10-30',anotadorNombre:'Ana' })
+    const settlement = await apiClient.post(`/api/cargas/${load.data.cargaId}/liquidaciones-transporte`,{ numero:'LT-2',fecha:'2026-10-30' })
     await expect(aplicacionAdelantoV1(settlement.data.liquidacionTransporteId).create({ adelantoTransporteId:1,fecha:'2026-10-30',monto:101 })).rejects.toMatchObject({ code:'ADVANCE_UNAVAILABLE' })
   })
 
@@ -144,26 +161,26 @@ describe('future API contract', () => {
     const guide = await emitirGuiaV1(1)
     expect(guide.emitidaAt).toBeTruthy()
     expect(guide.contenido.standardCodes).toEqual(['NOP'])
-    await expect(apiClient.patch('/v1/guias/1/proveedores/1',{ kilosAsignados:1 })).rejects.toMatchObject({ code:'GUIDE_IMMUTABLE' })
+    await expect(apiClient.patch('/api/guias/1/proveedores/1',{ kilosAsignados:1 })).rejects.toMatchObject({ code:'GUIDE_IMMUTABLE' })
     await expect(cerrarCampanaV1(1,'Fin de temporada')).rejects.toMatchObject({ code:'CAMPAIGN_PENDING' })
     expect((await campanaV1.get(1)).estado).toBe('en proceso')
   })
 
   it('keeps V1 separate from unversioned services and never returns HTML for errors', async () => {
     expect((await fetch(`${origin}/mock-api/campanas`)).status).toBe(418)
-    const missing = await fetch(`${origin}/mock-api/v1/no-existe`)
+    const missing = await fetch(`${origin}/mock-api/api/no-existe`)
     expect(missing.status).toBe(404)
     expect(missing.headers.get('cache-control')).toBe('no-store')
     expect(await missing.json()).toMatchObject({ code:'ROUTE_NOT_FOUND',fieldErrors:{} })
-    const malformed = await fetch(`${origin}/mock-api/v1/personas`,{ method:'POST',body:'{' })
+    const malformed = await fetch(`${origin}/mock-api/api/personas`,{ method:'POST',body:'{' })
     expect(malformed.status).toBe(400)
-    await expect(apiClient.patch('/v1/roles/1',{ nombre:'Otro' })).rejects.toMatchObject({ statusCode:405 })
+    await expect(apiClient.patch('/api/roles/1',{ nombre:'Otro' })).rejects.toMatchObject({ statusCode:405 })
   })
 
   it('provides a driver entry point without trusting a client driver selector and prevents stage skipping', async () => {
     expect((await cargasAsignadasV1.list()).items[0].cargaId).toBe(1)
     await expect(cargasAsignadasV1.list({ driverId:999 })).rejects.toMatchObject({ code:'INVALID_QUERY' })
-    await expect(apiClient.post('/v1/coordinaciones/1/historial-chofer',{ estado:'LLEGADA' })).rejects.toMatchObject({ code:'INVALID_DRIVER_STAGE' })
+    await expect(apiClient.post('/api/coordinaciones/1/historial-chofer',{ estado:'LLEGADA' })).rejects.toMatchObject({ code:'INVALID_DRIVER_STAGE' })
   })
 
   it('requires an in-progress campaign and preserves a closed campaign as read-only', async () => {

@@ -1,11 +1,13 @@
-/** Certificado propio del proveedor, tal como se guarda localmente mientras no haya servicio en el backend. */
+import type { FileSource } from '@/shared/utils/fileSource';
+
+/** Certificado propio del proveedor. */
 export interface CertificadoLocal {
     certificadoId: number;
     nombre: string;
     /** yyyy-MM-dd */
     fechaRevisionSenasa: string;
     /** Archivo elegido; se conserva en memoria igual que el resto de los datos */
-    documento: File | null;
+    documento: FileSource | null;
 }
 
 export interface CertificadoFormValues {

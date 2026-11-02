@@ -59,8 +59,10 @@ interface CarriersQuotationsSubViewProps {
     carriers: Carrier[];
 }
 
+const currencySymbol = (moneda?: "PEN" | "USD") => (moneda === "USD" ? "US$" : "S/");
+
 export default function CarriersQuotationsSubView({ carriers }: CarriersQuotationsSubViewProps) {
-    const navigate=useNavigate();
+    const navigate = useNavigate();
     const quotations = useCarrierQuotations();
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -77,6 +79,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
         item: CarrierRequirementQuotation | null;
         estado: CarrierQuotationStatus;
         monto: string;
+        moneda: "PEN" | "USD";
         archivo: FileSource | null;
         observaciones: string;
     }>({
@@ -84,6 +87,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
         item: null,
         estado: "Recibida",
         monto: "",
+        moneda: "PEN",
         archivo: null,
         observaciones: "",
     });
@@ -122,13 +126,17 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
             item,
             estado: "Recibida",
             monto: item.montoCotizadoPen != null ? String(item.montoCotizadoPen) : "",
+            moneda: item.moneda ?? "PEN",
             archivo: item.documentoCotizacion,
             observaciones: item.observaciones,
         });
     };
 
     const openAssignModalFor = (item: CarrierRequirementQuotation) => {
-        if(usesV1()){navigate(`/campaigns/${item.campaniaId}/deliveries`);return;}
+        if (usesV1()) {
+            navigate(`/campaigns/${item.campaniaId}/deliveries`);
+            return;
+        }
         const carrierObj = carriers.find((c) => c.id === item.carrierId) ?? carriers[0];
         const defaultPlate = item.vehiculoAsignadoPlaca || carrierObj?.vehiculos[0]?.placa || "B8T-914";
         const defaultDriver = item.choferAsignadoNombre || carrierObj?.choferes[0]?.nombre || "Carlos Alberto Mendoza Ríos";
@@ -172,7 +180,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
             "Campaña",
             "Cantidad est. (kg)",
             "Fecha límite",
-            "Cotización (S/)",
+            "Cotización",
             "Unidad / Chofer",
             "Estado",
         ],
@@ -182,7 +190,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
             r.campaniaNombre,
             String(r.cantidadEstimadaKg),
             formatDisplayDate(r.fechaLimiteCotizacion),
-            r.montoCotizadoPen != null ? String(r.montoCotizadoPen) : "En espera",
+            r.montoCotizadoPen != null ? `${currencySymbol(r.moneda)} ${formatMoney(r.montoCotizadoPen)}` : "En espera",
             r.vehiculoAsignadoPlaca ? `${r.vehiculoAsignadoPlaca} · ${r.choferAsignadoNombre}` : "Sin asignar",
             r.estado,
         ]),
@@ -270,7 +278,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                                             label="Cotización"
                                             value={
                                                 item.montoCotizadoPen != null
-                                                    ? `S/ ${formatMoney(item.montoCotizadoPen)}`
+                                                    ? `${currencySymbol(item.moneda)} ${formatMoney(item.montoCotizadoPen)}`
                                                     : "Pendiente"
                                             }
                                         />
@@ -343,7 +351,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                                             {item.montoCotizadoPen != null ? (
                                                 <div className="flex flex-col">
                                                     <span className="text-[13.5px] font-extrabold text-brand">
-                                                        S/ {formatMoney(item.montoCotizadoPen)}
+                                                        {currencySymbol(item.moneda)} {formatMoney(item.montoCotizadoPen)}
                                                     </span>
                                                     <span className="text-[11px] text-ink-muted">
                                                         {item.vehiculoAsignadoPlaca
@@ -397,7 +405,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                                         openAssignModalFor(current);
                                     }}
                                 >
-                                    <UserCheck size={18} /> Asignar camión y chofer
+                                    <UserCheck size={18} /> {usesV1() ? "Coordinar entregas" : "Asignar camión y chofer"}
                                 </Button>
                                 <Button
                                     size="xl"
@@ -431,7 +439,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                                     label: "Tarifa cotizada",
                                     value:
                                         detailModal.item.montoCotizadoPen != null
-                                            ? `S/ ${formatMoney(detailModal.item.montoCotizadoPen)}`
+                                            ? `${currencySymbol(detailModal.item.moneda)} ${formatMoney(detailModal.item.montoCotizadoPen)}`
                                             : "En espera",
                                     tone: "brand",
                                 },
@@ -528,6 +536,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                                         responseModal.estado === "Recibida"
                                             ? Number(responseModal.monto) || 0
                                             : null,
+                                    moneda: responseModal.moneda,
                                     documentoCotizacion: responseModal.archivo,
                                     observaciones: responseModal.observaciones,
                                 });
@@ -540,7 +549,7 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                 }
             >
                 <div className="flex flex-col gap-5">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <FormField label="Estado de la cotización" required>
                             <Select
                                 value={responseModal.estado}
@@ -561,10 +570,31 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                             </Select>
                         </FormField>
 
+                        <FormField label="Moneda" required>
+                            <Select
+                                value={responseModal.moneda}
+                                onValueChange={(v) =>
+                                    setResponseModal((current) => ({
+                                        ...current,
+                                        moneda: (v === "USD" ? "USD" : "PEN"),
+                                    }))
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="PEN">PEN · Soles (S/)</SelectItem>
+                                    <SelectItem value="USD">USD · Dólares (US$)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </FormField>
+
                         <InputField
                             id="quot-tarifa"
-                            label="Tarifa cotizada por viaje (S/)"
+                            label={`Tarifa cotizada por viaje (${currencySymbol(responseModal.moneda)})`}
                             type="number"
+                            required
                             value={responseModal.monto}
                             onChange={(v) => setResponseModal((current) => ({ ...current, monto: v }))}
                         />

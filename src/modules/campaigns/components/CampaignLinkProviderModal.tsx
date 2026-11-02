@@ -355,6 +355,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     {renderField({ field: "precioEstimado", label: "Precio estimado o acordado", step: "0.01", placeholder: "0.00", leading: currencySymbol })}
+<<<<<<< HEAD
                     <FormField id="link-provider-moneda" label="Moneda" required>
                         <Select items={usesV1() ? MONEDA_OPTIONS.filter(option => option.value === "PEN") : MONEDA_OPTIONS}
                             value={draft.moneda || null} onValueChange={value => updateDraft("moneda", value ?? "")} disabled={isLocked}>
@@ -367,6 +368,16 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                                 ))}
                             </SelectContent>
                         </Select>
+=======
+                    <FormField label="Moneda" required>
+                        <Combobox
+                            options={MONEDA_OPTIONS.filter(o => o.value === "PEN" || o.value === "USD")}
+                            value={draft.moneda}
+                            onChange={(value) => updateDraft("moneda", value)}
+                            disabled={isLocked}
+                            placeholder="Seleccionar moneda"
+                        />
+>>>>>>> e0912f885278a1780aadab2fa605b15095325f55
                     </FormField>
                 </div>
 

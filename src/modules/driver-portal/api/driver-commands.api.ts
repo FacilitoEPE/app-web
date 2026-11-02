@@ -1,10 +1,11 @@
 import { historialChoferV1 } from '@/modules/driver-portal/api/future.api';
 import { operationsContext } from '@/modules/operations/api/operations-context.api';
 import { loadContext } from '@/modules/operations/api/operation-links';
-import { commitRemote } from '@/shared/api/data-contract';
-import { jsonData, assertNoNewFiles } from '@/shared/api/document-state';
+import { commitRemote, requireId } from '@/shared/api/data-contract';
+import { jsonData } from '@/shared/api/document-state';
+import { persistFile } from '@/shared/api/uploadDocument';
 import { writeReceipt } from '@/modules/logistics/api/logistics-commands.api';
-import { writeLoad } from '@/modules/quality/api/quality-commands.api';
+import { apiClient } from '@/shared/api/client';
 import type { DriverArrivalChecklist, DriverVehicleExitGuide, DriverProviderLoadDetail } from '@/modules/driver-portal/driverPortal.models';
 export const driverCommands = {
     advance: (id: string, note?: string) => commitRemote(async () => {
@@ -21,10 +22,10 @@ export const driverCommands = {
         const c = loadContext(id), old = operationsContext().receipts.find(r => r.cargaId === c.load.cargaId);
         return writeReceipt(id, { checklist: { ...old?.checklist, llegada: jsonData({ ...value, registrado: true }) } });
     }),
-    exit: (id: string, value: DriverVehicleExitGuide) => commitRemote(() => {
-        assertNoNewFiles(value.archivo);
+    exit: (id: string, value: DriverVehicleExitGuide) => commitRemote(async () => {
+        const archivo = await persistFile(value.archivo);
         const c = loadContext(id), old = operationsContext().receipts.find(r => r.cargaId === c.load.cargaId);
-        return writeReceipt(id, { checklist: { ...old?.checklist, guiaSalida: jsonData({ ...value, archivo: null }) } });
+        return writeReceipt(id, { checklist: { ...old?.checklist, guiaSalida: jsonData({ ...value, archivo }) } });
     }),
     load: (id: string, value: {
         fechaCarga: string;
@@ -35,5 +36,5 @@ export const driverCommands = {
         gastoAnotadores: number;
         observacionesCarga: string;
         proveedores: DriverProviderLoadDetail[];
-    }) => commitRemote(() => writeLoad(id, { ...value, fechaCargaReal: value.fechaCarga, proveedoresCarga: value.proveedores.map(p => ({ ...p, rol: p.tipo, tipoFruta: 'Convencional' as const })) })),
+    }) => commitRemote(async () => { await apiClient.patch(`/api/chofer/cargas/${requireId(id)}/datos`, value); }),
 };

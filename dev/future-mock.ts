@@ -23,10 +23,13 @@ async function readJson(request: IncomingMessage): Promise<unknown> {
 }
 
 /** Contract-driven V1 mock. Auth/storage/PostgreSQL remain responsibilities of the real backend. */
-export function createFutureMockMiddleware(root: string): Connect.NextHandleFunction {
+export function createFutureMockMiddleware(root: string, clock: () => Date = () => new Date()): Connect.NextHandleFunction {
   const loaded = loadFutureContract(root)
   const contract = loaded.contract
   let db = loaded.database
+  let nextLocalFileId = 1
+  const localFiles = new Map<number, { id: number; url: string; name: string; type: string; size: number }>()
+  let localLinks: Array<{ tipo: string; entidadId: number; id: number; url: string; name: string; type: string; size: number }> = []
   const meta = contract['x-database']
   const nextIds = Object.fromEntries(Object.entries(meta).map(([table, def]) => [table, Math.max(0, ...db[table].map(row => Number(row[def.id]))) + 1]))
   const find = (table: string, id: unknown): Row => {
@@ -51,6 +54,13 @@ export function createFutureMockMiddleware(root: string): Connect.NextHandleFunc
     }
   }
   const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+  const campaignStatus = (row: Row) => {
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Lima', year:'numeric', month:'2-digit', day:'2-digit' }).format(clock())
+    return today < String(row.fechaInicio).slice(0,10) ? 'planificacion' : today > String(row.fechaFin).slice(0,10) ? 'terminado' : 'en proceso'
+  }
+  const refreshCampaignStatuses = () => {
+    for (const row of db.campana) if (row.estado !== 'terminado') row.estado = campaignStatus(row)
+  }
 
   function references(table: string, row: Row) {
     for (const ref of meta[table].references) {
@@ -98,6 +108,7 @@ export function createFutureMockMiddleware(root: string): Connect.NextHandleFunc
   }
 
   function compute(table: string, row: Row, current?: Row) {
+    if (table === 'campana') row.estado = campaignStatus(row)
     if (table === 'recepcion_planta') row.idChoferTransporteExterno = coordination(row.cargaId).idChoferTransporteExterno
     if (table === 'historial_chofer') {
       row.idChoferTransporteExterno = find('coordinacion_entrega',row.coordinacionEntregaId).idChoferTransporteExterno
@@ -154,7 +165,8 @@ export function createFutureMockMiddleware(root: string): Connect.NextHandleFunc
     for (const [start,end] of [['fechaInicio','fechaFin'],['disponibilidadDesde','disponibilidadHasta'],['entregaDesde','entregaHasta'],['vigenciaDesde','fechaVencimiento'],['fechaEmision','fechaVencimiento'],['descargaInicioAt','descargaFinAt']]) {
       if (row[start] && row[end] && Date.parse(String(row[end])) < Date.parse(String(row[start]))) fail('INVALID_DATE_RANGE','La fecha final es anterior a la inicial.',end)
     }
-    if (['campania_x_proveedores','acuerdo_transporte','liquidacion_proveedor','liquidacion_transporte'].includes(table) && row.moneda !== 'PEN') fail('PEN_REQUIRED','Compra y transporte operan en PEN.','moneda')
+    if (['campania_x_proveedores','acuerdo_transporte','liquidacion_proveedor','liquidacion_transporte','cotizacion_transporte','contrato_venta','factura_venta'].includes(table) && !['PEN', 'USD'].includes(String(row.moneda))) fail('INVALID_CURRENCY','Selecciona soles o dólares.','moneda')
+    if (table === 'certificado_campana' && row.moneda != null && !['PEN', 'USD'].includes(String(row.moneda))) fail('INVALID_CURRENCY','Selecciona soles o dólares.','moneda')
     if (table === 'campana' && row.estado !== 'terminado' && db.campana.some(item => item.campaniaId !== row.campaniaId && item.frutaId === row.frutaId && item.estado !== 'terminado')) fail('ACTIVE_CAMPAIGN_EXISTS','La fruta ya tiene una campaña habilitada.')
     if (table === 'campania_x_proveedores' && row.tipoProveedor === 'acopio' && row.frutaConvencionalEstimado != null) fail('PRODUCER_ONLY','La estimación convencional corresponde solo a productores.')
     if (table === 'finca') {
@@ -302,7 +314,39 @@ export function createFutureMockMiddleware(root: string): Connect.NextHandleFunc
   const resourceFor = (template: string): Resource => contract.paths[template.replace(/\/\{id\}$/,'')]['x-resource']!
 
   async function handle(request: IncomingMessage, url: URL) {
-    const pathname = url.pathname.slice('/mock-api/v1'.length) || '/'
+    refreshCampaignStatuses()
+    const pathname = url.pathname.slice('/mock-api/api'.length) || '/'
+    if (pathname === '/archivos-locales' && request.method === 'POST') {
+      for await (const chunk of request) void chunk
+      const id = nextLocalFileId++
+      const file = { id, url: `/api/archivos-locales/${id}/contenido`, name: `documento-${id}.pdf`, type: 'application/pdf', size: 128 }
+      localFiles.set(id, file)
+      return { status: 201, data: file }
+    }
+    if (pathname === '/archivos-locales/vinculos' && request.method === 'GET') return { status: 200, data: localLinks }
+    if (pathname === '/archivos-locales/vinculos' && request.method === 'POST') {
+      const body = await readJson(request) as { tipo: string; entidadId: number; archivoId: number }
+      const file = localFiles.get(Number(body.archivoId)) ?? { id: Number(body.archivoId), url: `/api/archivos-locales/${body.archivoId}/contenido`, name: 'documento.pdf', type: 'application/pdf', size: 128 }
+      localLinks = localLinks.filter(item => !(item.tipo === body.tipo && item.entidadId === Number(body.entidadId)))
+      localLinks.push({ tipo: body.tipo, entidadId: Number(body.entidadId), ...file })
+      return { status: 201, data: { ok: true } }
+    }
+    if (pathname === '/auth/recuperar-password' && request.method === 'POST') {
+      const body = await readJson(request) as { correo?: string }
+      const correo = String(body?.correo ?? '').trim().toLowerCase()
+      const matched = db.usuario.some(u => u.activo && db.persona.some(p => p.personaId === u.personaId && String(p.correo ?? '').trim().toLowerCase() === correo))
+      if (!correo || !matched) throw new FutureError(404, 'NOT_FOUND', 'No se encontró una cuenta activa asociada a ese correo electrónico.')
+      return { status: 200, data: { message: 'Se envió una contraseña temporal a tu correo electrónico.' } }
+    }
+    const userByIdRoute = /^\/auth\/usuarios\/(\d+)$/.exec(pathname)
+    if (userByIdRoute && request.method === 'GET') {
+      const uid = Number(userByIdRoute[1])
+      const u = db.usuario.find(row => row.usuarioId === uid && row.activo)
+      if (!u) throw new FutureError(404, 'NOT_FOUND', 'Usuario no encontrado')
+      const p = db.persona.find(row => row.personaId === u.personaId)
+      const r = db.rol.find(row => row.rolId === u.rolId)
+      return { status: 200, data: { usuarioId: u.usuarioId, usuario: u.usuario, personaId: u.personaId, nombres: p?.nombres ?? '', apellidos: p?.apellidos ?? '', correo: p?.correo ?? null, rol: { rolId: u.rolId, nombre: r?.nombre ?? '' } } }
+    }
     const route = compiled.find(item => item.pattern.test(pathname))
     if (!route) throw new FutureError(404,'ROUTE_NOT_FOUND','Ruta V1 no documentada.')
     const method = (request.method ?? 'GET').toLowerCase() as 'get'|'post'|'patch'|'delete'
@@ -384,7 +428,7 @@ export function createFutureMockMiddleware(root: string): Connect.NextHandleFunc
   let queue = Promise.resolve()
   return (request,response,next) => {
     const url = new URL(request.url ?? '/','http://mock.local')
-    if (url.pathname !== '/mock-api/v1' && !url.pathname.startsWith('/mock-api/v1/')) return next()
+    if (url.pathname !== '/mock-api/api' && !url.pathname.startsWith('/mock-api/api/')) return next()
     response.setHeader('Content-Type','application/json; charset=utf-8')
     response.setHeader('Cache-Control','no-store')
     response.setHeader('Pragma','no-cache')

@@ -1,10 +1,5 @@
 /**
  * Certificaciones de una campaña: modelo local, validaciones y cálculos de la vista de gestión.
- *
- * TODO(api): el backend solo guarda nombre, documento, recibo, costo, vencimiento y estado de vigencia
- * (`certificado-campana.dto.ts`). El resto (tipo, organismo, periodo, trámite, moneda, kilos, productores,
- * ampliaciones y pagos) todavía no tiene endpoint, así que viven en `campaignCertificates.store.ts`, en
- * memoria. Quien conecte el servicio reemplaza ese almacén; los modelos y reglas de acá se mantienen.
  */
 
 export const CERTIFICATION_TYPES = ["Global GAP", "Orgánico USDA", "Orgánico UE", "Fairtrade", "Rainforest Alliance"];
@@ -19,7 +14,6 @@ export const TRAMITE_OPTIONS = [
 export const MONEDA_OPTIONS = [
     { value: "USD", label: "USD · Dólar", symbol: "$" },
     { value: "PEN", label: "PEN · Sol", symbol: "S/" },
-    { value: "EUR", label: "EUR · Euro", symbol: "€" },
 ];
 
 export const getTramiteLabel = (value: string) => TRAMITE_OPTIONS.find((option) => option.value === value)?.label ?? value;
@@ -27,6 +21,8 @@ export const getTramiteLabel = (value: string) => TRAMITE_OPTIONS.find((option) 
 // ---------------------------------------------------------------------------------------------
 // Registro y edición
 // ---------------------------------------------------------------------------------------------
+
+import type { FileSource } from '@/shared/utils/fileSource';
 
 export interface CertificadoCampanaFormValues {
     tipo: string;
@@ -124,7 +120,7 @@ export interface PagoCertificado {
     /** yyyy-MM-dd */
     fecha: string;
     referencia: string;
-    evidencia: File | null;
+    evidencia: FileSource | null;
 }
 
 export interface CertificadoCampanaLocal {
@@ -140,8 +136,8 @@ export interface CertificadoCampanaLocal {
     kilosIniciales: number;
     productores: ProductorCubierto[];
     observaciones: string;
-    documento: File | null;
-    cotizacion: File | null;
+    documento: FileSource | null;
+    cotizacion: FileSource | null;
     ampliaciones: AmpliacionCertificado[];
     pagos: PagoCertificado[];
 }

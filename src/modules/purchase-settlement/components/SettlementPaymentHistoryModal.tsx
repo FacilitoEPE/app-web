@@ -14,6 +14,7 @@ interface SettlementPaymentHistoryModalProps {
     beneficiaryName: string;
     documentNumber: string;
     totalAmount: number;
+    moneda?: string;
     payments: SettlementPaymentItem[];
     onOpenRegisterPayment: () => void;
 }
@@ -24,9 +25,11 @@ export default function SettlementPaymentHistoryModal({
     beneficiaryName,
     documentNumber,
     totalAmount,
+    moneda,
     payments,
     onOpenRegisterPayment,
 }: SettlementPaymentHistoryModalProps) {
+    const symbol = moneda === 'USD' ? 'US$' : 'S/';
     const totalPagado = payments.reduce((s, p) => s + p.importe, 0);
     const saldoPendiente = Math.max(0, totalAmount - totalPagado);
 
@@ -62,16 +65,16 @@ export default function SettlementPaymentHistoryModal({
                     items={[
                         {
                             label: "Total liquidado",
-                            value: `S/ ${totalAmount.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+                            value: `${symbol} ${totalAmount.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                         },
                         {
                             label: "Total pagado",
-                            value: `S/ ${totalPagado.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+                            value: `${symbol} ${totalPagado.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                             tone: "brand",
                         },
                         {
                             label: "Saldo pendiente",
-                            value: `S/ ${saldoPendiente.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+                            value: `${symbol} ${saldoPendiente.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                             tone: saldoPendiente > 0 ? "highlight" : "brand",
                         },
                     ]}
@@ -99,7 +102,7 @@ export default function SettlementPaymentHistoryModal({
                                             </span>
                                             <div>
                                                 <p className="text-[14px] font-bold text-ink">
-                                                    S/{" "}
+                                                    {symbol}{" "}
                                                     {pay.importe.toLocaleString("es-PE", {
                                                         minimumFractionDigits: 2,
                                                     })}{" "}

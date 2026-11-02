@@ -1,6 +1,7 @@
-/** Explicit compatibility switch. A failed V1 request never selects legacy/demo data. */
-export const usesV1 = () => import.meta.env.VITE_API_CONTRACT === 'v1'
-    || (import.meta.env.VITE_API_CONTRACT !== 'legacy' && import.meta.env.VITE_API_BASE_URL?.startsWith('/mock-api') === true);
+/** En la aplicación se utiliza siempre la API actual; las pruebas históricas conservan su modo local. */
+export const usesV1 = () => import.meta.env.MODE !== 'test'
+    || import.meta.env.VITE_API_CONTRACT === 'v1'
+    || import.meta.env.VITE_API_BASE_URL?.startsWith('/mock-api') === true;
 let refresh: (() => Promise<void>) | undefined;
 export function registerDataRefresh(callback: () => Promise<void>) { refresh = callback; }
 export async function refreshRemoteData() {

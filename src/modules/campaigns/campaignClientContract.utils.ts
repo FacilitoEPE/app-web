@@ -1,8 +1,7 @@
-import { usesV1 } from '@/shared/api/data-contract';
+import type { FileSource } from '@/shared/utils/fileSource';
 export const CONTRACT_CURRENCIES = [
     { value: "USD", label: "USD · Dólar", symbol: "$" },
     { value: "PEN", label: "PEN · Sol", symbol: "S/" },
-    { value: "EUR", label: "EUR · Euro", symbol: "€" },
 ];
 
 export interface CampaignClientContractValues {
@@ -25,7 +24,7 @@ export interface CampaignClientContractLocal {
     condicionesPago: string;
     condicionesEntrega: string;
     observaciones: string;
-    archivo: File | null;
+    archivo: FileSource | null;
 }
 
 export const EMPTY_CAMPAIGN_CLIENT_CONTRACT: CampaignClientContractValues = {
@@ -51,7 +50,7 @@ export function validateCampaignClientContract(values: CampaignClientContractVal
     if (positiveNumber(values.cantidadPropuestaKg, 3) === null) errors.cantidadPropuestaKg = "Ingresa una cantidad mayor que cero.";
     if (!values.condicionesPago.trim()) errors.condicionesPago = "Ingresa las condiciones de pago.";
     if (!values.condicionesEntrega.trim()) errors.condicionesEntrega = "Ingresa las condiciones de entrega.";
-    if (!usesV1() && !archivo && !hasExistingFile) errors.archivo = "Adjunta el contrato.";
+    if (!archivo && !hasExistingFile) errors.archivo = "Adjunta el contrato.";
     return errors;
 }
 
@@ -65,4 +64,3 @@ export function contractToValues(contract: CampaignClientContractLocal): Campaig
         observaciones: contract.observaciones,
     };
 }
-

@@ -1,5 +1,6 @@
 import { usesV1 } from '@/shared/api/data-contract';
 import { formatMoney } from '@/shared/utils/format';
+import { USD_A_SOLES_UIT } from '@/modules/purchase-settlement/settlementUit.utils';
 import { useMemo, useState } from "react";
 import { Scale, ShieldAlert, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -28,11 +29,8 @@ export default function SettlementUitControlModal({
     open,
     onOpenChange,
     loads,
-    tipoCambioUit,
-    onChangeExchangeRate,
 }: SettlementUitControlModalProps) {
     const [search, setSearch] = useState("");
-    const [rateInput, setRateInput] = useState(String(tipoCambioUit));
 
     const personRows = useMemo(() => {
         const byPerson = new Map<
@@ -115,7 +113,7 @@ export default function SettlementUitControlModal({
                         },
                         {
                             label: "Tipo de cambio UIT",
-                            value: `S/ ${tipoCambioUit.toFixed(2)} / USD`,
+                            value: `S/ ${USD_A_SOLES_UIT.toFixed(2)} / USD`,
                             tone: "highlight",
                         },
                     ]}
@@ -136,12 +134,8 @@ export default function SettlementUitControlModal({
                             label="Tipo de cambio UIT (S/)"
                             step="0.01"
                             min={1}
-                            value={rateInput}
-                            onChange={(v) => {
-                                setRateInput(v);
-                                const num = Number(v);
-                                if (num > 0) onChangeExchangeRate(num);
-                            }}
+                            value={String(USD_A_SOLES_UIT)}
+                            readOnly
                             className="sm:col-span-2"
                         />
                     </div>

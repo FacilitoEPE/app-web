@@ -2,6 +2,7 @@
 
 > **Único archivo oficial de seguimiento.** Toda auditoría o conexión de vistas/APIs debe actualizarse aquí indicando fecha ISO (`YYYY-MM-DD`) y estado (`Completo`, `Parcial`, `Sin cambios`), conservando el historial en la sección inferior.
 
+<<<<<<< HEAD
 ## Breadcrumb breve de Cosecha y Calidad — 2026-11-01 · Completo
 
 - Las rutas propias muestran solo el nombre de la vista en el último nivel: Análisis y revisión, Carga, Guías de remisión o Resumen de campaña. El canal Exportador/Industria sigue en la URL y en el contexto de la página, sin repetirse en el breadcrumb.
@@ -107,6 +108,27 @@
 - Ese mismo commit sustituyó las acciones de fila Registrar vehículo / Registrar chofer (modales directos) por Vehículos / Choferes, que navegan al detalle `/transportistas/:id?tab=vehiculos` o `?tab=choferes`.
 - En el historial disponible no se encontraron páginas de ruta eliminadas dentro de `src/modules/carriers/pages`: las gestiones globales eran sub-vistas en `components`, no páginas adicionales. Las pestañas globales existían antes de `4414ac0`, aunque no estaban aún en el checkout local previo al pull (`7589cef`).
 - Auditoría de código e historial; no se restauraron vistas ni se alteraron flujos o contratos.
+=======
+## Plan de cierre funcional — 2026-11-01 · Completo
+
+1. **Roles (`Administrador` y `Chofer`)** — Completo: `AuthService.seedDefaultRolesAndUsers`, esquemas SQL (`03_schema_total.sql`, `05_seed_reference_catalogs_production.sql`) y `V1DatabaseService.list('rol')` restringidos exclusivamente a `Administrador` y `Chofer`. Cuenta compartida de chofer configurada como `chofer` (`DRIVER_SHARED_USERNAME=chofer`), vinculando conductores activos y nuevos.
+2. **Fincas y múltiples variedades** — Completo: cada proveedor puede registrar múltiples fincas y cada finca conserva su variedad directamente en `agro.finca.fruta_derivada_id` (sin tabla intermedia `finca_variedad` ni vistas adicionales). Adaptados los flujos de campaña (`campaignCommands.interview`), calidad (`QualityLoadFormModal.tsx`, `qualityCommands.saveLoad`) y portal del chofer (`DriverLoadDataModal.tsx`, `PATCH /api/chofer/cargas/:id/datos`).
+3. **Documentos obligatorios (`*`) y almacenamiento local** — Completo: servicio local autenticado (`/api/archivos-locales` y `/api/archivos-locales/vinculos`) con almacenamiento en `epe-backend/uploads`. Validación obligatoria (`*`) aplicada en formularios y validadores de requerimiento de transporte (`CarrierSendRequirementModal.tsx`), exámenes de laboratorio con resultado (`campaignExam.ts`), emisión de factura (`BillingIssueInvoiceModal.tsx`) y cierre documental de logística (`LogisticsDocumentsClosureModal.tsx`).
+4. **API sin versionado (`/api/...`)** — Completo: frontend (`usesV1() => true`) y backend unificados en `/api/...` con validación JWT y permisos por rol (`Administrador` / `Chofer`). Añadido `GET /api/auth/usuarios/:id` para resolver el nombre completo del responsable de campaña en edición (`CampaignFormModal.tsx`) incluso cuando pertenece a otro usuario.
+5. **Monedas (`PEN` y `USD`) y columnas anulables de conteo/kilos** — Completo: soporte de `PEN` y `USD` validado en código de aplicación (backend `V1BusinessService` y frontend, sin restricciones `CHECK (moneda ...)` en base de datos) en participaciones de compra, acuerdos de transporte, cotizaciones de transporte (`CarriersQuotationsSubView.tsx`, `quotationCommands.respond`), contratos comerciales, certificaciones, facturas y liquidaciones, bloqueando monedas distintas (`INVALID_CURRENCY`) y mezclas de moneda con el documento origen (`CURRENCY_MISMATCH`), y calculando UIT en código con conversión `S/ 3.70` por USD. Las columnas `capturas`, `trampas` y `dias_exposicion` en `agro.medicion_mtd` y `kilos_iniciales` en `agro.certificado_campana` son anulables (`NULL`) sin `CHECK` de base de datos.
+6. **Correo con Resend (solicitudes de transporte y recuperación de contraseña)** — Completo:
+   - **Recuperación de contraseña**: endpoint público `POST /api/auth/recuperar-password` conectado a `ResendService` y formulario `RecoverFormControl.tsx` (`requestPasswordRecovery`). Genera contraseña temporal y envía el correo antes de actualizar el hash (evitando bloqueos si el proveedor falla).
+   - **Solicitudes e invitaciones de transporte**: `TransporteV1Service.createInvitacion` (`POST /api/solicitudes-transporte/:id/invitaciones`) conectado a `ResendService` con clave de idempotencia y reversión automática de la invitación si falla el envío. En `CarriersPage.tsx` se habilitaron selección de empresas, botón y modal `"Enviar requerimiento"` con adjunto obligatorio (`*`) y pestaña `"Solicitudes y cotizaciones"`.
+   - **Estado del proveedor Resend**: verificado `GET https://api.resend.com/domains` con `RESEND_API_KEY` configurada (HTTP `200`, remitente `Agro Exportaciones <agroexportadores@adkventurie.com>`, 2 dominios registrados).
+7. **Verificación integral de cierre**:
+   - **Frontend (`epe-web`)**: **55 archivos / 281 pruebas aprobadas** (`vitest run`), `tsc -b && vite build` aprobado y `eslint .` aprobado con **0 errores y 0 advertencias**.
+   - **Backend (`epe-backend`)**: **24 archivos / 91 pruebas unitarias aprobadas**, **3 archivos / 23 pruebas E2E aprobadas** en base aislada temporal `epe_e2e_cierre_20261101` (creada y eliminada automáticamente sin tocar `desarrolloEPE`), `nest build` aprobado y `oxlint` con **0 errores**.
+
+## Responsable de campaña — 2026-11-01 · Completo
+
+- En el contrato actual, el alta envía `responsableUsuarioId` con el administrador de la sesión; la edición conserva el responsable guardado y consulta `GET /api/auth/usuarios/:id` cuando difiere del usuario en sesión para mostrar su nombre completo.
+- Verificación: pruebas unitarias, integración V1 (`dev/frontend-v1.test.ts`) y E2E (`test/v1-future-api.e2e-spec.ts`) aprobadas.
+>>>>>>> e0912f885278a1780aadab2fa605b15095325f55
 
 ## Carga de datos por vista — 2026-10-30 · Parcial
 

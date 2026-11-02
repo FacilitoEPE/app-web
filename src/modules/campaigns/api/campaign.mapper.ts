@@ -2,6 +2,7 @@ import type { CampanaDto, CreateCampanaDto, FrutaDto, CampanaEstado } from "@/mo
 import { parseFecha, formatFecha } from "@/modules/campaigns/api/fecha.util";
 
 export interface Campana {
+  responsableUsuarioId?: number | null;
   temporada?: string | null;
   observaciones?: string | null;
   campaniaId: number;
@@ -17,6 +18,7 @@ export interface Campana {
 }
 
 export interface CampaignFormInput {
+  responsableUsuarioId?: number | null;
   temporada?: string | null;
   observaciones?: string | null;
   nombre: string;

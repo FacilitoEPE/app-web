@@ -24,6 +24,8 @@ const COPY: Record<CarrierSuccessMode, { title: string; description: string }> =
 };
 
 export default function CarrierSuccessModal({ open, onOpenChange, mode }: CarrierSuccessModalProps) {
-    const { title, description } = usesV1() && mode === "requirement-sent" ? {title:"Solicitud registrada",description:"Se guardaron la solicitud y las invitaciones de los transportistas seleccionados."} : COPY[mode];
+    const { title, description } = usesV1() && mode === "requirement-sent"
+        ? { title: "Solicitud enviada", description: "Se registraron la solicitud y las invitaciones, y se notificó por correo a los transportistas seleccionados." }
+        : COPY[mode];
     return <SuccessModal open={open} onOpenChange={onOpenChange} title={title} description={description} />;
 }

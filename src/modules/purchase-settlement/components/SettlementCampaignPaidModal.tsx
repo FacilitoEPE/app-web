@@ -112,7 +112,7 @@ export default function SettlementCampaignPaidModal({
                                                     Pagado / Total
                                                 </span>
                                                 <span className="text-[13.5px] font-extrabold text-brand">
-                                                    S/ {pagado.toLocaleString("es-PE")} / S/{" "}
+                                                    {prov.moneda === 'USD' ? 'US$' : 'S/'} {pagado.toLocaleString("es-PE")} / {prov.moneda === 'USD' ? 'US$' : 'S/'}{" "}
                                                     {prov.total.toLocaleString("es-PE")}
                                                 </span>
                                             </div>
@@ -156,7 +156,7 @@ export default function SettlementCampaignPaidModal({
                                                     Pagado / Total
                                                 </span>
                                                 <span className="text-[13.5px] font-extrabold text-brand">
-                                                    S/ {pagado.toLocaleString("es-PE")} / S/{" "}
+                                                    {transporte.moneda === 'USD' ? 'US$' : 'S/'} {pagado.toLocaleString("es-PE")} / {transporte.moneda === 'USD' ? 'US$' : 'S/'}{" "}
                                                     {totalDoc.toLocaleString("es-PE")}
                                                 </span>
                                             </div>

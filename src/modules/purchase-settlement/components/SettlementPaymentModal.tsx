@@ -25,6 +25,7 @@ interface SettlementPaymentModalProps {
     documentNumber: string;
     totalAmount: number;
     paidAmount: number;
+    moneda?: string;
     availableAdvances?: CarrierAdvanceItem[];
     onRegister: (payment: Omit<SettlementPaymentItem, "id">, advanceId?: string) => void;
 }
@@ -43,9 +44,11 @@ export default function SettlementPaymentModal({
     documentNumber,
     totalAmount,
     paidAmount,
+    moneda,
     availableAdvances = [],
     onRegister,
 }: SettlementPaymentModalProps) {
+    const symbol = moneda === 'USD' ? 'US$' : 'S/';
     const [modo, setModo] = useState<"Caja" | "Adelanto">("Caja");
     const [selectedAdvanceId, setSelectedAdvanceId] = useState("");
     const [fecha, setFecha] = useState("");
@@ -72,7 +75,7 @@ export default function SettlementPaymentModal({
 
     const advanceItems = activeAdvances.map((a) => ({
         value: a.id,
-        label: `${a.referencia} · Disponible: S/ ${a.saldoDisponible.toLocaleString("es-PE")}`,
+        label: `${a.referencia} · Disponible: ${symbol} ${a.saldoDisponible.toLocaleString("es-PE")}`,
     }));
 
     const handleSubmit = async () => {
@@ -132,16 +135,16 @@ export default function SettlementPaymentModal({
                     items={[
                         {
                             label: "Total liquidado",
-                            value: `S/ ${totalAmount.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+                            value: `${symbol} ${totalAmount.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                         },
                         {
                             label: "Pagado",
-                            value: `S/ ${paidAmount.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+                            value: `${symbol} ${paidAmount.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                             tone: "brand",
                         },
                         {
                             label: "Saldo por pagar",
-                            value: `S/ ${saldoPendiente.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+                            value: `${symbol} ${saldoPendiente.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                             tone: "highlight",
                         },
                     ]}
@@ -207,7 +210,7 @@ export default function SettlementPaymentModal({
                             required
                             step="0.01"
                             min={0}
-                            unit="S/"
+                            unit={symbol}
                             value={importe}
                             onChange={setImporte}
                         />
