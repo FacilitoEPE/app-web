@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const ts=require(path.join(process.cwd(),'node_modules/typescript'));
+const code=ts.transpileModule(fs.readFileSync('src/remission-model.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+const mod={exports:{}};vm.runInNewContext(code,{exports:mod.exports});const {guideFruitType:type,guideHasOrganic:organic,guideValidation:validate,standardPhrases}=mod.exports;
+const s={providers:[],requirements:[{id:'r',campaignId:'c',canal:'Industria'}],qualityOperations:[],campaignTransporters:[],campaigns:[],transporters:[],campaignProviders:[{campaignId:'c',providerId:'a',fincaId:'f',rol:'Productor',clasificacion:'Orgánico'},{campaignId:'other',providerId:'b',clasificacion:'Orgánico'},{campaignId:'c',providerId:'b',rol:'Acopiador',clasificacion:'T2'}]};
+const a={providerId:'a',fincaIds:['f'],kilos:10},b={providerId:'b',fincaIds:['g'],kilos:10};
+const item={annotation:{kilos:20,providers:[a,b]},sourceDelivery:{},providerId:'a'};
+const g={id:'g',requirementId:'r',kilos:20,providers:[a,b]};
+assert.equal(type(s,item,g,a),'Orgánica');assert.equal(type(s,item,g,b),'Convencional');assert.equal(type(s,item,g,{...a,fincaIds:['another']}),'Orgánica');
+assert.equal(organic(s,item,g),true);assert.equal(organic(s,item,{...g,providers:[b]}),false);
+assert.equal(type(s,item,g,{...b,fruitType:'Orgánica'}),'Convencional');assert.equal(type(s,item,{...g,generatedAt:'2026-10-22'}, {...b,fruitType:'Orgánica'}),'Orgánica');
+assert.equal(type({...s,requirements:[{id:'r',canal:'Exportación'}]},item,g,b),'Orgánica');
+s.requirements[0].contratos=[{id:'ct',entregas:[{id:'en',providers:[a,b]}]}];g.contractId='ct';g.deliveryId='en';
+const details={shipmentDate:'2026-10-22',originAddress:'Finca',destinationAddress:'Planta',originUbigeo:'',destinationUbigeo:'',grossWeight:20,packageCount:2,standardCodes:['NOP'],standardText:standardPhrases(['NOP'])};
+assert.equal(validate(s,item,{...g,details},[]),'');
+assert.match(validate({...s,campaignProviders:s.campaignProviders.map(p=>({...p,rol:'Acopiador'}))},item,{...g,details},[]),/únicamente/);
+assert.match(validate(s,item,{...g,details:{...details,standardText:'incorrecto'}},[]),/frases/);
+console.log('PASS: organic industry, conventional industry, mixed suppliers, export organic, campaign/farm isolation and standards validation.');

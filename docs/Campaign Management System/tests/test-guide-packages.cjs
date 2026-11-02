@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const root=process.cwd(),ts=require(path.join(root,'node_modules/typescript'));
+const code=ts.transpileModule(fs.readFileSync(path.join(root,'src/guide-packages.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+const moduleUnderTest={exports:{}};vm.runInNewContext(code,{exports:moduleUnderTest.exports});const {guidePackageCount:count}=moduleUnderTest.exports;
+const packages=(loaded,empty=0)=>[{loaded,empty}];
+const annotation={packages:packages(17,3),providers:[{providerId:'a',packages:packages(12,2)},{providerId:'b',packages:packages(5,1)}]};
+assert.equal(count(annotation,['a'],['a','b']),12);assert.equal(count(annotation,['b'],['a','b']),5);assert.equal(count(annotation,['a','b'],['a','b']),17);
+assert.equal(count({packages:packages(17)},['a'],['a','b']),null);assert.equal(count({packages:packages(17)},['a','b'],['a','b']),17);
+assert.equal(count(undefined,['a'],['a','b'],[{providerId:'a',crates:9}]),9);assert.equal(count(undefined,['a'],['a','b']),null);
+assert.equal(count({packages:[],providers:[{providerId:'a',packages:packages(0)}]},['a'],['a']),0);
+const rows=JSON.parse(fs.readFileSync(path.join(root,'src/data/ubigeos-peru.json'),'utf8'));assert.ok(rows.length>1800);assert.equal(new Set(rows.map(d=>d.code)).size,rows.length);assert.equal(rows.find(d=>d.code==='010101').district,'CHACHAPOYAS');assert.equal(rows.find(d=>d.code==='150108').district,'CHORRILLOS');
+console.log('PASS: supplier packages, empty containers excluded, legacy totals, unknown counts and ubigeo leading zeros.');

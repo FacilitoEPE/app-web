@@ -1,0 +1,11 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const r=path.resolve(__dirname,'..'),React=require('react'),{renderToStaticMarkup}=require('react-dom/server'),ts=require(path.join(r,'node_modules/typescript'));
+let agreement;
+const mod={exports:{}};const source=ts.transpileModule(fs.readFileSync(path.join(r,'src/transport-receipt.tsx'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+vm.runInThisContext('(function(require,module,exports){'+source+'\n})')(name=>name==='./store'?{useStore:()=>({campaignTransporters:[{id:'link',paymentAgreement:agreement}]})}:name==='./receipt-preview'?{ReceiptPreview:()=>null}:name==='./ui'?{Button:({children,...p})=>React.createElement('button',p,children),Modal:()=>null}:require(name),mod,mod.exports);
+const view=editable=>renderToStaticMarkup(React.createElement(mod.exports.AgreementReceipt,{linkId:'link',editable}));
+agreement={type:'Completo',receipt:'old.pdf',receiptAttachmentId:'old'};assert.equal(view(false),'');assert.equal(view(true),'');
+agreement={type:'Adelanto',receipt:'adelanto.pdf',receiptAttachmentId:'registered'};let html=view(false);assert.match(html,/Boleta del adelanto/);assert.match(html,/Ver boleta/);assert.doesNotMatch(html,/Subir boleta|Reemplazar boleta|type="file"/);
+html=view(true);assert.match(html,/Ver boleta/);assert.match(html,/Reemplazar boleta/);assert.match(html,/type="file"/);
+agreement={type:'Adelanto',receipt:'filename-only.pdf'};html=view(false);assert.doesNotMatch(html,/Subir boleta|Sube el archivo|type="file"/);assert.match(html,/no está disponible/);
+console.log('PASS: adelanto visualiza el archivo registrado sin pedir subir; completo oculta todo; edición del archivo solo en origen; histórico sin bytes no inventa archivo.');

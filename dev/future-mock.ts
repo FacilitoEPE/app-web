@@ -313,23 +313,137 @@ export function createFutureMockMiddleware(root: string, clock: () => Date = () 
   }))
   const resourceFor = (template: string): Resource => contract.paths[template.replace(/\/\{id\}$/,'')]['x-resource']!
 
+  const buildOperationsContext = (): Row => ({
+    localDocuments: localLinks,
+    campaigns: db.campana,
+    fruits: db.fruta,
+    varieties: db.fruta_derivada,
+    providers: db.proveedor,
+    people: db.persona,
+    farms: db.finca,
+    providerPeople: db.proveedor_x_persona,
+    providerFruits: db.proveedor_x_fruta,
+    providerVarieties: db.proveedor_x_fruta_derivada,
+    providerCertificates: db.certificado_proveedor,
+    exams: db.examen_proveedor,
+    clients: db.cliente_negocio,
+    participations: db.campania_x_proveedores,
+    interviews: db.entrevista_extencion,
+    certificates: db.certificado_campana,
+    coverage: db.certificado_campana_x_proveedor,
+    expansions: db.ampliacion_certificado_campana,
+    certificatePayments: db.pago_certificado_campana,
+    requirements: db.cliente_negocio_campana,
+    requirementVarieties: db.cliente_negocio_campana_x_fruta_derivada,
+    contracts: db.contrato_venta,
+    deliveries: db.entrega_programada,
+    deliveryVarieties: db.entrega_x_fruta_derivada,
+    carriers: db.empresa_transporte_externo,
+    vehicles: db.vehiculo_externo,
+    drivers: db.chofer_transporte_externo,
+    requests: db.solicitud_transporte,
+    invitations: db.invitacion_transporte,
+    quotations: db.cotizacion_transporte,
+    agreements: db.acuerdo_transporte,
+    coordinations: db.coordinacion_entrega,
+    deliveryOrigins: db.origen_entrega,
+    harvests: db.cosecha,
+    analyses: db.analisis_calidad,
+    measurements: db.medicion_mtd,
+    loads: db.carga,
+    loadProviders: db.proveedor_carga,
+    loadOrigins: db.origen_carga,
+    loadExpenses: db.gasto_carga,
+    guides: db.guia_remision,
+    guideProviders: db.proveedor_guia,
+    guideStandards: db.guia_x_norma,
+    standards: db.norma,
+    receipts: db.recepcion_planta,
+    histories: db.historial_chofer,
+    providerSettlements: db.liquidacion_proveedor,
+    transportSettlements: db.liquidacion_transporte,
+    transportExpenses: db.gasto_transporte,
+    advances: db.adelanto_transporte,
+    applications: db.aplicacion_adelanto,
+    providerPayments: db.pago_proveedor,
+    transportPayments: db.pago_transporte,
+    uit: db.parametro_uit,
+    invoices: db.factura_venta,
+    collections: db.cobro_venta,
+  })
+
   async function handle(request: IncomingMessage, url: URL) {
     refreshCampaignStatuses()
-    const pathname = url.pathname.slice('/mock-api/api'.length) || '/'
+    let pathname = url.pathname
+    if (pathname.startsWith('/mock-api/api')) pathname = pathname.slice('/mock-api/api'.length)
+    else if (pathname.startsWith('/mock-api/v1')) pathname = pathname.slice('/mock-api/v1'.length)
+    else if (pathname.startsWith('/mock-api')) pathname = pathname.slice('/mock-api'.length)
+    else if (pathname.startsWith('/api')) pathname = pathname.slice('/api'.length)
+
+    if (pathname.startsWith('/v1/')) pathname = pathname.slice('/v1'.length)
+    else if (pathname === '/v1') pathname = '/'
+    if (pathname.startsWith('/api/')) pathname = pathname.slice('/api'.length)
+    else if (pathname === '/api') pathname = '/'
+
+    pathname = pathname || '/'
     if (pathname === '/archivos-locales' && request.method === 'POST') {
       for await (const chunk of request) void chunk
       const id = nextLocalFileId++
-      const file = { id, url: `/api/archivos-locales/${id}/contenido`, name: `documento-${id}.pdf`, type: 'application/pdf', size: 128 }
+      const file = { id: String(id), url: `/api/archivos-locales/${id}/contenido`, name: `documento-${id}.pdf`, type: 'application/pdf', size: 128 }
       localFiles.set(id, file)
       return { status: 201, data: file }
     }
     if (pathname === '/archivos-locales/vinculos' && request.method === 'GET') return { status: 200, data: localLinks }
     if (pathname === '/archivos-locales/vinculos' && request.method === 'POST') {
-      const body = await readJson(request) as { tipo: string; entidadId: number; archivoId: number }
-      const file = localFiles.get(Number(body.archivoId)) ?? { id: Number(body.archivoId), url: `/api/archivos-locales/${body.archivoId}/contenido`, name: 'documento.pdf', type: 'application/pdf', size: 128 }
+      const body = await readJson(request) as { tipo: string; entidadId: number; archivoId: number | string }
+      const file = localFiles.get(Number(body.archivoId)) ?? { id: String(body.archivoId), url: `/api/archivos-locales/${body.archivoId}/contenido`, name: 'documento.pdf', type: 'application/pdf', size: 128 }
       localLinks = localLinks.filter(item => !(item.tipo === body.tipo && item.entidadId === Number(body.entidadId)))
       localLinks.push({ tipo: body.tipo, entidadId: Number(body.entidadId), ...file })
       return { status: 201, data: { ok: true } }
+    }
+    const unlinkRoute = /^\/archivos-locales\/vinculos\/([^/]+)\/(\d+)$/.exec(pathname)
+    if (unlinkRoute && request.method === 'DELETE') {
+      const tipo = decodeURIComponent(unlinkRoute[1])
+      const entidadId = Number(unlinkRoute[2])
+      localLinks = localLinks.filter(item => !(item.tipo === tipo && item.entidadId === entidadId))
+      return { status: 200, data: { ok: true } }
+    }
+    const fileContentRoute = /^\/archivos-locales\/(\d+)\/contenido$/.exec(pathname)
+    if (fileContentRoute && request.method === 'GET') {
+      const id = Number(fileContentRoute[1])
+      const file = localFiles.get(id) ?? { id: String(id), url: `/api/archivos-locales/${id}/contenido`, name: `documento-${id}.pdf`, type: 'application/pdf', size: 128 }
+      return { status: 200, data: file }
+    }
+    if (pathname === '/auth/login' && request.method === 'POST') {
+      const body = await readJson(request) as { usuario?: string; password?: string }
+      const username = String(body?.usuario ?? '').trim().toLowerCase()
+      const u = db.usuario.find(row => row.usuario.toLowerCase() === username && row.activo)
+        ?? (username === 'admin' ? db.usuario.find(row => row.usuario === 'admin-demo') : undefined)
+        ?? (username === 'chofer' ? db.usuario.find(row => row.usuario === 'chofer-demo') : undefined)
+        ?? (username ? undefined : db.usuario.find(row => row.activo))
+      if (!u) throw new FutureError(401, 'UNAUTHORIZED', 'Credenciales inválidas')
+      const p = db.persona.find(row => row.personaId === u.personaId)
+      const r = db.rol.find(row => row.rolId === u.rolId)
+      const user = {
+        usuarioId: u.usuarioId,
+        usuario: u.usuario,
+        personaId: u.personaId,
+        nombres: p?.nombres ?? '',
+        apellidos: p?.apellidos ?? '',
+        correo: p?.correo ?? null,
+        rol: { rolId: u.rolId, nombre: r?.nombre ?? '' },
+      }
+      return { status: 200, data: { accessToken: `mock-token-${u.usuarioId}`, user } }
+    }
+    if (pathname === '/auth/me' && request.method === 'GET') {
+      const authHeader = request.headers.authorization
+      const tokenMatch = /mock-token-(\d+)/.exec(authHeader ?? '')
+      const uid = tokenMatch ? Number(tokenMatch[1]) : (db.usuario.find(u => u.activo)?.usuarioId ?? 1)
+      const u = db.usuario.find(row => row.usuarioId === uid && row.activo) ?? db.usuario[0]
+      if (!u) throw new FutureError(401, 'UNAUTHORIZED', 'No autorizado')
+      const p = db.persona.find(row => row.personaId === u.personaId)
+      const r = db.rol.find(row => row.rolId === u.rolId)
+      return { status: 200, data: { usuarioId: u.usuarioId, usuario: u.usuario, personaId: u.personaId, nombres: p?.nombres ?? '', apellidos: p?.apellidos ?? '', correo: p?.correo ?? null, rol: { rolId: u.rolId, nombre: r?.nombre ?? '' } } }
     }
     if (pathname === '/auth/recuperar-password' && request.method === 'POST') {
       const body = await readJson(request) as { correo?: string }
@@ -346,6 +460,20 @@ export function createFutureMockMiddleware(root: string, clock: () => Date = () 
       const p = db.persona.find(row => row.personaId === u.personaId)
       const r = db.rol.find(row => row.rolId === u.rolId)
       return { status: 200, data: { usuarioId: u.usuarioId, usuario: u.usuario, personaId: u.personaId, nombres: p?.nombres ?? '', apellidos: p?.apellidos ?? '', correo: p?.correo ?? null, rol: { rolId: u.rolId, nombre: r?.nombre ?? '' } } }
+    }
+    if (pathname === '/chofer/contexto' && request.method === 'GET') {
+      return { status: 200, data: buildOperationsContext() }
+    }
+    const driverLoadDataRoute = /^\/chofer\/cargas\/(\d+)\/datos$/.exec(pathname)
+    if (driverLoadDataRoute && request.method === 'PATCH') {
+      const id = Number(driverLoadDataRoute[1])
+      const carga = db.carga.find(row => row.cargaId === id)
+      if (!carga) throw new FutureError(404, 'NOT_FOUND', 'Carga no encontrada')
+      const body = await readJson(request) as Row
+      Object.assign(carga, { updatedAt: new Date().toISOString() })
+      if (body.fechaCarga !== undefined) carga.fechaCarga = body.fechaCarga
+      if (body.observacionesCarga !== undefined) carga.observaciones = body.observacionesCarga
+      return { status: 200, data: { ok: true, carga } }
     }
     const route = compiled.find(item => item.pattern.test(pathname))
     if (!route) throw new FutureError(404,'ROUTE_NOT_FOUND','Ruta V1 no documentada.')
@@ -428,7 +556,14 @@ export function createFutureMockMiddleware(root: string, clock: () => Date = () 
   let queue = Promise.resolve()
   return (request,response,next) => {
     const url = new URL(request.url ?? '/','http://mock.local')
-    if (url.pathname !== '/mock-api/api' && !url.pathname.startsWith('/mock-api/api/')) return next()
+    const isMockV1 = url.pathname === '/mock-api/v1' || url.pathname.startsWith('/mock-api/v1/')
+    const isMockApi = url.pathname === '/mock-api/api' || url.pathname.startsWith('/mock-api/api/')
+    const isMockAuthOrSpecial = url.pathname.startsWith('/mock-api/auth')
+      || url.pathname.startsWith('/mock-api/archivos-locales')
+      || url.pathname.startsWith('/mock-api/chofer')
+    const isDirectApi = url.pathname === '/api' || url.pathname.startsWith('/api/')
+      || url.pathname === '/v1' || url.pathname.startsWith('/v1/')
+    if (!isMockV1 && !isMockApi && !isMockAuthOrSpecial && !isDirectApi) return next()
     response.setHeader('Content-Type','application/json; charset=utf-8')
     response.setHeader('Cache-Control','no-store')
     response.setHeader('Pragma','no-cache')

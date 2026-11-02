@@ -2,7 +2,6 @@
 
 > **Único archivo oficial de seguimiento.** Toda auditoría o conexión de vistas/APIs debe actualizarse aquí indicando fecha ISO (`YYYY-MM-DD`) y estado (`Completo`, `Parcial`, `Sin cambios`), conservando el historial en la sección inferior.
 
-<<<<<<< HEAD
 ## Breadcrumb breve de Cosecha y Calidad — 2026-11-01 · Completo
 
 - Las rutas propias muestran solo el nombre de la vista en el último nivel: Análisis y revisión, Carga, Guías de remisión o Resumen de campaña. El canal Exportador/Industria sigue en la URL y en el contexto de la página, sin repetirse en el breadcrumb.
@@ -108,7 +107,7 @@
 - Ese mismo commit sustituyó las acciones de fila Registrar vehículo / Registrar chofer (modales directos) por Vehículos / Choferes, que navegan al detalle `/transportistas/:id?tab=vehiculos` o `?tab=choferes`.
 - En el historial disponible no se encontraron páginas de ruta eliminadas dentro de `src/modules/carriers/pages`: las gestiones globales eran sub-vistas en `components`, no páginas adicionales. Las pestañas globales existían antes de `4414ac0`, aunque no estaban aún en el checkout local previo al pull (`7589cef`).
 - Auditoría de código e historial; no se restauraron vistas ni se alteraron flujos o contratos.
-=======
+
 ## Plan de cierre funcional — 2026-11-01 · Completo
 
 1. **Roles (`Administrador` y `Chofer`)** — Completo: `AuthService.seedDefaultRolesAndUsers`, esquemas SQL (`03_schema_total.sql`, `05_seed_reference_catalogs_production.sql`) y `V1DatabaseService.list('rol')` restringidos exclusivamente a `Administrador` y `Chofer`. Cuenta compartida de chofer configurada como `chofer` (`DRIVER_SHARED_USERNAME=chofer`), vinculando conductores activos y nuevos.
@@ -128,7 +127,6 @@
 
 - En el contrato actual, el alta envía `responsableUsuarioId` con el administrador de la sesión; la edición conserva el responsable guardado y consulta `GET /api/auth/usuarios/:id` cuando difiere del usuario en sesión para mostrar su nombre completo.
 - Verificación: pruebas unitarias, integración V1 (`dev/frontend-v1.test.ts`) y E2E (`test/v1-future-api.e2e-spec.ts`) aprobadas.
->>>>>>> e0912f885278a1780aadab2fa605b15095325f55
 
 ## Carga de datos por vista — 2026-10-30 · Parcial
 

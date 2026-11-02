@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict');
+const {fixture,buy,load}=require('./test-finance.cjs');
+const {providerUit,projectUit,uitIssue,linkedPeopleIssue}=load('purchase-uit');
+const {paidProviderSettlement}=load('provider-settlement-payment');
+const s=fixture();s.providers[0].dni='12345678';s.providers[0].tipoDocumento='DNI';
+const relative={id:'relative',nombres:'Maria',apellidos:'Prueba',tipoDocumento:'DNI',dni:'87654321',vinculo:'Familiar'};
+s.providers[0].settlementPeople=[relative];assert.equal(linkedPeopleIssue(s,fixture()),'');
+s.settlements=[{...buy,id:'history',transportServiceId:'old',price:412500/200}];
+const command={action:'settle-provider',id:'test',providerId:'p1',transportServiceId:'truck',settlementPersonId:'relative',date:'2026-10-21',method:'Efectivo'};
+const result=paidProviderSettlement(s,command),d=result.settlements.at(-1);
+assert.equal(d.providerId,'p1');assert.equal(d.settlementPersonId,'relative');assert.equal(d.price,1.8);assert.equal(d.kilos,200);assert.equal(result.financialMovements.length,0);
+assert.equal(providerUit(result,'p1',2026).total,412500);assert.equal(providerUit(result,'p1',2026,undefined,'relative').total,360);
+assert.equal(projectUit(result,{...d,price:2}).projected,400);assert.equal(uitIssue(result,d),'');
+assert.throws(()=>paidProviderSettlement(s,{...command,settlementPersonId:'other'}),/vinculada/);
+// The same real document under another provider does not create another allowance.
+result.providers[1].settlementPeople=[{...relative,id:'relative-elsewhere'}];assert.equal(providerUit(result,'p2',2026,undefined,'relative-elsewhere').total,360);
+const removed=structuredClone(result);removed.providers[0].settlementPeople=[];assert.ok(linkedPeopleIssue(removed,result));
+const changed=structuredClone(result);changed.settlements.at(-1).settlementPersonId=undefined;assert.ok(linkedPeopleIssue(changed,result));
+const duplicate=structuredClone(s);duplicate.providers[0].settlementPeople.push({...relative,id:'duplicate'});assert.ok(linkedPeopleIssue(duplicate,s));
+console.log('PASS personas: principal conserva carga y precio; acumulados separados entre campañas; documento compartido agrupa; historial y selección protegidos; liquidar no paga.');

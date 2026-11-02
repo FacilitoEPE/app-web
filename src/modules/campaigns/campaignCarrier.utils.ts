@@ -104,13 +104,8 @@ export function validateAgreement(values: AgreementFormValues): AgreementErrors 
     return errors;
 }
 
-<<<<<<< HEAD
-/** Del formulario al acuerdo guardado. El comprobante solo aplica cuando se registra con adelanto. */
-export function toAgreement(values: AgreementFormValues, boleta: File | null, saldoPagado = false): CarrierPaymentAgreement {
-=======
-/** Del formulario al acuerdo guardado. Cambiar a "Pago único" descarta lo que solo aplica al adelanto. */
+/** Del formulario al acuerdo guardado. El pago único descarta el comprobante y los datos del adelanto. */
 export function toAgreement(values: AgreementFormValues, boleta: FileSource | null, saldoPagado = false): CarrierPaymentAgreement {
->>>>>>> e0912f885278a1780aadab2fa605b15095325f55
     const isAdvance = values.tipo === "adelanto";
     return {
         tipo: values.tipo,

@@ -1,0 +1,2 @@
+/* Tailwind image max-width must not shrink Leaflet tiles inside zero-width tile panes. */
+.leaflet-container img.leaflet-tile { max-width: none !important; max-height: none !important; }

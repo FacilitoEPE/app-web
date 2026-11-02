@@ -1,0 +1,11 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
+const ts=require(path.join(process.cwd(),'node_modules/typescript'));
+function mod(file,requireFn){const m={exports:{}};const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInThisContext('(function(exports,require){'+code+'\n})')(m.exports,requireFn);return m.exports}
+const protocol=mod('src/shared-protocol.ts',()=>{throw Error('unexpected import')});
+global.window={location:{search:''}};
+const storage={getItem(k){return this[k]??null},setItem(k,v){this[k]=v}};global.localStorage=storage;
+const data=JSON.parse(fs.readFileSync('server/shared-seed.json','utf8'));
+storage['agro-cloud-v1:cache']='old-backup-untouched';storage['agro-cloud-v1:outbox:admin']=JSON.stringify([{id:'old-change',changes:protocol.changesBetween(data.campaigns,[{...data.campaigns[0],nombre:'OLD BLOB DATA'},...data.campaigns.slice(1)],['campaigns'])}]);
+const {SharedEngine}=mod('src/shared-engine.ts',()=>protocol);let calls=0;
+global.fetch=async(_url,opts)=>{calls++;return opts.headers['If-None-Match']?new Response(null,{status:304}):new Response(JSON.stringify({schema:1,revision:1,updatedAt:new Date().toISOString(),storageId:'supabase:test',data,applied:[],actor:{role:'admin'}}),{status:200,headers:{ETag:'"supabase-1"'}})};
+(async()=>{const engine=new SharedEngine(false);await engine.poll();assert.equal(engine.data.campaigns[0].nombre,data.campaigns[0].nombre);assert.equal(engine.status.pending,0);assert.equal(storage['agro-cloud-v1:cache'],'old-backup-untouched');assert.ok(storage['agro-cloud-v1:cache:supabase%3Atest']);await engine.poll();assert.equal(calls,2);global.fetch=async()=>{calls++;throw Error('offline')};await engine.poll();assert.equal(calls,3);await engine.poll();assert.equal(calls,3);assert.equal(engine.status.ready,true);assert.equal(storage['agro-cloud-v1:cache'],'old-backup-untouched');console.log('PASS: new Supabase dataset ignores legacy outbox, preserves backups, uses conditional requests and backs off on failure.');})().catch(e=>{console.error(e);process.exitCode=1});

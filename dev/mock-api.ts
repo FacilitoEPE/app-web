@@ -271,7 +271,8 @@ export function createMockMiddleware(directory: string): Connect.NextHandleFunct
 }
 
 export function mockApiPlugin(apiBaseUrl: string | undefined): Plugin {
-  const enabled = apiBaseUrl?.replace(/\/$/, '') === '/mock-api'
+  const normalized = apiBaseUrl?.replace(/\/$/, '') ?? ''
+  const enabled = normalized === '/mock-api' || normalized.startsWith('/mock-api')
   return {
     name: 'epe-mock-api',
     config(_config, { command }) {

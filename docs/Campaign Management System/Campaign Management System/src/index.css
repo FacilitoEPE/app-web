@@ -1,0 +1,167 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Outfit', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-canvas: #eef1ec;
+  --color-surface: #ffffff;
+  --color-ink: #14211a;
+  --color-ink-soft: #5a6b62;
+  --color-line: #dfe4dd;
+
+  --color-forest: #14432c;
+  --color-forest-600: #1c5c3c;
+  --color-leaf: #2f8f5b;
+  --color-leaf-50: #e6f3ec;
+  --color-mango: #f0a03c;
+  --color-mango-50: #fdf1de;
+  --color-clay: #c85a3a;
+
+  --color-plan: #2f6bd6;
+  --color-plan-50: #e6eefb;
+  --color-proc: #d98a1a;
+  --color-proc-50: #fbf0dc;
+  --color-done: #2f8f5b;
+  --color-done-50: #e6f3ec;
+  --color-danger: #c0392b;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbars until scrolling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover {
+  scrollbar-color: #c3ccc4 transparent;
+}
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background: #c3ccc4;
+  background-clip: content-box;
+}
+
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes overlay-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes expand-in {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+    transform: translateY(0);
+  }
+}
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-overlay {
+  animation: overlay-fade 0.18s ease-out;
+}
+.animate-modal {
+  animation: modal-pop 0.24s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.animate-expand {
+  animation: expand-in 0.24s ease-out;
+  overflow: hidden;
+}
+.animate-row {
+  animation: row-in 0.3s ease-out both;
+}
+.animate-toast {
+  animation: toast-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* Driver load forms: full-screen sheet and touch-friendly controls. */
+@media (max-width: 640px) {
+ .driver-load-form .animate-overlay { padding: 0; }
+ .driver-load-form .animate-modal { margin: 0; min-height: 100dvh; border-radius: 0; }
+ .driver-load-form .animate-modal > div:nth-child(2) { max-height: calc(100dvh - 150px); padding: 16px; }
+ .driver-load-form input:not([type=checkbox]), .driver-load-form select { min-height: 48px; font-size: 16px; }
+ .driver-load-form button { min-height: 44px; }
+}
+
+/* Responsive presentation of the existing Logistics and Dispatch module. */
+.logistics-module { overflow-wrap: anywhere; }
+.logistics-module .logistics-filters > div { margin-bottom: 0; border: 0; padding: 0; }
+@media (max-width: 767px) {
+ .logistics-module .logistics-filters > div { display: grid; grid-template-columns: minmax(0,1fr); }
+ .logistics-module .logistics-filters > div > * { width: 100%; min-width: 0; }
+ .logistics-module .inline-flex.rounded-xl.border { display: flex; flex-wrap: nowrap; max-width: 100%; overflow-x: auto; }
+ .logistics-module .inline-flex.rounded-xl.border > button { flex-shrink: 0; white-space: nowrap; }
+ .logistics-module button { min-height: 44px; }
+ .logistics-module input:not([type=checkbox]), .logistics-module select, .logistics-module textarea { min-height: 46px; font-size: 16px; }
+ .logistics-module .animate-overlay { padding: 8px; }
+ .logistics-module .animate-modal { min-width: 0; max-width: 100%; }
+ .logistics-module .animate-modal > div:nth-child(2) { padding: 16px; max-height: calc(100dvh - 175px); }
+ .logistics-module .flex.justify-between { flex-wrap: wrap; gap: 12px; }
+ .logistics-module h1 { font-size: 1.5rem; }
+}

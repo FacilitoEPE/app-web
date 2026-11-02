@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-<<<<<<< HEAD
-import { AlertCircle, Building2, Truck, UserRound } from "lucide-react";
-import SegmentedTabs from "@/shared/components/SegmentedTabs";
-=======
-import { AlertCircle, Building2, FileSpreadsheet, Send, Truck } from "lucide-react";
->>>>>>> e0912f885278a1780aadab2fa605b15095325f55
+import { AlertCircle, Building2, FileSpreadsheet, Send, Truck, UserRound } from "lucide-react";
 import CarriersFilters from "@/modules/carriers/components/CarriersFilters";
 import CarriersTable from "@/modules/carriers/components/CarriersTable";
 import CarriersQuotationsSubView from "@/modules/carriers/components/CarriersQuotationsSubView";
@@ -76,9 +71,10 @@ export default function CarriersPage() {
         void loadCarriers();
     }, [loadCarriers]);
 
-    const hasActiveFilters = search !== "";
+    const hasActiveFilters = search !== "" || typeFilter !== "all";
     const clearFilters = () => {
         setSearch("");
+        setTypeFilter("all");
     };
 
     const filteredData = useMemo(() => {
@@ -193,23 +189,20 @@ export default function CarriersPage() {
                 </Alert>
             )}
 
-<<<<<<< HEAD
-            <SegmentedTabs
-                tabs={[
-                    { id: "all", label: "Todos", icon: Truck, count: profiles.length },
-                    { id: "publico", label: "Público", icon: Building2, count: profiles.filter(carrier => carrier.tipo === "publico").length },
-                    { id: "privado", label: "Privado", icon: UserRound, count: profiles.filter(carrier => carrier.tipo === "privado").length },
-                ]}
-                value={typeFilter}
-                onChange={setTypeFilter}
-                showLabelsOnMobile
-                className="mt-4 mb-6"
-            />
-
-=======
             {activeTab === "empresas" ? (
                 <>
->>>>>>> e0912f885278a1780aadab2fa605b15095325f55
+                    <SegmentedTabs
+                        tabs={[
+                            { id: "all", label: "Todos", icon: Truck, count: profiles.length },
+                            { id: "publico", label: "Público", icon: Building2, count: profiles.filter((carrier) => carrier.tipo === "publico").length },
+                            { id: "privado", label: "Privado", icon: UserRound, count: profiles.filter((carrier) => carrier.tipo === "privado").length },
+                        ]}
+                        value={typeFilter}
+                        onChange={setTypeFilter}
+                        showLabelsOnMobile
+                        className="mt-4 mb-6"
+                    />
+
                     <CarriersFilters
                         search={search}
                         onSearchChange={setSearch}
