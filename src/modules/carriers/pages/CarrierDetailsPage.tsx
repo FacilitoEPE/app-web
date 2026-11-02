@@ -209,9 +209,21 @@ function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefres
                     profundidad: String(vehicleModal.editing.profundidad), volumen: String(vehicleModal.editing.volumen),
                     pesoNeto: String(vehicleModal.editing.pesoNeto), pesoBruto: String(vehicleModal.editing.pesoBruto),
                 } : undefined} />
-            <CarrierDriverModal open={driverModal.open} onOpenChange={(open) => setDriverModal((current) => ({ ...current, open }))} carrier={carrier}
-                onSuccess={saveDriver} mode={driverModal.editing ? "edit" : "create"}
-                initialValues={driverModal.editing ? { nombre: driverModal.editing.nombre, telefono: driverModal.editing.telefono, correo: driverModal.editing.correo } : undefined} />
+            <CarrierDriverModal
+                open={driverModal.open}
+                onOpenChange={(open) => setDriverModal((current) => ({ ...current, open }))}
+                carrier={carrier}
+                onSuccess={saveDriver}
+                mode={driverModal.editing ? "edit" : "create"}
+                initialValues={driverModal.editing ? {
+                    nombre: driverModal.editing.nombre,
+                    telefono: driverModal.editing.telefono,
+                    correo: driverModal.editing.correo,
+                    tipoDocumento: driverModal.editing.tipoDocumento ?? "DNI",
+                    numeroDocumento: driverModal.editing.numeroDocumento ?? "",
+                    numeroLicencia: driverModal.editing.numeroLicencia ?? "",
+                } : undefined}
+            />
             <CarrierFormModal open={editingCarrier} onOpenChange={setEditingCarrier} mode="edit" initialValues={profile} onSuccess={saveCarrier} />
             <CarrierSuccessModal open={success.open} onOpenChange={(open) => setSuccess((current) => ({ ...current, open }))} mode={success.mode} />
         </div>

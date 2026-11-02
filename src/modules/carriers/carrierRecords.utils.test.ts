@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
     EMPTY_DRIVER,
     EMPTY_VEHICLE,
+    toDriverInput,
     toVehicleInput,
     validateDriver,
     validateVehicle,
@@ -48,13 +49,26 @@ describe("validateVehicle", () => {
 });
 
 describe("validateDriver", () => {
-    it("exige nombre, teléfono y correo", () => {
-        expect(Object.keys(validateDriver(EMPTY_DRIVER)).sort()).toEqual(["correo", "nombre", "telefono"]);
+    it("exige nombre, documento, licencia, teléfono y correo", () => {
+        expect(Object.keys(validateDriver(EMPTY_DRIVER)).sort()).toEqual([
+            "correo",
+            "nombre",
+            "numeroDocumento",
+            "numeroLicencia",
+            "telefono",
+        ]);
     });
 
     it("valida el formato del correo", () => {
-        expect(validateDriver({ nombre: "Luis", telefono: "999", correo: "luis" }).correo).toBeDefined();
-        expect(validateDriver({ nombre: "Luis", telefono: "999", correo: "luis@mail.com" })).toEqual({});
+        const base = {
+            ...EMPTY_DRIVER,
+            nombre: "Luis",
+            numeroDocumento: "12345678",
+            numeroLicencia: "Q12345678",
+            telefono: "999",
+        };
+        expect(validateDriver({ ...base, correo: "luis" }).correo).toBeDefined();
+        expect(validateDriver({ ...base, correo: "luis@mail.com" })).toEqual({});
     });
 });
 
@@ -63,5 +77,26 @@ describe("toVehicleInput", () => {
         const input = toVehicleInput({ ...vehicle, volumen: "60" });
         expect(input.volumen).toBe(60);
         expect(input.ancho).toBe(2.4);
+    });
+});
+
+describe("toDriverInput", () => {
+    it("envía los datos del chofer con sus documentos y licencia", () => {
+        const input = toDriverInput({
+            nombre: "Luis Pérez",
+            tipoDocumento: "DNI",
+            numeroDocumento: "45871236",
+            numeroLicencia: "Q45871236",
+            telefono: "987654321",
+            correo: "luis@example.com",
+        });
+        expect(input).toEqual({
+            nombre: "Luis Pérez",
+            tipoDocumento: "DNI",
+            numeroDocumento: "45871236",
+            numeroLicencia: "Q45871236",
+            telefono: "987654321",
+            correo: "luis@example.com",
+        });
     });
 });

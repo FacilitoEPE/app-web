@@ -22,11 +22,21 @@ export interface DriverFormValues {
     nombre: string;
     telefono: string;
     correo: string;
+    tipoDocumento: string;
+    numeroDocumento: string;
+    numeroLicencia: string;
 }
 
 export type DriverField = keyof DriverFormValues;
 
-export const EMPTY_DRIVER: DriverFormValues = { nombre: "", telefono: "", correo: "" };
+export const EMPTY_DRIVER: DriverFormValues = {
+    nombre: "",
+    telefono: "",
+    correo: "",
+    tipoDocumento: "DNI",
+    numeroDocumento: "",
+    numeroLicencia: "",
+};
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -57,10 +67,13 @@ export function validateVehicle(values: VehicleFormValues): Partial<Record<Vehic
     return errors;
 }
 
-/** Revisión previa del chofer: nombre, teléfono y correo son obligatorios. */
+/** Revisión previa del chofer: nombre, tipo y número de documento, licencia, teléfono y correo son obligatorios. */
 export function validateDriver(values: DriverFormValues): Partial<Record<DriverField, string>> {
     const errors: Partial<Record<DriverField, string>> = {};
     if (!values.nombre.trim()) errors.nombre = "Ingresa el nombre completo del chofer.";
+    if (!values.tipoDocumento.trim()) errors.tipoDocumento = "Selecciona el tipo de documento.";
+    if (!values.numeroDocumento.trim()) errors.numeroDocumento = "Ingresa el número de documento.";
+    if (!values.numeroLicencia.trim()) errors.numeroLicencia = "Ingresa el número de licencia de conducir.";
     if (!values.telefono.trim()) errors.telefono = "Ingresa un teléfono de contacto.";
     if (!values.correo.trim()) errors.correo = "Ingresa el correo del chofer.";
     else if (!EMAIL_PATTERN.test(values.correo.trim())) errors.correo = "Ingresa un correo válido.";
@@ -80,12 +93,26 @@ export function toVehicleInput(values: VehicleFormValues): VehicleInput {
 }
 
 export function toDriverInput(values: DriverFormValues): DriverInput {
-    return { nombre: values.nombre.trim(), telefono: values.telefono.trim(), correo: values.correo.trim() };
+    return {
+        nombre: values.nombre.trim(),
+        telefono: values.telefono.trim(),
+        correo: values.correo.trim(),
+        tipoDocumento: values.tipoDocumento.trim(),
+        numeroDocumento: values.numeroDocumento.trim(),
+        numeroLicencia: values.numeroLicencia.trim(),
+    };
 }
 
 /** Propiedades del backend → campo del formulario, para ubicar los errores 400 bajo cada campo */
 export const VEHICLE_BACKEND_FIELDS: Record<string, string> = {
     placa: "placa", ancho: "ancho", altura: "altura", profundidad: "profundidad", volumen: "volumen", pesoNeto: "pesoNeto", pesoBruto: "pesoBruto",
 };
-export const DRIVER_BACKEND_FIELDS: Record<string, string> = { nombre: "nombre", telefono: "telefono", correo: "correo" };
+export const DRIVER_BACKEND_FIELDS: Record<string, string> = {
+    nombre: "nombre",
+    telefono: "telefono",
+    correo: "correo",
+    tipoDocumento: "tipoDocumento",
+    numeroDocumento: "numeroDocumento",
+    numeroLicencia: "numeroLicencia",
+};
 export const CARRIER_BACKEND_FIELDS: Record<string, string> = { nombreCompleto: "nombre", ruc: "ruc", correo: "correo", numero: "numero" };

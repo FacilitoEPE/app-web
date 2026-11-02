@@ -357,6 +357,8 @@ export default function CampaignCarriersPage() {
                 carrier={details.row?.carrier ?? null}
                 link={details.row?.link ?? null}
                 campaignName={campaign?.nombre ?? "Campaña"}
+                assignedUnitAndDriver={details.row ? quotationInfoFor(details.row).unitAndDriver : undefined}
+                quotation={details.row ? (quotations.find((q) => q.carrierId === details.row?.link.carrierId && q.campaniaId === campaniaId) ?? quotations.find((q) => q.carrierId === details.row?.link.carrierId) ?? null) : null}
             />
 
             <CampaignCarrierAgreementModal

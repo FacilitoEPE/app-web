@@ -75,7 +75,7 @@ export default function CampaignClientsPage() {
 
     const actionsFor = (row: ClienteNegocioCampana): { primary: RowAction[]; secondary: RowAction[] } => ({
         primary: [
-            { label: "Ver detalles", icon: <Eye size={18} />, onClick: () => setRecordModal({ open: true, mode: "view", client: row }) },
+            { label: "Ver detalles", icon: <Eye size={18} />, onClick: () => navigate(`/campaigns/${campaniaId}/clients/${row.clienteNegocioCampanaId}`) },
             { label: "Editar vínculo", icon: <Pencil size={18} />, onClick: () => setRecordModal({ open: true, mode: "edit", client: row }) },
             { label: "Desvincular", icon: <Link2Off size={18} />, variant: "destructive", onClick: () => setUnlinkClient(row) },
         ],

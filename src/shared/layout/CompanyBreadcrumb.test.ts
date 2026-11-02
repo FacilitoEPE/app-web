@@ -117,13 +117,13 @@ describe("getParentHref", () => {
     it.each([
         ["/campaigns", "/modules"],
         ["/campaigns/12", "/campaigns"],
-        ["/campaigns/12/providers", "/campaigns/12"],
-        ["/campaigns/12/carriers", "/campaigns/12"],
-        ["/campaigns/12/weekly-delivery-program", "/campaigns/12"],
-        ["/campaigns/12/providers/5/exams", "/campaigns/12/providers/5"],
+        ["/campaigns/12/providers", "/campaigns"],
+        ["/campaigns/12/carriers", "/campaigns"],
+        ["/campaigns/12/weekly-delivery-program", "/campaigns"],
+        ["/campaigns/12/providers/5/exams", "/campaigns/12/providers"],
         ["/campaigns/3/clients/8/contracts", "/campaigns/3/clients"],
         ["/campaigns/3/clients/8/contracts/2/deliveries", "/campaigns/3/clients/8/contracts"],
-        ["/proveedores/3/fincas", "/proveedores/3"],
+        ["/proveedores/3/fincas", "/proveedores"],
         ["/transportistas/8", "/transportistas"],
         ["/modules", "/modules"],
     ])("from %s goes back to %s", (route, parent) => {

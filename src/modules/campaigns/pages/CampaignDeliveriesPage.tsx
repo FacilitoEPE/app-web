@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { CalendarRange, Eye, ListFilter, PackageCheck, Pencil, RotateCw, SearchX, Sprout, TriangleAlert } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { Eye, ListFilter, PackageCheck, Pencil, RotateCw, SearchX, Sprout, TriangleAlert } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
@@ -8,7 +8,6 @@ import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components
 import { ContextBannerPlaceholder } from "@/shared/components/ContextBanner";
 import FilterBar, { FilterSearch } from "@/shared/components/FilterBar";
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
-import StatusBadge from "@/shared/components/StatusBadge";
 import TableCard from "@/shared/components/TableCard";
 import TableGridCard, { TableGridCardField, TableGridCardFields } from "@/shared/components/TableGridCard";
 import { TableCountPill, TableExportMenu, TableToolbar, TableViewToggle, type TableViewMode } from "@/shared/components/TableToolbar";
@@ -33,7 +32,6 @@ import { useCampaignContractRecords } from "@/modules/campaigns/campaignClientCo
 import { saveCampaignDeliveryCoordination, useCampaignDeliveryRecords } from "@/modules/campaigns/campaignContractDeliveries.store";
 import { useCampaignCarriers } from "@/modules/campaigns/campaignCarriers.store";
 import {
-    getCoordinationStatus,
     listCampaignDeliveries,
     toCoordination,
     type CampaignDeliveryEntry,
@@ -49,7 +47,7 @@ interface LoadedData {
 
 const PROVIDER_TYPES: Record<CampaniaProveedor["tipoProveedor"], string> = { acopio: "Acopiador", productor: "Productor" };
 
-/** Entregas programadas de una campaña en ejecución: de dónde salen, con quién y cuándo. Se completan desde acá. */
+/** Entregas programadas de una campaña en ejecución: de dónde salen, con quién y cuándo. */
 export default function CampaignDeliveriesPage() {
     const { id } = useParams<{ id: string }>();
     const campaniaId = Number(id);
@@ -59,7 +57,6 @@ export default function CampaignDeliveriesPage() {
     const contractRecords = useCampaignContractRecords();
     const links = useCampaignCarriers(campaniaId);
     const { fincas } = useProviderLocalData();
-    const navigate = useNavigate();
 
     const [data, setData] = useState<LoadedData>({ relations: [], campaignProviders: [], carriers: [] });
     const [isLoading, setIsLoading] = useState(isValidCampaign);
@@ -132,27 +129,18 @@ export default function CampaignDeliveriesPage() {
     const entryClient = (entry: CampaignDeliveryEntry) => clientNames[entry.relationId] ?? "Cliente no disponible";
     const entryContract = (entry: CampaignDeliveryEntry) => contractNames[entry.key] ?? "";
     const entryVariety = (entry: CampaignDeliveryEntry) => entry.delivery.variedad ?? "Kent";
-    const carrierCaption = (entry: CampaignDeliveryEntry): string | null => {
-        const assigned = entry.delivery.coordinacion;
-        if (!assigned) return null;
-        const carrier = data.carriers.find((item) => item.id === assigned.carrierId);
-        const plate = carrier?.vehiculos.find((item) => item.id === assigned.vehicleId)?.placa;
-        return [carrier?.nombre, plate].filter(Boolean).join(" · ") || null;
-    };
-
     const hasActiveFilters = search !== "";
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase();
         return entries.filter((entry) => `${clientNames[entry.relationId] ?? ""} ${contractNames[entry.key] ?? ""} ${entry.delivery.destino} ${entryVariety(entry)}`.toLowerCase().includes(query));
     }, [entries, search, clientNames, contractNames]);
     const { pageCount, currentPage, visible } = paginate(filtered, page);
-
-    const pending = entries.filter((entry) => !entry.delivery.coordinacion).length;
+    const pendingCount = entries.filter((entry) => !entry.delivery.coordinacion).length;
 
     const getExportData = (): TableExport => ({
         filename: "entregas_campana",
         title: "Entregas de la campaña",
-        header: ["Cliente", "Contrato", "Variedad", "Fecha programada", "Kilos", "Destino", "Coordinación", "Transportista"],
+        header: ["Cliente", "Contrato", "Variedad", "Fecha programada", "Kilos", "Destino"],
         rows: filtered.map((entry) => [
             entryClient(entry),
             entryContract(entry),
@@ -160,8 +148,6 @@ export default function CampaignDeliveriesPage() {
             formatDisplayDate(entry.delivery.fecha),
             formatKg(entry.delivery.kilosProgramados),
             entry.delivery.destino,
-            getCoordinationStatus(entry.delivery),
-            carrierCaption(entry) ?? "",
         ]),
     });
 
@@ -171,16 +157,6 @@ export default function CampaignDeliveriesPage() {
             { label: "Editar", icon: <Pencil size={18} strokeWidth={2.5} />, onClick: () => setCoordination({ open: true, entry }) },
         ],
     });
-
-    const coordinationCell = (entry: CampaignDeliveryEntry) => {
-        const caption = carrierCaption(entry);
-        return (
-            <div className="flex flex-col items-start gap-1">
-                <StatusBadge status={getCoordinationStatus(entry.delivery)} />
-                {caption && <span className="text-[11.5px] font-medium text-ink-muted">{caption}</span>}
-            </div>
-        );
-    };
 
     const emptyState = isLoading
         ? { icon: <Spinner className="size-7" />, title: "Cargando entregas", description: "Consultando las entregas de la campaña.", action: undefined }
@@ -215,10 +191,9 @@ export default function CampaignDeliveriesPage() {
             {campaign === undefined ? <ContextBannerPlaceholder /> : campaign && (
                 <CampaignContextBanner
                     campaign={campaign}
-                    caption="Entregas · coordinación de las entregas programadas"
+                    caption="Entregas programadas de la campaña"
                     stats={[
                         { label: plural(entries.length, "entrega programada", "entregas programadas"), value: String(entries.length) },
-                        { label: plural(pending, "entrega por completar", "entregas por completar"), value: String(pending) },
                     ]}
                 />
             )}
@@ -226,16 +201,11 @@ export default function CampaignDeliveriesPage() {
             <PageHeader
                 icon={<PackageCheck size={24} strokeWidth={2.5} />}
                 title="Entregas de la Campaña"
-                description="Completa el transporte, los proveedores y las fincas de las entregas programadas en Gestión Comercial."
+                description="Consulta y edita el transporte, los proveedores y las fincas de cada entrega programada en Gestión Comercial."
                 action={
-                    <div className="flex flex-wrap items-center gap-2.5">
-                        <Button variant="outline" size="xl" onClick={() => navigate(`/campaigns/${campaniaId}/weekly-program`)} disabled={!isValidCampaign}>
-                            <CalendarRange size={19} strokeWidth={2.3} /> Programa semanal
-                        </Button>
-                        <Button size="xl" onClick={() => setCoordination({ open: true, entry: null })} disabled={!isValidCampaign || isLoading || entries.length === 0}>
-                            <PackageCheck size={20} strokeWidth={2.5} /> Completar datos de entrega
-                        </Button>
-                    </div>
+                    <Button size="xl" onClick={() => setCoordination({ open: true, entry: null })} disabled={!isValidCampaign || isLoading || pendingCount === 0}>
+                        <PackageCheck size={20} strokeWidth={2.5} /> Completar datos de entrega
+                    </Button>
                 }
             />
 
@@ -278,7 +248,6 @@ export default function CampaignDeliveriesPage() {
                                 <TableGridCardField label="Fecha programada" value={formatDisplayDate(entry.delivery.fecha)} />
                                 <TableGridCardField label="Kilos" value={`${formatKg(entry.delivery.kilosProgramados)} kg`} />
                                 <TableGridCardField label="Destino" value={entry.delivery.destino} />
-                                <TableGridCardField label="Coordinación" value={coordinationCell(entry)} />
                             </TableGridCardFields>
                         </TableGridCard>
                     ))}
@@ -294,7 +263,6 @@ export default function CampaignDeliveriesPage() {
                                     <TableHead className="h-14 font-semibold text-ink">Fecha programada</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Kilos</TableHead>
                                     <TableHead className="h-14 font-semibold text-ink">Destino</TableHead>
-                                    <TableHead className="h-14 font-semibold text-ink">Coordinación</TableHead>
                                     <TableHead className="h-14 w-36 px-6 text-center font-semibold text-ink">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -314,7 +282,6 @@ export default function CampaignDeliveriesPage() {
                                         <TableCell className="whitespace-nowrap font-medium text-ink-body">{formatDisplayDate(entry.delivery.fecha)}</TableCell>
                                         <TableCell className="whitespace-nowrap font-medium tabular-nums text-ink-body">{formatKg(entry.delivery.kilosProgramados)} kg</TableCell>
                                         <TableCell className="font-medium text-ink-body">{entry.delivery.destino}</TableCell>
-                                        <TableCell>{coordinationCell(entry)}</TableCell>
                                         <TableCell className="px-6">
                                             <RowActions {...getRowActions(entry)} className="justify-center text-ink-muted" />
                                         </TableCell>
@@ -331,7 +298,7 @@ export default function CampaignDeliveriesPage() {
                 onOpenChange={(open) => setCoordination((current) => ({ ...current, open }))}
                 campaignName={campaignName}
                 entries={entries}
-                editing={coordination.entry}
+                entry={coordination.entry}
                 clientNames={clientNames}
                 contractNames={contractNames}
                 carriers={linkedCarriers}
@@ -354,3 +321,4 @@ export default function CampaignDeliveriesPage() {
         </div>
     );
 }
+

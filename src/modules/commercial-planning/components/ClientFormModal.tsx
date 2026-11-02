@@ -28,8 +28,13 @@ const BACKEND_FIELDS: Record<string, string> = {
 };
 
 const EMPTY_CLIENT: ClienteNegocioInput = {
-    nombreEmpresa: "", nombreContacto: "", telefono: "", ruc: "",
-    correoCorporativo: "", ubicacion: "", tipoCliente: "" as ClienteNegocioInput["tipoCliente"],
+    nombreEmpresa: "",
+    nombreContacto: "",
+    telefono: "",
+    ruc: "",
+    correoCorporativo: "",
+    ubicacion: "",
+    tipoCliente: "exportador",
 };
 
 interface ClientFormModalProps {

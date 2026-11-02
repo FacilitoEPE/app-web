@@ -2,6 +2,63 @@
 
 > **Único archivo oficial de seguimiento.** Toda auditoría o conexión de vistas/APIs debe actualizarse aquí indicando fecha ISO (`YYYY-MM-DD`) y estado (`Completo`, `Parcial`, `Sin cambios`), conservando el historial en la sección inferior.
 
+## Breadcrumb breve de Cosecha y Calidad — 2026-11-01 · Completo
+
+- Las rutas propias muestran solo el nombre de la vista en el último nivel: Análisis y revisión, Carga, Guías de remisión o Resumen de campaña. El canal Exportador/Industria sigue en la URL y en el contexto de la página, sin repetirse en el breadcrumb.
+- Se mantienen el enlace al listado y el regreso directo; no cambian rutas, datos ni formularios.
+
+## Vistas independientes de Cosecha y Calidad — 2026-11-01 · Completo
+
+- Las acciones de campaña del listado abren rutas propias: Exportador tiene Análisis y revisión, Carga y Guías de remisión; Industria tiene Carga y Guías de remisión. Ver detalles abre un resumen separado, sin pestañas operativas ni banner superior.
+- Cada gestión tiene título, botón de registro y tabla. Los botones de registro eligen una entrega o carga existente y reutilizan los formularios V1; Guías de remisión ahora lista las guías en tabla en lugar de tarjetas por carga. No se agregaron campos ni endpoints.
+- El breadcrumb y el respaldo de Regresar llevan directamente al listado de Cosecha y Calidad, sin insertar Detalle como paso ficticio. Las rutas inválidas y Análisis en Industria muestran error de página.
+
+## Botón superior para completar entregas — 2026-11-01 · Completo
+
+- Se restauró Completar datos de entrega en el encabezado de Gestión de Entregas. Abre un formulario con selector de entregas programadas que todavía no tienen datos de transporte, proveedores y fincas; se deshabilita cuando no hay ninguna disponible.
+- Las acciones de cada fila siguen siendo solo Ver detalles y Editar. La tabla y el detalle no muestran un estado de coordinación. Editar abre directamente la entrega seleccionada y conserva sus datos si ya fueron guardados.
+- Se reutiliza el guardado V1 existente; el selector del botón superior es un control del formulario y no una acción adicional de fila.
+
+## Edición de entregas de campaña sin estado visual — 2026-11-01 · Completo
+
+- Gestión de Entregas muestra solo Ver detalles y Editar por fila, tenga o no datos de transporte. Se retiraron la acción Completar datos, el botón superior, la columna y las etiquetas de Coordinación, y el contador de entregas por completar.
+- Editar abre directamente la entrega elegida: si aún no tiene transporte, proveedores ni fincas, el formulario inicia vacío; si ya se guardaron, carga esos datos para modificarlos. Se eliminó el selector de entregas y su campo de validación porque ya no existe un flujo de alta separado.
+- Ver detalles conserva la información programada y muestra los datos operativos registrados cuando existen, sin presentar un estado de coordinación. El contrato y los endpoints V1 permanecen iguales.
+
+## Datos ficticios para completar entregas — 2026-11-01 · Completo
+
+- Se agregaron dos entregas programadas sin coordinación al contrato 2 de Mango 2026 en `json/future/entrega_programada.json`: 600 kg y 900 kg, dentro de los 1,500 kg acordados. El mock V1 de desarrollo las muestra como pendientes en Gestión de Entregas para probar Completar datos.
+- Los datos se cargan solo con `/mock-api/` durante `pnpm dev`; no se añadió respaldo ficticio a la vista conectada ni se modificó el contrato del backend.
+
+## Precarga de coordinación al elegir una entrega — 2026-11-01 · Completo
+
+- La entrega de la captura estaba marcada `Completa`: ya tenía una fila en `coordinacion_entrega` con transportista, camión, chofer y fechas, más orígenes con proveedor y finca. Esos datos se proyectan a `delivery.coordinacion`; no provienen de los campos de programación (fecha, kilos, destino y observaciones).
+- El modal de Completar permitía elegir entregas completas y cargaba su coordinación existente. Ahora ofrece únicamente pendientes; al seleccionarlas, transporte, fechas y proveedores permanecen vacíos para captura manual. Las completas se consultan o modifican desde las acciones Ver detalles y Editar de su fila.
+- El botón superior se deshabilita cuando no hay pendientes, y la acción de una fila pendiente se llama Completar datos. La edición de una entrega ya coordinada conserva la precarga legítima de sus datos guardados.
+
+## Banner en páginas de detalle — 2026-11-01 · Completo
+
+- Retirado `CampaignContextBanner` de `/campaigns/:id/clients/:clientLinkId`, la página abierta por Ver detalles en Gestión de Clientes. Su ficha y métricas ya aportan contexto suficiente.
+- Auditadas las demás páginas con ruta propia abiertas por Ver detalles: campaña, proveedor de campaña, proveedor global, cliente comercial y transportista. No montan `ContextBanner`. Las sub-vistas de gestión conservan sus banners de contexto.
+- `docs/ui-and-design-system.md` ahora prohíbe explícitamente el banner superior en cualquier futura página de Ver detalles con ruta propia, incluso cuando la ruta está anidada.
+
+## Auditoría transversal de rutas y navegación — 2026-11-01 · Parcial
+
+- Revisadas todas las rutas registradas en `App.tsx`, sus breadcrumbs, destinos de `Regresar`, accesos directos desde tablas y enlaces de las páginas de campaña, proveedores, transporte y gestión comercial. Los breadcrumbs de fincas/certificados, exámenes/entrevistas, vehículos/choferes y secciones de campaña ya omitían los detalles intermedios; el defecto adicional estaba en el respaldo de `Regresar` al abrir una URL directa.
+- Ajustado ese respaldo para que las secciones de campaña vuelvan al listado de campañas, exámenes/entrevistas al listado de proveedores de campaña y fincas/certificados al listado global de proveedores. Con historial de navegación se conserva el regreso a la vista realmente visitada. Los estados de error de esas sub-vistas y de certificaciones de campaña ofrecen el mismo destino de listado; el programa semanal ahora ofrece regreso en error.
+- Corregido el botón Programa semanal de Entregas de la Campaña: apuntaba a `/weekly-program`, ruta no registrada, y ahora usa `/weekly-delivery-program`. Pruebas de rutas cubren accesos directos, breadcrumb sin niveles ficticios y regreso con/sin historial. Auditoría de código; queda pendiente recorrido visual por cada módulo en navegador.
+
+## Auditoría del breadcrumb de contratos y entregas — 2026-11-01 · Completo
+
+- La ruta de Contratos se abre directamente desde Gestión de Clientes, sin pasar por Detalle. El breadcrumb anterior insertaba Detalle por la forma de la URL y mostraba un paso que el usuario no recorrió; se retira de Contratos y Entregas. Detalle conserva su breadcrumb cuando se abre su página propia.
+- El regreso con historial sigue volviendo a la vista realmente visitada. Al abrir Contratos por URL directa, el destino de respaldo vuelve a Gestión de Clientes; desde Entregas vuelve a Contratos. Se actualizaron las pruebas de rutas para ambos casos.
+
+## Detalle de cliente en campaña — 2026-11-01 · Parcial
+
+- `Ver detalles` en Gestión de Clientes abre `/campaigns/:id/clients/:clientLinkId`, una página independiente con ficha comercial, datos del vínculo, documentos, resumen de contratos y entregas y acceso a sus vistas de gestión. La edición del vínculo permanece disponible en su modal.
+- La página usa la relación cargada por `getClientesNegocioCampana`, el catálogo de campaña y las proyecciones de contratos/entregas ya existentes. No se agregaron campos ni endpoints y no se usa demo como respaldo de V1.
+- Se añadieron la ruta y su breadcrumb propios. Contratos se mantiene como acceso directo desde Gestión de Clientes, y Entregas desde Contratos. Falta recorrido visual en navegador y comprobación contra backend activo.
+
 ## Cotización al vincular transportista — 2026-11-01 · Parcial
 
 - En el modal de transportistas de campaña se retiró el bloque de ubicación y contacto que aparecía al elegir un transportista. Se añadió el selector y la vista previa de la cotización.

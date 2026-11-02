@@ -24,6 +24,13 @@ export interface QualityActionItem {
     label: string;
 }
 
+export type QualitySection = "resumen" | QualityActionItem["id"];
+
+export function qualityCampaignHref(scope: QualityScope, campaignId: number, section: QualitySection = "resumen"): string {
+    const base = `/calidad/${scope}/${campaignId}`;
+    return section === "resumen" ? base : `${base}/${section}`;
+}
+
 export function getQualityActionsForScope(scope: QualityScope): QualityActionItem[] {
     if (scope === "industria") {
         return [

@@ -236,7 +236,7 @@ export default function CampaignWeeklyDeliveryProgramPage() {
 
     const hasActiveFilters = selectedVariety !== "all" || (selectedWeekId !== "" && selectedWeekId !== weeks[0]?.id);
 
-    if (dataError) return <PageError title="No se pudo cargar el programa semanal" message="Verifica la conexión e inténtalo nuevamente." onRetry={()=>{setDataError(false);setRetry(n=>n+1)}} />;
+    if (dataError) return <PageError title="No se pudo cargar el programa semanal" message="Verifica la conexión e inténtalo nuevamente." onRetry={()=>{setDataError(false);setRetry(n=>n+1)}} back={{ to: "/campaigns", label: "Volver a campañas" }} />;
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">

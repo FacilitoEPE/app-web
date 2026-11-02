@@ -1,4 +1,4 @@
-import { useSectionMotion } from '@/shared/hooks/useSectionMotion';
+import { useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { Plus, ShieldCheck } from "lucide-react";
 import PageHeader from "@/shared/layout/PageHeader";
@@ -7,25 +7,19 @@ import QualityStatusTabs from "@/modules/quality/components/QualityStatusTabs";
 import QualityFilters from "@/modules/quality/components/QualityFilters";
 import QualityTable from "@/modules/quality/components/QualityTable";
 import QualityAddCampaignModal from "@/modules/quality/components/QualityAddCampaignModal";
-import QualityCampaignWorkspace, {
-    type QualityWorkspaceTab,
-} from "@/modules/quality/components/QualityCampaignWorkspace";
 import {
     filterQualityCampaigns,
+    qualityCampaignHref,
     type QualityCampaign,
     type QualityScope,
 } from "@/modules/quality/quality.utils";
 import { addQualityCampaign, useQualityCampaigns } from "@/modules/quality/quality.store";
 
 export default function QualityPage() {
+    const navigate = useNavigate();
     const campaigns = useQualityCampaigns();
     const [scope, setScope] = useState<QualityScope>("exportador");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [activeCampaign, setActiveCampaign] = useState<QualityCampaign | null>(null);
-    useSectionMotion(String(activeCampaign?.campaniaId ?? 'list'));
-    const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<QualityWorkspaceTab | undefined>(
-        undefined,
-    );
 
     // Filtros
     const [search, setSearch] = useState("");
@@ -80,28 +74,15 @@ export default function QualityPage() {
     }, [campaignsInScope]);
 
     const handleViewDetails = (campaign: QualityCampaign) => {
-        setActiveWorkspaceTab(scope === "exportador" ? "resumen" : "carga");
-        setActiveCampaign(campaign);
+        navigate(qualityCampaignHref(scope, campaign.campaniaId));
     };
 
     const handleSelectAction = (
         actionId: "analisis" | "carga" | "guias",
         campaign: QualityCampaign,
     ) => {
-        setActiveWorkspaceTab(actionId);
-        setActiveCampaign(campaign);
+        navigate(qualityCampaignHref(scope, campaign.campaniaId, actionId));
     };
-
-    if (activeCampaign) {
-        return (
-            <QualityCampaignWorkspace
-                campaign={activeCampaign}
-                scope={scope}
-                initialTab={activeWorkspaceTab}
-                onBack={() => setActiveCampaign(null)}
-            />
-        );
-    }
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">

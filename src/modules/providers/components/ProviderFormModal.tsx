@@ -163,7 +163,15 @@ export default function ProviderFormModal({ open, onOpenChange, mode = "create",
                                 </SelectContent>
                             </Select>
                         </FormField>
-                        <InputField {...bind("nmrDocumento")} label="Número de documento" className="sm:col-span-3" step="1" min={1} inputMode="numeric" placeholder="12345678" />
+                        <InputField
+                            {...bind("nmrDocumento")}
+                            label="Número de documento"
+                            className="sm:col-span-3"
+                            type="text"
+                            inputMode={values.tipoDocumento === "DNI" ? "numeric" : "text"}
+                            maxLength={30}
+                            placeholder="Ej. 12345678"
+                        />
                         <FormField className="sm:col-span-6" error={errors.identidadDocArchivo}>
                             <FileDropzone
                                 variant="horizontal"
@@ -196,7 +204,7 @@ export default function ProviderFormModal({ open, onOpenChange, mode = "create",
                             </Select>
                         </FormField>
                     </div>
-                    <FormField label="Frutas y variedades" hint="Agrega las frutas que trabaja el proveedor y marca sus variedades.">
+                    <FormField label="Frutas y variedades" hint="Elige cada fruta y marca al menos una variedad para agregarla.">
                         <FruitVarietyPicker
                             fruits={CATALOGO_FRUTAS}
                             value={toCultivos(values.frutas ?? [])}

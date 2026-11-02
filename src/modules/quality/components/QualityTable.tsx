@@ -116,13 +116,7 @@ export default function QualityTable({
     const getRowActions = (row: QualityCampaign): { primary: RowAction[]; secondary: RowAction[] } => {
         const primary: RowAction[] = [
             {
-                label: "Abrir espacio de calidad",
-                icon: <ClipboardCheck size={18} strokeWidth={2.2} />,
-                variant: "brand",
-                onClick: () => onSelectAction(scope === "exportador" ? "analisis" : "carga", row),
-            },
-            {
-                label: "Ver campaña",
+                label: "Ver detalles",
                 icon: <Eye size={18} strokeWidth={2.2} />,
                 onClick: () => onViewDetails(row),
             },

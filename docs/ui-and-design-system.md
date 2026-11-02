@@ -14,10 +14,10 @@
 | **Subtítulo dentro de un modal** | `ModalSection` (`title`, `aside` opcional) | Prohibido usar `<h3>` sueltos o repetir íconos en círculo por sección. **No usar `ModalSection`** si el formulario registra una sola entidad simple. |
 | **Vista de listado con tabla/grilla** | `PageHeader` + Filtros + `TableCard` (`TableToolbar`, `TableCountPill`, `TableExportMenu`, `TablePagination` con `paginate` de 8 filas) | Prohibido desmontar toda la página de lista con `PageLoading`/`PageError` (la carga y el error van dentro de `TableCard`). |
 | **Acciones de fila en tabla** | `RowActions` en este orden exacto: **1. Ver detalles · 2. Editar · 3. Eliminar/Desvincular · 4. Más opciones (⋮)** | Prohibido alterar el orden de las acciones o deshabilitar el botón de guardar de un modal por campos vacíos. |
-| **Vista de detalle de entidad** | Carga/error con `PageLoading` / `PageError` (siempre con `back` y `onRetry`). Grilla superior `lg:grid-cols-[1.95fr_1fr]` con `EntityOverviewCard` + `MetricCards`. Acción en header: `"Editar ..."` | Prohibido poner `ContextBanner` en vistas raíz o de detalle general. |
+| **Vista de detalle de entidad con ruta propia** | Carga/error con `PageLoading` / `PageError` (siempre con `back` y `onRetry`). Grilla superior `lg:grid-cols-[1.95fr_1fr]` con `EntityOverviewCard` + `MetricCards`. Acción en header: `"Editar ..."` | Toda vista abierta por **Ver detalles** en una página aparte, incluso si su URL está dentro de una campaña, va **sin `ContextBanner` ni banner informativo superior**. La ficha y el resumen de la entidad son su encabezado visual. |
 
 ### Escalera de `ContextBanner` en Sub-vistas
-Toda vista que sale de otra lleva arriba el banner del **nivel inmediato anterior** (y reserva espacio con `ContextBannerPlaceholder` si carga aparte):
+Las **sub-vistas de gestión** que salen de otra llevan arriba el banner del **nivel inmediato anterior** (y reservan espacio con `ContextBannerPlaceholder` si cargan aparte). Esta regla no se aplica a páginas de **Ver detalles** con ruta propia:
 - `/campaigns/:id/{providers,clients,certifications,carriers,deliveries}` → `CampaignContextBanner`
 - `/campaigns/:id/providers/:cxpId/{interviews,exams}` → `CampaignProviderContextBanner`
 - `/campaigns/:id/clients/:clientLinkId/contracts` → `CampaignClientContextBanner`

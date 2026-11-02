@@ -1,8 +1,6 @@
 import { usesV1 } from '@/shared/api/data-contract';
-import { useNavigate } from 'react-router-dom';
 import { useMemo, useState } from "react";
 import {
-    ArrowLeft,
     Bug,
     ClipboardCheck,
     FileCheck2,
@@ -22,16 +20,15 @@ import QualityManagementImg from "@/assets/quality_management.webp";
 import AppModal from "@/shared/components/AppModal";
 import ContextBanner from "@/shared/components/ContextBanner";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
-import { InfoField, SummaryBar } from "@/shared/components/InfoField";
+import { SummaryBar } from "@/shared/components/InfoField";
 import InputField from "@/shared/components/InputField";
 import MetricCards, { type Metric } from "@/shared/components/MetricCards";
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
-import SegmentedTabs, { type SegmentedTabItem } from "@/shared/components/SegmentedTabs";
 import StatusBadge from "@/shared/components/StatusBadge";
 import TableCard from "@/shared/components/TableCard";
 import { TableCountPill, TableToolbar } from "@/shared/components/TableToolbar";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent } from "@/shared/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
 import {
     Table,
     TableBody,
@@ -42,7 +39,7 @@ import {
 } from "@/shared/components/ui/table";
 import PageHeader from "@/shared/layout/PageHeader";
 import { formatDisplayDate, formatKg, formatMoney } from "@/shared/utils/format";
-import type { QualityCampaign, QualityScope } from "@/modules/quality/quality.utils";
+import type { QualityCampaign, QualityScope, QualitySection } from "@/modules/quality/quality.utils";
 import QualityDeliveryReviewModal from "@/modules/quality/components/QualityDeliveryReviewModal";
 import QualityHarvestWizardModal from "@/modules/quality/components/QualityHarvestWizardModal";
 import QualityLoadFormModal from "@/modules/quality/components/QualityLoadFormModal";
@@ -60,26 +57,19 @@ import {
     useQualityDeliveryLoads,
 } from "@/modules/quality/qualityOperations.store";
 
-export type QualityWorkspaceTab = "resumen" | "analisis" | "carga" | "guias";
-
 interface QualityCampaignWorkspaceProps {
     campaign: QualityCampaign;
     scope: QualityScope;
-    initialTab?: QualityWorkspaceTab;
-    onBack: () => void;
+    section: QualitySection;
 }
 
 export default function QualityCampaignWorkspace({
     campaign,
     scope,
-    initialTab,
-    onBack,
+    section,
 }: QualityCampaignWorkspaceProps) {
-    const navigate = useNavigate();
     const allLoads = useQualityDeliveryLoads();
-    const defaultTab: QualityWorkspaceTab =
-        initialTab ?? (scope === "exportador" ? "resumen" : "carga");
-    const [activeTab, setActiveTab] = useState<QualityWorkspaceTab>(defaultTab);
+    const activeTab = section;
 
     const [reviewModalLoad, setReviewModalLoad] = useState<QualityDeliveryLoadItem | null>(null);
     const [harvestModalLoad, setHarvestModalLoad] = useState<QualityDeliveryLoadItem | null>(null);
@@ -119,44 +109,6 @@ export default function QualityCampaignWorkspace({
             ),
         [allLoads, campaign.campaniaId, scope],
     );
-
-    const tabs: readonly SegmentedTabItem[] =
-        scope === "exportador"
-            ? [
-                  { id: "resumen", label: "Resumen de cosecha y calidad", icon: Layers },
-                  {
-                      id: "analisis",
-                      label: "Análisis y revisión",
-                      icon: FlaskConical,
-                      count: campaignLoads.length,
-                  },
-                  {
-                      id: "carga",
-                      label: "Cargas por entrega",
-                      icon: PackageCheck,
-                      count: campaignLoads.length,
-                  },
-                  {
-                      id: "guias",
-                      label: "Guías de remisión",
-                      icon: FileCheck2,
-                      count: campaignLoads.reduce((s, l) => s + l.guiasRemision.length, 0),
-                  },
-              ]
-            : [
-                  {
-                      id: "carga",
-                      label: "Cargas por entrega — Industria",
-                      icon: PackageCheck,
-                      count: campaignLoads.length,
-                  },
-                  {
-                      id: "guias",
-                      label: "Guías de remisión",
-                      icon: FileCheck2,
-                      count: campaignLoads.reduce((s, l) => s + l.guiasRemision.length, 0),
-                  },
-              ];
 
     const totalKilosProgramados = campaignLoads.reduce((s, l) => s + l.kilosProgramados, 0);
     const totalKilosCosechados = campaignLoads.reduce(
@@ -304,56 +256,36 @@ export default function QualityCampaignWorkspace({
         setNewExportLoadOpen(false);
     };
 
-    const getLoadActions = (load: QualityDeliveryLoadItem): { primary: RowAction[]; secondary: RowAction[] } => {
-        if (scope === "industria") {
-            return {
-                primary: [
-                    {
-                        label: "Registrar / editar datos de carga",
-                        icon: <Pencil size={18} strokeWidth={2.4} />,
-                        onClick: () => setLoadFormModalItem(load),
-                    },
-                    {
-                        label: load.id.startsWith("entrega-") ? "Registrar datos antes de guía" : "Preparar guía SUNAT",
-                        icon: <FileCheck2 size={18} strokeWidth={2.4} />,
-                        onClick: () => openGuide(load),
-                    },
-                ],
-                secondary: [],
-            };
-        }
+    const getLoadActions = (load: QualityDeliveryLoadItem): { primary: RowAction[]; secondary: RowAction[] } => ({
+        primary: [{ label: "Editar carga", icon: <Pencil size={18} strokeWidth={2.4} />, onClick: () => setLoadFormModalItem(load) }],
+        secondary: scope === "exportador"
+            ? [{ label: "Flujo de operación de cosecha", icon: <Sprout size={16} strokeWidth={2.4} />, onClick: () => setHarvestModalLoad(load) }]
+            : [],
+    });
 
-        return {
-            primary: [
-                {
-                    label: "Flujo de operación de cosecha (5 pasos)",
-                    icon: <Sprout size={18} strokeWidth={2.4} />,
-                    onClick: () => setHarvestModalLoad(load),
-                },
-                {
-                    label: "Análisis y revisión MTD",
-                    icon: <FlaskConical size={18} strokeWidth={2.4} />,
-                    onClick: () => setReviewModalLoad(load),
-                },
-            ],
-            secondary: [
-                {
-                    label: "Datos de carga (Anotador)",
-                    icon: <PackageCheck size={16} strokeWidth={2.4} />,
-                    onClick: () => setLoadFormModalItem(load),
-                },
-                {
-                    label: load.id.startsWith("entrega-") ? "Registrar datos antes de guía" : "Preparar guía de remisión SUNAT",
-                    icon: <FileCheck2 size={16} strokeWidth={2.4} />,
-                    onClick: () => openGuide(load),
-                },
-            ],
-        };
+    const registrationTargets = activeTab === "analisis"
+        ? campaignLoads
+        : activeTab === "carga"
+            ? campaignLoads.filter((load) => load.id.startsWith("entrega-"))
+            : activeTab === "guias"
+                ? campaignLoads.filter((load) => !load.id.startsWith("entrega-"))
+                : [];
+    const canCreateLegacyLoad = activeTab === "carga" && scope === "exportador" && !usesV1();
+    const sectionTitle = activeTab === "analisis" ? "Análisis y revisión"
+        : activeTab === "carga" ? "Carga"
+            : activeTab === "guias" ? "Guías de remisión" : "Resumen de campaña";
+    const registerLabel = activeTab === "analisis" ? "Registrar análisis y revisión"
+        : activeTab === "carga" ? "Registrar carga" : "Registrar guía de remisión";
+    const openRegistration = (load: QualityDeliveryLoadItem) => {
+        if (activeTab === "analisis") setReviewModalLoad(load);
+        else if (activeTab === "carga") setLoadFormModalItem(load);
+        else if (activeTab === "guias") openGuide(load, null);
     };
+    const guideRows = campaignLoads.flatMap((load) => load.guiasRemision.map((guide) => ({ load, guide })));
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
-            <ContextBanner
+            {activeTab !== "resumen" && <ContextBanner
                 ariaLabel={`Campaña ${campaign.nombre}`}
                 eyebrow={{
                     icon: <Sprout size={14} strokeWidth={2.4} />,
@@ -367,40 +299,41 @@ export default function QualityCampaignWorkspace({
                     { label: "entregas", value: String(campaignLoads.length) },
                     { label: "cosechados", value: `${formatKg(totalKilosCosechados)} kg` },
                 ]}
-            />
+            />}
 
             <PageHeader
                 icon={<ShieldCheck size={24} strokeWidth={2.5} />}
-                title={`Operación de Cosecha y Calidad · ${campaign.nombre}`}
-                description={
-                    scope === "exportador"
-                        ? "Gestiona el resumen de cosecha, revisión fitosanitaria MTD Ceratitis, flujo de 5 pasos de cosecha y guías SUNAT."
-                        : "Gestiona las cargas industriales por entrega, validación de aptitud en acopio y guías de remisión."
-                }
-                action={
-                    <div className="flex flex-wrap items-center gap-2.5">
-                        <Button variant="outline" size="xl" onClick={onBack}>
-                            <ArrowLeft size={18} strokeWidth={2.5} /> Volver al listado
-                        </Button>
-                        {scope === "exportador" && (
-                            <Button size="xl" onClick={() => usesV1() ? navigate(`/campaigns/${campaign.campaniaId}/deliveries`) : setNewExportLoadOpen(true)}>
-                                <Plus size={18} strokeWidth={2.5} /> {usesV1() ? "Programar entrega" : "Nueva carga de Exportación"}
-                            </Button>
-                        )}
-                    </div>
-                }
+                title={`${sectionTitle} · ${campaign.nombre}`}
+                description={activeTab === "resumen"
+                    ? `Resumen de cosecha y calidad en ${scope === "exportador" ? "Exportador" : "Industria"}.`
+                    : activeTab === "analisis"
+                        ? "Registra y consulta el análisis MTD y la revisión de cada entrega."
+                        : activeTab === "carga"
+                            ? "Registra y consulta los datos reales de carga de las entregas."
+                            : "Registra y consulta las guías de remisión de las cargas de la campaña."}
+                action={activeTab !== "resumen" ? (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger render={<Button size="xl" disabled={registrationTargets.length === 0 && !canCreateLegacyLoad} />}>
+                            <Plus size={18} strokeWidth={2.5} /> {registerLabel}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" sideOffset={8} className="max-h-72 w-80 overflow-y-auto rounded-xl border-border bg-popover p-1.5 shadow-xl">
+                            {registrationTargets.map((load) => (
+                                <DropdownMenuItem key={load.id} onClick={() => openRegistration(load)} className="cursor-pointer rounded-lg px-3 py-2.5 text-ink-body">
+                                    <PackageCheck size={16} className="text-brand" />
+                                    <span className="truncate">{load.codigoCarga || `Entrega ${formatDisplayDate(load.fechaProgramada)}`} · {load.cliente}</span>
+                                </DropdownMenuItem>
+                            ))}
+                            {canCreateLegacyLoad && <DropdownMenuItem onClick={() => setNewExportLoadOpen(true)} className="cursor-pointer rounded-lg px-3 py-2.5 text-ink-body">
+                                <Plus size={16} className="text-brand" /> Nueva carga de Exportación
+                            </DropdownMenuItem>}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                ) : undefined}
             />
 
-            <div className="mb-6">
+            {activeTab === "resumen" && <div className="mb-6">
                 <MetricCards label="Indicadores de cosecha y calidad" metrics={summaryMetrics} />
-            </div>
-
-            <SegmentedTabs
-                tabs={tabs}
-                value={activeTab}
-                onChange={(v) => setActiveTab(v as QualityWorkspaceTab)}
-                className="mb-6"
-            />
+            </div>}
 
             {/* SECCIÓN 1: RESUMEN DE COSECHA Y CALIDAD (EXPORTACIÓN) */}
             {activeTab === "resumen" && (
@@ -443,9 +376,6 @@ export default function QualityCampaignWorkspace({
                                     Kilos cosechados
                                 </TableHead>
                                 <TableHead className="px-3 py-3.5 text-center font-bold text-ink">Estado</TableHead>
-                                <TableHead className="py-3.5 pl-3 pr-6 text-right font-bold text-ink">
-                                    Acciones
-                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-border/60">
@@ -454,7 +384,6 @@ export default function QualityCampaignWorkspace({
                                     (s, p) => s + p.kilosCargados,
                                     0,
                                 );
-                                const actions = getLoadActions(load);
                                 return (
                                     <TableRow key={load.id} className="transition-colors hover:bg-muted/30">
                                         <TableCell className="relative py-3.5 pl-6 pr-3">
@@ -502,12 +431,6 @@ export default function QualityCampaignWorkspace({
                                                         ? "Cosecha cerrada"
                                                         : "En cosecha"
                                                 }
-                                            />
-                                        </TableCell>
-                                        <TableCell className="py-3.5 pl-3 pr-6 text-right">
-                                            <RowActions
-                                                primary={actions.primary}
-                                                secondary={actions.secondary}
                                             />
                                         </TableCell>
                                     </TableRow>
@@ -760,92 +683,43 @@ export default function QualityCampaignWorkspace({
 
             {/* SECCIÓN 4: GUÍAS DE REMISIÓN SUNAT */}
             {activeTab === "guias" && (
-                <div className="flex flex-col gap-5">
-                    {campaignLoads.map((load) => (
-                        <Card key={load.id} className="border-border/90 py-0 shadow-xs">
-                            <CardContent className="flex flex-col gap-4 p-5">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <div className="flex items-center gap-3">
-                                        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-surface text-brand">
-                                            <FileCheck2 size={20} strokeWidth={2.3} />
-                                        </span>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-[15px] font-extrabold text-ink">
-                                                    Carga {load.codigoCarga} · {load.cliente}
-                                                </h3>
-                                                <StatusBadge
-                                                    status={`${load.guiasRemision.length} guía(s) SUNAT`}
-                                                />
-                                            </div>
-                                            <p className="text-[12.5px] text-ink-muted">
-                                                Unidad: {load.placa} ({load.chofer}) · Destino: {load.destino}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        size="lg"
-                                        onClick={() => openGuide(load, null)}
-                                    >
-                                        <Plus size={16} strokeWidth={2.5} /> Agregar guía de remisión SUNAT
-                                    </Button>
-                                </div>
-
-                                {load.guiasRemision.length === 0 ? (
-                                    <div className="rounded-xl border border-dashed border-border p-4 text-center text-[13px] text-ink-muted">
-                                        Aún no se han emitido guías de remisión para esta carga. Pulsa{" "}
-                                        <strong>+ Agregar guía de remisión SUNAT</strong> para configurarla.
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                        {load.guiasRemision.map((guide) => (
-                                            <div
-                                                key={guide.id}
-                                                className="flex flex-col gap-3 rounded-2xl border border-brand-border/60 bg-brand-surface/20 p-4"
-                                            >
-                                                <div className="flex items-center justify-between gap-2">
-                                                    <span className="text-[14.5px] font-extrabold text-brand">
-                                                        Guía Remitente {guide.numeroGuia}
-                                                    </span>
-                                                    <StatusBadge status={guide.estado} />
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <InfoField
-                                                        label="Peso bruto (KGM)"
-                                                        value={`${formatKg(guide.pesoBrutoTotalKg)} kg (${guide.numeroBultos} bultos)`}
-                                                    />
-                                                    <InfoField
-                                                        label="UBIGEO Partida → Llegada"
-                                                        value={`${guide.ubigeoPartida} → ${guide.ubigeoLlegada}`}
-                                                    />
-                                                </div>
-                                                <p className="text-[12px] text-ink-muted">
-                                                    <strong>Bien:</strong> {guide.descripcionProducto}
-                                                </p>
-                                                <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => openGuide(load, guide)}
-                                                    >
-                                                        <Pencil size={14} /> Configurar datos SUNAT
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => window.print()}
-                                                    >
-                                                        <Printer size={14} /> Vista previa / Imprimir
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                <TableCard
+                    icon={<FileCheck2 size={24} strokeWidth={2.2} />}
+                    title="Guías de remisión SUNAT"
+                    description="Consulta y configura las guías registradas para las cargas de esta campaña."
+                    headerRight={<TableToolbar><TableCountPill icon={<FileCheck2 size={16} className="text-brand" />} count={guideRows.length} singular="guía" plural="guías" /></TableToolbar>}
+                    isEmpty={guideRows.length === 0}
+                    emptyTitle="Aún no hay guías de remisión"
+                    emptyDescription="Usa Registrar guía de remisión y elige una carga registrada."
+                    page={1}
+                    pageCount={1}
+                    onPageChange={() => {}}
+                >
+                    <Table>
+                        <TableHeader className={TABLE_HEAD_BG}>
+                            <TableRow>
+                                <TableHead className="h-14 px-6 font-semibold text-ink">Carga / cliente</TableHead>
+                                <TableHead className="font-semibold text-ink">Guía</TableHead>
+                                <TableHead className="font-semibold text-ink">Traslado</TableHead>
+                                <TableHead className="font-semibold text-ink">Peso y bultos</TableHead>
+                                <TableHead className="font-semibold text-ink">Estado</TableHead>
+                                <TableHead className="px-6 text-right font-semibold text-ink">Acciones</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {guideRows.map(({ load, guide }) => (
+                                <TableRow key={`${load.id}:${guide.id}`} className="border-b border-border hover:bg-surface-page/60">
+                                    <TableCell className="relative h-20 px-6"><TableRowAccent color="bg-brand" /><TableRowLead icon={<FileCheck2 size={18} />} title={load.codigoCarga || "Carga"} subtitle={load.cliente} /></TableCell>
+                                    <TableCell className="font-semibold text-ink">{guide.numeroGuia}</TableCell>
+                                    <TableCell className="text-ink-body">{formatDisplayDate(guide.fechaInicioTraslado)}</TableCell>
+                                    <TableCell className="text-ink-body">{formatKg(guide.pesoBrutoTotalKg)} kg · {guide.numeroBultos} bultos</TableCell>
+                                    <TableCell><StatusBadge status={guide.estado} /></TableCell>
+                                    <TableCell className="px-6"><RowActions className="justify-end" primary={[{ label: "Editar guía", icon: <Pencil size={18} />, onClick: () => openGuide(load, guide) }, { label: "Imprimir guía", icon: <Printer size={18} />, onClick: () => window.print() }]} /></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableCard>
             )}
 
             {/* Modal: Nueva carga de Exportación */}
@@ -918,7 +792,6 @@ export default function QualityCampaignWorkspace({
                 onSave={saveQualityHarvestWizard}
                 onOpenLoadForm={(targetLoad) => {
                     setHarvestModalLoad(null);
-                    setActiveTab("carga");
                     setLoadFormModalItem(targetLoad);
                 }}
             />

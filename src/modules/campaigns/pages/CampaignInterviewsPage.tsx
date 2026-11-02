@@ -94,7 +94,7 @@ export default function CampaignInterviewsPage() {
     if (loadState.status !== "ready") {
         return loadState.status === "loading"
             ? <PageLoading label="Cargando entrevistas..." />
-            : <PageError title="Entrevistas no disponibles" message={loadState.message} onRetry={() => void load()} back={{ to: `/campaigns/${campaignId}/providers/${cxpId}`, label: "Volver al proveedor" }} />;
+            : <PageError title="Entrevistas no disponibles" message={loadState.message} onRetry={() => void load()} back={{ to: `/campaigns/${campaignId}/providers`, label: "Volver a proveedores" }} />;
     }
 
     const { campaign, relation, fruitName } = loadState;

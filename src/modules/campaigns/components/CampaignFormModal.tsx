@@ -194,7 +194,20 @@ export default function CampaignFormModal({
 
                 {/* Fila 2 */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <InputField id="campaign-requerimiento" label="Requerimiento (KG):" placeholder="Ej: 3000" inputMode="decimal" unit="KG" value={values.requerimientoComercial} onChange={(value) => set("requerimientoComercial", value)} error={errors.requerimientoComercial} />
+                    <InputField
+                        id="campaign-requerimiento"
+                        label="Requerimiento (KG):"
+                        placeholder="Ej: 3000"
+                        type="text"
+                        inputMode="decimal"
+                        unit="KG"
+                        value={values.requerimientoComercial}
+                        onChange={(value) => {
+                            const numeric = value.replace(/[^0-9.]/g, "").replace(/(\..*?)\..*/g, "$1");
+                            set("requerimientoComercial", numeric);
+                        }}
+                        error={errors.requerimientoComercial}
+                    />
                     <InputField id="campaign-fechaInicio" type="date" label="Fecha de inicio:" value={values.fechaInicio} error={errors.fechaInicio} onChange={(val) => set("fechaInicio", val)} />
                     <InputField id="campaign-fechaFin" type="date" label="Fecha de fin:" value={values.fechaFin} error={errors.fechaFin} onChange={(val) => set("fechaFin", val)} />
                 </div>

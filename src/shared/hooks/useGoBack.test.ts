@@ -31,3 +31,24 @@ describe("hasPreviousView", () => {
         expect(hasPreviousView({})).toBe(false);
     });
 });
+
+describe("campaign client navigation", () => {
+    it("returns to the actual previous page when contracts were opened through navigation", () => {
+        expect(getGoBackTarget("/campaigns/3/clients/8/contracts", { idx: 2 })).toBe(-1);
+    });
+    it("uses the client list as fallback for a directly opened contracts URL", () => {
+        expect(getGoBackTarget("/campaigns/3/clients/8/contracts", { idx: 0 })).toBe("/campaigns/3/clients");
+        expect(getGoBackTarget("/campaigns/3/clients/8/contracts/2/deliveries", { idx: 0 })).toBe("/campaigns/3/clients/8/contracts");
+    });
+});
+
+describe("directly accessible subviews", () => {
+    it.each([
+        ["/campaigns/3/certifications", "/campaigns"],
+        ["/campaigns/3/providers/8/exams", "/campaigns/3/providers"],
+        ["/proveedores/8/certificados", "/proveedores"],
+    ])("uses the prior page with history and %s fallback without it", (route, fallback) => {
+        expect(getGoBackTarget(route, { idx: 2 })).toBe(-1);
+        expect(getGoBackTarget(route, { idx: 0 })).toBe(fallback);
+    });
+});

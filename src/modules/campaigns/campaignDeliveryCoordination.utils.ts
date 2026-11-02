@@ -6,10 +6,8 @@ import type {
 
 /**
  * Coordinación de una entrega programada: con qué transportista, camión y chofer sale, de qué proveedores y fincas
- * se recoge y en qué fechas. La entrega (fecha, kilos y destino) se programa en Gestión Comercial; acá solo se
- * completa lo que falta para que salga a campo.
+ * se recoge y en qué fechas. La entrega (fecha, kilos y destino) se programa en Gestión Comercial.
  */
-export type DeliveryCoordinationStatus = "Por completar" | "Completa";
 
 /** Una entrega programada con el contrato y el cliente al que pertenece */
 export interface CampaignDeliveryEntry {
@@ -21,8 +19,6 @@ export interface CampaignDeliveryEntry {
 }
 
 export interface DeliveryCoordinationValues {
-    /** Clave (`CampaignDeliveryEntry.key`) de la entrega que se coordina */
-    entrega: string;
     carrierId: string;
     vehicleId: string;
     driverId: string;
@@ -34,7 +30,7 @@ export interface DeliveryCoordinationValues {
     observaciones: string;
 }
 
-export type DeliveryCoordinationField = "entrega" | "carrierId" | "vehicleId" | "driverId" | "proveedores" | "fechaInicio" | "fechaFin";
+export type DeliveryCoordinationField = "carrierId" | "vehicleId" | "driverId" | "proveedores" | "fechaInicio" | "fechaFin";
 
 export interface DeliveryCoordinationErrors extends Partial<Record<DeliveryCoordinationField, string>> {
     /** Proveedores elegidos sin ninguna finca */
@@ -42,7 +38,6 @@ export interface DeliveryCoordinationErrors extends Partial<Record<DeliveryCoord
 }
 
 export const EMPTY_COORDINATION: DeliveryCoordinationValues = {
-    entrega: "",
     carrierId: "",
     vehicleId: "",
     driverId: "",
@@ -56,9 +51,6 @@ export const EMPTY_COORDINATION: DeliveryCoordinationValues = {
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export const deliveryKey = (relationId: number, contractId: number, deliveryId: number) => `${relationId}:${contractId}:${deliveryId}`;
-
-export const getCoordinationStatus = (delivery: CampaignContractDeliveryLocal): DeliveryCoordinationStatus =>
-    delivery.coordinacion ? "Completa" : "Por completar";
 
 /** Las entregas de una campaña a partir del almacén (`campaña:vínculo:contrato` → entregas), ordenadas por fecha programada */
 export function listCampaignDeliveries(records: Record<string, CampaignContractDeliveryLocal[]>, campaniaId: number): CampaignDeliveryEntry[] {
@@ -75,7 +67,6 @@ export function listCampaignDeliveries(records: Record<string, CampaignContractD
 
 export function validateCoordination(values: DeliveryCoordinationValues): DeliveryCoordinationErrors {
     const errors: DeliveryCoordinationErrors = {};
-    if (!values.entrega) errors.entrega = "Selecciona la entrega.";
     if (!values.carrierId) errors.carrierId = "Selecciona el transportista.";
     if (!values.vehicleId) errors.vehicleId = "Selecciona el camión.";
     if (!values.driverId) errors.driverId = "Selecciona el chofer.";
@@ -109,9 +100,8 @@ export function toCoordination(values: DeliveryCoordinationValues): DeliveryCoor
 /** Valores del formulario para una entrega; los de una entrega ya coordinada, para editarla */
 export function coordinationToValues(entry: CampaignDeliveryEntry): DeliveryCoordinationValues {
     const coordination = entry.delivery.coordinacion;
-    if (!coordination) return { ...EMPTY_COORDINATION, entrega: entry.key };
+    if (!coordination) return { ...EMPTY_COORDINATION };
     return {
-        entrega: entry.key,
         carrierId: String(coordination.carrierId),
         vehicleId: String(coordination.vehicleId),
         driverId: String(coordination.driverId),

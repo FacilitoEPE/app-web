@@ -17,7 +17,6 @@ import CampaignDeliveryProviderPicker, { type DeliveryProviderOption } from "@/m
 import {
     EMPTY_COORDINATION,
     coordinationToValues,
-    getCoordinationStatus,
     hasCoordinationErrors,
     validateCoordination,
     type CampaignDeliveryEntry,
@@ -29,10 +28,8 @@ interface CampaignDeliveryCoordinationModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     campaignName: string;
-    /** Todas las entregas de la campaña: de ahí se elige cuál completar */
     entries: CampaignDeliveryEntry[];
-    /** Entrega que se edita; con ella la elección queda fija. Sin ella se elige de la lista. */
-    editing: CampaignDeliveryEntry | null;
+    entry: CampaignDeliveryEntry | null;
     /** Nombre del cliente por vínculo, para identificar cada entrega */
     clientNames: Record<number, string>;
     /** Archivo del contrato de cada entrega, por clave de entrega */
@@ -44,44 +41,41 @@ interface CampaignDeliveryCoordinationModalProps {
 }
 
 /**
- * Completa los datos de una entrega programada: transportista, camión y chofer, proveedores con sus fincas, fechas del
- * viaje y condiciones de la carga. La entrega ya viene programada (fecha, kilos y destino), por eso solo se elige y no se
- * vuelve a pedir. Elegir una que ya tiene datos carga lo registrado para actualizarlo.
+ * Edita el transporte, proveedores, fincas, fechas del viaje y condiciones de carga de una entrega programada.
  */
 export default function CampaignDeliveryCoordinationModal({
     open,
     onOpenChange,
     campaignName,
     entries,
-    editing,
+    entry,
     clientNames,
     contractNames,
     carriers,
     providers,
     onSave,
 }: CampaignDeliveryCoordinationModalProps) {
-    const [values, setValues, set] = useModalForm<DeliveryCoordinationValues>(open, editing ? coordinationToValues(editing) : EMPTY_COORDINATION);
+    const [values, setValues, set] = useModalForm<DeliveryCoordinationValues>(open, entry ? coordinationToValues(entry) : EMPTY_COORDINATION);
     const [errors, setErrors] = useState<DeliveryCoordinationErrors>({});
+    const [selectedKey, setSelectedKey] = useState("");
+    const [selectionError, setSelectionError] = useState<string | null>(null);
 
-    useResetOnToggle(open, () => setErrors({}));
+    useResetOnToggle(open, () => { setErrors({}); setSelectedKey(""); setSelectionError(null); });
 
-    // Las pendientes primero: son las que hay que completar
-    const entryOptions = useMemo(
-        () =>
-            [...entries]
-                .sort((a, b) => Number(Boolean(a.delivery.coordinacion)) - Number(Boolean(b.delivery.coordinacion)))
-                .map((entry) => ({
-                    value: entry.key,
-                    label: `${clientNames[entry.relationId] ?? "Cliente"} · ${contractNames[entry.key] ?? "Contrato"} · ${formatDisplayDate(entry.delivery.fecha)} · ${formatKg(entry.delivery.kilosProgramados)} kg · ${getCoordinationStatus(entry.delivery)}`,
-                })),
-        [entries, clientNames, contractNames],
-    );
+    const pendingEntries = useMemo(() => entries.filter((item) => !item.delivery.coordinacion), [entries]);
+    const entryOptions = useMemo(() => pendingEntries.map((item) => ({
+        value: item.key,
+        label: `${clientNames[item.relationId] ?? "Cliente"} · ${contractNames[item.key] ?? "Contrato"} · ${formatDisplayDate(item.delivery.fecha)} · ${formatKg(item.delivery.kilosProgramados)} kg`,
+    })), [pendingEntries, clientNames, contractNames]);
     const carrierOptions = useMemo(() => carriers.map((carrier) => ({ value: String(carrier.id), label: carrier.nombre })), [carriers]);
     const carrier = carriers.find((item) => String(item.id) === values.carrierId);
     const vehicleOptions = (carrier?.vehiculos ?? []).map((vehicle) => ({ value: String(vehicle.id), label: vehicle.placa }));
     const driverOptions = (carrier?.choferes ?? []).map((driver) => ({ value: String(driver.id), label: driver.nombre }));
 
-    const editingLabel = editing ? entryOptions.find((option) => option.value === editing.key)?.label ?? "" : "";
+    const entryLabel = entry
+        ? `${clientNames[entry.relationId] ?? "Cliente"} · ${contractNames[entry.key] ?? "Contrato"} · ${formatDisplayDate(entry.delivery.fecha)} · ${formatKg(entry.delivery.kilosProgramados)} kg`
+        : "";
+    const selectedEntry = entry ?? pendingEntries.find((item) => item.key === selectedKey) ?? null;
 
     const clear = (...fields: (keyof DeliveryCoordinationErrors)[]) =>
         setErrors((current) => ({ ...current, ...Object.fromEntries(fields.map((field) => [field, undefined])) }));
@@ -91,26 +85,27 @@ export default function CampaignDeliveryCoordinationModal({
         clear(field as keyof DeliveryCoordinationErrors);
     };
 
-    const chooseEntry = (key: string) => {
-        const entry = entries.find((item) => item.key === key);
-        setValues(entry ? coordinationToValues(entry) : { ...EMPTY_COORDINATION, entrega: key });
-        setErrors({});
-    };
-
     const chooseCarrier = (carrierId: string) => {
         // El camión y el chofer son de un transportista: al cambiarlo hay que volver a elegirlos
         setValues((current) => ({ ...current, carrierId, vehicleId: "", driverId: "" }));
         clear("carrierId", "vehicleId", "driverId");
     };
 
+    const chooseEntry = (key: string) => {
+        setSelectedKey(key);
+        setSelectionError(null);
+        setValues(EMPTY_COORDINATION);
+        setErrors({});
+    };
+
     const handleSave = async () => {
         const next = validateCoordination(values);
-        const entry = entries.find((item) => item.key === values.entrega);
-        if (hasCoordinationErrors(next) || !entry) {
+        if (!selectedEntry) setSelectionError("Selecciona la entrega.");
+        if (hasCoordinationErrors(next) || !selectedEntry) {
             setErrors(next);
             return;
         }
-        await onSave(entry, values);
+        await onSave(selectedEntry, values);
     };
 
     const renderSelect = (id: string, label: string, placeholder: string, options: { value: string; label: string }[], field: "vehicleId" | "driverId", disabledHint: string) => (
@@ -131,7 +126,7 @@ export default function CampaignDeliveryCoordinationModal({
             open={open}
             onOpenChange={onOpenChange}
             icon={<PackageCheck size={22} strokeWidth={2} />}
-            title={editing ? "Editar datos de entrega" : "Completar datos de entrega"}
+            title={entry ? "Editar datos de entrega" : "Completar datos de entrega"}
             description={`${campaignName} · Transporte, proveedores y fincas de la entrega programada.`}
             size="lg"
             footer={
@@ -140,24 +135,21 @@ export default function CampaignDeliveryCoordinationModal({
                         <X size={20} strokeWidth={2.5} /> Cancelar
                     </Button>
                     <Button size="xl" onClick={handleSave}>
-                        <Save size={20} strokeWidth={2.5} /> {editing ? "Guardar cambios" : "Guardar datos"}
+                        <Save size={20} strokeWidth={2.5} /> {entry ? "Guardar cambios" : "Guardar datos"}
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-6">
                 <ModalSection title="Entrega">
-                    {editing ? (
-                        // Editar no cambia de entrega: se muestra como dato, no como selector
-                        <InfoField label="Entrega programada" value={editingLabel} />
-                    ) : (
-                        <FormField label="Entrega programada" required error={errors.entrega} hint="Elige una entrega pendiente o una ya completa para actualizarla.">
+                    {entry ? <InfoField label="Entrega programada" value={entryLabel} /> : (
+                        <FormField label="Entrega programada" required error={selectionError ?? undefined} hint="Elige una entrega programada para agregar sus datos.">
                             <Combobox
                                 options={entryOptions}
-                                value={values.entrega}
+                                value={selectedKey}
                                 onChange={chooseEntry}
                                 placeholder="Buscar por cliente, contrato o fecha..."
-                                emptyMessage="No hay entregas programadas"
+                                emptyMessage="No hay entregas disponibles"
                             />
                         </FormField>
                     )}

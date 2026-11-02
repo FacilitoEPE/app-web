@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ArrowRight, Plus } from "lucide-react";
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface LinkedCardProps {
     icon: ReactNode;
@@ -15,6 +16,7 @@ interface LinkedCardProps {
     isEmpty: boolean;
     emptyMessage: string;
     emptyActionLabel: string;
+    className?: string;
     children: ReactNode;
 }
 
@@ -23,9 +25,21 @@ interface LinkedCardProps {
  * proveedor en campaña): encabezado con acceso directo a su vista de
  * gestión, cifras y una lista corta. Mismo esquema que las tarjetas de proveedores y clientes de campaña.
  */
-export default function LinkedCard({ icon, title, description, manageLabel, onManage, stats, isEmpty, emptyMessage, emptyActionLabel, children }: LinkedCardProps) {
+export default function LinkedCard({
+    icon,
+    title,
+    description,
+    manageLabel,
+    onManage,
+    stats,
+    isEmpty,
+    emptyMessage,
+    emptyActionLabel,
+    className,
+    children,
+}: LinkedCardProps) {
     return (
-        <Card className="gap-0 rounded-2xl border-0 p-0 ring-1 ring-border">
+        <Card className={cn("flex flex-col gap-0 rounded-2xl border-0 p-0 ring-1 ring-border", className)}>
             <div className="flex items-center gap-3 px-5 pt-5">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-surface text-brand">{icon}</span>
                 <div className="min-w-0 flex-1">
@@ -51,12 +65,12 @@ export default function LinkedCard({ icon, title, description, manageLabel, onMa
             )}
 
             {isEmpty ? (
-                <div className="flex flex-col items-center gap-3 px-5 py-10 text-center">
+                <div className="flex flex-1 flex-col items-center justify-center gap-3 px-5 py-10 text-center">
                     <p className="max-w-xs text-[13px] leading-relaxed text-ink-muted">{emptyMessage}</p>
                     <Button size="sm" onClick={onManage}><Plus size={16} strokeWidth={2.5} /> {emptyActionLabel}</Button>
                 </div>
             ) : (
-                <div className="flex flex-col gap-2 px-5 pb-5 pt-4">{children}</div>
+                <div className="flex flex-1 flex-col gap-2 px-5 pb-5 pt-4">{children}</div>
             )}
         </Card>
     );

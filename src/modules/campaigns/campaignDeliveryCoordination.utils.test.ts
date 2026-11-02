@@ -3,7 +3,6 @@ import type { CampaignContractDeliveryLocal } from "@/modules/campaigns/campaign
 import {
     EMPTY_COORDINATION,
     coordinationToValues,
-    getCoordinationStatus,
     hasCoordinationErrors,
     listCampaignDeliveries,
     toCoordination,
@@ -15,7 +14,6 @@ const delivery = (id: number, fecha: string): CampaignContractDeliveryLocal => (
 
 const valid: DeliveryCoordinationValues = {
     ...EMPTY_COORDINATION,
-    entrega: "1:1:1",
     carrierId: "2",
     vehicleId: "3",
     driverId: "4",
@@ -37,9 +35,9 @@ describe("validateCoordination", () => {
         expect(hasCoordinationErrors(validateCoordination(valid))).toBe(false);
     });
 
-    it("pide entrega, transporte, proveedor y fechas", () => {
+    it("pide transporte, proveedor y fechas", () => {
         const errors = validateCoordination(EMPTY_COORDINATION);
-        expect(Object.keys(errors).sort()).toEqual(["carrierId", "driverId", "entrega", "fechaFin", "fechaInicio", "proveedores", "vehicleId"]);
+        expect(Object.keys(errors).sort()).toEqual(["carrierId", "driverId", "fechaFin", "fechaInicio", "proveedores", "vehicleId"]);
     });
 
     it("exige al menos una finca por cada proveedor elegido", () => {
@@ -57,12 +55,10 @@ describe("toCoordination y coordinationToValues", () => {
         expect(coordination).toMatchObject({ carrierId: 2, vehicleId: 3, driverId: 4, condicionesCarga: "Cajas de 4 kg", proveedores: [{ proveedorId: 7, fincas: ["Fundo San Pedro"] }] });
         const entry = { key: "1:1:1", relationId: 1, contractId: 1, delivery: { ...delivery(1, "2026-10-25"), coordinacion: coordination } };
         expect(coordinationToValues(entry)).toEqual({ ...valid, condicionesCarga: "Cajas de 4 kg" });
-        expect(getCoordinationStatus(entry.delivery)).toBe("Completa");
     });
 
-    it("una entrega sin coordinar abre el formulario vacío con su clave", () => {
+    it("una entrega sin datos de transporte abre el formulario vacío", () => {
         const entry = { key: "1:1:1", relationId: 1, contractId: 1, delivery: delivery(1, "2026-10-25") };
-        expect(coordinationToValues(entry)).toEqual({ ...EMPTY_COORDINATION, entrega: "1:1:1" });
-        expect(getCoordinationStatus(entry.delivery)).toBe("Por completar");
+        expect(coordinationToValues(entry)).toEqual(EMPTY_COORDINATION);
     });
 });

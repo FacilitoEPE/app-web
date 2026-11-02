@@ -2,12 +2,11 @@ import { PackageCheck, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import { InfoField } from "@/shared/components/InfoField";
 import ModalSection from "@/shared/components/ModalSection";
-import StatusBadge from "@/shared/components/StatusBadge";
 import { Button } from "@/shared/components/ui/button";
 import { formatDisplayDate, formatKg } from "@/shared/utils/format";
 import type { Carrier } from "@/modules/carriers/carriers.data";
 import type { DeliveryProviderOption } from "@/modules/campaigns/components/CampaignDeliveryProviderPicker";
-import { getCoordinationStatus, type CampaignDeliveryEntry } from "@/modules/campaigns/campaignDeliveryCoordination.utils";
+import type { CampaignDeliveryEntry } from "@/modules/campaigns/campaignDeliveryCoordination.utils";
 
 const NOT_REGISTERED = "No registrado";
 
@@ -22,7 +21,7 @@ interface CampaignDeliveryDetailsModalProps {
     providers: DeliveryProviderOption[];
 }
 
-/** Detalle de solo lectura de una entrega: lo programado con el cliente y, si ya se completó, su transporte, proveedores y carga. */
+/** Detalle de solo lectura de una entrega: programación, transporte, proveedores y carga registrados. */
 export default function CampaignDeliveryDetailsModal({ open, onOpenChange, entry, campaignName, clientName, contractName, carriers, providers }: CampaignDeliveryDetailsModalProps) {
     if (!entry) return null;
 
@@ -54,7 +53,6 @@ export default function CampaignDeliveryDetailsModal({ open, onOpenChange, entry
                         <InfoField label="Fecha programada" value={formatDisplayDate(delivery.fecha)} />
                         <InfoField label="Cantidad programada" value={`${formatKg(delivery.kilosProgramados)} kg`} />
                         <InfoField label="Destino" value={delivery.destino} />
-                        <InfoField label="Coordinación" variant="plain" value={<StatusBadge status={getCoordinationStatus(delivery)} />} />
                         {delivery.observaciones && <InfoField label="Notas de la programación" value={delivery.observaciones} multiline className="sm:col-span-2" />}
                     </div>
                 </ModalSection>
@@ -96,7 +94,7 @@ export default function CampaignDeliveryDetailsModal({ open, onOpenChange, entry
                     </>
                 ) : (
                     <p className="rounded-xl border border-dashed border-border px-4 py-5 text-center text-[13px] text-ink-muted">
-                        Aún no se completaron el transporte, los proveedores ni las fincas de esta entrega. Usa Editar para completarlos.
+                        No hay datos de transporte, proveedores ni fincas registrados para esta entrega. Puedes agregarlos desde Editar.
                     </p>
                 )}
             </div>

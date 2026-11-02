@@ -1,18 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Truck, UserPlus, AlertCircle, LandPlot, ShieldCheck, Sprout, Users } from "lucide-react";
+import { Truck, UserPlus, AlertCircle } from "lucide-react";
 import ProvidersTable from "@/modules/providers/components/ProvidersTable";
 import ProviderFormModal from "@/modules/providers/components/ProviderFormModal";
 import ProviderSuccessModal from "@/modules/providers/components/ProviderSuccessModal";
 import PageHeader from "@/shared/layout/PageHeader";
-import MetricCards, { type Metric } from "@/shared/components/MetricCards";
 import ProvidersFilters from "@/modules/providers/components/ProvidersFilters";
 import { Button } from "@/shared/components/ui/button";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { createProveedor, deleteProveedor, getProveedores, updateProveedor } from "@/modules/providers/api/proveedor.api";
 import type { ProveedorInput } from "@/modules/providers/api/proveedor.dto";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
-import { useProviderLocalData } from "@/modules/providers/providerLocalData.store";
-import { formatDecimal } from "@/shared/utils/format";
 import { createInFlightGuard } from "@/shared/utils/inFlightGuard";
 
 const byId = (left: Proveedor, right: Proveedor) => left.proveedorId - right.proveedorId;
@@ -28,7 +25,6 @@ export default function ProvidersPage() {
     const [zoneFilter, setZoneFilter] = useState("all");
     const [mutationGuard] = useState(createInFlightGuard);
     const loadSequence = useRef(0);
-    const { fincas, certificados } = useProviderLocalData();
 
     const loadProviders = useCallback(async () => {
         const request = ++loadSequence.current;
@@ -74,43 +70,6 @@ export default function ProvidersPage() {
         });
     }, [providers, search, zoneFilter]);
 
-    const summaryMetrics = useMemo<Metric[]>(() => {
-        const allFincas = Object.values(fincas).flat();
-        const totalHaCultivo = allFincas.reduce((sum, item) => sum + item.haCultivo, 0);
-        const totalCerts = Object.values(certificados).flat().length;
-        return [
-            {
-                title: "Proveedores",
-                value: String(providers.length),
-                unit: providers.length === 1 ? "registrado" : "registrados",
-                description: "Padrón activo de productores y acopiadores",
-                icon: Users,
-            },
-            {
-                title: "Fincas",
-                value: String(allFincas.length),
-                unit: allFincas.length === 1 ? "parcela" : "parcelas",
-                description: "Parcelas y fundos empadronados",
-                icon: LandPlot,
-            },
-            {
-                title: "Superficie cultivo",
-                value: formatDecimal(totalHaCultivo),
-                unit: "ha",
-                description: "Hectáreas productivas declaradas",
-                icon: Sprout,
-                warm: true,
-            },
-            {
-                title: "Certificados",
-                value: String(totalCerts),
-                unit: totalCerts === 1 ? "documento" : "documentos",
-                description: "SENASA, GlobalG.A.P. y orgánicos",
-                icon: ShieldCheck,
-            },
-        ];
-    }, [providers.length, fincas, certificados]);
-
     const saveProvider = async (providerId: number | null, input: ProveedorInput) => {
         setMutationError(null);
         const saved = providerId === null ? await createProveedor(input) : await updateProveedor(providerId, input);
@@ -146,10 +105,6 @@ export default function ProvidersPage() {
                     </Button>
                 }
             />
-
-            <div className="mb-8">
-                <MetricCards metrics={summaryMetrics} label="Resumen del padrón de proveedores" />
-            </div>
 
             <ProvidersFilters
                 search={search}

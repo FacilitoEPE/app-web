@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
     filterQualityCampaigns,
     getQualityActionsForScope,
+    qualityCampaignHref,
     type QualityCampaign,
 } from "@/modules/quality/quality.utils";
 import {
@@ -57,6 +58,19 @@ describe("quality.utils", () => {
         expect(industriaActions.map((a) => a.label)).toEqual([
             "Carga",
             "Guías de remisión",
+        ]);
+    });
+
+    it("builds independent routes for the summary and each management action", () => {
+        expect(qualityCampaignHref("exportador", 10)).toBe("/calidad/exportador/10");
+        expect(getQualityActionsForScope("exportador").map((action) => qualityCampaignHref("exportador", 10, action.id))).toEqual([
+            "/calidad/exportador/10/analisis",
+            "/calidad/exportador/10/carga",
+            "/calidad/exportador/10/guias",
+        ]);
+        expect(getQualityActionsForScope("industria").map((action) => qualityCampaignHref("industria", 10, action.id))).toEqual([
+            "/calidad/industria/10/carga",
+            "/calidad/industria/10/guias",
         ]);
     });
 

@@ -1,6 +1,6 @@
-import { usesV1 } from '@/shared/api/data-contract';
 import { X, Truck, Save, Building2, UserRound } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
+import ModalSection from "@/shared/components/ModalSection";
 import { useModalForm } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import FormField from "@/shared/components/FormField";
@@ -92,7 +92,7 @@ export default function CarrierFormModal({
                 </>
             }
         >
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 pt-1 pb-1">
                 {Boolean(errors._form) && <FormField error={errors._form} />}
 
                 <FormField label="Tipo de transportista" required hint={tipo.description}>
@@ -108,33 +108,108 @@ export default function CarrierFormModal({
                     />
                 </FormField>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
-                    <InputField {...bind("nombre", true)} label={tipo.nameLabel} maxLength={150} placeholder={isPrivado ? "Ej. Juan Pérez Rojas" : "Ej. Transportes Andes S.A.C."} className="sm:col-span-3" />
-                    {isPrivado ? (
-                        <InputField {...bind("documento", true)} label="Documento de identidad" maxLength={20} inputMode="numeric" placeholder="Ej. 45871236" className="sm:col-span-3" />
-                    ) : (
-                        <InputField {...bind("ruc", true)} label="RUC" maxLength={11} inputMode="numeric" placeholder="11 dígitos" className="sm:col-span-3" />
-                    )}
+                <ModalSection title={isPrivado ? "Datos personales y registros" : "Datos de la empresa y registros"}>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
+                        <InputField
+                            {...bind("nombre", true)}
+                            label={tipo.nameLabel}
+                            maxLength={150}
+                            placeholder={isPrivado ? "Ej. Juan Pérez Rojas" : "Ej. Transportes Andes S.A.C."}
+                            className="sm:col-span-3"
+                        />
+                        {isPrivado ? (
+                            <InputField
+                                {...bind("documento", true)}
+                                label="Documento de identidad"
+                                maxLength={20}
+                                inputMode="numeric"
+                                placeholder="Ej. 45871236"
+                                className="sm:col-span-3"
+                            />
+                        ) : (
+                            <InputField
+                                {...bind("ruc", true)}
+                                label="RUC"
+                                maxLength={11}
+                                inputMode="numeric"
+                                placeholder="11 dígitos"
+                                className="sm:col-span-3"
+                            />
+                        )}
 
-                    <InputField {...bind("mtc", true)} label="MTC" maxLength={30} placeholder="Registro MTC" className="sm:col-span-3" />
-                    {isPrivado ? (
-                        !usesV1() && <InputField {...bind("cgn", true)} label="CGN" maxLength={30} placeholder="Número de CGN" className="sm:col-span-3" />
-                    ) : (
-                        <InputField {...bind("numero", true)} label="Teléfono" type="tel" inputMode="tel" maxLength={20} placeholder="Ej. 987654321" className="sm:col-span-3" />
-                    )}
+                        <InputField
+                            {...bind("mtc", true)}
+                            label="MTC"
+                            maxLength={30}
+                            placeholder="Registro MTC"
+                            className="sm:col-span-3"
+                        />
+                        {isPrivado ? (
+                            <InputField
+                                {...bind("cgn", true)}
+                                label="CGN"
+                                maxLength={30}
+                                placeholder="Número de CGN"
+                                className="sm:col-span-3"
+                            />
+                        ) : null}
 
-                    {isPrivado && (
-                        <>
-                            <InputField {...bind("ruc")} label="RUC" optional maxLength={11} inputMode="numeric" placeholder="11 dígitos" className="sm:col-span-3" />
-                            <InputField {...bind("numero", true)} label="Teléfono" type="tel" inputMode="tel" maxLength={20} placeholder="Ej. 987654321" className="sm:col-span-3" />
-                        </>
-                    )}
-                    <InputField {...bind("correo", true)} label="Correo" type="email" inputMode="email" maxLength={120} placeholder="correo@dominio.com" className="sm:col-span-6" />
+                        {isPrivado && (
+                            <InputField
+                                {...bind("ruc")}
+                                label="RUC"
+                                optional
+                                maxLength={11}
+                                inputMode="numeric"
+                                placeholder="11 dígitos"
+                                className="sm:col-span-3"
+                            />
+                        )}
+                    </div>
+                </ModalSection>
 
-                    <InputField {...bind("departamento", true)} label="Departamento" placeholder="Ej. Piura" className="sm:col-span-2" />
-                    <InputField {...bind("provincia", true)} label="Provincia" placeholder="Ej. Sullana" className="sm:col-span-2" />
-                    <InputField {...bind("ciudad", true)} label="Ciudad" placeholder="Ej. Sullana" className="sm:col-span-2" />
-                </div>
+                <ModalSection title="Información de contacto">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
+                        <InputField
+                            {...bind("numero", true)}
+                            label="Teléfono"
+                            type="tel"
+                            inputMode="tel"
+                            maxLength={20}
+                            placeholder="Ej. 987654321"
+                            className="sm:col-span-3"
+                        />
+                        <InputField
+                            {...bind("correo", true)}
+                            label="Correo electrónico"
+                            type="email"
+                            inputMode="email"
+                            maxLength={120}
+                            placeholder="correo@dominio.com"
+                            className="sm:col-span-3"
+                        />
+                    </div>
+                </ModalSection>
+
+                <ModalSection title="Ubicación">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <InputField
+                            {...bind("departamento", true)}
+                            label="Departamento"
+                            placeholder="Ej. Piura"
+                        />
+                        <InputField
+                            {...bind("provincia", true)}
+                            label="Provincia"
+                            placeholder="Ej. Sullana"
+                        />
+                        <InputField
+                            {...bind("ciudad", true)}
+                            label="Ciudad"
+                            placeholder="Ej. Sullana"
+                        />
+                    </div>
+                </ModalSection>
             </div>
         </AppModal>
     );

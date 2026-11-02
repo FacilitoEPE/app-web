@@ -22,6 +22,9 @@ interface DriverDto {
   nombre: string;
   telefono: string;
   correo: string;
+  tipoDocumento?: string;
+  numeroDocumento?: string;
+  numeroLicencia?: string;
 }
 
 interface CarrierDto {
@@ -56,6 +59,9 @@ export interface DriverInput {
   nombre: string;
   telefono: string;
   correo: string;
+  tipoDocumento?: string;
+  numeroDocumento?: string;
+  numeroLicencia?: string;
 }
 
 function toVehicle(dto: VehicleDto, carrierId: number): Vehicle {
@@ -79,6 +85,9 @@ function toDriver(dto: DriverDto, carrierId: number): Driver {
     nombre: dto.nombre,
     telefono: dto.telefono,
     correo: dto.correo,
+    tipoDocumento: dto.tipoDocumento,
+    numeroDocumento: dto.numeroDocumento,
+    numeroLicencia: dto.numeroLicencia,
   };
 }
 

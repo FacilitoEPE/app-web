@@ -28,5 +28,25 @@
     "observaciones": "Primera entrega programada de Palta Hass",
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "entregaProgramadaId": 4,
+    "contratoVentaId": 2,
+    "destino": "Chile, Santiago",
+    "fecha": "2026-11-12",
+    "kilosProgramados": 600,
+    "observaciones": "Entrega de prueba pendiente de coordinación",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
+  },
+  {
+    "entregaProgramadaId": 5,
+    "contratoVentaId": 2,
+    "destino": "Perú, Lima",
+    "fecha": "2026-11-20",
+    "kilosProgramados": 900,
+    "observaciones": "Segunda entrega de prueba pendiente de coordinación",
+    "createdAt": "2026-10-29T13:00:00.000Z",
+    "updatedAt": "2026-10-29T13:00:00.000Z"
   }
 ]

@@ -26,6 +26,7 @@ const CampaignsPage = lazy(modulePages['/campaigns'])
 const CampaignDetailsPage = lazy(() => import('@/modules/campaigns/pages/CampaignDetailsPage'))
 const CampaignProvidersPage = lazy(() => import('@/modules/campaigns/pages/CampaignProvidersPage'))
 const CampaignClientsPage = lazy(() => import('@/modules/campaigns/pages/CampaignClientsPage'))
+const CampaignClientDetailsPage = lazy(() => import('@/modules/campaigns/pages/CampaignClientDetailsPage'))
 const CampaignClientContractsPage = lazy(() => import('@/modules/campaigns/pages/CampaignClientContractsPage'))
 const CampaignContractDeliveriesPage = lazy(() => import('@/modules/campaigns/pages/CampaignContractDeliveriesPage'))
 const CampaignProviderDetailsPage = lazy(() => import('@/modules/campaigns/pages/CampaignProviderDetailsPage'))
@@ -46,6 +47,7 @@ const CarrierVehiclesPage = lazy(() => import('@/modules/carriers/pages/CarrierV
 const CarrierDriversPage = lazy(() => import('@/modules/carriers/pages/CarrierDriversPage'))
 const CarrierDetailsPage = lazy(() => import('@/modules/carriers/pages/CarrierDetailsPage'))
 const QualityPage = lazy(modulePages['/calidad'])
+const QualityCampaignPage = lazy(() => import('@/modules/quality/pages/QualityCampaignPage'))
 const LogisticsPage = lazy(modulePages['/logistica-despacho'])
 const BillingPage = lazy(modulePages['/facturacion-cobros'])
 const PurchaseSettlementPage = lazy(modulePages['/liquidacion-compra'])
@@ -165,6 +167,7 @@ function App() {
           <Route path="/campaigns/:id" element={<CampaignDetailsPage />} />
           <Route path="/campaigns/:id/providers" element={<CampaignProvidersPage />} />
           <Route path="/campaigns/:id/clients" element={<CampaignClientsPage />} />
+          <Route path="/campaigns/:id/clients/:clientLinkId" element={<CampaignClientDetailsPage />} />
           <Route path="/campaigns/:id/clients/:clientLinkId/contracts" element={<CampaignClientContractsPage />} />
           <Route path="/campaigns/:id/clients/:clientLinkId/contracts/:contractId/deliveries" element={<CampaignContractDeliveriesPage />} />
           <Route path="/campaigns/:id/providers/:cxpId" element={<CampaignProviderDetailsPage />} />
@@ -185,6 +188,8 @@ function App() {
           <Route path="/transportistas/:id/choferes" element={<CarrierDriversPage />} />
           <Route path="/transportistas/:id" element={<CarrierDetailsPage />} />
           <Route path="/calidad" element={<QualityPage />} />
+          <Route path="/calidad/:scope/:id" element={<QualityCampaignPage />} />
+          <Route path="/calidad/:scope/:id/:section" element={<QualityCampaignPage />} />
           <Route path="/logistica-despacho" element={<LogisticsPage />} />
           <Route path="/facturacion-cobros" element={<BillingPage />} />
           <Route path="/liquidacion-compra" element={<PurchaseSettlementPage />} />

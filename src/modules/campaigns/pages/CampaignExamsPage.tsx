@@ -112,7 +112,7 @@ export default function CampaignExamsPage() {
     if (loadState.status !== "ready") {
         return loadState.status === "loading"
             ? <PageLoading label="Cargando exámenes..." />
-            : <PageError title="Exámenes no disponibles" message={loadState.message} onRetry={() => void load()} back={{ to: `/campaigns/${campaignId}/providers/${cxpId}`, label: "Volver al proveedor" }} />;
+            : <PageError title="Exámenes no disponibles" message={loadState.message} onRetry={() => void load()} back={{ to: `/campaigns/${campaignId}/providers`, label: "Volver a proveedores" }} />;
     }
 
     const { campaign, relation } = loadState;

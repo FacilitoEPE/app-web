@@ -1,5 +1,4 @@
-import { usesV1 } from '@/shared/api/data-contract';
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Save, ShieldCheck, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import ChipSelect from "@/shared/components/ChipSelect";
@@ -47,7 +46,7 @@ const toFormValues = (certificate: CertificadoCampanaLocal): CertificadoCampanaF
     estadoTramite: certificate.estadoTramite,
     moneda: certificate.moneda,
     costo: String(certificate.costo),
-    kilosIniciales: certificate.kilosIniciales ? String(certificate.kilosIniciales) : "",
+    kilosIniciales: certificate.kilosIniciales ? String(certificate.kilosIniciales) : "0",
     productores: certificate.productores.map((producer) => producer.id),
     observaciones: certificate.observaciones,
 });
@@ -58,13 +57,15 @@ const toFormValues = (certificate: CertificadoCampanaLocal): CertificadoCampanaF
  *
  * Al registrar no se pregunta el estado del trámite (arranca "Pendiente") ni se muestra el estado de
  * vigencia; al editar sí: el trámite avanza y la vigencia se ve calculada junto al periodo.
+ *
+ * Kilos iniciales es un dato visible no editable, calculado automáticamente sumando los kilos de los
+ * productores seleccionados.
  */
 export default function CampaignCertificationFormModal({ open, onOpenChange, campaniaId, certificate, onSave }: CampaignCertificationFormModalProps) {
     const isEdit = certificate !== null;
     const initial = certificate ? toFormValues(certificate) : EMPTY_CERTIFICADO_CAMPANA;
 
     const [values, setValues, set] = useModalForm<CertificadoCampanaFormValues>(open, initial);
-    const [kilosEdited, setKilosEdited] = useState(false);
     const [errors, setErrors] = useState<CertificadoCampanaErrors>({});
     const [certificateFile, setCertificateFile] = useState<File | null>(null);
     const [quoteFile, setQuoteFile] = useState<File | null>(null);
@@ -73,7 +74,6 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
 
     useResetOnToggle(open, () => {
         setErrors({});
-        setKilosEdited(isEdit);
         setCertificateFile(null);
         setQuoteFile(null);
     });
@@ -99,12 +99,32 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
         return () => { active = false; };
     }, [open, campaniaId]);
 
-    // Solo los productores reales vinculados a esta campaña
-    const producers = apiProducers;
+    // Combina los productores de la API con los ya guardados en el certificado si aplica
+    const producers = useMemo(() => {
+        const list = [...apiProducers];
+        if (certificate) {
+            for (const certProd of certificate.productores) {
+                const exists = list.some(
+                    (p) => p.id === certProd.id || p.nombre.toLowerCase().trim() === certProd.nombre.toLowerCase().trim()
+                );
+                if (!exists) {
+                    list.push(certProd);
+                }
+            }
+        }
+        return list;
+    }, [apiProducers, certificate]);
 
-    // Al abrir en modo edición, vincula los productores guardados con los reales de la campaña una sola vez
+    // Al abrir en modo edición, asegura que los IDs de productores seleccionados coincidan
     useEffect(() => {
-        if (!open || !isEdit || !certificate || apiProducers.length === 0) return;
+        if (!open || !isEdit || !certificate) return;
+        if (apiProducers.length === 0) {
+            setValues((current) => ({
+                ...current,
+                productores: certificate.productores.map((p) => p.id),
+            }));
+            return;
+        }
         const validIds = new Set(apiProducers.map((p) => p.id));
         const matchedIds: string[] = [];
 
@@ -115,30 +135,40 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
                 const match = apiProducers.find((p) => p.nombre.toLowerCase().trim() === certProd.nombre.toLowerCase().trim());
                 if (match && !matchedIds.includes(match.id)) {
                     matchedIds.push(match.id);
+                } else if (!matchedIds.includes(certProd.id)) {
+                    matchedIds.push(certProd.id);
                 }
             }
         }
 
-        setValues((current) => ({
-            ...current,
-            productores: matchedIds,
-        }));
+        if (matchedIds.length > 0) {
+            setValues((current) => ({
+                ...current,
+                productores: matchedIds,
+            }));
+        }
     }, [open, isEdit, certificate, apiProducers, setValues]);
+
+    // Kilos iniciales calculados en vivo a partir de la suma de los productores seleccionados
+    const calculatedKilos = useMemo(() => {
+        return values.productores.reduce((sum, id) => {
+            const producer = producers.find((p) => p.id === id);
+            return sum + (producer?.kilos ?? 0);
+        }, 0);
+    }, [values.productores, producers]);
 
     const update = <Field extends CertificadoCampanaField>(field: Field) => (next: CertificadoCampanaFormValues[Field]) => {
         set(field)(next);
-        if (field === "kilosIniciales") setKilosEdited(true);
         setErrors((current) => ({ ...current, [field]: undefined }));
     };
 
     const handleProducersChange = (selectedIds: string[]) => {
         set("productores")(selectedIds);
-        if (!kilosEdited) set("kilosIniciales")(String(selectedIds.reduce((sum, id) => sum + (apiProducers.find(p => p.id === id)?.kilos ?? 0), 0)));
         setErrors((current) => ({ ...current, productores: undefined }));
     };
 
     /** Props comunes de los campos de texto, fecha y número */
-    const bind = (field: Exclude<CertificadoCampanaField, "productores">) => ({
+    const bind = (field: Exclude<CertificadoCampanaField, "productores" | "kilosIniciales">) => ({
         id: `campaign-cert-${field}`,
         value: values[field],
         error: errors[field],
@@ -148,7 +178,7 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
     const handleSave = async () => {
         const payload: CertificadoCampanaFormValues = {
             ...values,
-            kilosIniciales: values.kilosIniciales || "0",
+            kilosIniciales: String(calculatedKilos),
         };
         const nextErrors = validateCertificadoCampana(payload);
         setErrors(nextErrors);
@@ -199,24 +229,23 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
                         <InputField {...bind("nombre")} label="Nombre del certificado:" required maxLength={255} placeholder="Ej. GlobalGAP Mango 2026" className="sm:col-span-2" />
                         <InputField {...bind("organismoEmisor")} label="Organismo emisor:" required maxLength={255} placeholder="Ej. SGS Perú" className="sm:col-span-2" />
 
-                        {isEdit ? (
-                            <>
-                                {/* El periodo y el estado que de él se deduce van juntos: el estado no se elige, se calcula */}
-                                <div className="grid grid-cols-1 gap-4 rounded-xl border border-border p-4 sm:col-span-4 sm:grid-cols-2">
-                                    <InputField {...bind("validoDesde")} type="date" label="Válido desde:" optional />
-                                    <InputField {...bind("validoHasta")} type="date" label="Válido hasta:" optional />
-                                    <p className="flex flex-wrap items-center gap-2 text-[12.5px] text-ink-muted sm:col-span-2">
-                                        Estado automático:
-                                        <StatusBadge status={vigencia} />
-                                    </p>
+                        <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-surface-page/40 p-3 sm:col-span-6">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <InputField {...bind("validoDesde")} type="date" label="Válido desde:" optional />
+                                <InputField {...bind("validoHasta")} type="date" label="Válido hasta:" optional />
+                            </div>
+                            {vigencia && vigencia !== "Sin fechas completas" && (
+                                <div className="flex items-center gap-2 pt-1 border-t border-border/40 text-[12px] text-ink-muted">
+                                    <span>Estado automático:</span>
+                                    <StatusBadge status={vigencia} />
                                 </div>
-                                {!usesV1() && selectField("estadoTramite", "Estado del trámite:", TRAMITE_OPTIONS, "sm:col-span-2")}
-                            </>
-                        ) : (
-                            <>
-                                <InputField {...bind("validoDesde")} type="date" label="Válido desde:" optional className="sm:col-span-3" />
-                                <InputField {...bind("validoHasta")} type="date" label="Válido hasta:" optional className="sm:col-span-3" />
-                            </>
+                            )}
+                        </div>
+
+                        {isEdit && (
+                            <div className="sm:col-span-6">
+                                {selectField("estadoTramite", "Estado del trámite:", TRAMITE_OPTIONS, "sm:col-span-3")}
+                            </div>
                         )}
                     </div>
                 </ModalSection>
@@ -244,15 +273,18 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
                             />
                         </FormField>
 
-                        <InputField
-                            {...bind("kilosIniciales")}
+                        <FormField
                             label="Kilos iniciales:"
-                            min={0}
-                            step="0.001"
-                            unit="kg"
-                            hint="Suma de los productores seleccionados; puedes ajustar el total."
+                            hint="Suma automática de los productores seleccionados."
                             className="sm:col-span-2"
-                        />
+                        >
+                            <div className="relative flex h-11 w-full items-center rounded-lg border border-border bg-surface-page/70 px-3 text-[13.5px] font-semibold text-ink">
+                                <span>{formatKg(calculatedKilos)}</span>
+                                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-brand-surface px-2 py-1 text-[11px] font-bold text-brand">
+                                    kg
+                                </span>
+                            </div>
+                        </FormField>
                         {selectField("moneda", "Moneda:", MONEDA_OPTIONS, "sm:col-span-2")}
                         <InputField {...bind("costo")} label="Costo:" required leading={currencySymbol} step="0.01" min={0} placeholder="0.00" className="sm:col-span-2" />
                     </div>
@@ -281,9 +313,10 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
                                 onChange={setCertificateFile}
                             />
                         </FormField>
+
                         <FormField className="sm:col-span-3">
                             <FileDropzone
-                                label="Documento de cotización"
+                                label="Cotización de la certificadora"
                                 variant="horizontal"
                                 optional
                                 hint="PDF · Máx. 10 MB"

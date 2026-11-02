@@ -56,7 +56,7 @@ export default function ProviderCertificadosPage() {
                 title="Proveedor no disponible"
                 message={error ?? "No se pudo cargar el proveedor."}
                 onRetry={() => { setIsLoading(true); void loadProvider(); }}
-                back={{ to: `/proveedores/${providerId}`, label: "Volver al proveedor" }}
+                back={{ to: "/proveedores", label: "Volver a proveedores" }}
             />
         );
     }

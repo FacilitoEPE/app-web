@@ -28,6 +28,9 @@ export interface Driver {
     nombre: string;
     telefono: string;
     correo: string;
+    tipoDocumento?: string;
+    numeroDocumento?: string;
+    numeroLicencia?: string;
 }
 
 export const vehicleVolume = (vehicle: Vehicle) => vehicle.volumen;

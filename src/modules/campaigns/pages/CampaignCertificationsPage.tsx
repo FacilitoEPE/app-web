@@ -73,7 +73,7 @@ export default function CampaignCertificationsPage() {
     if (loadState.status !== "ready") {
         return loadState.status === "loading"
             ? <PageLoading label="Cargando certificaciones..." />
-            : <PageError title="Certificaciones no disponibles" message={loadState.message} onRetry={() => void load()} back={{ to: `/campaigns/${campaniaId}`, label: "Volver a la campaña" }} />;
+            : <PageError title="Certificaciones no disponibles" message={loadState.message} onRetry={() => void load()} back={{ to: "/campaigns", label: "Volver a campañas" }} />;
     }
 
     return <CertificationsView key={campaniaId} campaign={loadState.campaign} />;

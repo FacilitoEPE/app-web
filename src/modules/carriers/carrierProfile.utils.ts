@@ -1,4 +1,3 @@
-import { usesV1 } from '@/shared/api/data-contract';
 import type { Carrier } from "@/modules/carriers/carriers.data";
 import type { CarrierInput } from "@/modules/carriers/api/carrier.api";
 
@@ -104,7 +103,7 @@ export function validateCarrier(values: CarrierFormValues): CarrierErrors {
     require("ciudad", "Ingresa la ciudad.");
     if (isPrivado) {
         require("documento", "Ingresa el documento de identidad.");
-        if (!usesV1()) require("cgn", "Ingresa el número de CGN.");
+        require("cgn", "Ingresa el número de CGN.");
     }
 
     const ruc = values.ruc.trim();

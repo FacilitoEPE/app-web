@@ -124,9 +124,21 @@ export default function CarrierRecordsManagement({ kind }: { kind: "vehicles" | 
                     ancho: String(vehicleForm.editing.ancho), altura: String(vehicleForm.editing.altura),
                     profundidad: String(vehicleForm.editing.profundidad), pesoNeto: String(vehicleForm.editing.pesoNeto), pesoBruto: String(vehicleForm.editing.pesoBruto),
                 } : undefined} onSuccess={saveVehicle} />
-            <CarrierDriverModal carrier={currentCarrier} open={driverForm.open}
+            <CarrierDriverModal
+                carrier={currentCarrier}
+                open={driverForm.open}
                 onOpenChange={open => setDriverForm(current => ({ ...current, open }))}
-                mode={driverForm.editing ? "edit" : "create"} initialValues={driverForm.editing ?? undefined} onSuccess={saveDriver} />
+                mode={driverForm.editing ? "edit" : "create"}
+                initialValues={driverForm.editing ? {
+                    nombre: driverForm.editing.nombre,
+                    telefono: driverForm.editing.telefono,
+                    correo: driverForm.editing.correo,
+                    tipoDocumento: driverForm.editing.tipoDocumento ?? "DNI",
+                    numeroDocumento: driverForm.editing.numeroDocumento ?? "",
+                    numeroLicencia: driverForm.editing.numeroLicencia ?? "",
+                } : undefined}
+                onSuccess={saveDriver}
+            />
             <CarrierSuccessModal open={success.open} mode={success.mode} onOpenChange={open => setSuccess(current => ({ ...current, open }))} />
         </div>
     );

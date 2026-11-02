@@ -1,9 +1,11 @@
 import { X, Save, UserRound, Phone, Mail } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
+import ModalSection from "@/shared/components/ModalSection";
 import FormField from "@/shared/components/FormField";
 import { useModalForm } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import InputField from "@/shared/components/InputField";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Button } from "@/shared/components/ui/button";
 import type { Carrier } from "@/modules/carriers/carriers.data";
 import {
@@ -15,6 +17,12 @@ import {
 } from "@/modules/carriers/carrierRecords.utils";
 
 export type { DriverFormValues };
+
+const DOCUMENT_TYPES = [
+    { value: "DNI", label: "DNI" },
+    { value: "Pasaporte", label: "Pasaporte" },
+    { value: "Carnet de extranjeria", label: "Carnet de extranjería" },
+];
 
 interface CarrierDriverModalProps {
     open: boolean;
@@ -65,7 +73,7 @@ export default function CarrierDriverModal({ open, onOpenChange, onSuccess, carr
             icon={<UserRound size={22} strokeWidth={2} />}
             title={isEdit ? "Editar Chofer" : "Registrar Chofer"}
             description={`Chofer de ${carrier.nombre}.`}
-            size="md"
+            size="lg"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)} disabled={saving}>
@@ -77,29 +85,89 @@ export default function CarrierDriverModal({ open, onOpenChange, onSuccess, carr
                 </>
             }
         >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                {Boolean(errors._form) && <FormField error={errors._form} className="sm:col-span-2" />}
-                <InputField
-                    {...bind("nombre")}
-                    className="sm:col-span-2"
-                    label="Nombre completo"
-                    leading={<UserRound />}
-                    placeholder="Nombres y apellidos"
-                />
-                <InputField
-                    {...bind("telefono")}
-                    label="Teléfono"
-                    leading={<Phone />}
-                    type="tel"
-                    placeholder="987 654 321"
-                />
-                <InputField
-                    {...bind("correo")}
-                    label="Correo"
-                    leading={<Mail />}
-                    type="email"
-                    placeholder="chofer@correo.com"
-                />
+            <div className="flex flex-col gap-6 pt-1 pb-1">
+                {Boolean(errors._form) && <FormField error={errors._form} />}
+
+                <ModalSection title="Datos personales e identidad">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <InputField
+                            {...bind("nombre")}
+                            className="sm:col-span-2"
+                            label="Nombre completo"
+                            placeholder="Nombres y apellidos"
+                        />
+                        <FormField
+                            id="driver-tipoDocumento"
+                            label="Tipo de documento"
+                            required
+                            error={errors.tipoDocumento}
+                        >
+                            <Select
+                                items={DOCUMENT_TYPES}
+                                value={values.tipoDocumento || "DNI"}
+                                onValueChange={(val) => {
+                                    set("tipoDocumento")(val ?? "DNI");
+                                    clearError("tipoDocumento");
+                                }}
+                                disabled={saving}
+                            >
+                                <SelectTrigger id="driver-tipoDocumento" className="w-full">
+                                    <SelectValue placeholder="Seleccionar..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {DOCUMENT_TYPES.map((doc) => (
+                                        <SelectItem key={doc.value} value={doc.value}>
+                                            {doc.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FormField>
+                        <InputField
+                            {...bind("numeroDocumento")}
+                            label="Número de documento"
+                            placeholder="Ej. 45871236"
+                            maxLength={20}
+                            type="text"
+                            inputMode={values.tipoDocumento === "DNI" ? "numeric" : "text"}
+                        />
+                    </div>
+                </ModalSection>
+
+                <ModalSection title="Habilitación de conducción">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <InputField
+                            {...bind("numeroLicencia")}
+                            className="sm:col-span-2"
+                            label="Número de licencia de conducir"
+                            placeholder="Ej. Q45871236"
+                            maxLength={20}
+                        />
+                    </div>
+                </ModalSection>
+
+                <ModalSection title="Información de contacto">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <InputField
+                            {...bind("telefono")}
+                            label="Teléfono"
+                            leading={<Phone />}
+                            type="tel"
+                            inputMode="tel"
+                            maxLength={20}
+                            placeholder="Ej. 987 654 321"
+                        />
+                        <InputField
+                            {...bind("correo")}
+                            label="Correo electrónico"
+                            leading={<Mail />}
+                            type="email"
+                            inputMode="email"
+                            maxLength={120}
+                            placeholder="chofer@correo.com"
+                        />
+                    </div>
+                </ModalSection>
             </div>
         </AppModal>
     );

@@ -121,7 +121,7 @@ function ProviderDetailsView({ provider, onSaved }: { provider: Proveedor; onSav
                 />
             </div>
 
-            <div className="mt-4 grid grid-cols-1 items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700 lg:grid-cols-[1.35fr_1fr]">
+            <div className="mt-4 grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700 lg:grid-cols-[1.35fr_1fr]">
                 <LinkedCard
                     icon={<LandPlot size={22} strokeWidth={2.2} />}
                     title="Fincas"
@@ -136,6 +136,7 @@ function ProviderDetailsView({ provider, onSaved }: { provider: Proveedor; onSav
                     isEmpty={providerFincas.length === 0}
                     emptyMessage="Este proveedor todavía no tiene fincas registradas."
                     emptyActionLabel="Registrar finca"
+                    className="h-full"
                 >
                     {providerFincas.slice(0, PREVIEW_ROWS).map((finca) => (
                         <LinkedRow

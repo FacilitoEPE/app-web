@@ -18,6 +18,8 @@ import { TableToolbar, TableCountPill, TableExportMenu, TableViewToggle, type Ta
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
 import ProviderFormModal from "@/modules/providers/components/ProviderFormModal";
 import { useProviderLocalData } from "@/modules/providers/providerLocalData.store";
+import StatusBadge from "@/shared/components/StatusBadge";
+import { formatDecimal } from "@/shared/utils/format";
 import type { ProveedorInput } from "@/modules/providers/api/proveedor.dto";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
 import type { createInFlightGuard } from "@/shared/utils/inFlightGuard";
@@ -41,7 +43,7 @@ interface ProvidersTableProps {
 
 export default function ProvidersTable({ data, isLoading, loadError, onRetry, hasActiveFilters, onClearFilters, mutationGuard, onSave, onDelete }: ProvidersTableProps) {
     const navigate = useNavigate();
-    const { fincas, certificados } = useProviderLocalData();
+    const { fincas, certificados, produccion } = useProviderLocalData();
     const [page, setPage] = useState(1);
     const [viewMode, setViewMode] = useState<TableViewMode>("table");
     const [editing, setEditing] = useState<{ open: boolean; provider: Proveedor | null }>({ open: false, provider: null });
@@ -50,14 +52,33 @@ export default function ProvidersTable({ data, isLoading, loadError, onRetry, ha
     const padSummary = (row: Proveedor) => {
         const fCount = (fincas[row.proveedorId] ?? []).length;
         const cCount = (certificados[row.proveedorId] ?? []).length;
-        return `${fCount} ${fCount === 1 ? "finca" : "fincas"} · ${cCount} ${cCount === 1 ? "certificado" : "certificados"}`;
+        const totalHa = (fincas[row.proveedorId] ?? []).reduce((sum, f) => sum + f.haTotal, 0);
+        return {
+            text: `${fCount} ${fCount === 1 ? "finca" : "fincas"} · ${cCount} ${cCount === 1 ? "cert." : "certs."}`,
+            detail: totalHa > 0 ? `${formatDecimal(totalHa)} ha` : null,
+        };
     };
 
     const getExportData = (): TableExport => ({
         filename: "proveedores",
         title: "Proveedores",
-        header: ["Nombre", "Documento", "Zona", "Fincas y Certificados", "Teléfono", "Correo", "Código lugar de producción"],
-        rows: data.map((row) => [fullName(row), documentLabel(row), row.zona, padSummary(row), String(row.telefono), row.email, String(row.codigoLugarProduccion)]),
+        header: ["Nombre", "Documento", "Código CLP", "Zona", "Sanidad Agraria", "Cultivos", "Fincas y Certificados", "Teléfono", "Correo"],
+        rows: data.map((row) => {
+            const sanidad = produccion[row.proveedorId]?.estadoSanidad || row.estadoSanidadAgraria || "Sin registrar";
+            const frutasList = (produccion[row.proveedorId]?.frutas ?? []).map((f) => f.nombre).join(", ") || "—";
+            const pad = padSummary(row);
+            return [
+                fullName(row),
+                documentLabel(row),
+                String(row.codigoLugarProduccion || "—"),
+                row.zona || "—",
+                sanidad,
+                frutasList,
+                `${pad.text}${pad.detail ? ` (${pad.detail})` : ""}`,
+                String(row.telefono || "—"),
+                row.email || "—",
+            ];
+        }),
     });
 
     const getRowActions = (row: Proveedor): { primary: RowAction[]; secondary: RowAction[] } => ({
@@ -117,22 +138,43 @@ export default function ProvidersTable({ data, isLoading, loadError, onRetry, ha
                 onPageChange={setPage}
             >
                 <div className={`flex flex-col gap-3 ${viewMode === "grid" ? "sm:grid sm:grid-cols-2 lg:grid-cols-3" : "sm:hidden"}`}>
-                    {visibleData.map((row) => (
-                        <TableGridCard
-                            key={row.proveedorId}
-                            accentColor="border-l-brand"
-                            icon={<UserRound size={18} strokeWidth={2} />}
-                            title={fullName(row)}
-                            subtitle={documentLabel(row)}
-                            actions={<RowActions {...getRowActions(row)} />}
-                        >
-                            <TableGridCardFields>
-                                <TableGridCardField label="Zona" value={row.zona || "—"} />
-                                <TableGridCardField label="Padrón" value={padSummary(row)} />
-                                <TableGridCardField label="Teléfono" value={row.telefono ? String(row.telefono) : "—"} />
-                            </TableGridCardFields>
-                        </TableGridCard>
-                    ))}
+                    {visibleData.map((row) => {
+                        const sanidad = produccion[row.proveedorId]?.estadoSanidad || row.estadoSanidadAgraria || "Sin registrar";
+                        const frutas = produccion[row.proveedorId]?.frutas ?? [];
+                        const pad = padSummary(row);
+                        return (
+                            <TableGridCard
+                                key={row.proveedorId}
+                                accentColor="border-l-brand"
+                                icon={<UserRound size={18} strokeWidth={2} />}
+                                title={fullName(row)}
+                                subtitle={documentLabel(row)}
+                                actions={<RowActions {...getRowActions(row)} />}
+                            >
+                                <TableGridCardFields>
+                                    <TableGridCardField label="Zona" value={row.zona || "—"} />
+                                    <TableGridCardField label="Sanidad" value={<StatusBadge status={sanidad} />} />
+                                    <TableGridCardField label="CLP" value={row.codigoLugarProduccion ? String(row.codigoLugarProduccion) : "—"} />
+                                    <TableGridCardField
+                                        label="Cultivos"
+                                        value={
+                                            frutas.length ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {frutas.map((f) => (
+                                                        <span key={f.nombre} className="rounded-full bg-brand-surface px-2 py-0.5 text-[11px] font-semibold text-brand">
+                                                            {f.nombre}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : "—"
+                                        }
+                                    />
+                                    <TableGridCardField label="Padrón" value={`${pad.text}${pad.detail ? ` (${pad.detail})` : ""}`} />
+                                    <TableGridCardField label="Teléfono" value={row.telefono ? String(row.telefono) : "—"} />
+                                </TableGridCardFields>
+                            </TableGridCard>
+                        );
+                    })}
                 </div>
 
                 {viewMode === "table" && (
@@ -141,35 +183,77 @@ export default function ProvidersTable({ data, isLoading, loadError, onRetry, ha
                             <TableHeader className={TABLE_HEAD_BG}>
                                 <TableRow className="border-b border-border hover:bg-transparent">
                                     <TableHead className="text-ink font-semibold h-14 px-6">Proveedor</TableHead>
-                                    <TableHead className="text-ink font-semibold h-14">Documento</TableHead>
+                                    <TableHead className="text-ink font-semibold h-14">Documento / CLP</TableHead>
                                     <TableHead className="text-ink font-semibold h-14">Zona</TableHead>
-                                    <TableHead className="text-ink font-semibold h-14">Fincas y Certificados</TableHead>
+                                    <TableHead className="text-ink font-semibold h-14">Sanidad Agraria</TableHead>
+                                    <TableHead className="text-ink font-semibold h-14">Cultivos</TableHead>
+                                    <TableHead className="text-ink font-semibold h-14">Padrón</TableHead>
                                     <TableHead className="text-ink font-semibold h-14">Teléfono</TableHead>
-                                    <TableHead className="text-ink font-semibold h-14 text-center px-6 w-56">Acciones</TableHead>
+                                    <TableHead className="text-ink font-semibold h-14 text-center px-6 w-44">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {visibleData.map((row) => (
-                                    <TableRow key={row.proveedorId} className="border-b border-border hover:bg-surface-page/60 transition-colors">
-                                        <TableCell className="h-20 px-6 relative">
-                                            <TableRowAccent color="bg-brand" />
-                                            <TableRowLead icon={<UserRound size={20} strokeWidth={2} />} title={fullName(row)} subtitle={row.email} />
-                                        </TableCell>
-                                        <TableCell className="text-ink-body font-medium">{documentLabel(row)}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2 text-ink-body font-medium"><MapPin size={16} className="text-ink-muted" />{row.zona || "—"}</div>
-                                        </TableCell>
-                                        <TableCell className="text-ink-body font-medium text-[13px]">
-                                            {padSummary(row)}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2 text-ink-body font-medium"><Phone size={16} className="text-ink-muted" />{row.telefono || "—"}</div>
-                                        </TableCell>
-                                        <TableCell className="px-6">
-                                            <RowActions {...getRowActions(row)} className="justify-center" />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                {visibleData.map((row) => {
+                                    const sanidad = produccion[row.proveedorId]?.estadoSanidad || row.estadoSanidadAgraria || "Sin registrar";
+                                    const frutas = produccion[row.proveedorId]?.frutas ?? [];
+                                    const pad = padSummary(row);
+                                    return (
+                                        <TableRow key={row.proveedorId} className="border-b border-border hover:bg-surface-page/60 transition-colors">
+                                            <TableCell className="h-20 px-6 relative">
+                                                <TableRowAccent color="bg-brand" />
+                                                <TableRowLead icon={<UserRound size={20} strokeWidth={2} />} title={fullName(row)} subtitle={row.email} />
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-ink-body font-bold text-[13px]">{documentLabel(row)}</div>
+                                                {row.codigoLugarProduccion ? (
+                                                    <div className="text-[11px] text-ink-muted font-medium flex items-center gap-1 mt-0.5">
+                                                        <span className="text-ink-muted/80">CLP:</span> {String(row.codigoLugarProduccion)}
+                                                    </div>
+                                                ) : null}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2 text-ink-body font-medium text-[13px]">
+                                                    <MapPin size={15} className="text-ink-muted shrink-0" />
+                                                    <span className="truncate max-w-[150px]" title={row.zona || undefined}>{row.zona || "—"}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <StatusBadge status={sanidad} />
+                                            </TableCell>
+                                            <TableCell>
+                                                {frutas.length ? (
+                                                    <div className="flex flex-wrap items-center gap-1 max-w-[160px]">
+                                                        {frutas.slice(0, 2).map((fruta) => (
+                                                            <span key={fruta.nombre} className="rounded-full bg-brand-surface px-2.5 py-0.5 text-[11px] font-semibold text-brand ring-1 ring-brand-border/40">
+                                                                {fruta.nombre}
+                                                            </span>
+                                                        ))}
+                                                        {frutas.length > 2 && (
+                                                            <span className="text-[11px] font-medium text-ink-muted" title={frutas.slice(2).map((f) => f.nombre).join(", ")}>
+                                                                +{frutas.length - 2}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-ink-muted text-[13px]">—</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-[13px] font-semibold text-ink-body">{pad.text}</div>
+                                                {pad.detail && <div className="text-[11px] text-ink-muted font-medium">{pad.detail} declaradas</div>}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2 text-ink-body font-medium text-[13px]">
+                                                    <Phone size={15} className="text-ink-muted shrink-0" />
+                                                    <span>{row.telefono ? String(row.telefono) : "—"}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="px-6">
+                                                <RowActions {...getRowActions(row)} className="justify-center" />
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </div>

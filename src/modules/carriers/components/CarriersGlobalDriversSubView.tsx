@@ -380,6 +380,9 @@ export default function CarriersGlobalDriversSubView({
                               nombre: driverModal.driver.nombre,
                               telefono: driverModal.driver.telefono,
                               correo: driverModal.driver.correo,
+                              tipoDocumento: driverModal.driver.tipoDocumento ?? "DNI",
+                              numeroDocumento: driverModal.driver.numeroDocumento ?? "",
+                              numeroLicencia: driverModal.driver.numeroLicencia ?? "",
                           }
                         : undefined
                 }
