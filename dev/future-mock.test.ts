@@ -183,6 +183,57 @@ describe('future API contract', () => {
     await expect(apiClient.post('/api/coordinaciones/1/historial-chofer',{ estado:'LLEGADA' })).rejects.toMatchObject({ code:'INVALID_DRIVER_STAGE' })
   })
 
+  it('supports authentication, driver context and file preview/unlink without undocumented V1 errors', async () => {
+    // 1. Login endpoint
+    const loginRes = await apiClient.post('/api/auth/login', { usuario: 'admin-demo', password: 'AnyPassword' })
+    expect(loginRes.data).toMatchObject({
+      accessToken: 'mock-token-1',
+      user: { usuario: 'admin-demo', rol: { nombre: 'Administrador' } },
+    })
+
+    // 2. Auth me endpoint with bearer token
+    const meRes = await apiClient.get('/api/auth/me', {
+      headers: { Authorization: `Bearer ${loginRes.data.accessToken}` },
+    })
+    expect(meRes.data).toMatchObject({
+      usuarioId: 1,
+      usuario: 'admin-demo',
+      rol: { nombre: 'Administrador' },
+    })
+
+    // 3. Chofer context endpoint
+    const contextRes = await apiClient.get('/api/chofer/contexto')
+    expect(contextRes.status).toBe(200)
+    expect(Array.isArray(contextRes.data.campaigns)).toBe(true)
+    expect(Array.isArray(contextRes.data.loads)).toBe(true)
+
+    // 4. Chofer load update endpoint
+    const patchRes = await apiClient.patch('/api/chofer/cargas/1/datos', {
+      fechaCarga: '2026-10-30',
+      observacionesCarga: 'Carga completada sin incidentes',
+    })
+    expect(patchRes.status).toBe(200)
+    expect(patchRes.data.ok).toBe(true)
+
+    // 5. Normalizes /mock-api/v1 and /mock-api/api/v1 prefixes
+    const v1Res = await fetch(`${origin}/mock-api/v1/campanas`)
+    expect(v1Res.status).toBe(200)
+    const jsonV1 = await v1Res.json()
+    expect(jsonV1.total).toBeGreaterThan(0)
+
+    const apiV1Res = await fetch(`${origin}/mock-api/api/v1/campanas`)
+    expect(apiV1Res.status).toBe(200)
+    const jsonApiV1 = await apiV1Res.json()
+    expect(jsonApiV1.total).toBeGreaterThan(0)
+
+    // 6. Local files unlink and preview
+    await apiClient.post('/api/archivos-locales/vinculos', { tipo: 'TEST', entidadId: 99, archivoId: 1 })
+    const previewRes = await apiClient.get('/api/archivos-locales/1/contenido')
+    expect(previewRes.status).toBe(200)
+    const unlinkRes = await apiClient.delete('/api/archivos-locales/vinculos/TEST/99')
+    expect(unlinkRes.status).toBe(200)
+  })
+
   it('requires an in-progress campaign and preserves a closed campaign as read-only', async () => {
     await expect(campanaV1.update(3,{ estado:'en proceso' })).rejects.toMatchObject({ code:'CAMPAIGN_CLOSED' })
     await expect(cerrarCampanaV1(2,'Cierre de prueba')).rejects.toMatchObject({ code:'CAMPAIGN_NOT_IN_PROGRESS' })
