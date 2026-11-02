@@ -12,3 +12,13 @@ export async function getAuthenticatedUser(): Promise<AuthUser> {
   const { data } = await apiClient.get<AuthUser>('/api/auth/me')
   return data
 }
+
+export async function getUserById(usuarioId: number): Promise<AuthUser> {
+  const { data } = await apiClient.get<AuthUser>(`/api/auth/usuarios/${usuarioId}`)
+  return data
+}
+
+export async function requestPasswordRecovery(correo: string): Promise<{ message: string }> {
+  const { data } = await apiClient.post<{ message: string }>('/api/auth/recuperar-password', { correo })
+  return data
+}

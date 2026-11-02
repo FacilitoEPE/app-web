@@ -2,7 +2,6 @@ import type { FileSource } from '@/shared/utils/fileSource';
 export const CONTRACT_CURRENCIES = [
     { value: "USD", label: "USD · Dólar", symbol: "$" },
     { value: "PEN", label: "PEN · Sol", symbol: "S/" },
-    { value: "EUR", label: "EUR · Euro", symbol: "€" },
 ];
 
 export interface CampaignClientContractValues {
@@ -65,4 +64,3 @@ export function contractToValues(contract: CampaignClientContractLocal): Campaig
         observaciones: contract.observaciones,
     };
 }
-

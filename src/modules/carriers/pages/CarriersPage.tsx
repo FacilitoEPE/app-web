@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertCircle, Building2, Truck } from "lucide-react";
+import { AlertCircle, Building2, FileSpreadsheet, Send, Truck } from "lucide-react";
 import CarriersFilters from "@/modules/carriers/components/CarriersFilters";
 import CarriersTable from "@/modules/carriers/components/CarriersTable";
+import CarriersQuotationsSubView from "@/modules/carriers/components/CarriersQuotationsSubView";
 import CarrierFormModal from "@/modules/carriers/components/CarrierFormModal";
+import CarrierSendRequirementModal from "@/modules/carriers/components/CarrierSendRequirementModal";
 import CarrierSuccessModal, {
     type CarrierSuccessMode,
 } from "@/modules/carriers/components/CarrierSuccessModal";
 import PageHeader from "@/shared/layout/PageHeader";
+import SegmentedTabs from "@/shared/components/SegmentedTabs";
 import { Button } from "@/shared/components/ui/button";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import {
@@ -21,15 +24,20 @@ import {
     setCarrierExtras,
     useCarrierExtras,
 } from "@/modules/carriers/carrierExtras.store";
+import { useCarrierQuotations } from "@/modules/carriers/carrierQuotations.store";
 import {
     splitCarrierValues,
     toCarrierProfile,
     type CarrierFormValues,
 } from "@/modules/carriers/carrierProfile.utils";
 
+type CarriersSectionTab = "empresas" | "cotizaciones";
 
 export default function CarriersPage() {
+    const [activeTab, setActiveTab] = useState<CarriersSectionTab>("empresas");
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isSendModalOpen, setIsSendModalOpen] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [carriers, setCarriers] = useState<Carrier[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -40,6 +48,7 @@ export default function CarriersPage() {
     const [search, setSearch] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
     const extras = useCarrierExtras();
+    const quotations = useCarrierQuotations();
 
     const profiles = useMemo(
         () => carriers.map((carrier) => toCarrierProfile(carrier, extras[carrier.id])),
@@ -78,6 +87,25 @@ export default function CarriersPage() {
         });
     }, [profiles, search, typeFilter]);
 
+    const selectedCarriers = useMemo(
+        () => carriers.filter((carrier) => selectedIds.includes(carrier.id)),
+        [carriers, selectedIds],
+    );
+
+    const toggleRow = (id: number) => {
+        setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+        );
+    };
+
+    const toggleAll = (checked: boolean) => {
+        if (!checked) {
+            setSelectedIds([]);
+            return;
+        }
+        setSelectedIds(filteredData.map((row) => row.id));
+    };
+
     const showSuccess = (mode: CarrierSuccessMode) => setSuccess({ open: true, mode });
 
     const handleCreateCarrier = async (values: CarrierFormValues) => {
@@ -100,6 +128,7 @@ export default function CarriersPage() {
         try {
             await deleteCarrier(id);
             await removeCarrierExtras(id);
+            setSelectedIds((prev) => prev.filter((item) => item !== id));
             await loadCarriers();
         } catch {
             setError(
@@ -113,15 +142,45 @@ export default function CarriersPage() {
             <PageHeader
                 icon={<Truck size={24} strokeWidth={2.5} />}
                 title="Gestión de Transporte"
-                description="Administra transportistas y consulta sus vehículos y choferes."
+                description="Administra transportistas, envía requerimientos por correo y gestiona sus cotizaciones."
                 action={
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 [&>button]:w-full sm:[&>button]:w-auto">
+                        <Button
+                            variant="outline"
+                            size="xl"
+                            onClick={() => setIsSendModalOpen(true)}
+                        >
+                            <Send size={19} strokeWidth={2.4} /> Enviar requerimiento
+                            {selectedIds.length > 0 ? ` (${selectedIds.length})` : ""}
+                        </Button>
                         <Button size="xl" onClick={() => setIsCreateModalOpen(true)}>
                             <Building2 size={20} strokeWidth={2.5} /> Registrar transportista
                         </Button>
                     </div>
                 }
             />
+
+            <div className="mb-6">
+                <SegmentedTabs
+                    value={activeTab}
+                    onChange={(val) => setActiveTab(val as CarriersSectionTab)}
+                    showLabelsOnMobile
+                    tabs={[
+                        {
+                            id: "empresas",
+                            label: "Empresas",
+                            icon: Building2,
+                            count: profiles.length,
+                        },
+                        {
+                            id: "cotizaciones",
+                            label: "Solicitudes y cotizaciones",
+                            icon: FileSpreadsheet,
+                            count: quotations.length,
+                        },
+                    ]}
+                />
+            </div>
 
             {error && (
                 <Alert variant="destructive" className="mb-6">
@@ -130,6 +189,8 @@ export default function CarriersPage() {
                 </Alert>
             )}
 
+            {activeTab === "empresas" ? (
+                <>
                     <CarriersFilters
                         search={search}
                         onSearchChange={setSearch}
@@ -146,7 +207,29 @@ export default function CarriersPage() {
                         onClearFilters={clearFilters}
                         onDelete={handleDeleteCarrier}
                         onUpdateCarrier={handleUpdateCarrier}
+                        selectedIds={selectedIds}
+                        onToggleRow={toggleRow}
+                        onToggleAll={toggleAll}
                     />
+                </>
+            ) : (
+                <CarriersQuotationsSubView carriers={carriers} />
+            )}
+
+            <CarrierSendRequirementModal
+                open={isSendModalOpen}
+                onOpenChange={setIsSendModalOpen}
+                selectedCarriers={selectedCarriers}
+                onRemoveCarrier={(id) =>
+                    setSelectedIds((prev) => prev.filter((item) => item !== id))
+                }
+                onSuccess={async () => {
+                    setIsSendModalOpen(false);
+                    setSelectedIds([]);
+                    await loadCarriers();
+                    showSuccess("requirement-sent");
+                }}
+            />
 
             <CarrierFormModal
                 open={isCreateModalOpen}

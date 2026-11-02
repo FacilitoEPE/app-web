@@ -23,6 +23,7 @@ export interface CarrierRequirementQuotation {
     observaciones: string;
     estado: CarrierQuotationStatus;
     montoCotizadoPen: number | null;
+    moneda?: "PEN" | "USD";
     documentoRequerimiento: FileSource | null;
     documentoCotizacion: FileSource | null;
     vehiculoAsignadoPlaca: string;
@@ -51,6 +52,7 @@ export function registerQuotationResponse(
     payload: {
         estado: CarrierQuotationStatus;
         montoCotizadoPen: number | null;
+        moneda?: "PEN" | "USD";
         documentoCotizacion: FileSource | null;
         observaciones: string;
     },
@@ -62,6 +64,7 @@ export function registerQuotationResponse(
                   ...item,
                   estado: payload.estado,
                   montoCotizadoPen: payload.montoCotizadoPen,
+                  moneda: payload.moneda ?? item.moneda ?? "PEN",
                   documentoCotizacion: payload.documentoCotizacion,
                   observaciones: payload.observaciones,
               }

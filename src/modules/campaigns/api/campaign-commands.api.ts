@@ -16,9 +16,9 @@ import type { CreateContratoVentaV1 } from '@/modules/commercial-planning/api/fu
 import type { CreateExamenProveedorV1 } from '@/modules/providers/api/future.dto';
 import type { CreateCertificadoCampanaV1 } from '@/modules/campaigns/api/future.dto';
 import type { CertificadoArchivos } from '@/modules/campaigns/campaignCertificates.store';
-function currency(value: string): 'PEN' | 'USD' | 'EUR' {
-    if (value !== 'PEN' && value !== 'USD' && value !== 'EUR')
-        throw new Error('Selecciona una moneda válida.');
+function currency(value: string): 'PEN' | 'USD' {
+    if (value !== 'PEN' && value !== 'USD')
+        throw new Error('Selecciona soles o dólares.');
     return value;
 }
 function selectedVariety(name: string | undefined, fruitId: number) {
@@ -87,10 +87,10 @@ export const campaignCommands = {
         if (!farm)
             throw new Error('Registra primero la finca con su ubicación y variedad.');
         const campaign = g.campaigns.find(c => c.campaniaId === party?.campaniaId);
-        const farmIds = farm.variedadesIds ?? (farm.frutaDerivadaId ? [farm.frutaDerivadaId] : []);
+        const farmIds = farm.frutaDerivadaId ? [farm.frutaDerivadaId] : [];
         const eligible = g.varieties.filter(v => farmIds.includes(v.frutaDerivadaId) && v.frutaId === campaign?.frutaId);
         const existingVariety = id ? g.interviews.find(i => i.entrevistaId === Number(id))?.frutaDerivadaId : undefined;
-        const body = { fincaId: farm.fincaId, frutaDerivadaId: existingVariety ?? (eligible.length === 1 ? eligible[0].frutaDerivadaId : null), densidad: values.densidadPlantacion ? Number(values.densidadPlantacion) : null, distanciamientoDescripcion: values.distanciamiento, frecuenciaRiegoDescripcion: values.frecuenciaRiego, nombreAplicacion: values.nombreAplicacion || null, aplicacionesAlAno: values.aplicacionesAlAno ? Number(values.aplicacionesAlAno) : null };
+        const body = { fincaId: farm.fincaId, frutaDerivadaId: existingVariety ?? (eligible[0]?.frutaDerivadaId ?? null), densidad: values.densidadPlantacion ? Number(values.densidadPlantacion) : null, distanciamientoDescripcion: values.distanciamiento, frecuenciaRiegoDescripcion: values.frecuenciaRiego, nombreAplicacion: values.nombreAplicacion || null, aplicacionesAlAno: values.aplicacionesAlAno ? Number(values.aplicacionesAlAno) : null };
         return id ? entrevistaExtencionV1(cxpId).update(requireId(id), body) : entrevistaExtencionV1(cxpId).create(body);
     }),
     exam: (providerId: number, value: ExamValues, id?: string) => commitRemote(async () => {

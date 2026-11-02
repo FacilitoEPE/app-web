@@ -9,7 +9,6 @@ import type * as Billing from '@/modules/billing/api/future.dto';
 import type { ClienteNegocioV1 } from '@/modules/clients/api/future.dto';
 import type { RecepcionPlantaV1 } from '@/modules/logistics/api/future.dto';
 import type { HistorialChoferV1 } from '@/modules/driver-portal/api/future.dto';
-import { getFarmVarietyIds } from '@/modules/providers/api/farm-varieties.api';
 import { getLocalDocumentLinks, type LocalDocumentLink } from '@/shared/api/uploadDocument';
 import { getAuthToken } from '@/shared/offline/session';
 /** Remote operational context shared by the existing screens. No fixtures are imported here. */
@@ -20,7 +19,7 @@ export interface OperationsContext {
     varieties: Campaign.FrutaDerivadaV1[];
     providers: Provider.ProveedorV1[];
     people: Provider.PersonaV1[];
-    farms: (Provider.FincaV1 & { variedadesIds?: number[] })[];
+    farms: Provider.FincaV1[];
     providerPeople: Provider.ProveedorXPersonaV1[];
     providerFruits: Provider.ProveedorXFrutaV1[];
     providerVarieties: Provider.ProveedorXFrutaDerivadaV1[];
@@ -111,7 +110,6 @@ export async function loadOperationsContext(): Promise<OperationsContext> {
         ...(['participations', 'certificates', 'requirements', 'agreements', 'requests'] as const).map((key, index) => children(key, campaignIds, id => `/campanas/${id}/${['proveedores', 'certificaciones', 'requerimientos', 'transportistas', 'solicitudes-transporte'][index]}`)),
         children('vehicles', carrierIds, id => `/transportistas/${id}/vehiculos`), children('drivers', carrierIds, id => `/transportistas/${id}/choferes`),
     ]);
-    await Promise.all(data.farms.map(async farm => { farm.variedadesIds = await getFarmVarietyIds(farm.proveedorId, farm.fincaId); }));
     await Promise.all([
         ...(['coverage', 'expansions', 'certificatePayments'] as const).map((key, index) => children(key, data.certificates.map(row => row.certificadoId), id => `/certificaciones/${id}/${['cobertura', 'ampliaciones', 'pagos'][index]}`)),
         ...(['interviews', 'analyses', 'measurements'] as const).map((key, index) => children(key, data.participations.map(row => row.cxpId), id => `/participaciones/${id}/${['entrevistas', 'analisis-calidad', 'mediciones-mtd'][index]}`)),

@@ -29,11 +29,18 @@ export function providerName(id: number, g: OperationsContext = operationsContex
 }
 export function singleFarmVariety(farmId: number, fruitId: number, g: OperationsContext): number | undefined {
     const farm = g.farms.find(row => row.fincaId === farmId);
-    const ids = farm?.variedadesIds ?? (farm?.frutaDerivadaId ? [farm.frutaDerivadaId] : []);
-    const matches = g.varieties.filter(row => row.frutaId === fruitId && ids.includes(row.frutaDerivadaId));
-    return matches.length === 1 ? matches[0].frutaDerivadaId : undefined;
+    const variety = g.varieties.find(row => row.frutaId === fruitId && row.frutaDerivadaId === farm?.frutaDerivadaId);
+    return variety?.frutaDerivadaId;
 }
 export function farmNames(providerId: number, loadId: number, g: OperationsContext = operationsContext()) {
     const ids = new Set(g.loadOrigins.filter(origin => g.loadProviders.some(row => row.proveedorCargaId === origin.proveedorCargaId && row.cargaId === loadId && g.participations.some(p => p.cxpId === row.cxpId && p.proveedorId === providerId))).map(row => row.fincaId));
+    if (ids.size === 0) {
+        const load = g.loads.find(row => row.cargaId === loadId);
+        if (load) {
+            for (const origin of g.deliveryOrigins.filter(o => o.coordinacionEntregaId === load.coordinacionEntregaId && g.participations.some(p => p.cxpId === o.cxpId && p.proveedorId === providerId))) {
+                ids.add(origin.fincaId);
+            }
+        }
+    }
     return g.farms.filter(row => ids.has(row.fincaId)).map(row => row.nombreFinca).join(', ');
 }

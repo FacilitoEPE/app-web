@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { Badge } from "@/shared/components/ui/badge";
 import TableCard from "@/shared/components/TableCard";
@@ -32,9 +33,22 @@ interface CarriersTableProps {
     onClearFilters: () => void;
     onDelete: (id: number) => void;
     onUpdateCarrier: (id: number, values: CarrierFormValues) => Promise<void>;
+    selectedIds?: number[];
+    onToggleRow?: (id: number) => void;
+    onToggleAll?: (checked: boolean) => void;
 }
 
-export default function CarriersTable({ data, isLoading, hasActiveFilters, onClearFilters, onDelete, onUpdateCarrier }: CarriersTableProps) {
+export default function CarriersTable({
+    data,
+    isLoading,
+    hasActiveFilters,
+    onClearFilters,
+    onDelete,
+    onUpdateCarrier,
+    selectedIds = [],
+    onToggleRow,
+    onToggleAll,
+}: CarriersTableProps) {
     const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [viewMode, setViewMode] = useState<TableViewMode>("table");
@@ -84,6 +98,7 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
     const editingCarrier = data.find((row) => row.id === editingCarrierId) ?? null;
 
     const { pageCount, currentPage, visible: visibleData } = paginate(data, page);
+    const allSelected = visibleData.length > 0 && visibleData.every((row) => selectedIds.includes(row.id));
 
     return (
         <>
@@ -120,12 +135,20 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
                 <div className={`flex flex-col gap-3 ${viewMode === "grid" ? "sm:grid sm:grid-cols-2 lg:grid-cols-3" : "sm:hidden"}`}>
                     {visibleData.map((row) => {
                         const fInfo = fleetSummary(row);
+                        const isSelected = selectedIds.includes(row.id);
                         return (
                             <TableGridCard
                                 key={row.id}
                                 icon={row.tipo === "privado" ? <UserRound size={18} strokeWidth={2} /> : <Building2 size={18} strokeWidth={2} />}
                                 title={
                                     <span className="flex items-center gap-2">
+                                        {onToggleRow && (
+                                            <Checkbox
+                                                checked={isSelected}
+                                                onCheckedChange={() => onToggleRow(row.id)}
+                                                aria-label={`Seleccionar ${row.nombre}`}
+                                            />
+                                        )}
                                         {row.nombre}
                                     </span>
                                 }
@@ -148,6 +171,15 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
                     <Table>
                         <TableHeader className={TABLE_HEAD_BG}>
                             <TableRow className="border-b border-border hover:bg-transparent">
+                                {onToggleRow && (
+                                    <TableHead className="w-12 pl-4">
+                                        <Checkbox
+                                            checked={allSelected}
+                                            onCheckedChange={(checked) => onToggleAll?.(Boolean(checked))}
+                                            aria-label="Seleccionar todos los transportistas"
+                                        />
+                                    </TableHead>
+                                )}
                                 <TableHead className="text-ink font-semibold h-14">Transportista</TableHead>
                                 <TableHead className="text-ink font-semibold h-14">Tipo</TableHead>
                                 <TableHead className="text-ink font-semibold h-14">MTC</TableHead>
@@ -160,8 +192,18 @@ export default function CarriersTable({ data, isLoading, hasActiveFilters, onCle
                         <TableBody>
                             {visibleData.map((row) => {
                                 const fInfo = fleetSummary(row);
+                                const isSelected = selectedIds.includes(row.id);
                                 return (
                                     <TableRow key={row.id} className="border-b border-border hover:bg-surface-page/60 transition-colors">
+                                        {onToggleRow && (
+                                            <TableCell className="pl-4">
+                                                <Checkbox
+                                                    checked={isSelected}
+                                                    onCheckedChange={() => onToggleRow(row.id)}
+                                                    aria-label={`Seleccionar ${row.nombre}`}
+                                                />
+                                            </TableCell>
+                                        )}
                                         <TableCell className="h-20">
                                             <TableRowLead
                                                 icon={row.tipo === "privado" ? <UserRound size={20} strokeWidth={2} /> : <Building2 size={20} strokeWidth={2} />}

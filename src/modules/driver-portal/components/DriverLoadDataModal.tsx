@@ -140,7 +140,7 @@ export default function DriverLoadDataModal({ open, onOpenChange, load, onSave }
                     <div className="flex flex-col gap-4">
                         {proveedores.map((prov, index) => (
                             <div
-                                key={prov.proveedorId}
+                                key={`${prov.proveedorId}-${index}`}
                                 className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-page/40 p-4"
                             >
                                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">

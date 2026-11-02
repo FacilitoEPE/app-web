@@ -56,8 +56,7 @@ export function refreshFrontendData(): Promise<void> {
         return inFlight;
     publish({ ...state, phase: state.phase === 'ready' ? 'ready' : 'loading', refreshing: true, error: '' });
     const activeGeneration = generation;
-    let job!: Promise<void>;
-    job = (async () => {
+    const job = (async () => {
         try {
             do {
                 const revision = requested, g = await loadOperationsContext();
@@ -93,7 +92,7 @@ export function refreshFrontendData(): Promise<void> {
             throw error;
         }
         finally {
-            if (inFlight === job) inFlight = undefined;
+            if (activeGeneration === generation) inFlight = undefined;
         }
     })();
     inFlight = job;

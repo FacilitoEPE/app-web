@@ -9,7 +9,7 @@ export function projectProviderData(g: OperationsContext) {
     for (const provider of g.providers) {
         const id = provider.proveedorId;
         fincas[id] = g.farms.filter(row => row.proveedorId === id).map(row => {
-            const ids = row.variedadesIds ?? (row.frutaDerivadaId ? [row.frutaDerivadaId] : []);
+            const ids = row.frutaDerivadaId ? [row.frutaDerivadaId] : [];
             const cultivos = g.fruits.map(fruit => ({ fruta: fruit.name, variedades: g.varieties.filter(v => v.frutaId === fruit.frutaId && ids.includes(v.frutaDerivadaId)).map(v => v.name) })).filter(c => c.variedades.length > 0);
             return { fincaId: row.fincaId, nombre: row.nombreFinca, codigoSenasa: row.codigoLugarProduccion ?? '', codigoCatastral: row.codigoCatastral ?? '', departamento: row.departamento, provincia: row.provincia, distrito: row.distrito, latitud: row.latitud, longitud: row.longitud, haTotal: row.haTotalFinca, haCultivo: row.haCultivo, edadCultivo: row.edadCultivoAnios, cultivos };
         });

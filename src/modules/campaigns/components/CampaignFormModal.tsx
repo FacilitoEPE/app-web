@@ -7,6 +7,7 @@ import FormField from "@/shared/components/FormField";
 import InputField from "@/shared/components/InputField";
 import { InfoField } from "@/shared/components/InfoField";
 import { getSession } from "@/shared/offline/session";
+import { getUserById } from "@/modules/auth/api/auth.api";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -104,6 +105,15 @@ export default function CampaignFormModal({
                         requerimientoComercial: String(campana.requerimientoComercial),
                         estado: campana.estado,
                     });
+                    if (campana.responsableUsuarioId != null && campana.responsableUsuarioId !== user?.usuarioId) {
+                        getUserById(campana.responsableUsuarioId)
+                            .then((u) => {
+                                if (!active) return;
+                                const fullName = `${u.nombres} ${u.apellidos}`.trim();
+                                if (fullName) setValues((current) => ({ ...current, responsable: fullName }));
+                            })
+                            .catch(() => {});
+                    }
                 })
                 .catch(() => { if (active) setErrors({ _form: "No se pudo cargar la campaña." }); })
                 .finally(() => { if (active) setIsLoading(false); });

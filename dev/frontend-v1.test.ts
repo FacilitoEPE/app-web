@@ -30,6 +30,8 @@ import { clientOperationalSummary } from '@/modules/commercial-planning/api/clie
 import { logisticsCommands } from '@/modules/logistics/api/logistics-commands.api'
 import { projectLogisticsData } from '@/modules/logistics/api/logistics-screen-data'
 import { qualityCommands } from '@/modules/quality/api/quality-commands.api'
+import { requestPasswordRecovery, getUserById } from '@/modules/auth/api/auth.api'
+import { quotationCommands, projectCarrierData } from '@/modules/carriers/api/quotation-commands.api'
 
 let server: Server
 let originalBase: string | undefined
@@ -167,15 +169,20 @@ describe('existing frontend with the future HTTP contract', () => {
     expect(requested.some(url => url.startsWith('/mock-api/api/proveedores/1/fincas'))).toBe(true)
   })
 
-  it('persists several farm varieties and restores them after refresh', async () => {
+  it('persists multiple farms with different varieties for a provider and restores them after refresh', async () => {
     const source = getProviderLocalData().fincas[1][0]
     const g = operationsContext()
     const varieties = g.varieties.slice(0, 2)
-    const cultivos = varieties.map(v => ({ fruta: g.fruits.find(f => f.frutaId === v.frutaId)!.name, variedades: [v.name] }))
-    await addFinca(1, { ...source, nombre: 'Finca con varios cultivos', fincaId: undefined, cultivos })
+    for (const [idx, v] of varieties.entries()) {
+      const fruitName = g.fruits.find(f => f.frutaId === v.frutaId)!.name
+      await addFinca(1, { ...source, nombre: `Finca variedad ${idx + 1}`, fincaId: undefined, cultivos: [{ fruta: fruitName, variedades: [v.name] }] })
+    }
     await refreshFrontendData()
-    const saved = getProviderLocalData().fincas[1].find(f => f.nombre === 'Finca con varios cultivos')!
-    expect(saved.cultivos.flatMap(c => c.variedades).sort()).toEqual(varieties.map(v => v.name).sort())
+    const savedNames = getProviderLocalData().fincas[1]
+      .filter(f => f.nombre.startsWith('Finca variedad '))
+      .flatMap(f => f.cultivos.flatMap(c => c.variedades))
+      .sort()
+    expect(savedNames).toEqual(varieties.map(v => v.name).sort())
   })
 
   it('preserves leading zeros when the actual provider adapter writes data', async () => {
@@ -226,5 +233,39 @@ describe('existing frontend with the future HTTP contract', () => {
     await refreshFrontendData()
     expect(getFrontendDataStatus()).toMatchObject({ phase: 'ready', error: '' })
     expect(operationsContext().campaigns.find(c => c.campaniaId === 1)?.estado).toBe('en proceso')
+  })
+
+  it('recovers password by email and resolves user details by id', async () => {
+    const recovered = await requestPasswordRecovery('persona5@example.com')
+    expect(recovered.message).toContain('contraseña temporal')
+    await expect(requestPasswordRecovery('noexiste@epe.local')).rejects.toMatchObject({ statusCode: 404 })
+    const user = await getUserById(1)
+    expect(user).toMatchObject({ usuarioId: 1, usuario: 'admin-demo', nombres: 'Administrador', apellidos: 'Demo' })
+  })
+
+  it('sends transport requirement with local file attachment and registers quotation in USD', async () => {
+    const carrier = operationsContext().carriers[0]
+    const file = new File(['requerimiento pdf'], 'req-transporte.pdf', { type: 'application/pdf' })
+    await quotationCommands.send({
+      campaniaId: 1,
+      referencia: 'SOL-QA-1',
+      origen: 'Piura',
+      destino: 'Lima',
+      mensaje: 'Necesitamos 2 unidades refrigeradas',
+      carrierIds: [carrier.idEmpresaTransporteExterno],
+      documento: file,
+    })
+    const createdReq = projectCarrierData(operationsContext()).quotations.find(q => q.codigo === 'SOL-QA-1')!
+    expect(createdReq).toBeDefined()
+    expect(createdReq.documentoRequerimiento?.name).toBeTruthy()
+    await quotationCommands.respond(createdReq.id, {
+      estado: 'Recibida',
+      montoCotizadoPen: 2850,
+      moneda: 'USD',
+      documentoCotizacion: null,
+      observaciones: 'Incluye seguro de carga',
+    })
+    const updatedReq = projectCarrierData(operationsContext()).quotations.find(q => q.id === createdReq.id)!
+    expect(updatedReq).toMatchObject({ montoCotizadoPen: 2850, moneda: 'USD', estado: 'Recibida' })
   })
 })

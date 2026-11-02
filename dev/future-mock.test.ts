@@ -109,9 +109,10 @@ describe('future API contract', () => {
     await expect(acuerdoTransporteV1(1).update(2,{ estado:'CONFIRMADO' })).rejects.toMatchObject({ code:'AGREEMENT_INCOMPLETE' })
   })
 
-  it('enforces one active campaign per fruit and PEN for purchase/transport', async () => {
+  it('enforces one active campaign per fruit and PEN or USD for purchase/transport', async () => {
     await expect(campanaV1.create({ nombre:'Otra Mango',frutaId:1,fechaInicio:'2026-10-29',fechaFin:'2026-12-31',requerimientoComercial:100 })).rejects.toMatchObject({ code:'ACTIVE_CAMPAIGN_EXISTS' })
-    await expect(acuerdoTransporteV1(1).update(2,{ moneda:'USD' })).rejects.toMatchObject({ code:'PEN_REQUIRED' })
+    await expect(acuerdoTransporteV1(1).update(2,{ moneda:'USD' })).resolves.toMatchObject({ moneda:'USD' })
+    await expect(acuerdoTransporteV1(1).update(2,{ moneda:'EUR' as 'PEN' })).rejects.toMatchObject({ code:'INVALID_CURRENCY' })
   })
 
   it('allows consecutive trips and rejects overlapping driver intervals', async () => {

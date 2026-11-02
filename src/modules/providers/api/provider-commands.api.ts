@@ -4,7 +4,6 @@ import { commitRemote } from '@/shared/api/data-contract';
 import type { Finca } from '@/modules/providers/providerFinca.utils';
 import type { ProduccionProveedor } from '@/modules/providers/providerProduccion.utils';
 import type { CertificadoFormValues } from '@/modules/providers/providerCertificado.utils';
-import { replaceFarmVarietyIds } from '@/modules/providers/api/farm-varieties.api';
 import { linkLocalDocument, uploadLocalDocument } from '@/shared/api/uploadDocument';
 export function farmVarietyIds(finca: Finca): number[] {
     const g = operationsContext();
@@ -39,9 +38,7 @@ export const providerCommands = {
         const ids = farmVarietyIds(value);
         const body = { nombreFinca: value.nombre, departamento: value.departamento, provincia: value.provincia, distrito: value.distrito, latitud: value.latitud, longitud: value.longitud, haTotalFinca: value.haTotal, haCultivo: value.haCultivo, codigoLugarProduccion: value.codigoSenasa || null, codigoCatastral: value.codigoCatastral || null, edadCultivoAnios: value.edadCultivo ?? null, frutaDerivadaId: ids[0] ?? null };
         const current = index === undefined ? undefined : operationsContext().farms.filter(r => r.proveedorId === providerId)[index];
-        const saved = await (current ? fincaV1(providerId).update(current.fincaId, body) : fincaV1(providerId).create(body));
-        await replaceFarmVarietyIds(providerId, saved.fincaId, ids);
-        return saved;
+        return current ? fincaV1(providerId).update(current.fincaId, body) : fincaV1(providerId).create(body);
     }),
     removeFarm: (providerId: number, index: number) => commitRemote(async () => { const row = operationsContext().farms.filter(r => r.proveedorId === providerId)[index]; if (!row)
         throw new Error('Finca no encontrada.'); await fincaV1(providerId).remove(row.fincaId); }),

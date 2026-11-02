@@ -92,22 +92,22 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
             open={open}
             onOpenChange={onOpenChange}
             icon={<Send size={22} strokeWidth={2} />}
-            title={usesV1() ? "Registrar solicitud de transporte" : "Enviar requerimiento"}
-            description={usesV1() ? "Registra la solicitud y sus invitaciones. El envío de correo está pendiente." : "Comparte el requerimiento con las empresas seleccionadas."}
+            title="Enviar requerimiento de transporte"
+            description="Registra la solicitud y envía el requerimiento por correo electrónico a las empresas seleccionadas."
             size="lg"
             footer={
                 <>
                     <p className="hidden items-center gap-2 text-[13px] font-medium text-ink-muted sm:mr-auto sm:flex">
                         <Info size={16} strokeWidth={2} className="text-brand" />
                         <span>
-                            {usesV1() ? "Se registrará para" : "Se enviará a"} <strong className="font-bold text-ink">{countLabel}</strong> {count === 1 ? "seleccionada" : "seleccionadas"}.
+                            Se enviará a <strong className="font-bold text-ink">{countLabel}</strong> {count === 1 ? "seleccionada" : "seleccionadas"}.
                         </span>
                     </p>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={20} strokeWidth={2.5} /> Cancelar
                     </Button>
                     <Button size="xl" onClick={handleSend} disabled={saving}>
-                        <Send size={20} strokeWidth={2.5} /> {saving ? "Guardando..." : usesV1() ? "Registrar solicitud" : "Enviar requerimiento"}
+                        <Send size={20} strokeWidth={2.5} /> {saving ? "Enviando..." : "Enviar requerimiento"}
                     </Button>
                 </>
             }
@@ -127,7 +127,7 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
                     </div>
                     <Separator orientation="vertical" className="hidden bg-brand-border sm:block" />
                     <p className="text-[12.5px] font-medium leading-snug text-ink-muted sm:max-w-64">
-                        Se notificará a las empresas seleccionadas para que puedan revisar y responder tu requerimiento.
+                        Se notificará por correo electrónico a las empresas seleccionadas para que puedan revisar y responder tu requerimiento.
                     </p>
                 </div>
 
@@ -158,7 +158,7 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
                     <FormField error={fileError || undefined}>
                         <FileDropzone
                             label="Documento del requerimiento"
-                            hideLabel
+                            required
                             hint={`PDF, Word o Excel · Máx. ${MAX_FILE_MB} MB`}
                             accept={ACCEPTED_FILES}
                             file={file}

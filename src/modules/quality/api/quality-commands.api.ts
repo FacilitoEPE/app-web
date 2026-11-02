@@ -160,7 +160,13 @@ export async function writeLoad(id: string, payload: {
     for (const { p, party, variety } of selections) {
         const previous = g.loadProviders.find(r => r.cargaId === load.cargaId && r.cxpId === party.cxpId && r.frutaDerivadaId === variety.frutaDerivadaId), detail = { cxpId: party.cxpId, frutaDerivadaId: variety.frutaDerivadaId, kilosCargados: p.kilosCargados, precioCompraKgAplicado: previous?.precioCompraKgAplicado ?? party.precioCompraKg, jabasCargadas: p.jabasCargadas, jabasVacias: p.jabasVacias, binesCargados: p.binesCargados, binesVacios: p.binesVacios, mallasCargadas: p.mallasCargadas, mallasVacias: p.mallasVacias };
         const saved = previous ? (hasChanges(previous, detail) ? await proveedorCargaV1(load.cargaId).update(previous.proveedorCargaId, detail) : previous) : await proveedorCargaV1(load.cargaId).create(detail);
-        for (const o of g.deliveryOrigins.filter(o => o.coordinacionEntregaId === c.coordination.coordinacionEntregaId && o.cxpId === party.cxpId))
+        const coordinatedOrigins = g.deliveryOrigins.filter(o => o.coordinacionEntregaId === c.coordination.coordinacionEntregaId && o.cxpId === party.cxpId);
+        const matchingVarietyOrigins = coordinatedOrigins.filter(o => {
+            const farm = g.farms.find(f => f.fincaId === o.fincaId);
+            return farm?.frutaDerivadaId === variety.frutaDerivadaId;
+        });
+        const targetOrigins = matchingVarietyOrigins.length > 0 ? matchingVarietyOrigins : coordinatedOrigins;
+        for (const o of targetOrigins)
             if (!g.loadOrigins.some(n => n.proveedorCargaId === saved.proveedorCargaId && n.fincaId === o.fincaId))
                 await origenCargaV1(saved.proveedorCargaId).create({ cxpId: party.cxpId, fincaId: o.fincaId, kilosOrigen: null });
     }

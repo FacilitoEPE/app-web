@@ -11,6 +11,7 @@ import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { formatKg, formatMoney } from "@/shared/utils/format";
+import { operationsContext } from "@/modules/operations/api/operations-context.api";
 import type {
     QualityDeliveryLoadItem,
     QualityProviderLoadDetail,
@@ -35,6 +36,23 @@ interface QualityLoadFormModalProps {
             proveedoresCarga: QualityProviderLoadDetail[];
         },
     ) => void;
+}
+
+function varietyOptionsForLoad(frutaName: string, currentRows: QualityProviderLoadDetail[]): string[] {
+    const g = operationsContext();
+    const fruit = g.fruits.find((f) => f.name.toLowerCase() === frutaName.toLowerCase());
+    const fromCatalog = fruit
+        ? g.varieties
+              .filter((v) => v.frutaId === fruit.frutaId)
+              .map((v) => v.name.replace(new RegExp(`^${fruit.name}\\s+`, "i"), "").trim() || v.name)
+        : [];
+    const defaults = ["Kent", "Edward", "Keitt", "Hass"];
+    const all = new Set<string>([
+        ...fromCatalog,
+        ...currentRows.map((r) => r.variedad).filter(Boolean),
+        ...(fromCatalog.length === 0 ? defaults : []),
+    ]);
+    return [...all];
 }
 
 export default function QualityLoadFormModal({
@@ -69,6 +87,8 @@ export default function QualityLoadFormModal({
     });
 
     if (!load) return null;
+
+    const availableVarieties = varietyOptionsForLoad(load.fruta, proveedores);
 
     const updateProvider = (index: number, patch: Partial<QualityProviderLoadDetail>) => {
         setProveedores((current) =>
@@ -205,7 +225,7 @@ export default function QualityLoadFormModal({
                     <div className="flex flex-col gap-4">
                         {proveedores.map((prov, idx) => (
                             <div
-                                key={prov.proveedorId}
+                                key={`${prov.proveedorId}-${idx}`}
                                 className="flex flex-col gap-3.5 rounded-2xl border border-border/90 bg-card p-4"
                             >
                                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -217,17 +237,18 @@ export default function QualityLoadFormModal({
                                     </div>
                                     <div className="w-44">
                                         <Select
-                                            value={prov.variedad}
-                                            onValueChange={(v) => updateProvider(idx, { variedad: v ?? "Kent" })}
+                                            value={prov.variedad || availableVarieties[0] || "Kent"}
+                                            onValueChange={(v) => updateProvider(idx, { variedad: v ?? availableVarieties[0] ?? "Kent" })}
                                         >
                                             <SelectTrigger className="h-9">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="Kent">Variedad Kent</SelectItem>
-                                                <SelectItem value="Edward">Variedad Edward</SelectItem>
-                                                <SelectItem value="Keitt">Variedad Keitt</SelectItem>
-                                                <SelectItem value="Hass">Variedad Hass</SelectItem>
+                                                {availableVarieties.map((varName) => (
+                                                    <SelectItem key={varName} value={varName}>
+                                                        Variedad {varName}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -235,7 +256,7 @@ export default function QualityLoadFormModal({
 
                                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                                     <InputField
-                                        id={`lf-kg-${prov.proveedorId}`}
+                                        id={`lf-kg-${prov.proveedorId}-${idx}`}
                                         label="Kilos cargados"
                                         type="number"
                                         value={String(prov.kilosCargados)}
@@ -244,7 +265,7 @@ export default function QualityLoadFormModal({
                                         }
                                     />
                                     <InputField
-                                        id={`lf-jc-${prov.proveedorId}`}
+                                        id={`lf-jc-${prov.proveedorId}-${idx}`}
                                         label="Jabas cargadas"
                                         type="number"
                                         value={String(prov.jabasCargadas)}
@@ -253,7 +274,7 @@ export default function QualityLoadFormModal({
                                         }
                                     />
                                     <InputField
-                                        id={`lf-jv-${prov.proveedorId}`}
+                                        id={`lf-jv-${prov.proveedorId}-${idx}`}
                                         label="Jabas vacías"
                                         type="number"
                                         value={String(prov.jabasVacias)}
@@ -262,7 +283,7 @@ export default function QualityLoadFormModal({
                                         }
                                     />
                                     <InputField
-                                        id={`lf-bc-${prov.proveedorId}`}
+                                        id={`lf-bc-${prov.proveedorId}-${idx}`}
                                         label="Bines cargados"
                                         type="number"
                                         value={String(prov.binesCargados)}
@@ -271,7 +292,7 @@ export default function QualityLoadFormModal({
                                         }
                                     />
                                     <InputField
-                                        id={`lf-bv-${prov.proveedorId}`}
+                                        id={`lf-bv-${prov.proveedorId}-${idx}`}
                                         label="Bines vacíos"
                                         type="number"
                                         value={String(prov.binesVacios)}
@@ -280,7 +301,7 @@ export default function QualityLoadFormModal({
                                         }
                                     />
                                     <InputField
-                                        id={`lf-mc-${prov.proveedorId}`}
+                                        id={`lf-mc-${prov.proveedorId}-${idx}`}
                                         label="Mallas cargadas"
                                         type="number"
                                         value={String(prov.mallasCargadas)}
@@ -289,7 +310,7 @@ export default function QualityLoadFormModal({
                                         }
                                     />
                                     <InputField
-                                        id={`lf-mv-${prov.proveedorId}`}
+                                        id={`lf-mv-${prov.proveedorId}-${idx}`}
                                         label="Mallas vacías"
                                         type="number"
                                         value={String(prov.mallasVacias)}

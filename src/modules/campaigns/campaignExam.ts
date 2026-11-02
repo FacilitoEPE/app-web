@@ -1,4 +1,3 @@
-import { usesV1 } from '@/shared/api/data-contract';
 import type { FileSource } from "@/shared/utils/fileSource";
 
 /**
@@ -7,11 +6,6 @@ import type { FileSource } from "@/shared/utils/fileSource";
  * Un examen avanza por tres etapas: la muestra espera su envío, viaja al laboratorio y, cuando el laboratorio
  * responde, queda "con resultado". Cada etapa habilita sus propios datos (fecha de envío, resultado), así que el
  * formulario solo pide lo que ya corresponde y se vuelve a abrir en "editar" para avanzar de etapa.
- *
- * El backend sí guarda exámenes por proveedor, pero exige la URL de un documento y este formulario adjunta un
- * archivo (todavía no hay almacenamiento de archivos). Mientras tanto la página los guarda en memoria (se pierden
- * al recargar) y los muestra junto a los exámenes que ya existen en el backend.
- * TODO(api): enviar con `createExamenProveedor` cuando el documento pueda subirse como URL.
  */
 export type ExamResult = "positivo" | "negativo";
 export type ExamEstado = "pendiente" | "enviado" | "resultado";
@@ -51,7 +45,7 @@ export interface ExamValues {
     archivo: FileSource | null;
 }
 
-/** Examen ya registrado (solo en memoria): lo mismo que el formulario, más su identidad */
+/** Examen ya registrado: lo mismo que el formulario, más su identidad */
 export interface LocalExam extends ExamValues {
     id: string;
     proveedorId: number;
@@ -98,7 +92,7 @@ export function validateExam(values: ExamValues): ExamErrors {
     }
     if (examNeedsResult(values.estado)) {
         if (values.resultado !== "positivo" && values.resultado !== "negativo") errors.resultado = "Selecciona el resultado del examen.";
-        if (!usesV1() && !values.archivo) errors.archivo = "Adjunta el documento del laboratorio.";
+        if (!values.archivo) errors.archivo = "Adjunta el documento del laboratorio.";
     }
     return errors;
 }
