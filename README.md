@@ -26,20 +26,20 @@
 
 La experiencia combina tablas y tarjetas, filtros, formularios en modales y una identidad visual inspirada en el campo. El objetivo es facilitar la lectura de la operación y mantener una navegación coherente entre áreas.
 
-> **Estado del proyecto · Frontend en desarrollo**
+> **Estado del proyecto**
 >
-> La integración con el backend está en curso: campañas, relaciones de campaña y listados de proveedores/clientes consumen algunas APIs; el CRUD de transporte también quedó conectado. Otras vistas siguen parciales o usan datos de demostración. El acceso usa JWT del backend y separa las rutas de Administrador y Chofer. Consulta el [mapa de integración frontend/backend](docs/integration-status.md) para ver el estado por vista y lo pendiente.
+> La parte visual del frontend está completa, según confirmación del usuario. El backend está completado; el estado de integración por vista se mantiene en el [registro vigente](docs/integration-status.md). Los resultados históricos no prevalecen sobre ese registro.
 
 <a id="modulos"></a>
 ## 🧭 Un sistema organizado por áreas
 
-| Área | Qué encontrarás | Estado actual |
-| :--- | :--- | :--- |
-| 🌾 **Gestión de campañas** | Campañas, fruta/derivadas, relaciones con proveedores/clientes y certificados. | Integración parcial; pagos a transportistas sin API backend |
-| 🤝 **Gestión de proveedores** | Directorio, filtros, detalle y entrevista. | Listado conectado; CRUD, certificados, exámenes y frutas pendientes |
-| 🏢 **Gestión comercial** | Directorio y gestión de clientes/contratos. | Listado API parcial; edición y vistas comerciales pendientes |
-| 🚚 **Gestión de transporte** | Empresas, vehículos, choferes y pagos. | CRUD de empresas/vehículos/choferes conectado; trazabilidad pendiente; pagos sin API backend |
-| 🛡️ **Gestión de calidad** | Certificaciones de campañas y proveedores. | Certificados de campaña parcialmente conectados; certificados/exámenes de proveedor pendientes |
+| Área | Qué encontrarás |
+| :--- | :--- |
+| 🌾 **Gestión de campañas** | Campañas, fruta/derivadas, relaciones con proveedores/clientes y certificados. |
+| 🤝 **Gestión de proveedores** | Directorio, filtros, detalle y entrevista. |
+| 🏢 **Gestión comercial** | Directorio y gestión de clientes/contratos. |
+| 🚚 **Gestión de transporte** | Empresas, vehículos, choferes y pagos. |
+| 🛡️ **Gestión de calidad** | Certificaciones de campañas y proveedores. |
 
 ### Una campaña, varias perspectivas
 
@@ -65,7 +65,7 @@ Los recursos visuales de campaña se adaptan a **mango, palta, arándano, fresa,
 <details>
 <summary><strong>🗺️ Explorar las rutas de la aplicación</strong></summary>
 
-Las rutas de trabajo requieren la sesión local de demostración.
+Las rutas listadas son ejemplos de navegación. En modo de demostración usa datos ficticios; con un backend configurado, las rutas protegidas requieren una sesión autenticada.
 
 | Ruta | Vista |
 | :--- | :--- |
@@ -94,7 +94,7 @@ pnpm dev
 
 Abre la dirección que indique Vite en la terminal, normalmente `http://localhost:5173`.
 
-**Recorrido de demostración:** entra en `/login`, pulsa **Ingresar** y luego **Confirmar**. El flujo actual permite explorar los módulos sin credenciales reales; los campos de usuario y código aún no se verifican con un servicio.
+**Modo de demostración local:** configura `VITE_API_BASE_URL=/mock-api/` para explorar con datos ficticios sin iniciar el backend. Para probar el acceso y la persistencia reales, configura la URL de la API y sigue la [guía de integración](docs/README.md).
 
 ### Configuración de API
 
@@ -130,7 +130,7 @@ Con `VITE_API_BASE_URL=/mock-api/`, las pantallas usan el servidor ficticio de d
 
 El backend mantiene una copia de ejecución del [OpenAPI](docs/api-v1.openapi.json) para validar solicitudes y convertir filas de PostgreSQL. Ejecuta `pnpm contract:check` para comprobar que el SQL fuente y los archivos generados coincidan.
 
-Las escrituras se esperan antes de mostrar éxito. Un fallo HTTP muestra el error y conserva el formulario. El backend transacciona cada operación que lo requiere; los comandos del frontend que abarcan varios requests todavía pueden guardar parcialmente y recargan los datos para mostrar el estado confirmado por el servidor. El acceso mantiene la sesión existente y los adjuntos permanecen diferidos (FC14).
+Las escrituras se esperan antes de mostrar éxito. Un fallo HTTP muestra el error y conserva el formulario. El backend transacciona cada operación que lo requiere; los comandos del frontend que abarcan varios requests pueden guardar parcialmente y recargan los datos para mostrar el estado confirmado por el servidor. Los documentos se envían mediante la API de archivos locales; la persistencia del entorno desplegado se describe en el [estado de integración](docs/integration-status.md). La emisión SUNAT se realiza fuera del sistema.
 
 ### Comandos del proyecto
 
@@ -174,7 +174,7 @@ Para cargar los registros de ejemplo del backend, con los servicios levantados e
 docker compose exec api node scripts/seed-examples.mjs
 ```
 
-El comando se puede repetir: el script evita duplicar registros que ya existen. Al borrar el volumen con `docker compose down -v`, se elimina la base y tendrás que ejecutar el seed otra vez. Estos datos están en la API; las pantallas web aún usan datos de demostración/locales y no están conectadas a los dominios de negocio del backend.
+El comando se puede repetir: el script evita duplicar registros que ya existen. Al borrar el volumen con `docker compose down -v`, se elimina la base y tendrás que ejecutar el seed otra vez. El seed agrega datos a la API para desarrollo; la web consulta el backend cuando se configura su URL y usa fixtures cuando se selecciona `/mock-api/`.
 
 Para cambiar el origen permitido por CORS (por ejemplo, si usas la URL de red en vez de localhost), agrega `CORS_ORIGIN=http://192.168.1.25:5173` en `epe-web/.env` usando el origen exacto que Vite imprimió y recrea solo la API:
 
