@@ -2,19 +2,19 @@ import { operationsContext } from '@/modules/operations/api/operations-context.a
 import { commitRemote, requireId } from '@/shared/api/data-contract';
 import { linkLocalDocument, uploadDocument, uploadLocalDocument } from '@/shared/api/uploadDocument';
 import { formatFecha } from '@/modules/campaigns/api/fecha.util';
-import { contratoVentaV1, entregaProgramadaV1, entregaXFrutaDerivadaV1 } from '@/modules/commercial-planning/api/future.api';
-import { clienteNegocioCampanaV1, clienteNegocioCampanaXFrutaDerivadaV1, coordinacionEntregaV1, origenEntregaV1, entrevistaExtencionV1, certificadoCampanaV1, certificadoCampanaXProveedorV1, ampliacionCertificadoCampanaV1, pagoCertificadoCampanaV1 } from '@/modules/campaigns/api/future.api';
-import { examenProveedorV1 } from '@/modules/providers/api/future.api';
-import { acuerdoTransporteV1 } from '@/modules/carriers/api/future.api';
+import { contratoVentaV1, entregaProgramadaV1, entregaXFrutaDerivadaV1 } from '@/modules/commercial-planning/api/v1.api';
+import { clienteNegocioCampanaV1, clienteNegocioCampanaXFrutaDerivadaV1, coordinacionEntregaV1, origenEntregaV1, entrevistaExtencionV1, certificadoCampanaV1, certificadoCampanaXProveedorV1, ampliacionCertificadoCampanaV1, pagoCertificadoCampanaV1 } from '@/modules/campaigns/api/v1.api';
+import { examenProveedorV1 } from '@/modules/providers/api/v1.api';
+import { acuerdoTransporteV1 } from '@/modules/carriers/api/v1.api';
 import type { CampaignClientContractValues } from '@/modules/campaigns/campaignClientContract.utils';
 import type { CampaignContractDeliveryValues, DeliveryCoordination } from '@/modules/campaigns/campaignContractDelivery.utils';
 import type { InterviewValues } from '@/modules/campaigns/campaignInterview';
 import type { ExamValues } from '@/modules/campaigns/campaignExam';
 import type { CertificadoCampanaFormValues, ProductorCubierto, AmpliacionFormValues, PagoFormValues } from '@/modules/campaigns/campaignCertificate.utils';
 import type { AgreementFormValues } from '@/modules/campaigns/campaignCarrier.utils';
-import type { CreateContratoVentaV1 } from '@/modules/commercial-planning/api/future.dto';
-import type { CreateExamenProveedorV1 } from '@/modules/providers/api/future.dto';
-import type { CreateCertificadoCampanaV1 } from '@/modules/campaigns/api/future.dto';
+import type { CreateContratoVentaV1 } from '@/modules/commercial-planning/api/v1.dto';
+import type { CreateExamenProveedorV1 } from '@/modules/providers/api/v1.dto';
+import type { CreateCertificadoCampanaV1 } from '@/modules/campaigns/api/v1.dto';
 import type { CertificadoArchivos } from '@/modules/campaigns/campaignCertificates.store';
 function currency(value: string): 'PEN' | 'USD' {
     if (value !== 'PEN' && value !== 'USD')

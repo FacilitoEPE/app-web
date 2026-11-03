@@ -4,7 +4,7 @@ import AppModal from '@/shared/components/AppModal';
 import InputField from '@/shared/components/InputField';
 import { Button } from '@/shared/components/ui/button';
 import { usesV1, commitRemote } from '@/shared/api/data-contract';
-import { cerrarCampanaV1 } from '@/modules/campaigns/api/future-actions.api';
+import { cerrarCampanaV1 } from '@/modules/campaigns/api/v1-actions.api';
 export default function CampaignClosureAction({ campaignId, closed, onClosed }: {
     campaignId: number;
     closed: boolean;

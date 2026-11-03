@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 const { create, update } = vi.hoisted(() => ({ create: vi.fn(), update: vi.fn() }));
-vi.mock('@/modules/campaigns/api/future.api', () => ({
+vi.mock('@/modules/campaigns/api/v1.api', () => ({
   campanaV1: { create, update },
   campaniaXProveedoresV1: vi.fn(),
   clienteNegocioCampanaV1: vi.fn(),

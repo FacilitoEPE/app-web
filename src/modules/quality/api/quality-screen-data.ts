@@ -5,7 +5,7 @@ import type { QualityCampaign } from '@/modules/quality/quality.utils';
 import type { QualityAnalysisRecord } from '@/modules/quality/qualityAnalysis.utils';
 import { determineResultState } from '@/modules/quality/qualityAnalysis.utils';
 import type { QualityDeliveryLoadItem, QualitySunatRemissionGuide } from '@/modules/quality/qualityOperations.models';
-import type { JsonObject, JsonValue } from '@/shared/api/future-client';
+import type { JsonObject, JsonValue } from '@/shared/api/v1-client';
 export const jsonText = (value: JsonValue | undefined) => typeof value === 'string' ? value : '';
 export const jsonNumber = (value: JsonValue | undefined) => typeof value === 'number' ? value : 0;
 export const jsonObject = (value: JsonValue | undefined): JsonObject => value && typeof value === 'object' && !Array.isArray(value) ? value : {};

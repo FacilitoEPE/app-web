@@ -1,5 +1,5 @@
-import type { JsonObject } from '@/shared/api/future-client';
-import { recepcionPlantaV1 } from '@/modules/logistics/api/future.api';
+import type { JsonObject } from '@/shared/api/v1-client';
+import { recepcionPlantaV1 } from '@/modules/logistics/api/v1.api';
 import { operationsContext } from '@/modules/operations/api/operations-context.api';
 import { loadContext } from '@/modules/operations/api/operation-links';
 import { commitRemote } from '@/shared/api/data-contract';
@@ -9,7 +9,7 @@ import { persistFile } from '@/shared/api/uploadDocument';
 import { isPdf } from '@/shared/utils/fileSource';
 import { hasChanges } from '@/modules/quality/api/quality-commands.api';
 import type { LogisticsProviderBreakdown, LogisticsReceptionData, LogisticsDocumentsClosure, LogisticsArrival, LogisticsCrateReturn } from '@/modules/logistics/logistics.models';
-import type { CreateRecepcionPlantaV1 } from '@/modules/logistics/api/future.dto';
+import type { CreateRecepcionPlantaV1 } from '@/modules/logistics/api/v1.dto';
 export async function writeReceipt(loadId: string, input: CreateRecepcionPlantaV1 | Partial<CreateRecepcionPlantaV1>) {
     const c = loadContext(loadId), current = operationsContext().receipts.find(r => r.cargaId === c.load.cargaId), api = recepcionPlantaV1(c.load.cargaId);
     return current ? (hasChanges(current, input) ? api.update(current.recepcionPlantaId, input) : current) : api.create(input as CreateRecepcionPlantaV1);

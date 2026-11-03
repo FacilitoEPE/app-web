@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import type { IncomingMessage } from 'node:http'
 import type { Connect, Plugin } from 'vite'
-import { createFutureMockMiddleware } from './future-mock.ts'
+import { createV1MockMiddleware } from './v1-mock.ts'
 
 type Row = Record<string, unknown>
 type Database = Record<string, Row[]>
@@ -282,7 +282,7 @@ export function mockApiPlugin(apiBaseUrl: string | undefined): Plugin {
     },
     configureServer(server) {
       if (!enabled) return
-      server.middlewares.use(createFutureMockMiddleware(server.config.root, undefined, true))
+      server.middlewares.use(createV1MockMiddleware(server.config.root, undefined, true))
       server.middlewares.use(createMockMiddleware(path.join(server.config.root, 'json')))
       server.watcher.add(path.join(server.config.root, 'json/**/*.json'))
       server.watcher.on('change', (file) => {

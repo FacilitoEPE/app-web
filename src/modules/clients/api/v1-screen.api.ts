@@ -1,5 +1,5 @@
-import { clienteNegocioV1 } from '@/modules/clients/api/future.api';
-import type { ClienteNegocioV1 } from '@/modules/clients/api/future.dto';
+import { clienteNegocioV1 } from '@/modules/clients/api/v1.api';
+import type { ClienteNegocioV1 } from '@/modules/clients/api/v1.dto';
 import type { ClienteNegocioInput } from '@/modules/clients/api/cliente-negocio.dto';
 import { toClienteNegocio } from '@/modules/clients/api/cliente-negocio.mapper';
 import { commitRemote } from '@/shared/api/data-contract';

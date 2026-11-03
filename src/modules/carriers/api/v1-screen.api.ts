@@ -1,5 +1,5 @@
-import { empresaTransporteExternoV1, vehiculoExternoV1, choferTransporteExternoV1 } from '@/modules/carriers/api/future.api';
-import type { EmpresaTransporteExternoV1 } from '@/modules/carriers/api/future.dto';
+import { empresaTransporteExternoV1, vehiculoExternoV1, choferTransporteExternoV1 } from '@/modules/carriers/api/v1.api';
+import type { EmpresaTransporteExternoV1 } from '@/modules/carriers/api/v1.dto';
 import type { CarrierInput, VehicleInput, DriverInput } from '@/modules/carriers/api/carrier.api';
 import type { Carrier, Vehicle, Driver } from '@/modules/carriers/carriers.data';
 import type { CarrierExtras } from '@/modules/carriers/carrierProfile.utils';

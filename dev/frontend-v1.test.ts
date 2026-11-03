@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
-import { createFutureMockMiddleware } from './future-mock.ts'
+import { createV1MockMiddleware } from './v1-mock.ts'
 import { apiClient } from '@/shared/api/client'
 import { refreshFrontendData, getFrontendDataStatus } from '@/frontend-data'
 import { operationsContext } from '@/modules/operations/api/operations-context.api'
@@ -20,7 +20,7 @@ import { registerBillingCollection } from '@/modules/billing/billing.store'
 import { registerProviderPayment } from '@/modules/purchase-settlement/purchaseSettlement.store'
 import { addQualityCampaign, getQualityCampaigns } from '@/modules/quality/quality.store'
 import { saveQualityDeliveryReview } from '@/modules/quality/qualityOperations.store'
-import { cerrarCampanaV1 } from '@/modules/campaigns/api/future-actions.api'
+import { cerrarCampanaV1 } from '@/modules/campaigns/api/v1-actions.api'
 import { providerScreenV1 } from '@/modules/providers/api/v1-screen.api'
 import { providerOperationalSummary } from '@/modules/providers/api/provider-screen-data'
 import { weeklyCampaignItems } from '@/modules/campaigns/api/weekly-screen-data'
@@ -40,7 +40,7 @@ const requested: string[] = []
 beforeEach(async () => {
   vi.stubEnv('VITE_API_CONTRACT', 'v1')
   requested.length = 0
-  const middleware = createFutureMockMiddleware(path.resolve(import.meta.dirname, '..'))
+  const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'))
   server = createServer((request, response) => {
     requested.push(request.url ?? '')
     middleware(request, response, () => { response.statusCode = 418; response.end('Unversioned request rejected') })
@@ -56,7 +56,7 @@ afterEach(async () => {
   await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
 })
 
-describe('existing frontend with the future HTTP contract', () => {
+describe('existing frontend with the V1 HTTP contract', () => {
   it('sums each client contract at its own price and keeps currencies separate', () => {
     const g = structuredClone(operationsContext())
     const contract = g.contracts[0]

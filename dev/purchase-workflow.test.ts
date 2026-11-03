@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import path from 'node:path';
-import { createFutureMockMiddleware } from './future-mock.ts';
+import { createV1MockMiddleware } from './v1-mock.ts';
 import { apiClient } from '@/shared/api/client';
 import { refreshFrontendData } from '@/frontend-data';
 import { operationsContext } from '@/modules/operations/api/operations-context.api';
@@ -15,7 +15,7 @@ let previousBase: string | undefined;
 
 beforeEach(async () => {
     vi.stubEnv('VITE_API_CONTRACT', 'v1');
-    const middleware = createFutureMockMiddleware(path.resolve(import.meta.dirname, '..'), undefined, true);
+    const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'), undefined, true);
     server = createServer((request, response) => middleware(request, response, () => {
         response.statusCode = 418;
         response.end('Unversioned request rejected');

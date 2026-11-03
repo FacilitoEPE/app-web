@@ -1,5 +1,5 @@
-import { proveedorV1 } from '@/modules/providers/api/future.api';
-import type { CreateProveedorV1, ProveedorV1 } from '@/modules/providers/api/future.dto';
+import { proveedorV1 } from '@/modules/providers/api/v1.api';
+import type { CreateProveedorV1, ProveedorV1 } from '@/modules/providers/api/v1.dto';
 import type { ProveedorDto, ProveedorInput } from '@/modules/providers/api/proveedor.dto';
 import { operationsContext, readAllV1 } from '@/modules/operations/api/operations-context.api';
 import { commitRemote } from '@/shared/api/data-contract';

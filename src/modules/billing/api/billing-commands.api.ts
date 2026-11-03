@@ -1,5 +1,5 @@
-import { facturaVentaV1, cobroVentaV1 } from '@/modules/billing/api/future.api';
-import { emitirFacturaV1 } from '@/modules/billing/api/future-actions.api';
+import { facturaVentaV1, cobroVentaV1 } from '@/modules/billing/api/v1.api';
+import { emitirFacturaV1 } from '@/modules/billing/api/v1-actions.api';
 import { loadContext } from '@/modules/operations/api/operation-links';
 import { operationsContext } from '@/modules/operations/api/operations-context.api';
 import { projectBillingData } from '@/modules/billing/api/billing-screen-data';

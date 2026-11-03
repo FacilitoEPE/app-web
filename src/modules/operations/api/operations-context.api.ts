@@ -1,14 +1,14 @@
-import { createV1ReadResource } from '@/shared/api/future-client';
-import type * as Campaign from '@/modules/campaigns/api/future.dto';
-import type * as Provider from '@/modules/providers/api/future.dto';
-import type * as Commercial from '@/modules/commercial-planning/api/future.dto';
-import type * as Carrier from '@/modules/carriers/api/future.dto';
-import type * as Quality from '@/modules/quality/api/future.dto';
-import type * as Finance from '@/modules/purchase-settlement/api/future.dto';
-import type * as Billing from '@/modules/billing/api/future.dto';
-import type { ClienteNegocioV1 } from '@/modules/clients/api/future.dto';
-import type { RecepcionPlantaV1 } from '@/modules/logistics/api/future.dto';
-import type { HistorialChoferV1 } from '@/modules/driver-portal/api/future.dto';
+import { createV1ReadResource } from '@/shared/api/v1-client';
+import type * as Campaign from '@/modules/campaigns/api/v1.dto';
+import type * as Provider from '@/modules/providers/api/v1.dto';
+import type * as Commercial from '@/modules/commercial-planning/api/v1.dto';
+import type * as Carrier from '@/modules/carriers/api/v1.dto';
+import type * as Quality from '@/modules/quality/api/v1.dto';
+import type * as Finance from '@/modules/purchase-settlement/api/v1.dto';
+import type * as Billing from '@/modules/billing/api/v1.dto';
+import type { ClienteNegocioV1 } from '@/modules/clients/api/v1.dto';
+import type { RecepcionPlantaV1 } from '@/modules/logistics/api/v1.dto';
+import type { HistorialChoferV1 } from '@/modules/driver-portal/api/v1.dto';
 import { getLocalDocumentLinks, type LocalDocumentLink } from '@/shared/api/uploadDocument';
 import { getAuthToken } from '@/shared/offline/session';
 /** Remote operational context shared by the existing screens. No fixtures are imported here. */

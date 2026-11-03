@@ -1,4 +1,4 @@
-import { solicitudTransporteV1, invitacionTransporteV1, cotizacionTransporteV1, empresaTransporteExternoV1 } from '@/modules/carriers/api/future.api';
+import { solicitudTransporteV1, invitacionTransporteV1, cotizacionTransporteV1, empresaTransporteExternoV1 } from '@/modules/carriers/api/v1.api';
 import { operationsContext, type OperationsContext } from '@/modules/operations/api/operations-context.api';
 import { commitRemote, requireId } from '@/shared/api/data-contract';
 import { linkLocalDocument, uploadLocalDocument } from '@/shared/api/uploadDocument';

@@ -1,5 +1,5 @@
-import { campanaV1, campaniaXProveedoresV1, clienteNegocioCampanaV1 } from '@/modules/campaigns/api/future.api';
-import type { CampanaV1, CampaniaXProveedoresV1, ClienteNegocioCampanaV1 } from '@/modules/campaigns/api/future.dto';
+import { campanaV1, campaniaXProveedoresV1, clienteNegocioCampanaV1 } from '@/modules/campaigns/api/v1.api';
+import type { CampanaV1, CampaniaXProveedoresV1, ClienteNegocioCampanaV1 } from '@/modules/campaigns/api/v1.dto';
 import { operationsContext, readAllV1 } from '@/modules/operations/api/operations-context.api';
 import { commitRemote } from '@/shared/api/data-contract';
 import { formatFecha, parseFecha } from '@/modules/campaigns/api/fecha.util';

@@ -8,9 +8,9 @@
 - [Resultado E2E de negocio V1](pruebas/qa-e2e-flujos-negocio-v1-2026-10-30.md)
 - [Catálogos predeterminados y SQL seguro de producción](../../epe-backend/docs/default-data.md)
 - [Estado de integración por vista](integration-status.md)
-- [Contrato HTTP OpenAPI V1](future-api.openapi.json) — fuente vigente para los DTOs generados del frontend; el nombre `future-api` es heredado.
-- [Reglas del contrato frontend/backend V1](future-api-contract.md)
-- [Catálogo de endpoints V1](future-api-endpoints.md)
+- [Contrato HTTP OpenAPI V1](api-v1.openapi.json) — contrato vigente del backend y fuente de DTOs generados.
+- [Reglas del contrato frontend/backend V1](api-v1-contract.md)
+- [Catálogo de endpoints V1](api-v1-endpoints.md)
 
 ## Arquitectura y experiencia de uso
 

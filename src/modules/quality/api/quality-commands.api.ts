@@ -3,9 +3,9 @@ import { loadContext, coordinationContext, providerName } from '@/modules/operat
 import { commitRemote, requireId } from '@/shared/api/data-contract';
 import { jsonData } from '@/shared/api/document-state';
 import { linkLocalDocument, persistFile, uploadLocalDocument } from '@/shared/api/uploadDocument';
-import { campanaV1 } from '@/modules/campaigns/api/future.api';
-import { analisisCalidadV1, medicionMtdV1, cosechaV1, cargaV1, proveedorCargaV1, origenCargaV1, gastoCargaV1, guiaRemisionV1, proveedorGuiaV1, guiaXNormaV1 } from '@/modules/quality/api/future.api';
-import { emitirGuiaV1 } from '@/modules/quality/api/future-actions.api';
+import { campanaV1 } from '@/modules/campaigns/api/v1.api';
+import { analisisCalidadV1, medicionMtdV1, cosechaV1, cargaV1, proveedorCargaV1, origenCargaV1, gastoCargaV1, guiaRemisionV1, proveedorGuiaV1, guiaXNormaV1 } from '@/modules/quality/api/v1.api';
+import { emitirGuiaV1 } from '@/modules/quality/api/v1-actions.api';
 import { isQualityGuidePrepared } from '@/modules/quality/api/quality-guide-status';
 import { qualityGuideStandardText } from '@/modules/quality/qualityGuideNorms.utils';
 import { projectQualityData } from '@/modules/quality/api/quality-screen-data';

@@ -2,6 +2,12 @@
 
 > **Único archivo oficial de seguimiento.** Toda auditoría o conexión de vistas/APIs debe actualizarse aquí indicando fecha ISO (`YYYY-MM-DD`) y estado (`Completo`, `Parcial`, `Sin cambios`), conservando el historial en la sección inferior.
 
+## Auditoría estática de API V1 backend — 2026-11-03 · Completo en código / pendiente validación de entorno
+
+- Se contrastaron las 252 combinaciones de ruta y método del OpenAPI con los diez controladores NestJS V1, incluido el controlador de catálogos. No hubo operaciones faltantes ni rutas extra.
+- Los controladores delegan en servicios V1 que usan `V1DatabaseService`/TypeORM para leer y escribir en PostgreSQL; las reglas de negocio se ejecutan en backend. Se actualizó el contrato para documentar el prefijo real `/api` y eliminar la descripción de backend pendiente. Las fixtures de frontend quedan descritas solo como apoyo de desarrollo local.
+- Verificación: `nest build` aprobó en ambos backends antes de retirar `epe-backend-security`; el OpenAPI se copió a `dist`. La cobertura de rutas es una comparación estática del código. No se conectó a una base de datos ni se validó el entorno productivo en esta auditoría.
+
 ## Auditoría final de Facturación y Liquidación — 2026-11-02 · Completo en desarrollo / pendiente validación productiva
 
 - Se contrastaron `sales-campaign-module.tsx`, `purchase-campaign-module.tsx`, `finance.tsx` y `LIQUIDACIONES-IMPLEMENTADAS.md` con las rutas, proyectores, comandos y modales actuales. Se mantienen las decisiones del usuario: kilos reconocidos V1 para liquidar proveedores, números LC/LT propuestos y corregibles, liquidación independiente de pagos y adelantos, y recepción documentada antes de preparar ventas.
@@ -123,7 +129,7 @@
 
 ## Datos ficticios para completar entregas — 2026-11-01 · Completo
 
-- Se agregaron dos entregas programadas sin coordinación al contrato 2 de Mango 2026 en `json/future/entrega_programada.json`: 600 kg y 900 kg, dentro de los 1,500 kg acordados. El mock V1 de desarrollo las muestra como pendientes en Gestión de Entregas para probar Completar datos.
+- Se agregaron dos entregas programadas sin coordinación al contrato 2 de Mango 2026 en `json/v1-demo/entrega_programada.json`: 600 kg y 900 kg, dentro de los 1,500 kg acordados. El mock V1 de desarrollo las muestra como pendientes en Gestión de Entregas para probar Completar datos.
 - Los datos se cargan solo con `/mock-api/` durante `pnpm dev`; no se añadió respaldo ficticio a la vista conectada ni se modificó el contrato del backend.
 
 ## Precarga de coordinación al elegir una entrega — 2026-11-01 · Completo
@@ -222,7 +228,7 @@
 ## Responsable de campaña — 2026-11-01 · Completo
 
 - En el contrato actual, el alta envía `responsableUsuarioId` con el administrador de la sesión; la edición conserva el responsable guardado y consulta `GET /api/auth/usuarios/:id` cuando difiere del usuario en sesión para mostrar su nombre completo.
-- Verificación: pruebas unitarias, integración V1 (`dev/frontend-v1.test.ts`) y E2E (`test/v1-future-api.e2e-spec.ts`) aprobadas.
+- Verificación: pruebas unitarias, integración V1 (`dev/frontend-v1.test.ts`) y E2E (`test/v1-api.e2e-spec.ts`) aprobadas.
 
 ## Carga de datos por vista — 2026-10-30 · Parcial
 
@@ -427,7 +433,7 @@ Los IDs QA-01–QA-04 permanecen en la primera fase. QA-01 fue un bloqueo de con
 - Lecturas reales: `GET /campanas`, `/frutas`, `/proveedores`, `/clientes-negocio` y `/empresas-transporte-externo`: HTTP 200 con `[]`. CORS de los cuatro últimos permite `http://localhost:5173`.
 - `GET /v1/campanas`: HTTP 404. Hay implementación V1 en el árbol de trabajo del backend, pero su presencia en disco no acredita que el proceso del puerto 3000 la esté sirviendo.
 - El catálogo de frutas vacío impide crear una campaña desde el formulario. Sin campaña, participaciones, contratos, fincas y unidades no se pueden recorrer los procesos dependientes con datos válidos.
-- La documentación histórica de este archivo no es evidencia de pruebas del servidor actual. La afirmación anterior de «backend futuro todavía no implementado» debe entenderse como antecedente, no como evaluación del código backend actual.
+- La documentación histórica de este archivo no es evidencia de pruebas del servidor actual. La afirmación anterior de que la API aún no estaba implementada corresponde a un corte previo, no al código backend actual.
 
 ### Cobertura manual y pendientes
 
@@ -478,7 +484,7 @@ No se consideran defectos nuevos la sesión simulada ni FC14, pues son límites 
 
 ## 4.1. Integración V1 de las pantallas — 2026-10-29
 
-**Completo para el consumo HTTP de datos y operaciones soportadas por el contrato; backend futuro todavía no implementado.** Con `VITE_API_BASE_URL=/mock-api/` las pantallas consumen automáticamente `/mock-api/v1` y `json/future/`. Con una URL real, activar `VITE_API_CONTRACT=v1`; sin esa opción se conserva la API actual. `legacy` explícito mantiene la compatibilidad anterior.
+**Completo para el consumo HTTP del contrato desde el modo local de desarrollo.** Con `VITE_API_BASE_URL=/mock-api/` las pantallas consumen la API ficticia y `json/v1-demo/`. Para el backend real, configurar su origen y `VITE_API_CONTRACT=v1`; el backend NestJS sirve las operaciones bajo `/api`. El estado de implementación del backend de este hito es histórico; ver la auditoría del 2026-11-03. `legacy` explícito mantiene la compatibilidad anterior.
 
 | Pantallas | Consumo V1 implementado | Límites vigentes |
 |---|---|---|
@@ -526,7 +532,7 @@ Validación: pruebas HTTP del router y de los adaptadores/almacenes del frontend
 
 - **2026-10-29 · Completo (conexión de pantallas a V1):** adaptadores de lectura y comandos HTTP por dominio, hidratación y refresco de almacenes, formularios asíncronos con errores visibles, eliminación de fallbacks demo en V1 y pruebas de integración del frontend. Snapshot de fuentes en `docs/reference/` para regenerar el contrato desde un clon independiente. Las limitaciones de adjuntos, sesión local, campos sin columna y operaciones compuestas quedan identificadas arriba.
 
-- **2026-10-29 · Completo (contrato y mocks futuros; migración de pantallas pendiente):** contrato V1 documentado en `future-api-contract.md`, OpenAPI en `future-api.openapi.json` y catálogo `future-api-endpoints.md`, derivados del SQL objetivo de `app/docs/agro-schema/03_schema_total.sql` y acuerdos vigentes. Fixtures separadas en `json/future/`; middleware `/mock-api/v1` y servicios/DTOs por módulo en `api/future.*`. Se conservan servicios sin versión y almacenes actuales; no se afirma conexión de pantallas a V1 ni backend desplegado. Diferencias de fincas/variedades, certificaciones, tipos, cardinalidades y documentos identificadas en la guía. Las vistas de Logística, Facturación, Liquidación y Chofer sí existen en el código actual con almacenes locales; la fila anterior que las declaraba en construcción es un antecedente desactualizado.
+- **2026-10-29 · Completo en ese corte (contrato y fixtures locales; conexión de pantallas pendiente):** contrato V1 documentado en `api-v1-contract.md`, OpenAPI en `api-v1.openapi.json` y catálogo `api-v1-endpoints.md`, derivados del SQL objetivo y acuerdos vigentes. Fixtures separadas en `json/v1-demo/`; middleware local `/mock-api/` y clientes/DTOs tipados por módulo en `api/v1.*`. Esta entrada conserva el estado histórico de octubre; el avance y la conexión actuales están registrados en las auditorías superiores.
 - **2026-10-29 · Completo (modo ficticio de desarrollo):** API local de Vite activada explícitamente con `VITE_API_BASE_URL=/mock-api/`. Fixtures editables en `json/` para los recursos consumidos por los servicios actuales; lecturas, CRUD en memoria y relaciones sin modificar páginas, mappers ni el cliente HTTP. Reiniciar Vite restaura las fixtures. Backend real sigue siendo el modo predeterminado y conserva sus errores sin fallback. Build bloqueado si apunta a la API ficticia; archivos/S3 fuera de la simulación. Los almacenes y demos locales sin API mantienen su comportamiento previo.
 - **2026-10-25:** Consolidación de toda la documentación en `docs/` (`architecture-and-solid.md`, `ui-and-design-system.md`, `agent-workflow-and-constraints.md`, `integration-status.md`), unificando los antiguos `reporte-conexion-vistas.md`, `backend-api-integration.md` y `entidades-vistas.md`.
 - **2026-10-21:** Implementación de `QualityPage` (`/calidad`) con alcances Exportador e Industria sobre `quality.store.ts` (`// TODO(api)`).

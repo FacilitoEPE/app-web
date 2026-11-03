@@ -1,6 +1,6 @@
-import { liquidacionProveedorV1, liquidacionTransporteV1, gastoTransporteV1, pagoProveedorV1, pagoTransporteV1, aplicacionAdelantoV1 } from '@/modules/purchase-settlement/api/future.api';
-import { personaV1, proveedorXPersonaV1 } from '@/modules/providers/api/future.api';
-import { coordinacionEntregaV1 } from '@/modules/campaigns/api/future.api';
+import { liquidacionProveedorV1, liquidacionTransporteV1, gastoTransporteV1, pagoProveedorV1, pagoTransporteV1, aplicacionAdelantoV1 } from '@/modules/purchase-settlement/api/v1.api';
+import { personaV1, proveedorXPersonaV1 } from '@/modules/providers/api/v1.api';
+import { coordinacionEntregaV1 } from '@/modules/campaigns/api/v1.api';
 import { operationsContext } from '@/modules/operations/api/operations-context.api';
 import { loadContext } from '@/modules/operations/api/operation-links';
 import { commitRemote, requireId } from '@/shared/api/data-contract';

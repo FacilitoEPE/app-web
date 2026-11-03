@@ -1,4 +1,4 @@
-import type { GuiaRemisionV1 } from "@/modules/quality/api/future.dto";
+import type { GuiaRemisionV1 } from "@/modules/quality/api/v1.dto";
 
 /** Los campos visibles del formulario determinan si un borrador está listo. */
 export function isQualityGuidePrepared(guide: GuiaRemisionV1, hasProviders: boolean): boolean {

@@ -106,9 +106,9 @@ VITE_API_BASE_URL=http://localhost:3000/
 
 La variable alimenta al [cliente Axios compartido](src/shared/api/client.ts). Si abres la web desde otro dispositivo, reemplaza `localhost` por la IP de red del equipo que ejecuta la API, por ejemplo `http://192.168.1.25:3000/`. **Reinicia Vite después de cambiar `.env`** para que cargue el nuevo valor. Las variables `VITE_*` se incluyen en el frontend: no deben contener secretos.
 
-### Datos ficticios sin backend
+### Desarrollo local con datos ficticios
 
-Para desarrollar el backend objetivo y preparar su consumo desde el frontend, consulta la [guía de APIs futuras](docs/future-api-contract.md), el [contrato OpenAPI V1](docs/future-api.openapi.json) y el [catálogo de endpoints](docs/future-api-endpoints.md). Los servicios tipados `src/modules/*/api/future.api.ts` consumen `/v1`; los datos futuros se editan en `json/future/`. Es un contrato separado de los servicios actuales y todavía requiere migrar sus pantallas mediante mappers del dominio.
+La API V1 está implementada en `epe-backend` bajo `/api` y usa PostgreSQL. Consulta la [guía de la API V1](docs/api-v1-contract.md), el [contrato OpenAPI](docs/api-v1.openapi.json) y el [catálogo de endpoints](docs/api-v1-endpoints.md). Los servicios tipados llaman `/api`; `json/v1-demo/` contiene datos ficticios solo para desarrollo local.
 
 Para trabajar en el frontend con la API local de prueba, cambia una sola variable en `.env`:
 
@@ -122,15 +122,15 @@ Los datos se editan en [`json/`](json/), con un archivo por recurso y los nombre
 
 La API ficticia admite las lecturas y operaciones CRUD que consumen los servicios actuales; las relaciones se calculan sobre los registros en memoria. Crear, editar o eliminar no modifica los JSON. Los cambios duran mientras Vite esté ejecutándose y se comparten entre las pestañas conectadas al mismo servidor. Reinicia Vite para volver a cargar los archivos, restaurar los datos o aplicar ediciones de JSON.
 
-Este modo es exclusivo del servidor de desarrollo: el build se detiene si todavía apunta a `/mock-api/`. Los JSON quedan fuera del bundle de producción. El frontend utiliza automáticamente el contrato V1: carga el escenario de `json/future/` por HTTP y actualiza las vistas relacionadas después de guardar. Los almacenes actúan como estado de presentación de las respuestas; no agregan datos demo si la API falla. No se simulan subidas/descargas S3 ni el servicio general de archivos: los enlaces `example.com` de las fixtures son ilustrativos. La API de prueba no sustituye las validaciones completas del backend; protege IDs, referencias y aislamiento de recursos anidados, y devuelve errores JSON para rutas desconocidas.
+Este modo es exclusivo del servidor de desarrollo: el build se detiene si todavía apunta a `/mock-api/`. Los JSON quedan fuera del bundle de producción. El frontend utiliza automáticamente el contrato V1: carga el escenario de `json/v1-demo/` por HTTP y actualiza las vistas relacionadas después de guardar. Los almacenes actúan como estado de presentación de las respuestas; no agregan datos demo si la API falla. No se simulan subidas/descargas S3 ni el servicio general de archivos: los enlaces `example.com` de las fixtures son ilustrativos. La API de prueba no sustituye las validaciones completas del backend; protege IDs, referencias y aislamiento de recursos anidados, y devuelve errores JSON para rutas desconocidas.
 
-### Contrato V1 y futuro backend
+### Conexión con el backend V1
 
-La configuración `VITE_API_BASE_URL=/mock-api/` conecta las pantallas a `/mock-api/v1`; no debes agregar `/v1` a la variable. Para conectar el backend futuro, configura su URL real y `VITE_API_CONTRACT=v1`. Una URL real sin esa opción conserva la API actual; `VITE_API_CONTRACT=legacy` permite seleccionarla explícitamente.
+Con `VITE_API_BASE_URL=/mock-api/`, las pantallas usan el servidor ficticio de desarrollo. Para el backend real configura su origen, por ejemplo `http://localhost:3000/`, y `VITE_API_CONTRACT=v1`; los servicios llaman las rutas `/api` implementadas por NestJS.
 
-El agente backend debe recibir [la guía V1](docs/future-api-contract.md), [OpenAPI](docs/future-api.openapi.json), [el índice de endpoints](docs/future-api-endpoints.md) y [las fuentes acordadas](docs/reference/README.md), incluidas en este repositorio. Ejecuta `pnpm contract:check` para comprobar que el SQL y los clientes generados coincidan.
+El backend mantiene una copia de ejecución del [OpenAPI](docs/api-v1.openapi.json) para validar solicitudes y convertir filas de PostgreSQL. Ejecuta `pnpm contract:check` para comprobar que el SQL fuente y los archivos generados coincidan.
 
-Las escrituras se esperan antes de mostrar éxito. Un fallo HTTP muestra el error y conserva el formulario. Los comandos que abarcan varios recursos pueden guardar parcialmente: se recargan los datos para mostrar el estado confirmado por el servidor. La API real debe definir las transacciones necesarias. El acceso mantiene la sesión local existente y los adjuntos permanecen diferidos (FC14).
+Las escrituras se esperan antes de mostrar éxito. Un fallo HTTP muestra el error y conserva el formulario. El backend transacciona cada operación que lo requiere; los comandos del frontend que abarcan varios requests todavía pueden guardar parcialmente y recargan los datos para mostrar el estado confirmado por el servidor. El acceso mantiene la sesión existente y los adjuntos permanecen diferidos (FC14).
 
 ### Comandos del proyecto
 
@@ -251,7 +251,7 @@ public/image/                 Banner, badges y otros recursos públicos
 | Desarrollo | **Vite 8 · SWC** | Servidor de desarrollo y compilación |
 | Diseño | **Tailwind CSS 4 · shadcn/ui · Base UI** | Estilos, primitivas y componentes reutilizables |
 | Navegación | **React Router 7** | Rutas del sistema y acceso a las vistas |
-| Integración | **Axios** | Cliente HTTP centralizado para la futura API |
+| Integración | **Axios** | Cliente HTTP centralizado para la API V1 |
 | Recursos visuales | **Lucide · Plus Jakarta Sans** | Iconografía y tipografía del sistema |
 
 ### Convenciones que mantienen la coherencia
@@ -260,7 +260,7 @@ public/image/                 Banner, badges y otros recursos públicos
 - **Imports internos:** usar `@/`; los relativos se reservan para el catálogo vendorizado de UI.
 - **Composición:** `AppModal`, tablas, filtros y estados compartidos permiten mantener el mismo lenguaje visual entre módulos.
 - **UI vendorizada:** los componentes de `shared/components/ui/` se actualizan mediante shadcn; la lógica de negocio pertenece a los módulos.
-- **Integración futura:** API, DTO y mapper por dominio cuando se conecte al backend. Las páginas consumirán modelos de frontend, sin depender de DTOs ni de Axios directamente.
+- **Integración backend:** API V1, DTO y mapper por dominio. Las páginas consumen modelos de frontend, sin depender de DTOs ni de Axios directamente.
 
 Consulta [AGENTS.md](AGENTS.md) para las decisiones de arquitectura y las reglas de trabajo del repositorio.
 

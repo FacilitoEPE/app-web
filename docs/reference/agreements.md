@@ -4,7 +4,7 @@ Este repositorio contiene la documentación discutida y el SQL de revisión. El 
 
 ## Documentos vigentes
 
-- El resumen `api-futura.md` se retiró del repositorio central el 03/11/2026. El contrato OpenAPI V1 vigente para los DTOs del frontend se mantiene en [la especificación](../future-api.openapi.json) y [sus reglas](../future-api-contract.md); comparar su paridad con el backend antes de cambiarlo.
+- El resumen `api-futura.md` se retiró del repositorio central el 03/11/2026. El contrato OpenAPI V1 vigente para los DTOs del frontend se mantiene en [la especificación](../api-v1.openapi.json) y [sus reglas](../api-v1-contract.md); comparar su paridad con el backend antes de cambiarlo.
 - [Flujo funcional del sistema y de sus módulos (HTML Archify)](flujo-sistema.html): propósito de la aplicación, recorrido general, flujos internos de los ocho módulos, vista del chofer, reglas de avance y condiciones de cierre, basados en el prototipo local.
 - **[Schema actualizado tras la auditoría](agro-schema/01_reporte_especifico.md#schema-actualizado-tras-la-auditoría-de-cumplimiento):** ajustes FC01–FC13 incorporados al SQL, contrato de JSONB, tipos modificados y límites de implementación. FC14 (archivos) continúa diferido. Se prioriza funcionamiento sobre calidad del diseño.
 - [Reporte por vista](agro-schema/01_reporte_especifico.md): 62 fichas con navegación, función de cada tabla, atributos, relaciones y decisiones D01–D15.

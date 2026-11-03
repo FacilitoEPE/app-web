@@ -19,5 +19,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "dev/mock-api.ts", "dev/future-mock.ts", "dev/future-contract.ts"]
+  "include": ["vite.config.ts", "dev/mock-api.ts", "dev/v1-mock.ts", "dev/v1-contract.ts"]
 }

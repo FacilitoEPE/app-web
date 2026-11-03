@@ -1,4 +1,4 @@
-import { fincaV1, proveedorV1, proveedorXFrutaV1, proveedorXFrutaDerivadaV1, certificadoProveedorV1 } from '@/modules/providers/api/future.api';
+import { fincaV1, proveedorV1, proveedorXFrutaV1, proveedorXFrutaDerivadaV1, certificadoProveedorV1 } from '@/modules/providers/api/v1.api';
 import { operationsContext } from '@/modules/operations/api/operations-context.api';
 import { commitRemote } from '@/shared/api/data-contract';
 import type { Finca } from '@/modules/providers/providerFinca.utils';
