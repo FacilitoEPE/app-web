@@ -1,4 +1,5 @@
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import { useState } from "react";
 import { FileCheck2, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -8,7 +9,7 @@ import { SummaryBar } from "@/shared/components/InfoField";
 import InputField from "@/shared/components/InputField";
 import ModalSection from "@/shared/components/ModalSection";
 import { Button } from "@/shared/components/ui/button";
-import { Textarea } from "@/shared/components/ui/textarea";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import type { FileSource } from "@/shared/utils/fileSource";
 import { formatKg } from "@/shared/utils/format";
 import type { BillingClient, BillingInvoice, BillingLoad } from "@/modules/billing/billing.models";
@@ -30,7 +31,7 @@ interface BillingIssueInvoiceModalProps {
             archivoFacturaEmitida: FileSource | null;
             observaciones: string;
         },
-    ) => void;
+    ) => void | Promise<void>;
 }
 
 export default function BillingIssueInvoiceModal({
@@ -45,30 +46,22 @@ export default function BillingIssueInvoiceModal({
     const [fechaEmision, setFechaEmision] = useState("");
     const [fechaVencimiento, setFechaVencimiento] = useState("");
     const [archivoFacturaEmitida, setArchivoFacturaEmitida] = useState<FileSource | null>(null);
-    const [observaciones, setObservaciones] = useState("");
-    const [errors, setErrors] = useState<{
-        numero?: string;
-        fechaEmision?: string;
-        fechaVencimiento?: string;
-        archivo?: string;
-    }>({});
+    const [verified, setVerified] = useState(false);
 
     useResetOnToggle(open, () => {
         if (!invoice || !open) return;
         setNumeroFacturaElectronica(invoice.numeroFacturaElectronica || "");
-        setFechaEmision(invoice.fechaEmision || invoice.fechaPreparacion);
+        setFechaEmision(invoice.fechaEmision || "");
         setFechaVencimiento(invoice.fechaVencimiento);
         setArchivoFacturaEmitida(invoice.archivoFacturaEmitida);
-        setObservaciones(invoice.observaciones);
-        setErrors({});
+        setVerified(false);
     });
 
-    if (!client || !load || !invoice) return null;
-
-    const symbol = invoice.moneda === "USD" ? "US$" : "S/";
-
-    const handleSubmit = async () => {
-        const nextErrors: typeof errors = {};
+    const symbol = invoice?.moneda === "EUR" ? "€" : invoice?.moneda === "USD" ? "US$" : "S/";
+    const { errors, saving, clearError, submit } = useFormSubmit({
+        open,
+        validate: () => {
+        const nextErrors: Record<string, string> = {};
         if (!numeroFacturaElectronica.trim()) {
             nextErrors.numero = "Ingresa el número de la factura electrónica.";
         }
@@ -80,28 +73,36 @@ export default function BillingIssueInvoiceModal({
         } else if (fechaEmision && fechaVencimiento < fechaEmision) {
             nextErrors.fechaVencimiento = "El vencimiento no puede ser anterior a la emisión.";
         }
+        if (invoice && fechaEmision && fechaEmision < invoice.fechaPreparacion) nextErrors.fechaEmision = "La emisión no puede ser anterior a la preparación.";
         if (!archivoFacturaEmitida) {
             nextErrors.archivo = "Adjunta el archivo de la factura electrónica emitida.";
         }
-        setErrors(nextErrors);
-        if (Object.keys(nextErrors).length > 0) return;
-
+        if (!verified) nextErrors.verified = "Confirma que el comprobante fue emitido en SUNAT.";
+        return nextErrors;
+        },
+        onSubmit: async () => {
+        if (!client || !load || !invoice) return;
         await onIssue(client.id, load.id, invoice.id, {
             numeroFacturaElectronica: numeroFacturaElectronica.trim(),
             fechaEmision,
             fechaVencimiento,
             archivoFacturaEmitida,
-            observaciones: observaciones.trim(),
+            observaciones: "",
         });
         onOpenChange(false);
-    };
+        },
+        backendFields: { numeroFactura: "numero", fechaEmision: "fechaEmision", fechaVencimiento: "fechaVencimiento" },
+    });
+
+    if (!client || !load || !invoice) return null;
 
     return (
         <AppModal
+            busy={saving}
             open={open}
             onOpenChange={onOpenChange}
             icon={<FileCheck2 size={22} strokeWidth={2.2} />}
-            title="Registrar factura electrónica emitida"
+            title="Registrar factura emitida"
             description={`${invoice.referenciaPreparacion} · ${client.nombreEmpresa}`}
             size="lg"
             footer={
@@ -109,13 +110,14 @@ export default function BillingIssueInvoiceModal({
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={18} strokeWidth={2.5} /> Cancelar
                     </Button>
-                    <Button size="xl" onClick={handleSubmit}>
-                        <Save size={18} strokeWidth={2.5} /> Confirmar emisión electrónica
+                    <Button size="xl" disabled={saving} onClick={() => void submit({})}>
+                        <Save size={18} strokeWidth={2.5} /> Guardar factura emitida
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-6">
+                {errors._form && <p role="alert" className="text-sm text-destructive">{errors._form}</p>}
                 <SummaryBar
                     items={[
                         { label: "Preparación", value: invoice.referenciaPreparacion },
@@ -127,6 +129,7 @@ export default function BillingIssueInvoiceModal({
                         },
                     ]}
                 />
+                <p className="text-sm text-ink-muted">Registra aquí un comprobante ya emitido externamente. Esta acción no emite ni valida la factura ante SUNAT.</p>
 
                 <ModalSection title="Comprobante electrónico SUNAT">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -139,7 +142,7 @@ export default function BillingIssueInvoiceModal({
                             error={errors.numero}
                             onChange={(v) => {
                                 setNumeroFacturaElectronica(v);
-                                setErrors((curr) => ({ ...curr, numero: undefined }));
+                                clearError("numero");
                             }}
                         />
                         <InputField
@@ -151,7 +154,7 @@ export default function BillingIssueInvoiceModal({
                             error={errors.fechaEmision}
                             onChange={(v) => {
                                 setFechaEmision(v);
-                                setErrors((curr) => ({ ...curr, fechaEmision: undefined }));
+                                clearError("fechaEmision");
                             }}
                         />
                         <InputField
@@ -163,37 +166,31 @@ export default function BillingIssueInvoiceModal({
                             error={errors.fechaVencimiento}
                             onChange={(v) => {
                                 setFechaVencimiento(v);
-                                setErrors((curr) => ({ ...curr, fechaVencimiento: undefined }));
+                                clearError("fechaVencimiento");
                             }}
                         />
                         <div className="sm:col-span-3">
                             <FormField error={errors.archivo}>
                                 <FileDropzone
-                                    label="Factura electrónica emitida (PDF / XML)"
+                                    label="Factura electrónica emitida (PDF)"
                                     required
                                     file={archivoFacturaEmitida}
                                     onChange={(f) => {
                                         setArchivoFacturaEmitida(f);
-                                        setErrors((curr) => ({ ...curr, archivo: undefined }));
+                                        clearError("archivo");
                                     }}
                                     variant="horizontal"
                                     replaceable
                                 />
                             </FormField>
                         </div>
-                        <FormField
-                            id="iss-obs"
-                            label="Observaciones de emisión"
-                            optional
-                            className="sm:col-span-3"
-                        >
-                            <Textarea
-                                id="iss-obs"
-                                rows={2}
-                                value={observaciones}
-                                onChange={(e) => setObservaciones(e.target.value)}
-                            />
-                        </FormField>
+                        <div className="sm:col-span-3">
+                            <label className="flex items-start gap-3 rounded-xl border border-border p-3 text-sm text-ink-body">
+                                <Checkbox checked={verified} onCheckedChange={checked => { setVerified(checked === true); clearError("verified"); }} />
+                                Verifiqué que este comprobante ya fue emitido en SUNAT y que el archivo adjunto corresponde a él.
+                            </label>
+                            {errors.verified && <p role="alert" className="mt-1 text-xs text-destructive">{errors.verified}</p>}
+                        </div>
                     </div>
                 </ModalSection>
             </div>

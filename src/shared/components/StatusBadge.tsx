@@ -20,6 +20,12 @@ const STATUS_TONES: Record<string, StatusTone> = {
     "en espera": "highlight",
     pendiente: "highlight",
     "en proceso": "warning",
+    "lista para preparar guía": "brand",
+    "guía en preparación": "warning",
+    "guías generadas": "brand",
+    "lista para generar": "warning",
+    "generada": "brand",
+    "pendiente de datos": "highlight",
     "en ejecución": "warning",
     // Etapas de un examen de laboratorio
     "pendiente de envío": "highlight",
@@ -56,6 +62,7 @@ const STATUS_TONES: Record<string, StatusTone> = {
     "dentro del límite": "brand",
     "cerca del límite": "warning",
     "límite superado": "danger",
+    "límite alcanzado": "danger",
     // Resultado de examen de laboratorio: negativo es el resultado esperado (sin residuos)
     negativo: "brand",
     positivo: "danger",

@@ -1,0 +1,236 @@
+{
+  "recepcion_planta": {
+    "append": [
+      {
+        "recepcionPlantaId": 2,
+        "cargaId": 2,
+        "idChoferTransporteExterno": 1,
+        "fechaRecepcion": null,
+        "pesoPlantaKg": null,
+        "huboDescarte": null,
+        "descarteKg": null,
+        "evidenciaDescarteId": null,
+        "reporteRecepcionId": null,
+        "resultado": null,
+        "recepcionConfirmadaAt": null,
+        "descarteConfirmadoAt": null,
+        "jabasDevueltas": null,
+        "jabasDevolucionAt": null,
+        "descargaAt": null,
+        "cierreFisicoAt": null,
+        "cierreAdministrativoAt": null,
+        "observaciones": null,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "compras": [],
+        "logistica": {},
+        "checklist": {},
+        "documentos": {},
+        "descargaInicioAt": null,
+        "descargaFinAt": null,
+        "jabasIniciales": 25,
+        "jabasNoAplica": null
+      },
+      {
+        "recepcionPlantaId": 3,
+        "cargaId": 3,
+        "idChoferTransporteExterno": 1,
+        "fechaRecepcion": "2026-11-06T18:00:00.000Z",
+        "pesoPlantaKg": 780,
+        "huboDescarte": false,
+        "descarteKg": 0,
+        "evidenciaDescarteId": null,
+        "reporteRecepcionId": null,
+        "resultado": "Aceptada",
+        "recepcionConfirmadaAt": "2026-11-06T19:00:00.000Z",
+        "descarteConfirmadoAt": null,
+        "jabasDevueltas": null,
+        "jabasDevolucionAt": null,
+        "descargaAt": null,
+        "cierreFisicoAt": null,
+        "cierreAdministrativoAt": null,
+        "observaciones": "Revisión de fruta industrial pendiente de informe.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "compras": [
+          {
+            "providerId": 2,
+            "recognizedQuantity": 780,
+            "reference": "REC-IND-3",
+            "quantity": 800,
+            "document": null,
+            "reviewStatus": "Pendiente de revisión",
+            "observation": ""
+          }
+        ],
+        "logistica": {
+          "estimatedArrival": "2026-11-06T12:30",
+          "actualArrival": "2026-11-06T13:00"
+        },
+        "checklist": {},
+        "documentos": {},
+        "descargaInicioAt": null,
+        "descargaFinAt": null,
+        "jabasIniciales": 40,
+        "jabasNoAplica": null
+      }
+    ],
+    "replace": [
+      {
+        "recepcionPlantaId": 1,
+        "cargaId": 1,
+        "idChoferTransporteExterno": 1,
+        "fechaRecepcion": "2026-10-29T18:00:00.000Z",
+        "pesoPlantaKg": 960,
+        "huboDescarte": false,
+        "descarteKg": 0,
+        "evidenciaDescarteId": null,
+        "reporteRecepcionId": null,
+        "resultado": "Aceptada con observaciones",
+        "recepcionConfirmadaAt": "2026-10-29T19:30:00.000Z",
+        "descarteConfirmadoAt": null,
+        "jabasDevueltas": 40,
+        "jabasDevolucionAt": "2026-10-30T12:00:00.000Z",
+        "descargaAt": null,
+        "cierreFisicoAt": null,
+        "cierreAdministrativoAt": null,
+        "observaciones": "Se registraron 960 kg reconocidos en planta.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "compras": [
+          {
+            "providerId": 1,
+            "recognizedQuantity": 580,
+            "reference": "REC-1",
+            "quantity": 600,
+            "document": null,
+            "reviewStatus": "Revisado",
+            "observation": ""
+          },
+          {
+            "providerId": 2,
+            "recognizedQuantity": 380,
+            "reference": "REC-2",
+            "quantity": 400,
+            "document": null,
+            "reviewStatus": "Revisado",
+            "observation": ""
+          }
+        ],
+        "logistica": {
+          "logisticsStatus": "En recepción",
+          "estimatedArrival": "2026-10-29T12:30",
+          "windowStart": "2026-10-29T12:00",
+          "windowEnd": "2026-10-29T15:00",
+          "actualArrival": "2026-10-29T13:00",
+          "arrivalObservations": "Ingreso por puerta de carga 2.",
+          "responsableRecepcion": "Elena Ruiz",
+          "observacionesDescarga": "Se descargaron las jabas en rampa 1."
+        },
+        "checklist": {
+          "crateCoordination": "Devolución parcial coordinada con planta.",
+          "vehicleExit": "2026-10-30T11:30",
+          "carrierCopy": false
+        },
+        "documentos": {},
+        "descargaInicioAt": "2026-10-29T18:15:00.000Z",
+        "descargaFinAt": "2026-10-29T19:15:00.000Z",
+        "jabasIniciales": 50,
+        "jabasNoAplica": null
+      }
+    ]
+  },
+  "historial_chofer": {
+    "append": [
+      {
+        "historialChoferId": 2,
+        "coordinacionEntregaId": 1,
+        "cargaId": 1,
+        "idChoferTransporteExterno": 1,
+        "estado": "SALIDA",
+        "fechaHora": "2026-10-29T14:00:00.000Z",
+        "observacion": "Salida de finca confirmada.",
+        "createdAt": "2026-10-29T14:00:00.000Z",
+        "updatedAt": "2026-10-29T14:00:00.000Z"
+      },
+      {
+        "historialChoferId": 3,
+        "coordinacionEntregaId": 1,
+        "cargaId": 1,
+        "idChoferTransporteExterno": 1,
+        "estado": "EN_CAMINO",
+        "fechaHora": "2026-10-29T15:00:00.000Z",
+        "observacion": "En tránsito hacia planta.",
+        "createdAt": "2026-10-29T15:00:00.000Z",
+        "updatedAt": "2026-10-29T15:00:00.000Z"
+      },
+      {
+        "historialChoferId": 4,
+        "coordinacionEntregaId": 1,
+        "cargaId": 1,
+        "idChoferTransporteExterno": 1,
+        "estado": "LLEGADA",
+        "fechaHora": "2026-10-29T18:00:00.000Z",
+        "observacion": "Ingreso a planta.",
+        "createdAt": "2026-10-29T18:00:00.000Z",
+        "updatedAt": "2026-10-29T18:00:00.000Z"
+      },
+      {
+        "historialChoferId": 5,
+        "coordinacionEntregaId": 2,
+        "cargaId": 2,
+        "idChoferTransporteExterno": 1,
+        "estado": "EN_CARGA",
+        "fechaHora": "2026-10-30T13:00:00.000Z",
+        "observacion": "Carga registrada.",
+        "createdAt": "2026-10-30T13:00:00.000Z",
+        "updatedAt": "2026-10-30T13:00:00.000Z"
+      },
+      {
+        "historialChoferId": 6,
+        "coordinacionEntregaId": 4,
+        "cargaId": 3,
+        "idChoferTransporteExterno": 1,
+        "estado": "EN_CARGA",
+        "fechaHora": "2026-11-06T13:00:00.000Z",
+        "observacion": "Carga industrial registrada.",
+        "createdAt": "2026-11-06T13:00:00.000Z",
+        "updatedAt": "2026-11-06T13:00:00.000Z"
+      },
+      {
+        "historialChoferId": 7,
+        "coordinacionEntregaId": 4,
+        "cargaId": 3,
+        "idChoferTransporteExterno": 1,
+        "estado": "SALIDA",
+        "fechaHora": "2026-11-06T14:00:00.000Z",
+        "observacion": "Salida de finca.",
+        "createdAt": "2026-11-06T14:00:00.000Z",
+        "updatedAt": "2026-11-06T14:00:00.000Z"
+      },
+      {
+        "historialChoferId": 8,
+        "coordinacionEntregaId": 4,
+        "cargaId": 3,
+        "idChoferTransporteExterno": 1,
+        "estado": "EN_CAMINO",
+        "fechaHora": "2026-11-06T15:00:00.000Z",
+        "observacion": "En tránsito.",
+        "createdAt": "2026-11-06T15:00:00.000Z",
+        "updatedAt": "2026-11-06T15:00:00.000Z"
+      },
+      {
+        "historialChoferId": 9,
+        "coordinacionEntregaId": 4,
+        "cargaId": 3,
+        "idChoferTransporteExterno": 1,
+        "estado": "LLEGADA",
+        "fechaHora": "2026-11-06T18:00:00.000Z",
+        "observacion": "Llegada a planta industrial.",
+        "createdAt": "2026-11-06T18:00:00.000Z",
+        "updatedAt": "2026-11-06T18:00:00.000Z"
+      }
+    ],
+    "replace": []
+  }
+}

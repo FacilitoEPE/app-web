@@ -1,11 +1,10 @@
 import { useSectionMotion } from '@/shared/hooks/useSectionMotion';
 import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
     ArrowLeft,
     CheckCircle2,
-    ClipboardCheck,
     Eye,
-    FileCheck2,
     Flag,
     Layers,
     MapPin,
@@ -23,7 +22,6 @@ import FilterBar, { FilterSearch, FilterSelectField } from "@/shared/components/
 import MetricCards, { type Metric } from "@/shared/components/MetricCards";
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
 import StatusBadge from "@/shared/components/StatusBadge";
-import SuccessModal from "@/shared/components/SuccessModal";
 import TableCard from "@/shared/components/TableCard";
 import TableGridCard, { TableGridCardField, TableGridCardFields } from "@/shared/components/TableGridCard";
 import {
@@ -45,21 +43,11 @@ import {
 import PageHeader from "@/shared/layout/PageHeader";
 import type { TableExport } from "@/shared/utils/exportTable";
 import { formatDisplayDate, formatKg } from "@/shared/utils/format";
-import { paginate } from "@/shared/utils/paginate";
 import { getCampaignFruitIcon } from "@/modules/campaigns/campaignFruit";
-import LogisticsCratesExitModal from "@/modules/logistics/components/LogisticsCratesExitModal";
-import LogisticsDocumentsClosureModal from "@/modules/logistics/components/LogisticsDocumentsClosureModal";
-import LogisticsLoadDetailsModal from "@/modules/logistics/components/LogisticsLoadDetailsModal";
-import LogisticsPurchasesModal from "@/modules/logistics/components/LogisticsPurchasesModal";
-import LogisticsReceptionQualityModal from "@/modules/logistics/components/LogisticsReceptionQualityModal";
 import type { LogisticsLoad } from "@/modules/logistics/logistics.models";
-import {
-    addLogisticsCrateMovement,
-    updateLogisticsDocumentsClosure,
-    updateLogisticsPurchases,
-    updateLogisticsReception,
-    useLogisticsLoads,
-} from "@/modules/logistics/logistics.store";
+import { useLogisticsLoads } from "@/modules/logistics/logistics.store";
+import { formatLogisticsDateTime } from "@/modules/logistics/logistics.utils";
+import { PageError } from "@/shared/components/PageState";
 
 interface CampaignSummaryRow {
     campaniaId: number;
@@ -84,23 +72,16 @@ const STAGE_OPTIONS = [
 ];
 
 export default function LogisticsPage() {
+    const navigate = useNavigate();
+    const { campaignId } = useParams<{ campaignId?: string }>();
     const loads = useLogisticsLoads();
 
-    const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
+    const selectedCampaignId = campaignId ? Number(campaignId) : null;
     useSectionMotion(String(selectedCampaignId));
     const [search, setSearch] = useState("");
     const [campaignFilter, setCampaignFilter] = useState("");
     const [stageFilter, setStageFilter] = useState("");
-    const [page, setPage] = useState(1);
     const [viewMode, setViewMode] = useState<TableViewMode>("table");
-
-    // Modales de gestión de carga (Nivel 2)
-    const [detailsLoad, setDetailsLoad] = useState<LogisticsLoad | null>(null);
-    const [purchasesLoad, setPurchasesLoad] = useState<LogisticsLoad | null>(null);
-    const [receptionLoad, setReceptionLoad] = useState<LogisticsLoad | null>(null);
-    const [cratesLoad, setCratesLoad] = useState<LogisticsLoad | null>(null);
-    const [documentsLoad, setDocumentsLoad] = useState<LogisticsLoad | null>(null);
-    const [successInfo, setSuccessInfo] = useState<{ title: string; description: string } | null>(null);
 
     const campaignSummaries = useMemo<CampaignSummaryRow[]>(() => {
         const byCamp = new Map<number, CampaignSummaryRow>();
@@ -160,21 +141,10 @@ export default function LogisticsPage() {
                 description: "Meta comercial acumulada",
                 icon: Package,
             },
-            {
-                title: "EN CARGA / SALIDA",
-                value: String(countStage("En carga") + countStage("Salida")),
-                unit: "cargas",
-                description: `${countStage("En carga")} en carga · ${countStage("Salida")} en salida`,
-                icon: Flag,
-                warm: countStage("En carga") + countStage("Salida") > 0,
-            },
-            {
-                title: "EN CAMINO / LLEGADA",
-                value: String(countStage("En camino") + countStage("Llegada")),
-                unit: "cargas",
-                description: `${countStage("En camino")} en ruta · ${countStage("Llegada")} en planta`,
-                icon: Truck,
-            },
+            { title: "EN CARGA", value: String(countStage("En carga")), unit: "cargas", description: "En preparación", icon: Package, warm: countStage("En carga") > 0 },
+            { title: "SALIDA DE FINCA", value: String(countStage("Salida")), unit: "cargas", description: "Salida registrada", icon: Flag },
+            { title: "EN CAMINO", value: String(countStage("En camino")), unit: "cargas", description: "En ruta a planta", icon: Truck },
+            { title: "LLEGADA", value: String(countStage("Llegada")), unit: "cargas", description: "En planta", icon: Truck },
             {
                 title: "CIERRE COMPLETADO",
                 value: String(countStage("Cierre")),
@@ -200,7 +170,6 @@ export default function LogisticsPage() {
         setSearch("");
         setCampaignFilter("");
         setStageFilter("");
-        setPage(1);
     };
 
     // Filtrado para Nivel 1 (Campañas)
@@ -235,17 +204,8 @@ export default function LogisticsPage() {
         });
     }, [scopedLoads, stageFilter, search]);
 
-    const {
-        pageCount: campPageCount,
-        currentPage: campCurrentPage,
-        visible: visibleCampaigns,
-    } = paginate(filteredCampaigns, page);
-
-    const {
-        pageCount: loadPageCount,
-        currentPage: loadCurrentPage,
-        visible: visibleLoads,
-    } = paginate(filteredLoads, page);
+    const visibleCampaigns = filteredCampaigns;
+    const visibleLoads = filteredLoads;
 
     const getCampaignExport = (): TableExport => ({
         filename: "logistica_resumen_campanias",
@@ -290,38 +250,17 @@ export default function LogisticsPage() {
         ]),
     });
 
-    const getLoadActions = (load: LogisticsLoad): { primary: RowAction[]; secondary: RowAction[] } => ({
+    const getLoadActions = (load: LogisticsLoad): { primary: RowAction[] } => ({
         primary: [
             {
                 label: "Ver detalle",
                 icon: <Eye size={18} strokeWidth={2.3} />,
-                onClick: () => setDetailsLoad(load),
-            },
-        ],
-        secondary: [
-            {
-                label: "Compras de la carga",
-                icon: <PackageCheck size={16} strokeWidth={2.2} />,
-                onClick: () => setPurchasesLoad(load),
-            },
-            {
-                label: "Recepción y calidad",
-                icon: <ClipboardCheck size={16} strokeWidth={2.2} />,
-                onClick: () => setReceptionLoad(load),
-            },
-            {
-                label: "Jabas y salida",
-                icon: <Layers size={16} strokeWidth={2.2} />,
-                onClick: () => setCratesLoad(load),
-            },
-            {
-                label: "Documentos y cierre",
-                icon: <FileCheck2 size={16} strokeWidth={2.2} />,
-                variant: "brand",
-                onClick: () => setDocumentsLoad(load),
+                onClick: () => navigate(`/logistica-despacho/${load.campaniaId}/cargas/${load.id}`),
             },
         ],
     });
+
+    if (campaignId && (!Number.isSafeInteger(selectedCampaignId) || !activeCampaignSummary)) return <PageError title="Campaña no encontrada" message="No hay cargas de esta campaña en Logística." back={{ to: "/logistica-despacho", label: "Volver a campañas" }} />;
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
@@ -376,7 +315,7 @@ export default function LogisticsPage() {
                             variant="outline"
                             size="xl"
                             onClick={() => {
-                                setSelectedCampaignId(null);
+                                navigate("/logistica-despacho");
                                 clearFilters();
                             }}
                         >
@@ -387,7 +326,7 @@ export default function LogisticsPage() {
             />
 
             <div className="mb-6">
-                <MetricCards metrics={metrics} label="Indicadores de logística y despacho" />
+                <MetricCards metrics={metrics} label="Indicadores de logística y despacho" columns={6} />
             </div>
 
             <FilterBar onClear={clearFilters} canClear={hasActiveFilters} className="mb-6">
@@ -395,7 +334,6 @@ export default function LogisticsPage() {
                     value={search}
                     onChange={(v) => {
                         setSearch(v);
-                        setPage(1);
                     }}
                     placeholder={
                         selectedCampaignId === null
@@ -410,7 +348,6 @@ export default function LogisticsPage() {
                         value={campaignFilter}
                         onChange={(v) => {
                             setCampaignFilter(v);
-                            setPage(1);
                         }}
                     />
                 )}
@@ -420,7 +357,6 @@ export default function LogisticsPage() {
                     value={stageFilter}
                     onChange={(v) => {
                         setStageFilter(v);
-                        setPage(1);
                     }}
                 />
             </FilterBar>
@@ -446,9 +382,9 @@ export default function LogisticsPage() {
                     isEmpty={visibleCampaigns.length === 0}
                     emptyTitle="Sin campañas en logística"
                     emptyDescription="No se encontraron campañas con los filtros seleccionados."
-                    page={campCurrentPage}
-                    pageCount={campPageCount}
-                    onPageChange={setPage}
+                    page={1}
+                    pageCount={1}
+                    onPageChange={() => {}}
                 >
                     {/* Móvil / Grid */}
                     <div
@@ -472,7 +408,7 @@ export default function LogisticsPage() {
                                             size="sm"
                                             className="ml-auto"
                                             onClick={() => {
-                                                setSelectedCampaignId(camp.campaniaId);
+                                                navigate(`/logistica-despacho/${camp.campaniaId}`);
                                                 clearFilters();
                                             }}
                                         >
@@ -564,7 +500,7 @@ export default function LogisticsPage() {
                                                     <Button
                                                         size="default"
                                                         onClick={() => {
-                                                            setSelectedCampaignId(camp.campaniaId);
+                                                            navigate(`/logistica-despacho/${camp.campaniaId}`);
                                                             clearFilters();
                                                         }}
                                                     >
@@ -584,7 +520,7 @@ export default function LogisticsPage() {
                 <TableCard
                     icon={<PackageCheck size={24} strokeWidth={2.5} />}
                     title="Cargas y Despachos de la Campaña"
-                    description="Usa el menú de acciones de cada carga para gestionar Compras, Recepción y calidad, Jabas y salida, y Documentos y cierre."
+                    description="Abre el detalle de cada carga para consultar su recorrido y gestionar compras, recepción, jabas y documentos."
                     headerRight={
                         <TableToolbar>
                             <TableCountPill
@@ -600,9 +536,9 @@ export default function LogisticsPage() {
                     isEmpty={visibleLoads.length === 0}
                     emptyTitle="Sin cargas encontradas"
                     emptyDescription="No hay cargas que coincidan con los filtros aplicados."
-                    page={loadCurrentPage}
-                    pageCount={loadPageCount}
-                    onPageChange={setPage}
+                    page={1}
+                    pageCount={1}
+                    onPageChange={() => {}}
                 >
                     {/* Móvil / Grid */}
                     <div
@@ -649,6 +585,8 @@ export default function LogisticsPage() {
                                             value={formatDisplayDate(load.fechaCarga)}
                                         />
                                         <TableGridCardField label="Canal" value={load.canal} />
+                                        <TableGridCardField label="Último reporte" value={load.historialChofer?.at(-1)
+                                            ? formatLogisticsDateTime(load.historialChofer.at(-1)?.fechaHora) : "Sin reporte"} />
                                     </TableGridCardFields>
                                 </TableGridCard>
                             );
@@ -730,7 +668,9 @@ export default function LogisticsPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="max-w-56 text-[12px] font-medium text-ink-body">
-                                                    {load.ultimoReporte}
+                                                    <span>{load.historialChofer?.at(-1)
+                                                        ? formatLogisticsDateTime(load.historialChofer.at(-1)?.fechaHora) : "Sin reporte"}</span>
+                                                    {load.ultimoReporte && <span className="mt-1 block truncate text-ink-muted" title={load.ultimoReporte}>{load.ultimoReporte}</span>}
                                                 </TableCell>
                                                 <TableCell className="px-6">
                                                     <RowActions
@@ -748,75 +688,6 @@ export default function LogisticsPage() {
                 </TableCard>
             )}
 
-            {/* Modales de Logística y Despacho */}
-            <LogisticsLoadDetailsModal
-                open={detailsLoad !== null}
-                onOpenChange={(open) => !open && setDetailsLoad(null)}
-                load={detailsLoad}
-            />
-
-            <LogisticsPurchasesModal
-                open={purchasesLoad !== null}
-                onOpenChange={(open) => !open && setPurchasesLoad(null)}
-                load={purchasesLoad}
-                onSave={async (loadId, payload) => {
-                    await updateLogisticsPurchases(loadId, payload);
-                    setSuccessInfo({
-                        title: "Compras de la carga actualizadas",
-                        description: "Se actualizaron los kilos, bultos y viáticos registrados en la carga.",
-                    });
-                }}
-            />
-
-            <LogisticsReceptionQualityModal
-                open={receptionLoad !== null}
-                onOpenChange={(open) => !open && setReceptionLoad(null)}
-                load={receptionLoad}
-                onSave={async (loadId, recepcion, proveedores) => {
-                    await updateLogisticsReception(loadId, recepcion, proveedores);
-                    setSuccessInfo({
-                        title: "Recepción y calidad guardadas",
-                        description:
-                            "El peso recibido en planta, la evaluación de calidad, el descarte y el desglose por proveedor fueron actualizados.",
-                    });
-                }}
-            />
-
-            <LogisticsCratesExitModal
-                open={cratesLoad !== null}
-                onOpenChange={(open) => !open && setCratesLoad(null)}
-                load={cratesLoad}
-                onAddMovement={async (loadId, movement) => {
-                    await addLogisticsCrateMovement(loadId, movement);
-                    setCratesLoad(null);
-                    setSuccessInfo({
-                        title: "Movimiento de jabas y guía registrados",
-                        description: "Se registró la devolución de envases y su guía de salida asociada.",
-                    });
-                }}
-            />
-
-            <LogisticsDocumentsClosureModal
-                open={documentsLoad !== null}
-                onOpenChange={(open) => !open && setDocumentsLoad(null)}
-                load={documentsLoad}
-                onSave={async (loadId, closure) => {
-                    await updateLogisticsDocumentsClosure(loadId, closure);
-                    setSuccessInfo({
-                        title: "Expediente y cierre actualizados",
-                        description:
-                            "Los documentos de respaldo y el estado de cierre físico/administrativo quedaron guardados.",
-                    });
-                }}
-            />
-
-            <SuccessModal
-                open={successInfo !== null}
-                onOpenChange={(open) => !open && setSuccessInfo(null)}
-                title={successInfo?.title ?? ""}
-                description={successInfo?.description ?? ""}
-                badgeLabel="Logística y Despacho"
-            />
         </div>
     );
 }

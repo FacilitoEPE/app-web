@@ -1,4 +1,5 @@
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { suggestSettlementNumber } from '@/modules/purchase-settlement/settlementNumber.utils';
 import { useState } from "react";
 import { Plus, Save, Trash2, Truck, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -16,6 +17,7 @@ interface SettlementCarrierModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     load: SettlementLoad | null;
+    existingNumbers: string[];
     onSave: (
         loadId: string,
         payload: {
@@ -26,13 +28,14 @@ interface SettlementCarrierModalProps {
             archivoLiquidacion: FileSource | null;
             observaciones: string;
         },
-    ) => void;
+    ) => void | Promise<void>;
 }
 
 export default function SettlementCarrierModal({
     open,
     onOpenChange,
     load,
+    existingNumbers,
     onSave,
 }: SettlementCarrierModalProps) {
     const [numeroLiquidacion, setNumeroLiquidacion] = useState("");
@@ -41,25 +44,32 @@ export default function SettlementCarrierModal({
     const [gastosReales, setGastosReales] = useState<CarrierRealExpense[]>([]);
     const [archivoLiquidacion, setArchivoLiquidacion] = useState<FileSource | null>(null);
     const [observaciones, setObservaciones] = useState("");
+    const [formError, setFormError] = useState('');
+    const [saving, setSaving] = useState(false);
 
     useResetOnToggle(open, () => {
         if (!load || !open) return;
         const t = load.transporte;
-        setNumeroLiquidacion(t.numeroLiquidacion || "");
-        setFechaLiquidacion(t.fechaLiquidacion);
-        setFleteCarga(String(t.fleteCarga));
+        const date = t.fechaLiquidacion || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
+        setNumeroLiquidacion(t.numeroLiquidacion || suggestSettlementNumber(existingNumbers, date, 'LT'));
+        setFechaLiquidacion(date);
+        setFleteCarga(t.estado === 'Por liquidar' ? '' : String(t.fleteCarga));
         setGastosReales(t.gastosReales.map((g) => ({ ...g })));
         setArchivoLiquidacion(t.archivoLiquidacion);
         setObservaciones(t.observaciones);
+        setFormError('');
+        setSaving(false);
     });
 
     if (!load) return null;
 
     const symbol = load.transporte.moneda === 'USD' ? 'US$' : 'S/';
+    const currencyAllowed = load.transporte.moneda === 'PEN';
     const fleteNum = Number(fleteCarga) || 0;
     const totalGastosReales = gastosReales.reduce((s, g) => s + (Number(g.monto) || 0), 0);
-    const totalLiquidar = fleteNum + totalGastosReales;
     const viaticosRef = load.transporte.viaticosMovilidad + load.transporte.viaticosInsumos;
+    const totalLiquidar = fleteNum + (gastosReales.length ? totalGastosReales : viaticosRef);
+    const alreadyPaid = load.transporte.pagos.reduce((sum, payment) => sum + payment.importe, 0);
 
     const addExpenseRow = () => {
         setGastosReales((current) => [
@@ -73,19 +83,29 @@ export default function SettlementCarrierModal({
     };
 
     const handleSubmit = async () => {
+        if (!currencyAllowed || saving || !numeroLiquidacion.trim() || !fechaLiquidacion || fleteNum <= 0 || totalLiquidar < alreadyPaid || gastosReales.some(g => !g.concepto.trim() || !Number.isFinite(Number(g.monto)) || Number(g.monto) <= 0)) return;
+        setSaving(true);
+        setFormError('');
+        try {
         await onSave(load.id, {
             numeroLiquidacion: numeroLiquidacion.trim() || "",
             fechaLiquidacion,
             fleteCarga: fleteNum,
-            gastosReales: gastosReales.filter((g) => g.concepto.trim() !== ""),
+            gastosReales,
             archivoLiquidacion,
             observaciones: observaciones.trim(),
         });
         onOpenChange(false);
+        } catch (cause) {
+            setFormError(cause instanceof Error ? cause.message : 'No se pudo guardar la liquidación.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
         <AppModal
+            busy={saving}
             open={open}
             onOpenChange={onOpenChange}
             icon={<Truck size={22} strokeWidth={2.2} />}
@@ -97,13 +117,15 @@ export default function SettlementCarrierModal({
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={18} strokeWidth={2.5} /> Cancelar
                     </Button>
-                    <Button size="xl" onClick={handleSubmit}>
-                        <Save size={18} strokeWidth={2.5} /> Guardar liquidación de transporte
+                    <Button size="xl" disabled={!currencyAllowed || saving || !numeroLiquidacion.trim() || !fechaLiquidacion || fleteNum <= 0 || totalLiquidar < alreadyPaid || gastosReales.some(g => !g.concepto.trim() || !Number.isFinite(Number(g.monto)) || Number(g.monto) <= 0)} onClick={handleSubmit}>
+                        <Save size={18} strokeWidth={2.5} /> {saving ? 'Guardando…' : 'Guardar liquidación de transporte'}
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-6">
+                {!currencyAllowed && <FormField error="Por ahora solo se permite liquidar transporte con acuerdos en PEN. Revisa la moneda del acuerdo en Campañas." />}
+                {formError && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">{formError}</p>}
                 <SummaryBar
                     items={[
                         {
@@ -111,8 +133,8 @@ export default function SettlementCarrierModal({
                             value: `${symbol} ${fleteNum.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                         },
                         {
-                            label: "Gastos reales sustentados",
-                            value: `${symbol} ${totalGastosReales.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
+                            label: gastosReales.length ? "Gastos reales sustentados" : "Viáticos referenciales aplicables",
+                            value: `${symbol} ${(gastosReales.length ? totalGastosReales : viaticosRef).toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
                             tone: "highlight",
                         },
                         {
@@ -122,6 +144,7 @@ export default function SettlementCarrierModal({
                         },
                     ]}
                 />
+                {totalLiquidar < alreadyPaid && <p role="alert" className="text-sm text-destructive">El total actualizado no puede ser menor que los {symbol} {alreadyPaid.toFixed(2)} ya pagados o aplicados.</p>}
 
                 <ModalSection
                     title="1. Datos de liquidación y flete del viaje"
@@ -147,6 +170,8 @@ export default function SettlementCarrierModal({
                             id="carr-liq-flete"
                             label="Precio del flete de esta carga"
                             required
+                            placeholder="Ingresa el monto"
+                            disabled={load.transporte.estado !== 'Por liquidar'}
                             step="0.01"
                             min={0}
                             unit={symbol}

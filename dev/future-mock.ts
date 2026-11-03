@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import type { IncomingMessage } from 'node:http'
 import type { Connect } from 'vite'
+import { demoPdf } from '../src/shared/utils/demoData.ts'
 import { FutureError, loadFutureContract, validateFutureSchema, type Database, type Resource, type Row } from './future-contract.ts'
 
 const fail = (code: string, message: string, field?: string): never => {
@@ -23,13 +26,36 @@ async function readJson(request: IncomingMessage): Promise<unknown> {
 }
 
 /** Contract-driven V1 mock. Auth/storage/PostgreSQL remain responsibilities of the real backend. */
-export function createFutureMockMiddleware(root: string, clock: () => Date = () => new Date()): Connect.NextHandleFunction {
+export function createFutureMockMiddleware(root: string, clock: () => Date = () => new Date(), qualityDemo = false): Connect.NextHandleFunction {
   const loaded = loadFutureContract(root)
   const contract = loaded.contract
   let db = loaded.database
+  if (qualityDemo) {
+    for (const filename of ['quality-demo.json', 'logistics-demo.json']) {
+      const fixtures = JSON.parse(readFileSync(path.join(root, 'json', filename), 'utf8')) as Record<string, { append: Row[]; replace: Row[] }>
+      for (const [table, changes] of Object.entries(fixtures)) {
+        const id = loaded.contract['x-database'][table].id
+        db[table] = db[table].map(row => changes.replace.find(item => item[id] === row[id]) ?? row).concat(changes.append)
+        for (const row of db[table]) {
+          const errors = validateFutureSchema(loaded.contract, { $ref: `#/components/schemas/${loaded.contract['x-database'][table].schema}` }, row)
+          if (Object.keys(errors).length) throw new Error(`Demo fixture ${table}: ${JSON.stringify(errors)}`)
+        }
+      }
+    }
+  }
   let nextLocalFileId = 1
-  const localFiles = new Map<number, { id: number; url: string; name: string; type: string; size: number }>()
-  let localLinks: Array<{ tipo: string; entidadId: number; id: number; url: string; name: string; type: string; size: number }> = []
+  const localFiles = new Map<number, { id: string | number; url: string; name: string; type: string; size: number }>()
+  let localLinks: Array<{ tipo: string; entidadId: number; id: string | number; url: string; name: string; type: string; size: number }> = []
+  // Fixtures documentales exclusivos del servidor ficticio de desarrollo.
+  const qualityDocumentsReady = Promise.all([
+    ...(qualityDemo ? db.analisis_calidad : []).filter(row => row.estado !== 'PENDIENTE').map(row => ({ tipo: 'analisis_calidad', entidadId: Number(row.analisisCalidadId), name: `analisis-${row.analisisCalidadId}.pdf` })),
+    ...(qualityDemo ? db.medicion_mtd : []).map(row => ({ tipo: 'medicion_mtd', entidadId: Number(row.medicionMtdId), name: `captura-mtd-${row.medicionMtdId}.pdf` })),
+    ...(qualityDemo ? db.recepcion_planta : []).filter(row => row.cargaId === 3).map(row => ({ tipo: 'recepcion_planta', entidadId: Number(row.recepcionPlantaId), name: `recepcion-carga-${row.cargaId}.pdf` })),
+  ].map(async (entry, index) => {
+    const pdf = demoPdf(entry.name, 'Calidad - documento sintetico de demostracion')
+    const url = `data:application/pdf;base64,${Buffer.from(await pdf.arrayBuffer()).toString('base64')}`
+    return { ...entry, id: 10000 + index, url, type: pdf.type, size: pdf.size }
+  })).then(documents => { localLinks = documents })
   const meta = contract['x-database']
   const nextIds = Object.fromEntries(Object.entries(meta).map(([table, def]) => [table, Math.max(0, ...db[table].map(row => Number(row[def.id]))) + 1]))
   const find = (table: string, id: unknown): Row => {
@@ -373,6 +399,7 @@ export function createFutureMockMiddleware(root: string, clock: () => Date = () 
   })
 
   async function handle(request: IncomingMessage, url: URL) {
+    await qualityDocumentsReady
     refreshCampaignStatuses()
     let pathname = url.pathname
     if (pathname.startsWith('/mock-api/api')) pathname = pathname.slice('/mock-api/api'.length)
@@ -387,9 +414,20 @@ export function createFutureMockMiddleware(root: string, clock: () => Date = () 
 
     pathname = pathname || '/'
     if (pathname === '/archivos-locales' && request.method === 'POST') {
-      for await (const chunk of request) void chunk
       const id = nextLocalFileId++
-      const file = { id: String(id), url: `/api/archivos-locales/${id}/contenido`, name: `documento-${id}.pdf`, type: 'application/pdf', size: 128 }
+      const chunks: Buffer[] = []
+      let size = 0
+      for await (const chunk of request) {
+        const buffer = Buffer.from(chunk)
+        size += buffer.length
+        if (size > 11 * 1024 * 1024) throw new FutureError(413, 'FILE_TOO_LARGE', 'El archivo supera 10 MB.')
+        chunks.push(buffer)
+      }
+      const form = await new Response(Buffer.concat(chunks), { headers: { 'Content-Type': request.headers['content-type'] ?? '' } }).formData().catch(() => { throw new FutureError(400, 'INVALID_MULTIPART', 'No se pudo leer el archivo adjunto.') })
+      const uploaded = form.get('archivo')
+      if (!uploaded || typeof uploaded === 'string') throw new FutureError(400, 'FILE_REQUIRED', 'Adjunta un archivo.')
+      const bytes = Buffer.from(await uploaded.arrayBuffer())
+      const file = { id: String(id), url: `data:${uploaded.type};base64,${bytes.toString('base64')}`, name: uploaded.name, type: uploaded.type, size: uploaded.size }
       localFiles.set(id, file)
       return { status: 201, data: file }
     }
@@ -417,7 +455,7 @@ export function createFutureMockMiddleware(root: string, clock: () => Date = () 
     if (pathname === '/auth/login' && request.method === 'POST') {
       const body = await readJson(request) as { usuario?: string; password?: string }
       const username = String(body?.usuario ?? '').trim().toLowerCase()
-      const u = db.usuario.find(row => row.usuario.toLowerCase() === username && row.activo)
+      const u = db.usuario.find(row => String(row.usuario).toLowerCase() === username && row.activo)
         ?? (username === 'admin' ? db.usuario.find(row => row.usuario === 'admin-demo') : undefined)
         ?? (username === 'chofer' ? db.usuario.find(row => row.usuario === 'chofer-demo') : undefined)
         ?? (username ? undefined : db.usuario.find(row => row.activo))

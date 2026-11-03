@@ -16,6 +16,7 @@ interface SettlementPaymentHistoryModalProps {
     totalAmount: number;
     moneda?: string;
     payments: SettlementPaymentItem[];
+    readOnly?: boolean;
     onOpenRegisterPayment: () => void;
 }
 
@@ -27,6 +28,7 @@ export default function SettlementPaymentHistoryModal({
     totalAmount,
     moneda,
     payments,
+    readOnly = false,
     onOpenRegisterPayment,
 }: SettlementPaymentHistoryModalProps) {
     const symbol = moneda === 'USD' ? 'US$' : 'S/';
@@ -46,7 +48,7 @@ export default function SettlementPaymentHistoryModal({
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={18} strokeWidth={2.5} /> Cerrar
                     </Button>
-                    {saldoPendiente > 0 && (
+                    {!readOnly && saldoPendiente > 0 && (
                         <Button
                             size="xl"
                             onClick={() => {

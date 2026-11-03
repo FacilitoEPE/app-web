@@ -110,6 +110,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
     const [loadDataModalLoad, setLoadDataModalLoad] = useState<DriverLoad | null>(null);
     const [stageNote, setStageNote] = useState("");
     const [successInfo, setSuccessInfo] = useState<{ title: string; description: string } | null>(null);
+    const [actionError, setActionError] = useState("");
 
     const activeLoad = useMemo(
         () => driverLoads.find((l) => l.id === selectedLoadId) ?? driverLoads[0] ?? null,
@@ -164,17 +165,23 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
 
     const handleAdvanceStage = async () => {
         if (!activeLoad) return;
-        await advanceDriverLoadStage(activeLoad.id, stageNote);
-        setStageNote("");
-        setSuccessInfo({
-            title: "Etapa de despacho actualizada",
-            description: `Se registró el avance del despacho ${activeLoad.codigo} en el historial de ruta.`,
-        });
+        setActionError("");
+        try {
+            await advanceDriverLoadStage(activeLoad.id, stageNote);
+            setStageNote("");
+            setSuccessInfo({
+                title: "Etapa de despacho actualizada",
+                description: `Se registró el avance del despacho ${activeLoad.codigo} en el historial de ruta.`,
+            });
+        } catch (cause) {
+            setActionError(cause instanceof Error ? cause.message : "No se pudo actualizar la etapa del despacho.");
+        }
     };
 
     const handleSaveChecklist = async () => {
         if (!activeLoad) return;
-        await saveDriverArrivalChecklist(activeLoad.id, {
+        setActionError("");
+        try { await saveDriverArrivalChecklist(activeLoad.id, {
             kilosEnPlanta,
             huboDescarte,
             kilosDescarte: huboDescarte ? kilosDescarte : "0",
@@ -186,11 +193,13 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
             title: "Checklist de llegada guardado",
             description: "Los kilos en planta y el reporte de descarte quedaron registrados para Logística.",
         });
+        } catch (cause) { setActionError(cause instanceof Error ? cause.message : "No se pudo guardar el checklist."); }
     };
 
     const handleSaveExitGuide = async () => {
         if (!activeLoad) return;
-        await saveDriverVehicleExitGuide(activeLoad.id, {
+        setActionError("");
+        try { await saveDriverVehicleExitGuide(activeLoad.id, {
             requiereGuia: true,
             numeroGuia: numeroGuiaSalida,
             motivoSalida,
@@ -203,6 +212,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
             title: "Guía de salida registrada",
             description: "El documento de salida del vehículo fue actualizado correctamente.",
         });
+        } catch (cause) { setActionError(cause instanceof Error ? cause.message : "No se pudo guardar la guía de salida."); }
     };
 
     if (!currentDriver) return <div className="p-8 text-ink-muted">Registra un chofer y coordina una entrega para utilizar el portal.</div>;
@@ -529,6 +539,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                             </div>
 
                             <DispatchStepProgress stage={activeLoad.etapa} variant="full" />
+                            {actionError && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">{actionError}</p>}
 
                             {/* Botón de avance de etapa */}
                             {NEXT_STAGE_LABELS[activeLoad.etapa] ? (
@@ -543,7 +554,10 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                             onChange={setStageNote}
                                         />
                                     </div>
-                                    <Button size="xl" onClick={handleAdvanceStage} className="shrink-0">
+                                    <Button size="xl" onClick={handleAdvanceStage}
+                                        disabled={activeLoad.etapa === "Llegada"
+                                            && (!activeLoad.cierreFisicoConfirmado || !activeLoad.checklistLlegada.registrado)}
+                                        className="shrink-0">
                                         <CheckCircle2 size={19} strokeWidth={2.5} /> {NEXT_STAGE_LABELS[activeLoad.etapa]}
                                     </Button>
                                 </div>
@@ -552,6 +566,10 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                     <CheckCircle2 size={19} strokeWidth={2.5} /> Despacho cerrado y completado por el conductor.
                                 </div>
                             )}
+                            {activeLoad.etapa === "Llegada" && !activeLoad.cierreFisicoConfirmado &&
+                                <p className="text-sm text-ink-muted">Logística debe registrar el cierre físico antes de que puedas cerrar tu despacho.</p>}
+                            {activeLoad.etapa === "Llegada" && activeLoad.cierreFisicoConfirmado && !activeLoad.checklistLlegada.registrado &&
+                                <p className="text-sm text-ink-muted">Guarda el checklist de llegada antes de cerrar tu despacho.</p>}
 
                             {/* Resumen de carga y desglose por proveedor */}
                             <SummaryBar

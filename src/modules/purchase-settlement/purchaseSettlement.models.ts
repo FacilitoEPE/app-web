@@ -2,6 +2,8 @@ import type { FileSource } from "@/shared/utils/fileSource";
 export let UIT_VALOR_2026 = 0;
 export let UIT_LIMITE_UNIDADES = 0;
 export let UIT_LIMITE_SOLES = 0;
+const uitByYear = new Map<number, { value: number; limit: number }>();
+export function clearUitParameters() { uitByYear.clear(); UIT_VALOR_2026 = 0; UIT_LIMITE_UNIDADES = 0; UIT_LIMITE_SOLES = 0; }
 export type SettlementStatus = "Por liquidar" | "Por pagar" | "Pagado";
 export interface SettlementPaymentItem {
     id: string;
@@ -17,7 +19,7 @@ export interface SettlementLinkedPerson {
     id: string;
     nombres: string;
     apellidos: string;
-    tipoDocumento: "DNI" | "CE" | "RUC";
+    tipoDocumento: string;
     numeroDocumento: string;
     vinculo: string;
     acumuladoAnualPen: number;
@@ -75,6 +77,8 @@ export interface SettlementCarrierEntry {
     viaticosMovilidad: number;
     viaticosInsumos: number;
     gastosReales: CarrierRealExpense[];
+    /** Total efectivamente guardado por V1; evita recalcular documentos históricos. */
+    totalLiquidado?: number;
     totalContratadoCampania: number;
     adelantosDisponibles: CarrierAdvanceItem[];
     archivoLiquidacion: FileSource | null;
@@ -94,4 +98,9 @@ export interface SettlementLoad {
     proveedores: SettlementProviderEntry[];
     transporte: SettlementCarrierEntry;
 }
-export function setUitParameters(value: number, limit: number) { UIT_VALOR_2026 = value; UIT_LIMITE_UNIDADES = limit; UIT_LIMITE_SOLES = value * limit; }
+export function setUitParameters(value: number, limit: number, year = new Date().getFullYear()) {
+    uitByYear.set(year, { value, limit });
+    if (year === new Date().getFullYear()) { UIT_VALOR_2026 = value; UIT_LIMITE_UNIDADES = limit; UIT_LIMITE_SOLES = value * limit; }
+}
+export function getUitParameters(year: number) { return uitByYear.get(year) ?? null; }
+export function getUitYears() { return [...uitByYear.keys()].sort((a, b) => b - a); }

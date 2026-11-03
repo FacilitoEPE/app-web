@@ -62,6 +62,25 @@ describe("directly accessible management pages", () => {
 });
 
 describe("quality management routes", () => {
+    it("returns from a guide detail directly to its load's guide list", () => {
+        const route = "/calidad/exportador/2/guias/17/guia-4";
+        expect(getParentHref(route)).toBe("/calidad/exportador/2/guias/17");
+        expect(getBreadcrumbLevels(route)).toEqual([
+            { label: "Cosecha y Control de Calidad", href: "/calidad" },
+            { label: "Guías de remisión", href: "/calidad/exportador/2/guias" },
+            { label: "Guías de la carga", href: "/calidad/exportador/2/guias/17" },
+            { label: "Detalle" },
+        ]);
+    });
+    it("returns from guides of a load to the campaign guide list", () => {
+        const route = "/calidad/exportador/2/guias/17";
+        expect(getParentHref(route)).toBe("/calidad/exportador/2/guias");
+        expect(getBreadcrumbLevels(route)).toEqual([
+            { label: "Cosecha y Control de Calidad", href: "/calidad" },
+            { label: "Guías de remisión", href: "/calidad/exportador/2/guias" },
+            { label: "Guías de la carga" },
+        ]);
+    });
     it.each([
         ["/calidad/exportador/2/analisis", "Análisis y revisión"],
         ["/calidad/exportador/2/carga", "Carga"],
@@ -76,5 +95,55 @@ describe("quality management routes", () => {
             { label: "Cosecha y Control de Calidad", href: "/calidad" },
             { label },
         ]);
+    });
+});
+
+describe("logistics management routes", () => {
+    it.each([
+        ["compras", "Compras"],
+        ["recepcion", "Recepción y calidad"],
+        ["jabas", "Jabas y salida"],
+        ["documentos", "Documentos y cierre"],
+    ])("shows %s directly after campaign loads", (section, label) => {
+        const route = `/logistica-despacho/1/cargas/2/${section}`;
+        expect(getParentHref(route)).toBe("/logistica-despacho/1");
+        expect(getBreadcrumbLevels(route)).toEqual([
+            { label: "Logística y Despacho", href: "/logistica-despacho" },
+            { label: "Cargas de la campaña", href: "/logistica-despacho/1" },
+            { label },
+        ]);
+    });
+    it("keeps detail as its own route", () => {
+        const route = "/logistica-despacho/1/cargas/2";
+        expect(getParentHref(route)).toBe("/logistica-despacho/1");
+        expect(getBreadcrumbLevels(route).at(-1)).toEqual({ label: "Detalle de carga" });
+    });
+});
+
+describe("billing routes", () => {
+    it.each([
+        ["/facturacion-cobros/1", "/facturacion-cobros", ["Facturación y Cobros", "Clientes"]],
+        ["/facturacion-cobros/1/clientes/6", "/facturacion-cobros/1", ["Facturación y Cobros", "Clientes", "Facturación del cliente"]],
+        ["/facturacion-cobros/1/clientes/6/facturas/3", "/facturacion-cobros/1/clientes/6", ["Facturación y Cobros", "Clientes", "Facturación del cliente", "Factura"]],
+        ["/facturacion-cobros/1/clientes/6/facturas/3/cobros", "/facturacion-cobros/1/clientes/6/facturas/3", ["Facturación y Cobros", "Clientes", "Facturación del cliente", "Factura", "Cobros"]],
+    ])("follows the actual billing hierarchy for %s", (route, parent, labels) => {
+        expect(getParentHref(route)).toBe(parent);
+        expect(getBreadcrumbLevels(route).map(level => level.label)).toEqual(labels);
+    });
+});
+
+describe("purchase settlement routes", () => {
+    it.each([
+        ["/liquidacion-compra/1", "/liquidacion-compra", ["Liquidación de Compra", "Cargas"]],
+        ["/liquidacion-compra/1/cargas/2/proveedores", "/liquidacion-compra/1", ["Liquidación de Compra", "Cargas", "Proveedores"]],
+        ["/liquidacion-compra/1/cargas/2/transportista", "/liquidacion-compra/1", ["Liquidación de Compra", "Cargas", "Transportista"]],
+    ])("opens %s directly from its listing", (route, parent, labels) => {
+        expect(getParentHref(route)).toBe(parent);
+        expect(getBreadcrumbLevels(route).map(level => level.label)).toEqual(labels);
+    });
+    it('returns from a provider liquidation detail to its management view', () => {
+        const route = '/liquidacion-compra/1/cargas/2/proveedores/detalle/8';
+        expect(getParentHref(route)).toBe('/liquidacion-compra/1/cargas/2/proveedores');
+        expect(getBreadcrumbLevels(route).map(level => level.label)).toEqual(['Liquidación de Compra', 'Cargas', 'Proveedores', 'Detalle']);
     });
 });

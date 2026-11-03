@@ -1,4 +1,5 @@
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import { useState } from "react";
 import { FileSpreadsheet, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -12,6 +13,10 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import type { FileSource } from "@/shared/utils/fileSource";
 import { formatKg } from "@/shared/utils/format";
 import type { BillingClient, BillingInvoice, BillingLoad } from "@/modules/billing/billing.models";
+import { billingAvailableKg } from "@/modules/billing/billing.utils";
+import { useBillingClients } from "@/modules/billing/billing.store";
+
+const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 
 interface BillingPrepareInvoiceModalProps {
     open: boolean;
@@ -23,7 +28,7 @@ interface BillingPrepareInvoiceModalProps {
         clientId: string,
         loadId: string,
         invoice: Omit<BillingInvoice, "id" | "cobros"> & { id?: string },
-    ) => void;
+    ) => void | Promise<void>;
 }
 
 export default function BillingPrepareInvoiceModal({
@@ -34,6 +39,7 @@ export default function BillingPrepareInvoiceModal({
     editingInvoice,
     onSave,
 }: BillingPrepareInvoiceModalProps) {
+    const clients = useBillingClients();
     const [referenciaPreparacion, setReferenciaPreparacion] = useState("");
     const [fechaPreparacion, setFechaPreparacion] = useState("");
     const [fechaVencimiento, setFechaVencimiento] = useState("");
@@ -43,6 +49,9 @@ export default function BillingPrepareInvoiceModal({
     const [cargos, setCargos] = useState("0");
     const [archivoPreparacion, setArchivoPreparacion] = useState<FileSource | null>(null);
     const [observaciones, setObservaciones] = useState("");
+
+    const existingReferences = clients.flatMap(c => c.cargas.flatMap(l => l.facturas.map(f => Number(f.referenciaPreparacion.match(/^LV-(\d+)$/)?.[1] || 0))));
+    const nextReference = `LV-${String(1 + Math.max(0, ...existingReferences)).padStart(6, "0")}`;
 
     useResetOnToggle(open, () => {
         if (!load || !client || !open) return;
@@ -57,10 +66,10 @@ export default function BillingPrepareInvoiceModal({
             setArchivoPreparacion(editingInvoice.archivoPreparacion);
             setObservaciones(editingInvoice.observaciones);
         } else {
-            setReferenciaPreparacion("");
-            setFechaPreparacion(load.fechaRecepcion);
+            setReferenciaPreparacion(nextReference);
+            setFechaPreparacion(load.fechaRecepcion > today() ? load.fechaRecepcion : today());
             setFechaVencimiento("");
-            setKilosFacturados(String(load.kilosRecibidos));
+            setKilosFacturados(String(billingAvailableKg(load)));
             setPrecioUnitario(String(load.precioVentaKg));
             setDescuento("0");
             setCargos("0");
@@ -69,17 +78,32 @@ export default function BillingPrepareInvoiceModal({
         }
     });
 
-    if (!client || !load) return null;
-
     const kgNum = Number(kilosFacturados) || 0;
     const priceNum = Number(precioUnitario) || 0;
     const descNum = Number(descuento) || 0;
     const cargosNum = Number(cargos) || 0;
     const subtotal = kgNum * priceNum;
     const total = Math.max(0, subtotal - descNum + cargosNum);
-    const symbol = client.moneda === "EUR" ? "€" : client.moneda === "USD" ? "US$" : "S/";
+    const currency = editingInvoice?.moneda ?? load?.moneda ?? 'PEN';
+    const symbol = currency === "EUR" ? "€" : currency === "USD" ? "US$" : "S/";
 
-    const handleSubmit = async () => {
+    const availableKg = (load ? billingAvailableKg(load) : 0) + (editingInvoice?.kilosFacturados ?? 0);
+    const { errors, saving, clearError, submit } = useFormSubmit({
+        open,
+        validate: () => {
+            const found: Record<string, string> = {};
+            if (!referenciaPreparacion.trim()) found.referencia = "La referencia es obligatoria.";
+            if (!fechaPreparacion) found.fecha = "Indica la fecha de preparación.";
+            if (load && fechaPreparacion && fechaPreparacion < load.fechaRecepcion) found.fecha = "La preparación no puede ser anterior a la recepción.";
+            if (fechaVencimiento && fechaPreparacion && fechaVencimiento < fechaPreparacion) found.vencimiento = "El vencimiento no puede ser anterior a la preparación.";
+            if (!Number.isFinite(kgNum) || kgNum <= 0 || kgNum > availableKg) found.kilos = `Ingresa un peso mayor que 0 y no superior a ${formatKg(availableKg)} kg.`;
+            if (descNum < 0 || descNum > subtotal) found.descuento = "El descuento debe estar entre 0 y el subtotal.";
+            if (cargosNum < 0) found.cargos = "Los cargos no pueden ser negativos.";
+            if (load && !load.respaldoLogisticoCompleto) found._form = "La carga necesita recepción completa y reporte antes de preparar la factura.";
+            return found;
+        },
+        onSubmit: async () => {
+        if (!client || !load) return;
         await onSave(client.id, load.id, {
             id: editingInvoice?.id,
             referenciaPreparacion: referenciaPreparacion.trim(),
@@ -93,54 +117,42 @@ export default function BillingPrepareInvoiceModal({
             descuento: descNum,
             cargos: cargosNum,
             total,
-            moneda: client.moneda,
+            moneda: currency,
             archivoPreparacion,
             archivoFacturaEmitida: editingInvoice?.archivoFacturaEmitida ?? null,
             observaciones: observaciones.trim(),
         });
         onOpenChange(false);
-    };
+        },
+        backendFields: { referenciaPreparacion: "referencia", fechaPreparacion: "fecha", fechaVencimiento: "vencimiento", kilosFacturados: "kilos", descuento: "descuento", cargos: "cargos" },
+    });
+
+    if (!client || !load) return null;
 
     return (
         <AppModal
+            busy={saving}
             open={open}
             onOpenChange={onOpenChange}
             icon={<FileSpreadsheet size={22} strokeWidth={2.2} />}
-            title={
-                editingInvoice
-                    ? "Editar preparación de factura"
-                    : "Confirmar preparación de factura"
-            }
-            description={`${client.nombreEmpresa} · Carga ${load.codigo} · Moneda ${client.moneda}`}
+            title={editingInvoice ? "Editar preparación de factura" : "Preparar factura"}
+            description={`${client.nombreEmpresa} · Carga ${load.codigo} · Moneda ${currency}`}
             size="xl"
             footer={
                 <>
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={18} strokeWidth={2.5} /> Cancelar
                     </Button>
-                    <Button size="xl" onClick={handleSubmit}>
+                    <Button size="xl" disabled={saving} onClick={() => void submit({})}>
                         <Save size={18} strokeWidth={2.5} /> Guardar preparación
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-6">
-                <SummaryBar
-                    items={[
-                        {
-                            label: "Base (Kilos × Precio)",
-                            value: `${formatKg(kgNum)} kg × ${symbol} ${priceNum.toFixed(2)}`,
-                        },
-                        { label: "Subtotal", value: `${symbol} ${subtotal.toLocaleString("es-PE", { minimumFractionDigits: 2 })}` },
-                        {
-                            label: "Total a facturar",
-                            value: `${symbol} ${total.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`,
-                            tone: "brand",
-                        },
-                    ]}
-                />
+                {errors._form && <p role="alert" className="text-sm text-destructive">{errors._form}</p>}
 
-                <ModalSection title="1. Datos de origen de la recepción en planta">
+                <ModalSection title="Recepción en planta">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <InfoField label="Cliente" value={client.nombreEmpresa} />
                         <InfoField label="RUC / Tax ID" value={client.ruc} />
@@ -151,14 +163,16 @@ export default function BillingPrepareInvoiceModal({
                     </div>
                 </ModalSection>
 
-                <ModalSection title="2. Parámetros de la preparación">
+                <ModalSection title="Preparación de factura">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
                         <InputField
                             id="prep-ref"
                             label="Referencia de preparación"
                             required
                             value={referenciaPreparacion}
-                            onChange={setReferenciaPreparacion}
+                            readOnly
+                            hint="Se genera al preparar la factura."
+                            error={errors.referencia}
                             className="sm:col-span-2"
                         />
                         <InputField
@@ -167,16 +181,18 @@ export default function BillingPrepareInvoiceModal({
                             label="Fecha de preparación"
                             required
                             value={fechaPreparacion}
-                            onChange={setFechaPreparacion}
+                            error={errors.fecha}
+                            onChange={v => { setFechaPreparacion(v); clearError("fecha"); }}
                             className="sm:col-span-2"
                         />
                         <InputField
                             id="prep-venc"
                             type="date"
                             label="Fecha de vencimiento"
-                            required
+                            optional
                             value={fechaVencimiento}
-                            onChange={setFechaVencimiento}
+                            error={errors.vencimiento}
+                            onChange={v => { setFechaVencimiento(v); clearError("vencimiento"); }}
                             className="sm:col-span-2"
                         />
                         <InputField
@@ -187,7 +203,9 @@ export default function BillingPrepareInvoiceModal({
                             min={0}
                             unit="kg"
                             value={kilosFacturados}
-                            onChange={setKilosFacturados}
+                            error={errors.kilos}
+                            hint={`Disponibles: ${formatKg(availableKg)} kg`}
+                            onChange={v => { setKilosFacturados(v); clearError("kilos"); }}
                             className="sm:col-span-3"
                         />
                         <InputField
@@ -198,13 +216,14 @@ export default function BillingPrepareInvoiceModal({
                             min={0}
                             unit={symbol}
                             value={precioUnitario}
-                            onChange={setPrecioUnitario}
+                            readOnly
+                            hint="Precio fijado en el contrato."
                             className="sm:col-span-3"
                         />
                     </div>
                 </ModalSection>
 
-                <ModalSection title="3. Descuentos, cargos y respaldo" aside="Opcional">
+                <ModalSection title="Descuentos, cargos y respaldo" aside="Opcional">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <InputField
                             id="prep-descuento"
@@ -213,7 +232,8 @@ export default function BillingPrepareInvoiceModal({
                             min={0}
                             unit={symbol}
                             value={descuento}
-                            onChange={setDescuento}
+                            error={errors.descuento}
+                            onChange={v => { setDescuento(v); clearError("descuento"); }}
                         />
                         <InputField
                             id="prep-cargos"
@@ -222,7 +242,8 @@ export default function BillingPrepareInvoiceModal({
                             min={0}
                             unit={symbol}
                             value={cargos}
-                            onChange={setCargos}
+                            error={errors.cargos}
+                            onChange={v => { setCargos(v); clearError("cargos"); }}
                         />
                         <div className="sm:col-span-2">
                             <FileDropzone
@@ -249,6 +270,9 @@ export default function BillingPrepareInvoiceModal({
                         </FormField>
                     </div>
                 </ModalSection>
+                <SummaryBar items={[{ label: "Base", value: `${formatKg(kgNum)} kg × ${symbol} ${priceNum.toFixed(2)}` },
+                    { label: "Subtotal", value: `${symbol} ${subtotal.toLocaleString("es-PE", { minimumFractionDigits: 2 })}` },
+                    { label: "Total a facturar", value: `${symbol} ${total.toLocaleString("es-PE", { minimumFractionDigits: 2 })}`, tone: "brand" }]} />
             </div>
         </AppModal>
     );

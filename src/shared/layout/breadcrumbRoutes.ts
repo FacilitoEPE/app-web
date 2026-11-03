@@ -63,10 +63,32 @@ export function getBreadcrumbLevels(pathname: string): BreadcrumbLevel[] {
         levels.push({ label: "Certificados" });
     } else if (rootSegment === "transportistas" && (segments[2] === "vehiculos" || segments[2] === "choferes")) {
         levels.push({ label: segments[2] === "vehiculos" ? "Vehículos" : "Choferes" });
+    } else if (rootSegment === "logistica-despacho" && segments.length >= 2) {
+        levels.push({ label: "Cargas de la campaña", href: segments[2] ? `/logistica-despacho/${segments[1]}` : undefined });
+        if (segments[2] === "cargas" && segments[3]) {
+            levels.push({ label: segments[4] ? (({ compras: "Compras", recepcion: "Recepción y calidad", jabas: "Jabas y salida", documentos: "Documentos y cierre" } as Record<string, string>)[segments[4]] ?? "Gestión") : "Detalle de carga" });
+        }
+    } else if (rootSegment === "liquidacion-compra" && segments.length >= 2) {
+        levels.push({ label: "Cargas", href: segments[2] ? `/liquidacion-compra/${segments[1]}` : undefined });
+        if (segments[2] === "cargas" && segments[3]) {
+            levels.push({ label: segments[4] === "proveedores" ? "Proveedores" : segments[4] === "transportista" ? "Transportista" : "Gestión", href: segments[5] ? `/liquidacion-compra/${segments[1]}/cargas/${segments[3]}/${segments[4]}` : undefined });
+            if (segments[5] === 'detalle') levels.push({ label: 'Detalle' });
+        }
+    } else if (rootSegment === "facturacion-cobros" && segments.length >= 2) {
+        levels.push({ label: "Clientes", href: segments[2] ? `/facturacion-cobros/${segments[1]}` : undefined });
+        if (segments[2] === "clientes" && segments[3]) {
+            levels.push({ label: "Facturación del cliente", href: segments[4] ? `/facturacion-cobros/${segments[1]}/clientes/${segments[3]}` : undefined });
+            if (segments[4] === "facturas" && segments[5]) {
+                levels.push({ label: "Factura", href: segments[6] ? `/facturacion-cobros/${segments[1]}/clientes/${segments[3]}/facturas/${segments[5]}` : undefined });
+                if (segments[6] === "cobros") levels.push({ label: "Cobros" });
+            }
+        }
     } else if (rootSegment === "calidad" && (segments[1] === "exportador" || segments[1] === "industria") && segments.length >= 3) {
         const section = segments[3];
         const label = section === "analisis" ? "Análisis y revisión" : section === "carga" ? "Carga" : section === "guias" ? "Guías de remisión" : "Resumen de campaña";
-        levels.push({ label });
+        levels.push({ label, href: section === "guias" && segments[4] ? `/calidad/${segments[1]}/${segments[2]}/guias` : undefined });
+        if (section === "guias" && segments[4]) levels.push({ label: "Guías de la carga", href: segments[5] ? `/calidad/${segments[1]}/${segments[2]}/guias/${segments[4]}` : undefined });
+        if (section === "guias" && segments[5]) levels.push({ label: "Detalle" });
     } else if (segments.length > 1) {
         levels.push({ label: "Detalle" });
     }
@@ -107,6 +129,18 @@ const matches = (pattern: string[], segments: string[]) =>
 /** These management pages are opened from the transport directory, independently of the detail page. */
 export function getDirectBackHref(pathname: string): string | undefined {
     const segments = pathname.split("/").filter(Boolean);
+    if (segments[0] === "logistica-despacho" && segments.length === 2) return "/logistica-despacho";
+    if (segments[0] === "logistica-despacho" && segments[2] === "cargas" && segments.length === 4) return `/logistica-despacho/${segments[1]}`;
+    if (segments[0] === "logistica-despacho" && segments[2] === "cargas" && segments.length === 5) return `/logistica-despacho/${segments[1]}`;
+    if (segments[0] === "liquidacion-compra" && segments.length === 2) return "/liquidacion-compra";
+    if (segments[0] === "liquidacion-compra" && segments[2] === "cargas" && segments.length === 5) return `/liquidacion-compra/${segments[1]}`;
+    if (segments[0] === "liquidacion-compra" && segments[2] === "cargas" && segments[5] === "detalle") return `/liquidacion-compra/${segments[1]}/cargas/${segments[3]}/${segments[4]}`;
+    if (segments[0] === "facturacion-cobros" && segments.length === 2) return "/facturacion-cobros";
+    if (segments[0] === "facturacion-cobros" && segments[2] === "clientes" && segments.length === 4) return `/facturacion-cobros/${segments[1]}`;
+    if (segments[0] === "facturacion-cobros" && segments[2] === "clientes" && segments[4] === "facturas" && segments.length === 6) return `/facturacion-cobros/${segments[1]}/clientes/${segments[3]}`;
+    if (segments[0] === "facturacion-cobros" && segments[2] === "clientes" && segments[4] === "facturas" && segments[6] === "cobros") return `/facturacion-cobros/${segments[1]}/clientes/${segments[3]}/facturas/${segments[5]}`;
+    if (segments[0] === "calidad" && (segments[1] === "exportador" || segments[1] === "industria") && segments[3] === "guias" && segments.length === 5) return `/calidad/${segments[1]}/${segments[2]}/guias`;
+    if (segments[0] === "calidad" && (segments[1] === "exportador" || segments[1] === "industria") && segments[3] === "guias" && segments.length === 6) return `/calidad/${segments[1]}/${segments[2]}/guias/${segments[4]}`;
     if (segments[0] === "calidad" && (segments[1] === "exportador" || segments[1] === "industria") && segments.length >= 3) return "/calidad";
     if (matches(["transportistas", ":x", "vehiculos"], segments)
         || matches(["transportistas", ":x", "choferes"], segments)) return "/transportistas";

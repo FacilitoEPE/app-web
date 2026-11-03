@@ -23,6 +23,7 @@ Las **sub-vistas de gestión** que salen de otra llevan arriba el banner del **n
 - `/campaigns/:id/clients/:clientLinkId/contracts` → `CampaignClientContextBanner`
 - `/campaigns/:id/clients/:clientLinkId/contracts/:contractId/deliveries` → `CampaignContractContextBanner`
 - `/proveedores/:id/{fincas,certificados}` → `ProviderContextBanner`
+- `/calidad/:scope/:id/{analisis,carga,guias}` → `QualityCampaignContextBanner` con la campaña y el canal. El resumen `/calidad/:scope/:id` conserva su diseño de página de detalle, sin banner.
 
 ---
 

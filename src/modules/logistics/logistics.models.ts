@@ -15,42 +15,66 @@ export interface LogisticsProviderBreakdown {
     mallasCargadas: number;
     mallasVacias: number;
 }
+export interface LogisticsPurchase {
+    proveedorId: string;
+    referencia: string;
+    fruta: string;
+    cantidadKg: number;
+    guia: string;
+    soporte: string;
+    soporteArchivo?: FileSource | null;
+    estadoRevision: string;
+    observacion: string;
+}
+export interface LogisticsArrival {
+    llegadaEstimada: string;
+    ventanaInicio: string;
+    ventanaFin: string;
+    llegadaReal: string;
+    observaciones: string;
+    evidencia: FileSource | null;
+    motivoEspera: string;
+    atencionReprogramada: string;
+}
+export interface LogisticsCrateReturn {
+    jabasIniciales: number | null;
+    jabasDevueltas: number | null;
+    fechaDevolucion: string;
+    coordinacion: string;
+    salidaVehiculo: string;
+    copiaTransportista: boolean;
+    evidencia: FileSource | null;
+}
+export interface LogisticsDispatchEvent {
+    id: number;
+    etapa: DispatchStage;
+    fechaHora: string;
+    observacion: string;
+}
 export interface LogisticsReceptionData {
     // Bloque A: Descarga
     inicioDescarga: string;
     terminoDescarga: string;
     responsableRecepcion: string;
     observacionesDescarga: string;
+    evidenciaDescarga?: FileSource | null;
     // Bloque B: Evaluación de carga
     pesoRecibidoPlanta: number;
-    resultadoRecepcion: "Aceptada" | "Aceptada con observaciones" | "Rechazada";
-    calidadRecepcion: string;
+    resultadoRecepcion: string;
     reporteRecepcionArchivo: FileSource | null;
     observacionesEvaluacion: string;
     // Bloque C: Descarte
     huboDescarte: boolean;
     kilosDescarte: number;
-    destinoDescarte: string;
+    unidadDescarte: "kg";
     motivoDescarte: string;
     actaDescarteArchivo: FileSource | null;
 }
-export interface LogisticsCrateMovement {
-    id: string;
-    proveedorNombre: string;
-    tipoEnvase: "Jabas" | "Bines" | "Mallas";
-    fecha: string;
-    cantidadCargada: number;
-    cantidadDevuelta: number;
-    pendientes: number;
-    guiaSalidaNumero: string;
-    guiaSalidaArchivo: FileSource | null;
-    observaciones: string;
-}
 export interface LogisticsDocumentsClosure {
     guiaRemisionFruta: FileSource | null;
-    guiaTransportista: FileSource | null;
+    detalleCompras?: FileSource | null;
+    constanciaDevolucionJabas?: FileSource | null;
     reporteRecepcionPlanta: FileSource | null;
-    ticketBalanza: FileSource | null;
     guiaSalidaFirmada: FileSource | null;
     actaDescarte: FileSource | null;
     cierreFisicoConfirmado: boolean;
@@ -88,7 +112,23 @@ export interface LogisticsLoad {
     etapaDespacho: DispatchStage;
     ultimoReporte: string;
     proveedores: LogisticsProviderBreakdown[];
+    compras?: LogisticsPurchase[];
+    comprasBloqueadas?: boolean;
+    estadoContabilidad?: string;
+    llegada?: LogisticsArrival;
+    devolucionJabas?: LogisticsCrateReturn;
+    historialChofer?: LogisticsDispatchEvent[];
+    checklistChofer?: {
+        llegadaRegistrada: boolean;
+        kilosEnPlanta: string;
+        huboDescarte: boolean;
+        kilosDescarte: string;
+        motivoDescarte: string;
+        observacionesEntrega: string;
+        guiaSalidaNumero: string;
+        guiaSalidaArchivo: FileSource | null;
+    };
+    guiaFrutaEmitida?: string;
     recepcion: LogisticsReceptionData;
-    jabasMovimientos: LogisticsCrateMovement[];
     documentosCierre: LogisticsDocumentsClosure;
 }

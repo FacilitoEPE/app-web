@@ -80,6 +80,8 @@ export interface QualitySunatRemissionGuide {
     numeroGuia: string;
     estado: "Pendiente de datos" | "Lista para generar" | "Generada";
     proveedoresIncluidos: string[];
+    /** Kilos de cada proveedor incluidos en esta guía; permite dividir una carga entre varias guías. */
+    kilosPorProveedor?: Record<string, number>;
     rolOrigen: "Productor" | "Acopiador";
     tipoFruta: "Orgánica" | "Convencional";
     fechaInicioTraslado: string;
@@ -91,7 +93,7 @@ export interface QualitySunatRemissionGuide {
     transportistaDenominacion: string;
     transportistaMtc: string;
     vehiculoPlaca: string;
-    conductorTipoDoc: "DNI" | "CE";
+    conductorTipoDoc: "DNI" | "CE" | "Pasaporte";
     conductorNumeroDoc: string;
     conductorNombres: string;
     conductorApellidos: string;
@@ -102,8 +104,6 @@ export interface QualitySunatRemissionGuide {
     ubigeoLlegada: string;
     direccionLlegada: string;
     codEstablecimientoLlegada: string;
-    codigoProducto: string;
-    descripcionProducto: string;
     normasSeleccionadas: string[];
     observacionesSunat: string;
 }

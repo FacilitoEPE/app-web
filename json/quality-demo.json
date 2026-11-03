@@ -1,0 +1,544 @@
+{
+  "analisis_calidad": {
+    "append": [
+      {
+        "analisisCalidadId": 2,
+        "cosechaId": null,
+        "cxpId": 2,
+        "tipo": "Microbiológico",
+        "fechaMuestreo": "2026-10-14",
+        "estado": "APTO",
+        "resultadoTexto": "Conforme",
+        "resultadoNumerico": null,
+        "unidad": null,
+        "archivoId": null,
+        "observaciones": "Muestra sintética para probar el flujo de calidad.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 2
+      },
+      {
+        "analisisCalidadId": 3,
+        "cosechaId": null,
+        "cxpId": 1,
+        "tipo": "Metales Pesados",
+        "fechaMuestreo": "2026-10-15",
+        "estado": "PENDIENTE",
+        "resultadoTexto": null,
+        "resultadoNumerico": null,
+        "unidad": null,
+        "archivoId": null,
+        "observaciones": "Muestra sintética para probar el flujo de calidad.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 1
+      },
+      {
+        "analisisCalidadId": 4,
+        "cosechaId": null,
+        "cxpId": 2,
+        "tipo": "Materia seca",
+        "fechaMuestreo": "2026-10-16",
+        "estado": "APTO",
+        "resultadoTexto": "Conforme",
+        "resultadoNumerico": null,
+        "unidad": null,
+        "archivoId": null,
+        "observaciones": "Muestra sintética para probar el flujo de calidad.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 2
+      },
+      {
+        "analisisCalidadId": 5,
+        "cosechaId": null,
+        "cxpId": 1,
+        "tipo": "Residuos de Plaguicidas",
+        "fechaMuestreo": "2026-10-17",
+        "estado": "APTO",
+        "resultadoTexto": "Conforme",
+        "resultadoNumerico": null,
+        "unidad": null,
+        "archivoId": null,
+        "observaciones": "Muestra sintética para probar el flujo de calidad.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 1
+      },
+      {
+        "analisisCalidadId": 6,
+        "cosechaId": null,
+        "cxpId": 2,
+        "tipo": "Microbiológico",
+        "fechaMuestreo": "2026-10-18",
+        "estado": "PENDIENTE",
+        "resultadoTexto": null,
+        "resultadoNumerico": null,
+        "unidad": null,
+        "archivoId": null,
+        "observaciones": "Muestra sintética para probar el flujo de calidad.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 2
+      },
+      {
+        "analisisCalidadId": 7,
+        "cosechaId": null,
+        "cxpId": 1,
+        "tipo": "Metales Pesados",
+        "fechaMuestreo": "2026-10-19",
+        "estado": "APTO",
+        "resultadoTexto": "Conforme",
+        "resultadoNumerico": null,
+        "unidad": null,
+        "archivoId": null,
+        "observaciones": "Muestra sintética para probar el flujo de calidad.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 1
+      },
+      {
+        "analisisCalidadId": 8,
+        "cosechaId": null,
+        "cxpId": 2,
+        "tipo": "Materia seca",
+        "fechaMuestreo": "2026-10-20",
+        "estado": "NO_APTO",
+        "resultadoTexto": "No conforme",
+        "resultadoNumerico": null,
+        "unidad": null,
+        "archivoId": null,
+        "observaciones": "Muestra sintética para probar el flujo de calidad.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 2
+      },
+      {
+        "analisisCalidadId": 9,
+        "cosechaId": null,
+        "cxpId": 1,
+        "tipo": "Residuos de Plaguicidas",
+        "fechaMuestreo": "2026-10-21",
+        "estado": "PENDIENTE",
+        "resultadoTexto": null,
+        "resultadoNumerico": null,
+        "unidad": null,
+        "archivoId": null,
+        "observaciones": "Muestra sintética para probar el flujo de calidad.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 1
+      },
+      {
+        "analisisCalidadId": 10,
+        "cosechaId": null,
+        "cxpId": 2,
+        "tipo": "Microbiológico",
+        "fechaMuestreo": "2026-10-22",
+        "estado": "APTO",
+        "resultadoTexto": "Conforme",
+        "resultadoNumerico": null,
+        "unidad": null,
+        "archivoId": null,
+        "observaciones": "Muestra sintética para probar el flujo de calidad.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 2
+      },
+      {
+        "analisisCalidadId": 11,
+        "cosechaId": null,
+        "cxpId": 1,
+        "tipo": "Metales Pesados",
+        "fechaMuestreo": "2026-10-23",
+        "estado": "APTO",
+        "resultadoTexto": "Conforme",
+        "resultadoNumerico": null,
+        "unidad": null,
+        "archivoId": null,
+        "observaciones": "Muestra sintética para probar el flujo de calidad.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 1
+      },
+      {
+        "analisisCalidadId": 12,
+        "cosechaId": null,
+        "cxpId": 2,
+        "tipo": "Materia seca",
+        "fechaMuestreo": "2026-10-24",
+        "estado": "PENDIENTE",
+        "resultadoTexto": null,
+        "resultadoNumerico": null,
+        "unidad": null,
+        "archivoId": null,
+        "observaciones": "Muestra sintética para probar el flujo de calidad.",
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 2
+      }
+    ],
+    "replace": []
+  },
+  "campana": {
+    "append": [],
+    "replace": [
+      {
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "campaniaId": 1,
+        "nombre": "Mango 2026",
+        "fechaInicio": "2026-10-01",
+        "fechaFin": "2027-03-31",
+        "estado": "en proceso",
+        "requerimientoComercial": 1500,
+        "frutaId": 1,
+        "temporada": "2026/2027",
+        "responsableUsuarioId": null,
+        "lineamientosArchivoId": null,
+        "observaciones": null,
+        "cerradaAt": null,
+        "cerradaPorUsuarioId": null,
+        "motivoCierre": null,
+        "calidad": {
+          "Exportación": {
+            "incorporada": true,
+            "estado": "EN_PROCESO",
+            "rechazos": []
+          },
+          "Industria": {
+            "incorporada": true,
+            "estado": "PENDIENTE",
+            "rechazos": []
+          }
+        }
+      }
+    ]
+  },
+  "carga": {
+    "append": [
+      {
+        "cargaId": 2,
+        "coordinacionEntregaId": 2,
+        "codigo": "CAR-EXP-002",
+        "fechaCarga": "2026-10-30",
+        "anotadorNombre": "Rosa Vega",
+        "estadoCalidad": "PENDIENTE",
+        "viaticosMovilidad": 60,
+        "viaticosInsumos": 20,
+        "guiaSalidaId": null,
+        "guiaSalidaRegistradaAt": null,
+        "observaciones": null,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z"
+      },
+      {
+        "cargaId": 3,
+        "coordinacionEntregaId": 4,
+        "codigo": "CAR-IND-003",
+        "fechaCarga": "2026-11-06",
+        "anotadorNombre": "Luis Salazar",
+        "estadoCalidad": "PENDIENTE",
+        "viaticosMovilidad": 80,
+        "viaticosInsumos": 0,
+        "guiaSalidaId": null,
+        "guiaSalidaRegistradaAt": null,
+        "observaciones": null,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z"
+      }
+    ],
+    "replace": []
+  },
+  "cliente_negocio_campana": {
+    "append": [
+      {
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "clienteNegocioCampanaId": 6,
+        "documentoUrl": null,
+        "fechaRegistro": "2026-10-01",
+        "fichaTecnicaUrl": null,
+        "cantidadKg": 1800,
+        "kilosAcordados": 1800,
+        "clienteNegocioId": 3,
+        "campaniaId": 1,
+        "fichaTecnicaArchivoId": null,
+        "destinoSolicitado": null,
+        "entregaDesde": null,
+        "entregaHasta": null,
+        "observaciones": null
+      }
+    ],
+    "replace": []
+  },
+  "contrato_venta": {
+    "append": [
+      {
+        "contratoVentaId": 4,
+        "clienteNegocioCampanaId": 6,
+        "numero": "CTR-IND-004",
+        "canal": "INDUSTRIA",
+        "fecha": "2026-10-06",
+        "kilosAcordados": 1800,
+        "precioKg": 2.5,
+        "moneda": "PEN",
+        "estado": "VIGENTE",
+        "condicionesPago": "Contra entrega",
+        "archivoId": null,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "condicionesEntrega": "Planta Piura",
+        "observaciones": null
+      }
+    ],
+    "replace": []
+  },
+  "coordinacion_entrega": {
+    "append": [
+      {
+        "coordinacionEntregaId": 3,
+        "entregaProgramadaId": 4,
+        "acuerdoTransporteId": 1,
+        "idEmpresaTransporteExterno": 1,
+        "idVehiculoExterno": 1,
+        "idChoferTransporteExterno": 1,
+        "inicioProgramado": "2026-11-12T13:00:00.000Z",
+        "finProgramado": "2026-11-12T15:00:00.000Z",
+        "origenDescripcion": "Tambogrande",
+        "condicionesCarga": null,
+        "observaciones": null,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fleteAsignado": 500,
+        "observacionFlete": null
+      },
+      {
+        "coordinacionEntregaId": 4,
+        "entregaProgramadaId": 6,
+        "acuerdoTransporteId": 1,
+        "idEmpresaTransporteExterno": 1,
+        "idVehiculoExterno": 1,
+        "idChoferTransporteExterno": 1,
+        "inicioProgramado": "2026-11-06T13:00:00.000Z",
+        "finProgramado": "2026-11-06T15:00:00.000Z",
+        "origenDescripcion": "Tambogrande",
+        "condicionesCarga": null,
+        "observaciones": null,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fleteAsignado": 500,
+        "observacionFlete": null
+      },
+      {
+        "coordinacionEntregaId": 5,
+        "entregaProgramadaId": 7,
+        "acuerdoTransporteId": 1,
+        "idEmpresaTransporteExterno": 1,
+        "idVehiculoExterno": 1,
+        "idChoferTransporteExterno": 1,
+        "inicioProgramado": "2026-11-07T13:00:00.000Z",
+        "finProgramado": "2026-11-07T15:00:00.000Z",
+        "origenDescripcion": "Tambogrande",
+        "condicionesCarga": null,
+        "observaciones": null,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fleteAsignado": 500,
+        "observacionFlete": null
+      }
+    ],
+    "replace": []
+  },
+  "entrega_programada": {
+    "append": [
+      {
+        "entregaProgramadaId": 6,
+        "contratoVentaId": 4,
+        "destino": "Planta industrial Piura",
+        "fecha": "2026-11-06",
+        "kilosProgramados": 800,
+        "observaciones": null,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z"
+      },
+      {
+        "entregaProgramadaId": 7,
+        "contratoVentaId": 4,
+        "destino": "Planta industrial Piura",
+        "fecha": "2026-11-07",
+        "kilosProgramados": 1000,
+        "observaciones": null,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z"
+      }
+    ],
+    "replace": []
+  },
+  "guia_remision": {
+    "append": [
+      {
+        "guiaRemisionId": 2,
+        "cargaId": 3,
+        "numero": "T001-00000002",
+        "fechaInicioTraslado": "2026-11-06",
+        "fechaEntregaTransportista": null,
+        "pesoBrutoKg": 800,
+        "unidadPeso": "KGM",
+        "numeroBultos": 40,
+        "fincaPartidaId": 2,
+        "ubigeoPartidaSnapshot": "200114",
+        "direccionPartidaSnapshot": "Camino rural km 2",
+        "establecimientoPartidaSnapshot": "0001",
+        "ubigeoLlegadaSnapshot": "200101",
+        "direccionLlegadaSnapshot": "Planta industrial Piura",
+        "establecimientoLlegadaSnapshot": "0001",
+        "transportistaDocumentoSnapshot": "20100000001",
+        "mtcSnapshot": null,
+        "placaSnapshot": "ABC-123",
+        "conductorDocumentoSnapshot": "40000002",
+        "conductorNombreSnapshot": "Miguel Torres Ramos",
+        "conductorLicenciaSnapshot": "Q40000002",
+        "archivoId": null,
+        "observaciones": null,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "contenido": {
+          "driverFirstNames": "Miguel",
+          "driverLastNames": "Torres Ramos",
+          "productCode": "MANGO-KENT",
+          "description": "Mango Kent para pulpa"
+        },
+        "emitidaAt": null
+      }
+    ],
+    "replace": []
+  },
+  "medicion_mtd": {
+    "append": [
+      {
+        "medicionMtdId": 2,
+        "cxpId": 2,
+        "medidoAt": "2026-10-29T13:00:00.000Z",
+        "valor": 0.05,
+        "limiteAplicado": 0.5,
+        "archivoId": null,
+        "registradoPorUsuarioId": null,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "trampaReferencia": "JACKSON-02",
+        "fincaId": 2,
+        "capturas": 1,
+        "trampas": 4,
+        "diasExposicion": 5
+      }
+    ],
+    "replace": []
+  },
+  "origen_carga": {
+    "append": [
+      {
+        "origenCargaId": 3,
+        "proveedorCargaId": 3,
+        "cxpId": 1,
+        "kilosOrigen": 500,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 1
+      },
+      {
+        "origenCargaId": 4,
+        "proveedorCargaId": 4,
+        "cxpId": 2,
+        "kilosOrigen": 800,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 2
+      }
+    ],
+    "replace": []
+  },
+  "origen_entrega": {
+    "append": [
+      {
+        "origenEntregaId": 4,
+        "coordinacionEntregaId": 3,
+        "cxpId": 2,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 2
+      },
+      {
+        "origenEntregaId": 5,
+        "coordinacionEntregaId": 4,
+        "cxpId": 2,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 2
+      },
+      {
+        "origenEntregaId": 6,
+        "coordinacionEntregaId": 5,
+        "cxpId": 2,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincaId": 2
+      }
+    ],
+    "replace": []
+  },
+  "proveedor_carga": {
+    "append": [
+      {
+        "proveedorCargaId": 3,
+        "cargaId": 2,
+        "cxpId": 1,
+        "frutaDerivadaId": 1,
+        "kilosCargados": 500,
+        "precioCompraKgAplicado": 2,
+        "jabasCargadas": 25,
+        "jabasVacias": 0,
+        "binesCargados": 0,
+        "binesVacios": 0,
+        "mallasCargadas": 0,
+        "mallasVacias": 0,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z"
+      },
+      {
+        "proveedorCargaId": 4,
+        "cargaId": 3,
+        "cxpId": 2,
+        "frutaDerivadaId": 1,
+        "kilosCargados": 800,
+        "precioCompraKgAplicado": 2,
+        "jabasCargadas": 40,
+        "jabasVacias": 0,
+        "binesCargados": 0,
+        "binesVacios": 0,
+        "mallasCargadas": 0,
+        "mallasVacias": 0,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z"
+      }
+    ],
+    "replace": []
+  },
+  "proveedor_guia": {
+    "append": [
+      {
+        "proveedorGuiaId": 3,
+        "guiaRemisionId": 2,
+        "cargaId": 3,
+        "proveedorCargaId": 4,
+        "kilosAsignados": 800,
+        "createdAt": "2026-10-29T13:00:00.000Z",
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "fincasIds": [
+          2
+        ]
+      }
+    ],
+    "replace": []
+  }
+}

@@ -50,8 +50,18 @@ const CarrierDetailsPage = lazy(() => import('@/modules/carriers/pages/CarrierDe
 const QualityPage = lazy(modulePages['/calidad'])
 const QualityCampaignPage = lazy(() => import('@/modules/quality/pages/QualityCampaignPage'))
 const LogisticsPage = lazy(modulePages['/logistica-despacho'])
-const BillingPage = lazy(modulePages['/facturacion-cobros'])
+const LogisticsDeliveryDetailPage = lazy(() => import('@/modules/logistics/pages/LogisticsDeliveryDetailPage'))
+const LogisticsPurchasesPage = lazy(() => import('@/modules/logistics/pages/LogisticsPurchasesPage'))
+const LogisticsReceptionPage = lazy(() => import('@/modules/logistics/pages/LogisticsReceptionPage'))
+const LogisticsCratesPage = lazy(() => import('@/modules/logistics/pages/LogisticsCratesPage'))
+const LogisticsDocumentsPage = lazy(() => import('@/modules/logistics/pages/LogisticsDocumentsPage'))
+const BillingCampaignsPage = lazy(modulePages['/facturacion-cobros'])
+const BillingCampaignClientsPage = lazy(() => import('@/modules/billing/pages/BillingCampaignClientsPage'))
+const BillingClientWorkspacePage = lazy(() => import('@/modules/billing/pages/BillingClientWorkspacePage'))
+const BillingInvoiceDetailPage = lazy(() => import('@/modules/billing/pages/BillingInvoiceDetailPage'))
+const BillingCollectionsPage = lazy(() => import('@/modules/billing/pages/BillingCollectionsPage'))
 const PurchaseSettlementPage = lazy(modulePages['/liquidacion-compra'])
+const SettlementDetailPage = lazy(() => import('@/modules/purchase-settlement/pages/SettlementDetailPage'))
 const DriverPortalPage = lazy(() => import('@/modules/driver-portal/pages/DriverPortalPage'))
 
 // Imágenes de la portada de módulos: se precargan durante la bienvenida para que aparezca ya pintada
@@ -207,9 +217,24 @@ function App() {
           <Route path="/calidad" element={<QualityPage />} />
           <Route path="/calidad/:scope/:id" element={<QualityCampaignPage />} />
           <Route path="/calidad/:scope/:id/:section" element={<QualityCampaignPage />} />
+          <Route path="/calidad/:scope/:id/:section/:loadId" element={<QualityCampaignPage />} />
+          <Route path="/calidad/:scope/:id/:section/:loadId/:guideId" element={<QualityCampaignPage />} />
           <Route path="/logistica-despacho" element={<LogisticsPage />} />
-          <Route path="/facturacion-cobros" element={<BillingPage />} />
+          <Route path="/logistica-despacho/:campaignId" element={<LogisticsPage />} />
+          <Route path="/logistica-despacho/:campaignId/cargas/:loadId" element={<LogisticsDeliveryDetailPage />} />
+          <Route path="/logistica-despacho/:campaignId/cargas/:loadId/compras" element={<LogisticsPurchasesPage />} />
+          <Route path="/logistica-despacho/:campaignId/cargas/:loadId/recepcion" element={<LogisticsReceptionPage />} />
+          <Route path="/logistica-despacho/:campaignId/cargas/:loadId/jabas" element={<LogisticsCratesPage />} />
+          <Route path="/logistica-despacho/:campaignId/cargas/:loadId/documentos" element={<LogisticsDocumentsPage />} />
+          <Route path="/facturacion-cobros" element={<BillingCampaignsPage />} />
+          <Route path="/facturacion-cobros/:campaignId" element={<BillingCampaignClientsPage />} />
+          <Route path="/facturacion-cobros/:campaignId/clientes/:clientId" element={<BillingClientWorkspacePage />} />
+          <Route path="/facturacion-cobros/:campaignId/clientes/:clientId/facturas/:invoiceId" element={<BillingInvoiceDetailPage />} />
+          <Route path="/facturacion-cobros/:campaignId/clientes/:clientId/facturas/:invoiceId/cobros" element={<BillingCollectionsPage />} />
           <Route path="/liquidacion-compra" element={<PurchaseSettlementPage />} />
+          <Route path="/liquidacion-compra/:campaignId" element={<PurchaseSettlementPage />} />
+          <Route path="/liquidacion-compra/:campaignId/cargas/:loadId/:section" element={<PurchaseSettlementPage />} />
+          <Route path="/liquidacion-compra/:campaignId/cargas/:loadId/:section/detalle/:entryId" element={<SettlementDetailPage />} />
         </Route>
         
         <Route path="/" element={<Navigate to={session?.user.rol.nombre === 'Chofer' ? '/chofer' : '/modules'} />} />

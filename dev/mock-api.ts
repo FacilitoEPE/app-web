@@ -282,7 +282,7 @@ export function mockApiPlugin(apiBaseUrl: string | undefined): Plugin {
     },
     configureServer(server) {
       if (!enabled) return
-      server.middlewares.use(createFutureMockMiddleware(server.config.root))
+      server.middlewares.use(createFutureMockMiddleware(server.config.root, undefined, true))
       server.middlewares.use(createMockMiddleware(path.join(server.config.root, 'json')))
       server.watcher.add(path.join(server.config.root, 'json/**/*.json'))
       server.watcher.on('change', (file) => {

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
+import { carrierTotal } from '@/modules/purchase-settlement/settlementOverview.utils';
 import { CheckCircle2, Sprout, Truck, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import ModalSection from "@/shared/components/ModalSection";
@@ -21,26 +23,28 @@ export default function SettlementCampaignPaidModal({
     campaniaNombre,
     loads,
 }: SettlementCampaignPaidModalProps) {
+    const navigate = useNavigate();
     const [tab, setTab] = useState<"proveedores" | "transportistas">("proveedores");
 
     const paidProviders = loads.flatMap((load) =>
         load.proveedores
-            .filter((p) => p.pagos.length > 0)
+            .filter((p) => p.estado === 'Pagado')
             .map((p) => ({
                 loadCode: load.codigo,
+                route: `/liquidacion-compra/${load.campaniaId}/cargas/${load.id}/proveedores/detalle/${p.id}`,
                 prov: p,
                 pagado: p.pagos.reduce((s, pay) => s + pay.importe, 0),
             })),
     );
 
     const paidCarriers = loads
-        .filter((load) => load.transporte.pagos.length > 0)
+        .filter((load) => load.transporte.estado === 'Pagado')
         .map((load) => {
-            const totalGastos = load.transporte.gastosReales.reduce((s, g) => s + g.monto, 0);
-            const totalDoc = load.transporte.fleteCarga + totalGastos;
+            const totalDoc = carrierTotal(load.transporte);
             const pagado = load.transporte.pagos.reduce((s, pay) => s + pay.importe, 0);
             return {
                 loadCode: load.codigo,
+                route: `/liquidacion-compra/${load.campaniaId}/cargas/${load.id}/transportista/detalle/${load.transporte.id}`,
                 transporte: load.transporte,
                 totalDoc,
                 pagado,
@@ -53,7 +57,7 @@ export default function SettlementCampaignPaidModal({
             onOpenChange={onOpenChange}
             icon={<CheckCircle2 size={22} strokeWidth={2.2} />}
             title={`Pagados · ${campaniaNombre}`}
-            description="Consulta rápida de liquidaciones de proveedores y transportistas con pagos registrados en la campaña."
+            description="Liquidaciones de proveedores y transportistas totalmente pagadas en la campaña."
             size="xl"
             footer={
                 <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
@@ -85,7 +89,7 @@ export default function SettlementCampaignPaidModal({
                             </div>
                         ) : (
                             <div className="flex flex-col gap-3">
-                                {paidProviders.map(({ loadCode, prov, pagado }) => (
+                                {paidProviders.map(({ loadCode, route, prov, pagado }) => (
                                     <div
                                         key={prov.id}
                                         className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-page/50 p-4"
@@ -117,6 +121,7 @@ export default function SettlementCampaignPaidModal({
                                                 </span>
                                             </div>
                                             <StatusBadge status={prov.estado} />
+                                            <Button variant="outline" size="sm" onClick={() => { onOpenChange(false); navigate(route); }}>Ver detalle y pagos</Button>
                                         </div>
                                     </div>
                                 ))}
@@ -131,7 +136,7 @@ export default function SettlementCampaignPaidModal({
                             </div>
                         ) : (
                             <div className="flex flex-col gap-3">
-                                {paidCarriers.map(({ loadCode, transporte, totalDoc, pagado }) => (
+                                {paidCarriers.map(({ loadCode, route, transporte, totalDoc, pagado }) => (
                                     <div
                                         key={transporte.id}
                                         className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-page/50 p-4"
@@ -161,6 +166,7 @@ export default function SettlementCampaignPaidModal({
                                                 </span>
                                             </div>
                                             <StatusBadge status={transporte.estado} />
+                                            <Button variant="outline" size="sm" onClick={() => { onOpenChange(false); navigate(route); }}>Ver detalle y pagos</Button>
                                         </div>
                                     </div>
                                 ))}

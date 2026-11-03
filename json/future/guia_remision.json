@@ -5,9 +5,9 @@
     "numero": "T001-00000001",
     "fechaInicioTraslado": "2026-10-29",
     "fechaEntregaTransportista": null,
-    "pesoBrutoKg": 1000,
+    "pesoBrutoKg": 500,
     "unidadPeso": "KGM",
-    "numeroBultos": 50,
+    "numeroBultos": 25,
     "fincaPartidaId": 1,
     "ubigeoPartidaSnapshot": "200114",
     "direccionPartidaSnapshot": "Camino rural km 1",
@@ -19,13 +19,15 @@
     "mtcSnapshot": null,
     "placaSnapshot": "ABC-101",
     "conductorDocumentoSnapshot": "40000002",
-    "conductorNombreSnapshot": "Miguel Torres",
+    "conductorNombreSnapshot": "Miguel Torres Ramos",
     "conductorLicenciaSnapshot": "Q40000002",
     "archivoId": null,
     "observaciones": null,
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z",
     "contenido": {
+      "driverFirstNames": "Miguel",
+      "driverLastNames": "Torres Ramos",
       "standardCodes": [
         "NOP"
       ],

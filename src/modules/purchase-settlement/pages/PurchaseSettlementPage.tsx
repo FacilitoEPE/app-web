@@ -1,5 +1,5 @@
 import { useSectionMotion } from '@/shared/hooks/useSectionMotion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { usesV1 } from '@/shared/api/data-contract';
 import { useMemo, useState } from "react";
 import {
@@ -58,6 +58,7 @@ import SettlementPaymentHistoryModal from "@/modules/purchase-settlement/compone
 import SettlementPaymentModal from "@/modules/purchase-settlement/components/SettlementPaymentModal";
 import SettlementProviderModal from "@/modules/purchase-settlement/components/SettlementProviderModal";
 import SettlementUitControlModal from "@/modules/purchase-settlement/components/SettlementUitControlModal";
+import { carrierTotal, providerReadiness } from '@/modules/purchase-settlement/settlementOverview.utils';
 import type {
     SettlementProviderEntry,
     SettlementStatus,
@@ -68,7 +69,6 @@ import {
     registerProviderPayment,
     saveCarrierSettlement,
     saveProviderSettlement,
-    setUitExchangeRate,
     usePurchaseSettlementState,
 } from "@/modules/purchase-settlement/purchaseSettlement.store";
 
@@ -90,13 +90,14 @@ const PROVIDER_TABS: readonly SegmentedTabItem[] = [
 
 export default function PurchaseSettlementPage() {
     const navigate = useNavigate();
-    const { loads, tipoCambioUit } = usePurchaseSettlementState();
+    const { campaignId, loadId, section } = useParams();
+    const { loads } = usePurchaseSettlementState();
 
-    const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
-    const [selectedLoadId, setSelectedLoadId] = useState<string | null>(null);
+    const selectedCampaignId = campaignId && Number.isFinite(Number(campaignId)) ? Number(campaignId) : null;
+    const selectedLoadId = loadId ?? null;
     useSectionMotion(`${selectedCampaignId}/${selectedLoadId}`);
-    const [subView, setSubView] = useState<"proveedores" | "transportista" | null>(null);
-    const [providerStatusTab, setProviderStatusTab] = useState<SettlementStatus>("Por liquidar");
+    const subView = section === 'proveedores' || section === 'transportista' ? section : null;
+    const [providerStatusTab, setProviderStatusTab] = useState<SettlementStatus | null>(null);
 
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -161,6 +162,7 @@ export default function PurchaseSettlementPage() {
         () => loads.find((l) => l.id === selectedLoadId) ?? null,
         [loads, selectedLoadId],
     );
+    const visibleProviderStatus = providerStatusTab ?? activeLoad?.proveedores[0]?.estado ?? 'Por liquidar';
 
     const paidModalLoads = useMemo(
         () =>
@@ -302,20 +304,19 @@ export default function PurchaseSettlementPage() {
                 }
                 action={
                     <div className="flex flex-wrap items-center gap-2.5">
-                        <Button
+                        {subView !== 'transportista' && <Button
                             variant="outline"
                             size="xl"
                             onClick={() => setUitModalOpen(true)}
                         >
                             <Scale size={19} strokeWidth={2.4} /> Control UIT por proveedor
-                        </Button>
+                        </Button>}
                         {subView !== null ? (
                             <Button
                                 variant="outline"
                                 size="xl"
                                 onClick={() => {
-                                    setSubView(null);
-                                    setSelectedLoadId(null);
+                                    navigate(`/liquidacion-compra/${selectedCampaignId}`);
                                 }}
                             >
                                 <ArrowLeft size={19} strokeWidth={2.5} /> Volver a cargas
@@ -325,7 +326,7 @@ export default function PurchaseSettlementPage() {
                                 variant="outline"
                                 size="xl"
                                 onClick={() => {
-                                    setSelectedCampaignId(null);
+                                    navigate('/liquidacion-compra');
                                     setSearch("");
                                 }}
                             >
@@ -409,7 +410,7 @@ export default function PurchaseSettlementPage() {
                                                 <Button
                                                     size="sm"
                                                     onClick={() => {
-                                                        setSelectedCampaignId(camp.campaniaId);
+                                                        navigate(`/liquidacion-compra/${camp.campaniaId}`);
                                                         setSearch("");
                                                     }}
                                                 >
@@ -501,9 +502,7 @@ export default function PurchaseSettlementPage() {
                                                             </Button>
                                                             <Button
                                                                 onClick={() => {
-                                                                    setSelectedCampaignId(
-                                                                        camp.campaniaId,
-                                                                    );
+                                                                    navigate(`/liquidacion-compra/${camp.campaniaId}`);
                                                                     setSearch("");
                                                                 }}
                                                             >
@@ -588,12 +587,11 @@ export default function PurchaseSettlementPage() {
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => {
-                                                        setSelectedLoadId(load.id);
+                                                        navigate(`/liquidacion-compra/${selectedCampaignId}/cargas/${load.id}/proveedores`);
                                                         setProviderStatusTab(
                                                             load.proveedores[0]?.estado ??
                                                                 "Por liquidar",
                                                         );
-                                                        setSubView("proveedores");
                                                     }}
                                                 >
                                                     <Sprout size={15} strokeWidth={2.3} /> Proveedor (
@@ -602,8 +600,7 @@ export default function PurchaseSettlementPage() {
                                                 <Button
                                                     size="sm"
                                                     onClick={() => {
-                                                        setSelectedLoadId(load.id);
-                                                        setSubView("transportista");
+                                                        navigate(`/liquidacion-compra/${selectedCampaignId}/cargas/${load.id}/transportista`);
                                                     }}
                                                 >
                                                     <Truck size={15} strokeWidth={2.3} /> Transportista
@@ -706,12 +703,11 @@ export default function PurchaseSettlementPage() {
                                                             <Button
                                                                 variant="outline"
                                                                 onClick={() => {
-                                                                    setSelectedLoadId(load.id);
+                                                                    navigate(`/liquidacion-compra/${selectedCampaignId}/cargas/${load.id}/proveedores`);
                                                                     setProviderStatusTab(
                                                                         load.proveedores[0]?.estado ??
                                                                             "Por liquidar",
                                                                     );
-                                                                    setSubView("proveedores");
                                                                 }}
                                                             >
                                                                 <Sprout
@@ -722,8 +718,7 @@ export default function PurchaseSettlementPage() {
                                                             </Button>
                                                             <Button
                                                                 onClick={() => {
-                                                                    setSelectedLoadId(load.id);
-                                                                    setSubView("transportista");
+                                                                    navigate(`/liquidacion-compra/${selectedCampaignId}/cargas/${load.id}/transportista`);
                                                                 }}
                                                             >
                                                                 <Truck
@@ -753,14 +748,14 @@ export default function PurchaseSettlementPage() {
                             ...t,
                             count: activeLoad.proveedores.filter((p) => p.estado === t.id).length,
                         }))}
-                        value={providerStatusTab}
+                        value={visibleProviderStatus}
                         onChange={(v) => setProviderStatusTab(v as SettlementStatus)}
                         showLabelsOnMobile
                     />
 
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                         {activeLoad.proveedores
-                            .filter((p) => p.estado === providerStatusTab)
+                            .filter((p) => p.estado === visibleProviderStatus)
                             .map((prov) => {
                                 const pagado = prov.pagos.reduce((s, pay) => s + pay.importe, 0);
                                 const saldo = Math.max(0, prov.total - pagado);
@@ -792,8 +787,8 @@ export default function PurchaseSettlementPage() {
                                             <SummaryBar
                                                 items={[
                                                     {
-                                                        label: "Kilos cargados",
-                                                        value: `${formatKg(prov.kilosCargados)} kg`,
+                                                        label: "Kilos reconocidos",
+                                                        value: !prov.kilosReconocidos ? "Pendiente de recepción" : `${formatKg(prov.kilosReconocidos)} kg`,
                                                     },
                                                     {
                                                         label: "Precio / kg",
@@ -815,7 +810,7 @@ export default function PurchaseSettlementPage() {
                                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                                 <InfoField
                                                     label="Persona en liquidación (Control UIT)"
-                                                    value={`${prov.personaLiquidadaNombre} (DNI ${prov.personaLiquidadaDocumento})`}
+                                                    value={prov.personaLiquidadaNombre ? `${prov.personaLiquidadaNombre} (${prov.personaLiquidadaDocumento})` : "Pendiente de seleccionar"}
                                                 />
                                                 <InfoField
                                                     label="N° Liquidación / Fecha"
@@ -838,17 +833,25 @@ export default function PurchaseSettlementPage() {
                                             )}
 
                                             <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                                                <Button variant="outline" size="sm" onClick={() => navigate(`/liquidacion-compra/${selectedCampaignId}/cargas/${activeLoad.id}/proveedores/detalle/${prov.id}`)}>
+                                                    <Eye size={15} strokeWidth={2.3} /> Ver detalle
+                                                </Button>
                                                 {prov.estado === "Por liquidar" ? (
                                                     <>
-                                                        <Button
+                                                        {providerReadiness(prov).some(item => item !== 'Persona titular o vinculada') && <Button
                                                             variant="outline"
-                                                            onClick={() =>
-                                                                usesV1() ? navigate(`/campaigns/${activeLoad.campaniaId}/providers`) : setPendingModalLoad(activeLoad.codigo)
-                                                            }
+                                                            onClick={() => {
+                                                                if (!usesV1()) { setPendingModalLoad(activeLoad.codigo); return; }
+                                                                const missing = providerReadiness(prov);
+                                                                if (missing.includes('Kilos reconocidos en recepción')) navigate(`/logistica-despacho/${activeLoad.campaniaId}/cargas/${activeLoad.id}/recepcion`);
+                                                                else if (missing.includes('Precio de compra acordado') || missing.includes('Moneda de compra admitida')) navigate(`/campaigns/${activeLoad.campaniaId}/providers`);
+                                                                else setEditingProvider(prov);
+                                                            }}
                                                         >
                                                             Completar pendientes
-                                                        </Button>
+                                                        </Button>}
                                                         <Button
+                                                            disabled={activeLoad.estadoCampania === 'terminado' || providerReadiness(prov).some(item => item !== 'Persona titular o vinculada')}
                                                             onClick={() => setEditingProvider(prov)}
                                                         >
                                                             <FileSpreadsheet
@@ -863,6 +866,8 @@ export default function PurchaseSettlementPage() {
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
+                                                            disabled={activeLoad.estadoCampania === 'terminado' || prov.pagos.length > 0}
+                                                            title={prov.pagos.length > 0 ? 'Esta liquidación ya tiene pagos y V1 bloquea su edición.' : undefined}
                                                             onClick={() => setEditingProvider(prov)}
                                                         >
                                                             <Pencil size={15} strokeWidth={2.3} />{" "}
@@ -881,7 +886,7 @@ export default function PurchaseSettlementPage() {
                                                             <History size={15} strokeWidth={2.3} />{" "}
                                                             Ver pagos ({prov.pagos.length})
                                                         </Button>
-                                                        {saldo > 0 && (
+                                                        {activeLoad.estadoCampania !== 'terminado' && saldo > 0 && (
                                                             <Button
                                                                 size="sm"
                                                                 onClick={() =>
@@ -916,7 +921,7 @@ export default function PurchaseSettlementPage() {
                         const t = activeLoad.transporte;
                         const totalGastosReales = t.gastosReales.reduce((s, g) => s + g.monto, 0);
                         const totalViaticosRef = t.viaticosMovilidad + t.viaticosInsumos;
-                        const totalLiquidado = t.fleteCarga + totalGastosReales;
+                        const totalLiquidado = carrierTotal(t);
                         const totalPagado = t.pagos.reduce((s, p) => s + p.importe, 0);
                         const saldoPendiente = Math.max(0, totalLiquidado - totalPagado);
                         const totalAdelantoDisp = t.adelantosDisponibles.reduce(
@@ -944,16 +949,21 @@ export default function PurchaseSettlementPage() {
                                                         Chofer de esta carga: {t.chofer} · Placa{" "}
                                                         {t.placa} · RUC {t.ruc}
                                                     </p>
+                                                    {t.moneda !== 'PEN' && <p className="mt-2 text-sm text-ink-muted">Por ahora solo se permite liquidar transporte con acuerdos en PEN. Este acuerdo está en {t.moneda}.</p>}
                                                 </div>
                                             </div>
 
                                             <div className="flex flex-wrap items-center gap-2">
+                                                <Button variant="outline" onClick={() => navigate(`/liquidacion-compra/${selectedCampaignId}/cargas/${activeLoad.id}/transportista/detalle/${t.id}`)}>
+                                                    <Eye size={16} strokeWidth={2.3} /> Ver detalle
+                                                </Button>
                                                 <Button
                                                     variant="outline"
+                                                    disabled={t.moneda !== 'PEN' || activeLoad.estadoCampania === 'terminado' || t.pagos.length > 0}
+                                                    title={t.moneda !== 'PEN' ? 'Por ahora solo se permite liquidar transporte con acuerdos en PEN.' : t.pagos.length > 0 ? 'Esta liquidación ya tiene pagos o adelantos aplicados y V1 bloquea su edición.' : undefined}
                                                     onClick={() => setCarrierModalOpen(true)}
                                                 >
-                                                    <Pencil size={16} strokeWidth={2.3} /> Editar
-                                                    flete y gastos reales
+                                                    <Pencil size={16} strokeWidth={2.3} /> {t.estado === 'Por liquidar' ? 'Liquidar transporte' : 'Editar liquidación'}
                                                 </Button>
                                                 <Button
                                                     variant="outline"
@@ -964,7 +974,7 @@ export default function PurchaseSettlementPage() {
                                                     <History size={16} strokeWidth={2.3} /> Historial
                                                     de pagos ({t.pagos.length})
                                                 </Button>
-                                                {saldoPendiente > 0 && (
+                                                {activeLoad.estadoCampania !== 'terminado' && t.estado !== 'Por liquidar' && saldoPendiente > 0 && (
                                                     <Button
                                                         onClick={() =>
                                                             setPaymentTarget({ type: "carrier" })
@@ -984,17 +994,17 @@ export default function PurchaseSettlementPage() {
                                                     value: `${t.moneda === 'USD' ? 'US$' : 'S/'} ${t.fleteCarga.toLocaleString("es-PE")}`,
                                                 },
                                                 {
-                                                    label: "Gastos reales ruta",
-                                                    value: `${t.moneda === 'USD' ? 'US$' : 'S/'} ${totalGastosReales.toLocaleString("es-PE")}`,
+                                                    label: t.gastosReales.length ? "Gastos reales ruta" : "Viáticos aplicables",
+                                                    value: `${t.moneda === 'USD' ? 'US$' : 'S/'} ${(t.gastosReales.length ? totalGastosReales : totalViaticosRef).toLocaleString("es-PE")}`,
                                                 },
                                                 {
-                                                    label: "Total liquidado",
+                                                    label: t.estado === 'Por liquidar' ? "Total previsto" : "Total liquidado",
                                                     value: `${t.moneda === 'USD' ? 'US$' : 'S/'} ${totalLiquidado.toLocaleString("es-PE")}`,
                                                     tone: "brand",
                                                 },
                                                 {
                                                     label: "Saldo por pagar",
-                                                    value: `${t.moneda === 'USD' ? 'US$' : 'S/'} ${saldoPendiente.toLocaleString("es-PE")}`,
+                                                    value: t.estado === 'Por liquidar' ? 'Pendiente de liquidar' : `${t.moneda === 'USD' ? 'US$' : 'S/'} ${saldoPendiente.toLocaleString("es-PE")}`,
                                                     tone: saldoPendiente > 0 ? "highlight" : "brand",
                                                 },
                                             ]}
@@ -1053,15 +1063,14 @@ export default function PurchaseSettlementPage() {
                 open={uitModalOpen}
                 onOpenChange={setUitModalOpen}
                 loads={loads}
-                tipoCambioUit={tipoCambioUit}
-                onChangeExchangeRate={setUitExchangeRate}
             />
 
             <SettlementProviderModal
                 open={editingProvider !== null}
                 onOpenChange={(open) => !open && setEditingProvider(null)}
                 load={activeLoad}
-                providerEntry={editingProvider}
+                providerEntry={activeLoad?.proveedores.find(provider => provider.id === editingProvider?.id) ?? editingProvider}
+                existingNumbers={loads.flatMap(load => load.proveedores.map(provider => provider.numeroLiquidacion).filter(Boolean))}
                 onAddLinkedPerson={addProviderLinkedPerson}
                 onSave={async (loadId, providerEntryId, payload) => {
                     await saveProviderSettlement(loadId, providerEntryId, payload);
@@ -1077,6 +1086,7 @@ export default function PurchaseSettlementPage() {
                 open={carrierModalOpen}
                 onOpenChange={setCarrierModalOpen}
                 load={activeLoad}
+                existingNumbers={loads.map(load => load.transporte.numeroLiquidacion).filter(Boolean)}
                 onSave={async (loadId, payload) => {
                     await saveCarrierSettlement(loadId, payload);
                     setSuccessInfo({
@@ -1108,9 +1118,7 @@ export default function PurchaseSettlementPage() {
                 }
                 totalAmount={
                     paymentTarget?.type === "carrier"
-                        ? (activeLoad?.transporte.fleteCarga ?? 0) +
-                          (activeLoad?.transporte.gastosReales.reduce((s, g) => s + g.monto, 0) ??
-                              0)
+                        ? (activeLoad ? carrierTotal(activeLoad.transporte) : 0)
                         : paymentTarget?.prov.total ?? 0
                 }
                 paidAmount={
@@ -1141,6 +1149,7 @@ export default function PurchaseSettlementPage() {
             />
 
             <SettlementPaymentHistoryModal
+                readOnly={activeLoad?.estadoCampania === 'terminado'}
                 moneda={historyTarget?.type === 'carrier' ? activeLoad?.transporte.moneda : historyTarget?.prov.moneda}
                 open={historyTarget !== null}
                 onOpenChange={(open) => !open && setHistoryTarget(null)}
@@ -1156,9 +1165,7 @@ export default function PurchaseSettlementPage() {
                 }
                 totalAmount={
                     historyTarget?.type === "carrier"
-                        ? (activeLoad?.transporte.fleteCarga ?? 0) +
-                          (activeLoad?.transporte.gastosReales.reduce((s, g) => s + g.monto, 0) ??
-                              0)
+                        ? (activeLoad ? carrierTotal(activeLoad.transporte) : 0)
                         : historyTarget?.prov.total ?? 0
                 }
                 payments={

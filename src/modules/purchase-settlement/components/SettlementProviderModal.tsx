@@ -1,5 +1,5 @@
-import { usesV1 } from '@/shared/api/data-contract';
 import { annualBeforeSettlement, importeParaUit } from '@/modules/purchase-settlement/settlementUit.utils';
+import { suggestSettlementNumber } from '@/modules/purchase-settlement/settlementNumber.utils';
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { useState } from "react";
 import { AlertTriangle, FileSpreadsheet, Save, Scale, UserPlus, X } from "lucide-react";
@@ -18,9 +18,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import type { FileSource } from "@/shared/utils/fileSource";
 import { formatKg } from "@/shared/utils/format";
 import {
-    UIT_LIMITE_SOLES,
-    UIT_LIMITE_UNIDADES,
-    UIT_VALOR_2026,
+    getUitParameters,
     type SettlementLinkedPerson,
     type SettlementLoad,
     type SettlementProviderEntry,
@@ -31,6 +29,7 @@ interface SettlementProviderModalProps {
     onOpenChange: (open: boolean) => void;
     load: SettlementLoad | null;
     providerEntry: SettlementProviderEntry | null;
+    existingNumbers: string[];
     onAddLinkedPerson: (
         loadId: string,
         providerEntryId: string,
@@ -51,7 +50,7 @@ interface SettlementProviderModalProps {
             archivoLiquidacion: FileSource | null;
             observaciones: string;
         },
-    ) => void;
+    ) => void | Promise<void>;
 }
 
 export default function SettlementProviderModal({
@@ -59,54 +58,61 @@ export default function SettlementProviderModal({
     onOpenChange,
     load,
     providerEntry,
+    existingNumbers,
     onAddLinkedPerson,
     onSave,
 }: SettlementProviderModalProps) {
     const [numeroLiquidacion, setNumeroLiquidacion] = useState("");
     const [fechaLiquidacion, setFechaLiquidacion] = useState("");
-    const [precioKg, setPrecioKg] = useState("");
     const [selectedPersonId, setSelectedPersonId] = useState("");
     const [confirmacionExcesoUit, setConfirmacionExcesoUit] = useState(false);
     const [archivoLiquidacion, setArchivoLiquidacion] = useState<FileSource | null>(null);
     const [observaciones, setObservaciones] = useState("");
+    const [formError, setFormError] = useState('');
+    const [saving, setSaving] = useState(false);
 
     // Sub-formulario inline para "+ Agregar persona vinculada"
     const [showAddPerson, setShowAddPerson] = useState(false);
     const [newNombres, setNewNombres] = useState("");
     const [newApellidos, setNewApellidos] = useState("");
+    const [newTipoDocumento, setNewTipoDocumento] = useState('DNI');
     const [newDocumento, setNewDocumento] = useState("");
     const [newVinculo, setNewVinculo] = useState("Cónyuge / Copropietario");
+    const [personError, setPersonError] = useState('');
 
     useResetOnToggle(open, () => {
         if (!providerEntry || !open) return;
-        setNumeroLiquidacion(providerEntry.numeroLiquidacion || "");
-        setFechaLiquidacion(providerEntry.fechaLiquidacion);
-        setPrecioKg(String(providerEntry.precioKg));
-        setSelectedPersonId(
-            providerEntry.personaLiquidadaId || providerEntry.personasVinculadas[0]?.id || "",
-        );
+        const date = providerEntry.fechaLiquidacion || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
+        setNumeroLiquidacion(providerEntry.numeroLiquidacion || suggestSettlementNumber(existingNumbers, date, 'LC'));
+        setFechaLiquidacion(date);
+        setSelectedPersonId(providerEntry.personaLiquidadaId || "");
         setConfirmacionExcesoUit(providerEntry.confirmacionExcesoUit);
         setArchivoLiquidacion(providerEntry.archivoLiquidacion);
         setObservaciones(providerEntry.observaciones);
         setShowAddPerson(false);
+        setPersonError('');
+        setFormError('');
+        setSaving(false);
     });
 
     if (!load || !providerEntry) return null;
 
-    const selectedPerson =
-        providerEntry.personasVinculadas.find((p) => p.id === selectedPersonId) ??
-        providerEntry.personasVinculadas[0];
+    const selectedPerson = providerEntry.personasVinculadas.find((p) => p.id === selectedPersonId);
 
-    const priceNum = Number(precioKg) || 0;
+    const priceNum = providerEntry.precioKg;
     const symbol = providerEntry.moneda === 'USD' ? 'US$' : 'S/';
-    const totalCompra = (providerEntry.kilosReconocidos ?? providerEntry.kilosCargados) * priceNum;
-    const previoPen = usesV1()
-        ? annualBeforeSettlement(providerEntry, selectedPerson?.id ?? '', Number(fechaLiquidacion.slice(0, 4)) || new Date().getFullYear())
-        : selectedPerson?.acumuladoAnualPen ?? 0;
+    const totalCompra = (providerEntry.kilosReconocidos ?? 0) * priceNum;
+    const liquidationYear = Number(fechaLiquidacion.slice(0, 4));
+    const uit = getUitParameters(liquidationYear);
+    const uitValue = uit?.value ?? 0;
+    const uitLimit = uit?.limit ?? 0;
+    const limitSoles = uitValue * uitLimit;
+    const previoPen = annualBeforeSettlement(providerEntry, selectedPerson?.id ?? '', Number(fechaLiquidacion.slice(0, 4)) || new Date().getFullYear());
     const proyectadoPen = previoPen + importeParaUit(totalCompra, providerEntry.moneda ?? 'PEN');
-    const proyectadoUit = proyectadoPen / UIT_VALOR_2026;
-    const pctUit = Math.min(100, (proyectadoPen / UIT_LIMITE_SOLES) * 100);
-    const nearOrAboveUit = pctUit >= 90;
+    const proyectadoUit = uitValue > 0 ? proyectadoPen / uitValue : 0;
+    const percentUit = limitSoles > 0 ? (proyectadoPen / limitSoles) * 100 : 0;
+    const pctUit = Math.min(100, percentUit);
+    const nearOrAboveUit = percentUit >= 90;
 
     const personItems = providerEntry.personasVinculadas.map((p) => ({
         value: p.id,
@@ -114,11 +120,23 @@ export default function SettlementProviderModal({
     }));
 
     const handleCreatePerson = async () => {
-        if (!newNombres.trim() || !newApellidos.trim() || !newDocumento.trim()) return;
+        if (!newNombres.trim() || !newApellidos.trim() || !newDocumento.trim() || !newVinculo.trim()) {
+            setPersonError('Completa los datos de identidad y el vínculo.');
+            return;
+        }
+        if (newTipoDocumento === 'DNI' && !/^\d{8}$/.test(newDocumento.trim())) {
+            setPersonError('El DNI debe tener 8 dígitos.');
+            return;
+        }
+        if (providerEntry.personasVinculadas.some(person => person.tipoDocumento === newTipoDocumento && person.numeroDocumento === newDocumento.trim())) {
+            setPersonError('Esta persona ya está vinculada al proveedor.');
+            return;
+        }
+        try {
         const created = await onAddLinkedPerson(load.id, providerEntry.id, {
             nombres: newNombres.trim(),
             apellidos: newApellidos.trim(),
-            tipoDocumento: "DNI",
+            tipoDocumento: newTipoDocumento,
             numeroDocumento: newDocumento.trim(),
             vinculo: newVinculo.trim() || "Familiar vinculado",
         });
@@ -126,11 +144,18 @@ export default function SettlementProviderModal({
         setNewNombres("");
         setNewApellidos("");
         setNewDocumento("");
+        setPersonError('');
         setShowAddPerson(false);
+        } catch (cause) {
+            setPersonError(cause instanceof Error ? cause.message : 'No se pudo vincular a la persona.');
+        }
     };
 
     const handleSubmit = async () => {
-        if (!selectedPerson) return;
+        if (saving || !selectedPerson || !numeroLiquidacion.trim() || !fechaLiquidacion || totalCompra <= 0 || !uitValue || !uitLimit) return;
+        setSaving(true);
+        setFormError('');
+        try {
         await onSave(load.id, providerEntry.id, {
             numeroLiquidacion: numeroLiquidacion.trim() || "",
             fechaLiquidacion,
@@ -144,14 +169,20 @@ export default function SettlementProviderModal({
             observaciones: observaciones.trim(),
         });
         onOpenChange(false);
+        } catch (cause) {
+            setFormError(cause instanceof Error ? cause.message : 'No se pudo guardar la liquidación.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
         <AppModal
+            busy={saving}
             open={open}
             onOpenChange={onOpenChange}
             icon={<FileSpreadsheet size={22} strokeWidth={2.2} />}
-            title="Confirmar / Editar liquidación de compra (Proveedor)"
+            title={providerEntry.estado === 'Por liquidar' ? 'Registrar liquidación de compra' : 'Editar liquidación de compra'}
             description={`${providerEntry.proveedorNombre} · Carga ${load.codigo} · ${load.campaniaNombre}`}
             size="2xl"
             footer={
@@ -161,20 +192,22 @@ export default function SettlementProviderModal({
                     </Button>
                     <Button
                         size="xl"
-                        disabled={nearOrAboveUit && !confirmacionExcesoUit}
+                        disabled={saving || !selectedPerson || !numeroLiquidacion.trim() || !fechaLiquidacion || totalCompra <= 0 || !uitValue || !uitLimit || (proyectadoPen >= limitSoles && !confirmacionExcesoUit)}
                         onClick={handleSubmit}
                     >
-                        <Save size={18} strokeWidth={2.5} /> Confirmar liquidación de compra
+                        <Save size={18} strokeWidth={2.5} /> {saving ? 'Guardando…' : 'Confirmar liquidación de compra'}
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-6">
+                {!uit && <p role="alert" className="text-sm text-destructive">No hay parámetro UIT para el año de la liquidación. Elige un año configurado.</p>}
+                {formError && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">{formError}</p>}
                 <SummaryBar
                     items={[
                         {
                             label: "Kilos reconocidos",
-                            value: `${formatKg((providerEntry.kilosReconocidos ?? providerEntry.kilosCargados))} kg`,
+                            value: `${formatKg(providerEntry.kilosReconocidos ?? 0)} kg`,
                         },
                         {
                             label: "Precio de compra / kg",
@@ -192,7 +225,7 @@ export default function SettlementProviderModal({
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <InputField
                             id="sprov-num"
-                            label="Número de liquidación SUNAT"
+                            label="Número de liquidación"
                             required
                             value={numeroLiquidacion}
                             onChange={setNumeroLiquidacion}
@@ -205,16 +238,10 @@ export default function SettlementProviderModal({
                             value={fechaLiquidacion}
                             onChange={setFechaLiquidacion}
                         />
-                        <InputField
-                            id="sprov-precio"
-                            label="Precio acordado por kg"
-                            required
-                            step="0.01"
-                            min={0}
-                            unit={symbol}
-                            value={precioKg}
-                            onChange={setPrecioKg}
-                        />
+                        <div className="rounded-xl border border-border bg-surface-page/40 px-4 py-2.5 text-sm text-ink">
+                            <span className="block text-xs font-semibold text-ink-muted">Precio acordado por kg</span>
+                            <strong>{symbol} {priceNum.toFixed(2)}</strong>
+                        </div>
                     </div>
                 </ModalSection>
 
@@ -263,7 +290,7 @@ export default function SettlementProviderModal({
                                 <p className="text-[13px] font-bold text-ink">
                                     Registrar nueva persona vinculada al proveedor
                                 </p>
-                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                     <InputField
                                         id="np-nombres"
                                         label="Nombres"
@@ -281,14 +308,20 @@ export default function SettlementProviderModal({
                                         onChange={setNewApellidos}
                                     />
                                     <InputField
-                                        id="np-dni"
-                                        label="N° DNI"
+                                        id="np-doc"
+                                        label="Número de documento"
                                         variant="compact"
                                         required
-                                        maxLength={8}
+                                        maxLength={newTipoDocumento === 'DNI' ? 8 : 20}
                                         value={newDocumento}
                                         onChange={setNewDocumento}
                                     />
+                                    <FormField label="Tipo de documento" required>
+                                        <Select items={[{ value: 'DNI', label: 'DNI' }, { value: 'Carnet de extranjeria', label: 'Carné de extranjería' }, { value: 'Pasaporte', label: 'Pasaporte' }]} value={newTipoDocumento} onValueChange={value => value && setNewTipoDocumento(value as string)}>
+                                            <SelectTrigger aria-label="Tipo de documento de la persona"><SelectValue /></SelectTrigger>
+                                            <SelectContent><SelectItem value="DNI">DNI</SelectItem><SelectItem value="Carnet de extranjeria">Carné de extranjería</SelectItem><SelectItem value="Pasaporte">Pasaporte</SelectItem></SelectContent>
+                                        </Select>
+                                    </FormField>
                                     <InputField
                                         id="np-vinculo"
                                         label="Vínculo con proveedor"
@@ -298,6 +331,7 @@ export default function SettlementProviderModal({
                                         onChange={setNewVinculo}
                                     />
                                 </div>
+                                {personError && <p role="alert" className="text-sm text-destructive">{personError}</p>}
                                 <div className="flex justify-end">
                                     <Button size="sm" onClick={handleCreatePerson}>
                                         <UserPlus size={15} strokeWidth={2.4} /> Guardar y seleccionar persona
@@ -308,13 +342,12 @@ export default function SettlementProviderModal({
                     </div>
                 </ModalSection>
 
-                {/* PANEL PERSONALIZADO: CONTROL UIT 2026 · LÍMITE 75 UIT */}
                 <ModalSection
-                    title={`3. Control UIT 2026 · Límite ${UIT_LIMITE_UNIDADES} UIT (S/ ${UIT_LIMITE_SOLES.toLocaleString("es-PE")})`}
+                    title={`3. Control UIT ${liquidationYear || '—'} · Límite ${uitLimit} UIT (S/ ${limitSoles.toLocaleString("es-PE")})`}
                     aside={
                         <StatusBadge
                             status={
-                                proyectadoPen >= UIT_LIMITE_SOLES
+                                proyectadoPen >= limitSoles
                                     ? "Límite superado"
                                     : nearOrAboveUit
                                         ? "Cerca del límite"
@@ -358,20 +391,20 @@ export default function SettlementProviderModal({
                                 <div className="flex items-start gap-2.5 text-[12.5px] font-semibold text-status-highlight">
                                     <AlertTriangle size={18} className="mt-0.5 shrink-0" />
                                     <span>
-                                        Atención: Con esta compra la persona seleccionada alcanza el{" "}
-                                        <strong>{pctUit.toFixed(1)}%</strong> del tope anual de 75 UIT. Confirma la
-                                        autorización o selecciona una persona vinculada con saldo disponible.
+                                        Con esta compra la persona seleccionada llega al{" "}
+                                        <strong>{percentUit.toFixed(1)}%</strong> del límite anual de 75 UIT.
+                                        Revisa su acumulado antes de guardar.
                                     </span>
                                 </div>
-                                <div className="flex items-center justify-between rounded-lg bg-card/90 px-3 py-2">
+                                {proyectadoPen >= limitSoles && <div className="flex items-center justify-between rounded-lg bg-card/90 px-3 py-2">
                                     <span className="text-[12.5px] font-bold text-ink">
-                                        Confirmo haber verificado el límite de 75 UIT para esta liquidación
+                                        He revisado el aviso del límite anual de la persona seleccionada
                                     </span>
                                     <Switch
                                         checked={confirmacionExcesoUit}
                                         onCheckedChange={setConfirmacionExcesoUit}
                                     />
-                                </div>
+                                </div>}
                             </div>
                         ) : (
                             <div className="flex items-center gap-2 text-[12px] font-medium text-ink-muted">
@@ -379,7 +412,7 @@ export default function SettlementProviderModal({
                                 <span>
                                     Saldo disponible tras esta liquidación:{" "}
                                     <strong className="text-ink">
-                                        S/ {Math.max(0, UIT_LIMITE_SOLES - proyectadoPen).toLocaleString("es-PE")}
+                                        S/ {Math.max(0, limitSoles - proyectadoPen).toLocaleString("es-PE")}
                                     </strong>
                                 </span>
                             </div>

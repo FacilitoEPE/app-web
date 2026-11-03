@@ -57,12 +57,22 @@ afterEach(async () => {
 })
 
 describe('existing frontend with the future HTTP contract', () => {
-  it('prefills guide identities from the assigned carrier and driver, without demo snapshots', () => {
+  it('sums each client contract at its own price and keeps currencies separate', () => {
+    const g = structuredClone(operationsContext())
+    const contract = g.contracts[0]
+    g.contracts.push({ ...contract, contratoVentaId: 999, kilosAcordados: 100, precioKg: 3, moneda: 'USD' })
+    const client = projectBillingData(g).find(item => item.id === String(contract.clienteNegocioCampanaId))!
+    const expected = g.contracts.filter(item => item.clienteNegocioCampanaId === contract.clienteNegocioCampanaId && item.moneda === 'USD').reduce((sum, item) => sum + item.kilosAcordados * item.precioKg, 0)
+    expect(client.importesContratados.find(row => row.moneda === 'USD')?.importe).toBe(expected)
+  })
+  it('prefills carrier and driver identity while leaving guide providers for the user to choose', () => {
     const g = operationsContext(), load = projectQualityData(g).loads.find(l => l.id === '1')!
     const draft = createGuideDraft(load)
-    expect(draft.proveedoresIncluidos).toEqual(['1', '2'])
+    expect(draft.proveedoresIncluidos).toEqual([])
     expect(draft.transportistaRuc).toBe(g.carriers[0].ruc)
-    expect(draft.conductorNombres).toBe(g.drivers[0].nombre)
+    expect(draft.transportistaMtc).toBe(g.carriers[0].registroMtc)
+    expect(draft.conductorNombres).toBe(g.people.find(p => p.personaId === g.drivers[0].personaId)?.nombres)
+    expect(draft.conductorApellidos).toBe(g.people.find(p => p.personaId === g.drivers[0].personaId)?.apellidos)
     expect(draft.conductorNumeroDoc).toBe(g.people.find(p => p.personaId === g.drivers[0].personaId)?.numeroDocumento)
     expect(draft.normasSeleccionadas).toEqual([])
     expect(draft.numeroGuia).toBe('')
@@ -89,6 +99,7 @@ describe('existing frontend with the future HTTP contract', () => {
     expect(campaignCarrierAssignments(999, 1, g)).toBe('Sin camión ni chofer asignados')
     expect(campaignCarrierAssignments(1, 1, g)).toContain(g.vehicles[0].placa)
   })
+
 
   it('distinguishes coordinated deliveries from loads and does not invent MTD observations', () => {
     const g = operationsContext(), loads = projectQualityData(g).loads
@@ -125,7 +136,7 @@ describe('existing frontend with the future HTTP contract', () => {
   it('updates unloading details without rewriting settled purchase evidence', async () => {
     const g = operationsContext(), before = structuredClone(g.receipts[0].compras)
     const row = projectLogisticsData(g)[0]
-    await logisticsCommands.receive(row.id, { ...row.recepcion, inicioDescarga: '2026-10-29T08:00', terminoDescarga: '2026-10-29T09:00', responsableRecepcion: 'QA' }, row.proveedores)
+    await logisticsCommands.unloading(row.id, { inicioDescarga: '2026-10-29T08:00', terminoDescarga: '2026-10-29T09:00', responsableRecepcion: 'QA', observacionesDescarga: '', evidenciaDescarga: null })
     expect(operationsContext().receipts[0].compras).toEqual(before)
     expect(operationsContext().receipts[0].descargaFinAt).toBeTruthy()
     const reloaded = projectLogisticsData(operationsContext())[0].recepcion

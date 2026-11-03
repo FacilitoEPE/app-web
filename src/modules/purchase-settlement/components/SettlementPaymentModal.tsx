@@ -1,4 +1,5 @@
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { getBadRequestFieldErrors } from '@/shared/validation/api-form-errors';
 import { useState } from "react";
 import { Banknote, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -10,7 +11,6 @@ import ModalSection from "@/shared/components/ModalSection";
 import SegmentedControl from "@/shared/components/SegmentedControl";
 import { Button } from "@/shared/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
-import { Textarea } from "@/shared/components/ui/textarea";
 import type { FileSource } from "@/shared/utils/fileSource";
 import type {
     CarrierAdvanceItem,
@@ -27,7 +27,7 @@ interface SettlementPaymentModalProps {
     paidAmount: number;
     moneda?: string;
     availableAdvances?: CarrierAdvanceItem[];
-    onRegister: (payment: Omit<SettlementPaymentItem, "id">, advanceId?: string) => void;
+    onRegister: (payment: Omit<SettlementPaymentItem, "id">, advanceId?: string) => void | Promise<void>;
 }
 
 const MEDIO_OPTIONS = [
@@ -56,7 +56,8 @@ export default function SettlementPaymentModal({
     const [medio, setMedio] = useState<"Transferencia" | "Depósito" | "Efectivo">("Transferencia");
     const [referencia, setReferencia] = useState("");
     const [evidencia, setEvidencia] = useState<FileSource | null>(null);
-    const [observaciones, setObservaciones] = useState("");
+    const [error, setError] = useState("");
+    const [saving, setSaving] = useState(false);
 
     const saldoPendiente = Math.max(0, totalAmount - paidAmount);
     const activeAdvances = availableAdvances.filter((a) => a.saldoDisponible > 0);
@@ -70,7 +71,8 @@ export default function SettlementPaymentModal({
         setMedio("Transferencia");
         setReferencia("");
         setEvidencia(null);
-        setObservaciones("");
+        setError("");
+        setSaving(false);
     });
 
     const advanceItems = activeAdvances.map((a) => ({
@@ -79,11 +81,31 @@ export default function SettlementPaymentModal({
     }));
 
     const handleSubmit = async () => {
-        const amount = Number(importe) || 0;
-        if (amount <= 0) return;
+        if (saving) return;
+        const amount = Number(importe);
+        if (!fecha || !Number.isFinite(amount) || amount <= 0 || amount > saldoPendiente) {
+            setError('Indica una fecha y un importe mayor que cero que no supere el saldo pendiente.');
+            return;
+        }
+        if (modo === 'Caja' && !referencia.trim()) {
+            setError(medio === 'Efectivo' ? 'Indica la referencia del pago en caja.' : 'Indica el número de operación bancaria para este medio de pago.');
+            return;
+        }
+        if (modo === 'Caja' && medio !== 'Efectivo' && !evidencia) {
+            setError('Adjunta el voucher o constancia de este pago.');
+            return;
+        }
+        const advance = activeAdvances.find(a => a.id === selectedAdvanceId);
+        if (modo === 'Adelanto' && (!advance || amount > advance.saldoDisponible)) {
+            setError('Selecciona un adelanto con saldo suficiente.');
+            return;
+        }
+        setSaving(true);
+        setError('');
 
+        try {
         if (modo === "Adelanto") {
-            const adv = activeAdvances.find((a) => a.id === selectedAdvanceId);
+            const adv = advance;
             await onRegister(
                 {
                     fecha,
@@ -92,8 +114,7 @@ export default function SettlementPaymentModal({
                     medio: "Aplicación de adelanto",
                     referencia: adv?.referencia ?? "ADEL-CAMP",
                     evidencia,
-                    observaciones:
-                        observaciones.trim() || "Descuento de adelanto otorgado en acuerdo de campaña.",
+                    observaciones: '',
                 },
                 selectedAdvanceId,
             );
@@ -105,14 +126,21 @@ export default function SettlementPaymentModal({
                 medio,
                 referencia: referencia.trim(),
                 evidencia,
-                observaciones: observaciones.trim(),
+                observaciones: '',
             });
         }
         onOpenChange(false);
+        } catch (cause) {
+            const fieldErrors = getBadRequestFieldErrors(cause, { monto: '_form', fecha: '_form', medio: '_form', referencia: '_form' });
+            setError(Object.values(fieldErrors).filter(Boolean).join(' ') || (cause instanceof Error ? cause.message : 'No se pudo registrar el pago.'));
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
         <AppModal
+            busy={saving}
             open={open}
             onOpenChange={onOpenChange}
             icon={<Banknote size={22} strokeWidth={2.2} />}
@@ -124,13 +152,14 @@ export default function SettlementPaymentModal({
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={18} strokeWidth={2.5} /> Cancelar
                     </Button>
-                    <Button size="xl" onClick={handleSubmit}>
-                        <Save size={18} strokeWidth={2.5} /> Confirmar pago
+                    <Button size="xl" disabled={saving} onClick={handleSubmit}>
+                        <Save size={18} strokeWidth={2.5} /> {saving ? 'Guardando…' : 'Confirmar pago'}
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-6">
+                {error && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">{error}</p>}
                 <SummaryBar
                     items={[
                         {
@@ -221,12 +250,10 @@ export default function SettlementPaymentModal({
                                     <Select
                                         items={MEDIO_OPTIONS}
                                         value={medio}
-                                        onValueChange={(v) =>
-                                            v &&
-                                            setMedio(
-                                                v as "Transferencia" | "Depósito" | "Efectivo",
-                                            )
-                                        }
+                                        onValueChange={(v) => {
+                                            if (v) setMedio(v as "Transferencia" | "Depósito" | "Efectivo");
+                                            setError('');
+                                        }}
                                     >
                                         <SelectTrigger
                                             aria-label="Medio de pago"
@@ -245,16 +272,16 @@ export default function SettlementPaymentModal({
                                 </FormField>
                                 <InputField
                                     id="spay-ref"
-                                    label="N° de operación bancaria"
+                                    label={medio === 'Efectivo' ? 'Referencia de caja' : 'N° de operación bancaria'}
                                     required
-                                    placeholder="Ej. BCP-OP-991024"
+                                    placeholder={medio === 'Efectivo' ? 'Ej. REC-CAJA-001' : 'Ej. BCP-OP-991024'}
                                     value={referencia}
                                     onChange={setReferencia}
                                 />
                             </>
                         )}
 
-                        <div className="sm:col-span-2">
+                        {modo === 'Caja' && medio !== 'Efectivo' && <div className="sm:col-span-2">
                             <FileDropzone
                                 label="Voucher o constancia de pago"
                                 file={evidencia}
@@ -262,20 +289,7 @@ export default function SettlementPaymentModal({
                                 variant="horizontal"
                                 replaceable
                             />
-                        </div>
-                        <FormField
-                            id="spay-obs"
-                            label="Observaciones del pago"
-                            optional
-                            className="sm:col-span-2"
-                        >
-                            <Textarea
-                                id="spay-obs"
-                                rows={2}
-                                value={observaciones}
-                                onChange={(e) => setObservaciones(e.target.value)}
-                            />
-                        </FormField>
+                        </div>}
                     </div>
                 </ModalSection>
             </div>

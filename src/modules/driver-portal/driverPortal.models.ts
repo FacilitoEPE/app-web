@@ -83,6 +83,7 @@ export interface DriverLoad {
     gastoAnotadores: number;
     observacionesCarga: string;
     etapa: DispatchStage;
+    cierreFisicoConfirmado: boolean;
     fincas: DriverFarmStop[];
     proveedores: DriverProviderLoadDetail[];
     historial: DriverStageHistoryItem[];

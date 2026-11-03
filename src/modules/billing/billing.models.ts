@@ -52,9 +52,12 @@ export interface BillingClient {
     canal: "Exportación" | "Industria";
     pais: string;
     contacto: string;
+    telefono: string;
     correo: string;
     moneda: BillingCurrency;
     kilosContratados: number;
+    contratosCount: number;
     precioPorKg: number;
+    importesContratados: { moneda: string; importe: number }[];
     cargas: BillingLoad[];
 }

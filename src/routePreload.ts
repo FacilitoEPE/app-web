@@ -6,7 +6,7 @@ export const modulePages = {
     '/transportistas': () => import('@/modules/carriers/pages/CarriersPage'),
     '/calidad': () => import('@/modules/quality/pages/QualityPage'),
     '/logistica-despacho': () => import('@/modules/logistics/pages/LogisticsPage'),
-    '/facturacion-cobros': () => import('@/modules/billing/pages/BillingPage'),
+    '/facturacion-cobros': () => import('@/modules/billing/pages/BillingCampaignsPage'),
     '/liquidacion-compra': () => import('@/modules/purchase-settlement/pages/PurchaseSettlementPage'),
 };
 

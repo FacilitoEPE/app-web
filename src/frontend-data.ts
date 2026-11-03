@@ -26,7 +26,7 @@ import { hydrateDriverData } from '@/modules/driver-portal/driverPortal.store';
 import { CATALOGO_FRUTAS } from '@/modules/providers/providerCatalogo';
 import { PRODUCER_FARM_OPTIONS } from '@/modules/quality/qualityAnalysis.utils';
 import { ORGANIC_NORMS_CATALOG } from '@/modules/quality/qualityOperations.models';
-import { setUitParameters } from '@/modules/purchase-settlement/purchaseSettlement.models';
+import { clearUitParameters, setUitParameters } from '@/modules/purchase-settlement/purchaseSettlement.models';
 import { registerDataRefresh } from '@/shared/api/data-contract';
 import { actionErrorMessage } from '@/shared/api/action-errors';
 type Status = {
@@ -66,7 +66,9 @@ export function refreshFrontendData(): Promise<void> {
                 PRODUCER_FARM_OPTIONS.splice(0, PRODUCER_FARM_OPTIONS.length, ...g.participations.flatMap(p => g.farms.filter(f => f.proveedorId === p.proveedorId).map(f => ({ value: `${p.cxpId}:${f.fincaId}`, productor: `${g.providers.find(v => v.proveedorId === p.proveedorId)?.nombres ?? ''} ${g.providers.find(v => v.proveedorId === p.proveedorId)?.apellido ?? ''}`.trim(), finca: f.nombreFinca, campaniaId: p.campaniaId }))));
                 ORGANIC_NORMS_CATALOG.splice(0, ORGANIC_NORMS_CATALOG.length, ...g.standards.map(n => ({ id: n.codigo, label: n.nombre, certText: n.nombre })));
                 const parameter = g.uit.find(p => p.anio === new Date().getFullYear());
-                setUitParameters(parameter?.valor ?? 0, parameter?.limiteUit ?? 0);
+                clearUitParameters();
+                for (const item of g.uit) setUitParameters(item.valor, item.limiteUit, item.anio);
+                if (!parameter) setUitParameters(0, 0);
                 hydrateProviderData(providers);
                 hydrateCampaignContracts(campaigns.contracts);
                 hydrateCampaignDeliveries(campaigns.deliveries);

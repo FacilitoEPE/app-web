@@ -1,4 +1,5 @@
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import { useState } from "react";
 import { Banknote, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -9,7 +10,6 @@ import InputField from "@/shared/components/InputField";
 import ModalSection from "@/shared/components/ModalSection";
 import { Button } from "@/shared/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
-import { Textarea } from "@/shared/components/ui/textarea";
 import type { FileSource } from "@/shared/utils/fileSource";
 import type {
     BillingClient,
@@ -29,7 +29,7 @@ interface BillingRegisterCollectionModalProps {
         loadId: string,
         invoiceId: string,
         collection: Omit<BillingCollectionItem, "id">,
-    ) => void;
+    ) => void | Promise<void>;
 }
 
 const MEDIO_OPTIONS = [
@@ -52,42 +52,51 @@ export default function BillingRegisterCollectionModal({
     const [medio, setMedio] = useState<BillingCollectionItem["medio"]>("Transferencia");
     const [referencia, setReferencia] = useState("");
     const [evidencia, setEvidencia] = useState<FileSource | null>(null);
-    const [observaciones, setObservaciones] = useState("");
 
     useResetOnToggle(open, () => {
         if (!invoice || !open) return;
-        const cobrado = invoice.cobros.reduce((s, c) => s + c.importe, 0);
-        const saldo = Math.max(0, invoice.total - cobrado);
-        setFecha(new Date().toISOString().slice(0,10));
-        setImporte(String(saldo));
+        setFecha(new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()));
+        setImporte("");
         setMedio("Transferencia");
         setReferencia("");
         setEvidencia(null);
-        setObservaciones("");
+    });
+
+    const totalCobrado = invoice?.cobros.reduce((s, c) => s + c.importe, 0) ?? 0;
+    const saldoPendiente = Math.max(0, (invoice?.total ?? 0) - totalCobrado);
+    const symbol = invoice?.moneda === "EUR" ? "€" : invoice?.moneda === "USD" ? "US$" : "S/";
+    const { errors, saving, clearError, submit } = useFormSubmit({
+        open,
+        validate: () => {
+            const found: Record<string, string> = {};
+            const amount = Number(importe);
+            if (!fecha) found.fecha = "Indica la fecha del movimiento.";
+            else if (invoice?.fechaEmision && fecha < invoice.fechaEmision) found.fecha = "El cobro no puede ser anterior a la emisión.";
+            if (!Number.isFinite(amount) || amount <= 0 || amount > saldoPendiente) found.importe = `Ingresa un importe mayor que 0 y no superior a ${symbol} ${saldoPendiente.toFixed(2)}.`;
+            if (!referencia.trim()) found.referencia = "Ingresa la referencia de la operación.";
+            if (!evidencia) found.evidencia = "Adjunta el voucher o constancia del cobro.";
+            return found;
+        },
+        onSubmit: async () => {
+        if (!client || !load || !invoice) return;
+        await onRegister(client.id, load.id, invoice.id, {
+            fecha,
+            importe: Number(importe),
+            medio,
+            referencia: referencia.trim(),
+            evidencia,
+            observaciones: "",
+        });
+        onOpenChange(false);
+        },
+        backendFields: { fecha: "fecha", monto: "importe", referencia: "referencia", evidencia: "evidencia" },
     });
 
     if (!client || !load || !invoice) return null;
 
-    const totalCobrado = invoice.cobros.reduce((s, c) => s + c.importe, 0);
-    const saldoPendiente = Math.max(0, invoice.total - totalCobrado);
-    const symbol = invoice.moneda === "EUR" ? "€" : invoice.moneda === "USD" ? "US$" : "S/";
-
-    const handleSubmit = async () => {
-        const amount = Number(importe) || 0;
-        if (amount <= 0) return;
-        await onRegister(client.id, load.id, invoice.id, {
-            fecha,
-            importe: amount,
-            medio,
-            referencia: referencia.trim() || "OP-S/N",
-            evidencia,
-            observaciones: observaciones.trim(),
-        });
-        onOpenChange(false);
-    };
-
     return (
         <AppModal
+            busy={saving}
             open={open}
             onOpenChange={onOpenChange}
             icon={<Banknote size={22} strokeWidth={2.2} />}
@@ -99,13 +108,14 @@ export default function BillingRegisterCollectionModal({
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={18} strokeWidth={2.5} /> Cancelar
                     </Button>
-                    <Button size="xl" onClick={handleSubmit}>
+                    <Button size="xl" disabled={saving} onClick={() => void submit({})}>
                         <Save size={18} strokeWidth={2.5} /> Guardar cobro
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-6">
+                {errors._form && <p role="alert" className="text-sm text-destructive">{errors._form}</p>}
                 <SummaryBar
                     items={[
                         {
@@ -133,7 +143,8 @@ export default function BillingRegisterCollectionModal({
                             label="Fecha del movimiento"
                             required
                             value={fecha}
-                            onChange={setFecha}
+                            error={errors.fecha}
+                            onChange={v => { setFecha(v); clearError("fecha"); }}
                         />
                         <InputField
                             id="col-importe"
@@ -143,7 +154,8 @@ export default function BillingRegisterCollectionModal({
                             min={0}
                             unit={symbol}
                             value={importe}
-                            onChange={setImporte}
+                            error={errors.importe}
+                            onChange={v => { setImporte(v); clearError("importe"); }}
                         />
                         <FormField label="Medio de cobro" required>
                             <Select
@@ -171,30 +183,21 @@ export default function BillingRegisterCollectionModal({
                             required
                             placeholder="Ej. SWIFT-INGBNL2A-98412"
                             value={referencia}
-                            onChange={setReferencia}
+                            error={errors.referencia}
+                            onChange={v => { setReferencia(v); clearError("referencia"); }}
                         />
                         <div className="sm:col-span-2">
+                            <FormField error={errors.evidencia}>
                             <FileDropzone
                                 label="Voucher o evidencia del movimiento"
+                                required
                                 file={evidencia}
-                                onChange={(f) => setEvidencia(f)}
+                                onChange={(f) => { setEvidencia(f); clearError("evidencia"); }}
                                 variant="horizontal"
                                 replaceable
                             />
+                            </FormField>
                         </div>
-                        <FormField
-                            id="col-obs"
-                            label="Observaciones del cobro"
-                            optional
-                            className="sm:col-span-2"
-                        >
-                            <Textarea
-                                id="col-obs"
-                                rows={2}
-                                value={observaciones}
-                                onChange={(e) => setObservaciones(e.target.value)}
-                            />
-                        </FormField>
                     </div>
                 </ModalSection>
             </div>

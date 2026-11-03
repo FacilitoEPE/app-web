@@ -12,10 +12,10 @@ export interface Metric {
     warm?: boolean;
 }
 
-/** Cifras de una entidad en una grilla de 2×2, con el mismo esquema que los indicadores de campaña. */
-export default function MetricCards({ metrics, label }: { metrics: Metric[]; label: string }) {
+/** Cifras de una entidad; las seis etapas de despacho caben en una fila amplia. */
+export default function MetricCards({ metrics, label, columns = 2 }: { metrics: Metric[]; label: string; columns?: 2 | 6 }) {
     return (
-        <section aria-label={label} className="grid grid-cols-2 gap-3">
+        <section aria-label={label} className={cn("grid grid-cols-2 gap-3", columns === 6 && "sm:grid-cols-3 xl:grid-cols-6")}>
             {metrics.map(({ title, value, unit, description, icon: Icon, warm }) => (
                 <Card
                     key={title}

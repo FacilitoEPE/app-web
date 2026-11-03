@@ -1,0 +1,222 @@
+/* ─── Notch del Selector de Módulos (Estilo Apple / Dynamic Notch) ─── */
+
+:root {
+    --notch-border: var(--border);
+    --notch-shadow-ambient: 0 20px 45px -10px rgba(0, 0, 0, 0.09);
+    --notch-shadow-key: 0 8px 18px -6px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme="dark"],
+.dark {
+    --notch-border: color-mix(in srgb, var(--brand) 18%, var(--border));
+    --notch-shadow-ambient: 0 28px 65px -12px rgba(0, 0, 0, 0.7);
+    --notch-shadow-key: 0 10px 24px -6px rgba(0, 0, 0, 0.45);
+}
+
+.notch-panel {
+    position: relative;
+    background-color: var(--card);
+    border-left: 1px solid var(--notch-border);
+    border-right: 1px solid var(--notch-border);
+    border-bottom: 1px solid var(--notch-border);
+    border-top: none;
+    border-bottom-left-radius: 28px;
+    border-bottom-right-radius: 28px;
+    box-shadow:
+        var(--notch-shadow-ambient),
+        var(--notch-shadow-key);
+    transform-origin: top center;
+    isolation: isolate;
+}
+
+/* Puente que fusiona la parte superior del notch con el header */
+.notch-panel::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: var(--card);
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Orejas cóncavas SVG con curvatura continua (G2 Apple Fillet de 38px) */
+.notch-ear {
+    position: absolute;
+    top: 0;
+    width: 39px;
+    height: 38px;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 20;
+}
+
+.notch-ear-left {
+    left: -38px;
+}
+
+.notch-ear-right {
+    right: -38px;
+}
+
+@media (max-width: 540px) {
+    .notch-ear { display: none; }
+}
+
+/* Telón de fondo con desenfoque suave tipo modal (inicia debajo del header a 72px) */
+.notch-backdrop {
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    background-color: rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+:root[data-theme="dark"] .notch-backdrop,
+.dark .notch-backdrop {
+    background-color: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+/* Tarjeta individual de módulo dentro del notch */
+.notch-module {
+    position: relative;
+    display: flex;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    min-height: 0;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 16px;
+    padding: 12px 8px;
+    text-align: center;
+    color: var(--ink-body);
+    outline: none;
+    text-decoration: none;
+    background-color: transparent;
+    transition: background-color 180ms ease, color 180ms ease, transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.notch-module:hover,
+.notch-module:focus-visible {
+    background-color: color-mix(in oklab, var(--brand-surface) 80%, transparent);
+    color: var(--ink);
+    transform: translateY(-2px);
+}
+
+.notch-module:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--brand);
+}
+
+.notch-module:active {
+    transform: scale(0.96);
+}
+
+.notch-module[aria-current="location"] {
+    background-color: var(--brand-surface);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--brand-border);
+}
+
+/* Micro-brackets de marca en las esquinas al pasar el cursor */
+.notch-bracket-tr {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 10px;
+    height: 10px;
+    border-top: 1.5px solid var(--brand);
+    border-right: 1.5px solid var(--brand);
+    border-top-right-radius: 3px;
+    opacity: 0;
+    transform: translate(-2px, 2px);
+    transition: opacity 180ms ease, transform 180ms ease;
+    pointer-events: none;
+}
+
+.notch-bracket-bl {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    width: 10px;
+    height: 10px;
+    border-bottom: 1.5px solid var(--brand);
+    border-left: 1.5px solid var(--brand);
+    border-bottom-left-radius: 3px;
+    opacity: 0;
+    transform: translate(2px, -2px);
+    transition: opacity 180ms ease, transform 180ms ease;
+    pointer-events: none;
+}
+
+.notch-module:hover .notch-bracket-tr,
+.notch-module:hover .notch-bracket-bl,
+.notch-module:focus-visible .notch-bracket-tr,
+.notch-module:focus-visible .notch-bracket-bl,
+.notch-module[aria-current="location"] .notch-bracket-tr,
+.notch-module[aria-current="location"] .notch-bracket-bl {
+    opacity: 1;
+    transform: translate(0, 0);
+}
+
+/* Etiqueta de texto del módulo */
+.notch-module-label {
+    display: flex;
+    min-height: 28px;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: inherit;
+    user-select: none;
+}
+
+/* ─── Acciones interactivas del Notch de Perfil de Usuario ─── */
+.user-notch-action {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 12px;
+    border-radius: 14px;
+    padding: 10px 12px;
+    text-align: left;
+    outline: none;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.user-notch-action:hover,
+.user-notch-action:focus-visible {
+    background-color: var(--muted);
+    transform: translateY(-1px);
+}
+
+.user-notch-action:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--brand);
+}
+
+.user-notch-action:active {
+    transform: scale(0.98);
+}
+
+.user-notch-action-danger:hover,
+.user-notch-action-danger:focus-visible {
+    background-color: color-mix(in oklab, var(--destructive) 10%, transparent);
+}
+
+.user-notch-action-danger:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--destructive);
+}

@@ -115,6 +115,14 @@ export function saveQualityRemissionGuide(loadId: string, guide: QualitySunatRem
     emit();
 }
 
+export function removeQualityRemissionGuide(loadId: string, guideId: string) {
+    if (usesV1()) return qualityCommands.removeGuide(loadId, guideId);
+    items = items.map(item => item.id === loadId
+        ? { ...item, guiasRemision: item.guiasRemision.filter(guide => guide.id !== guideId || guide.estado === 'Generada') }
+        : item);
+    emit();
+}
+
 export function createQualityExportLoad(newLoad: QualityDeliveryLoadItem) {
     if (usesV1()) return qualityCommands.createLoad(newLoad);
     items = [newLoad, ...items];

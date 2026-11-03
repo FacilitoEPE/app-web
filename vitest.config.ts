@@ -9,7 +9,7 @@ export default defineConfig({
     },
   },
   test: {
-    env: { VITE_API_CONTRACT: 'legacy' },
+    env: { VITE_API_CONTRACT: 'legacy', VITE_API_BASE_URL: '' },
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'dev/**/*.test.ts'],
   },

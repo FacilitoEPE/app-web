@@ -29,6 +29,11 @@ export default function QualityFilters({
 }: QualityFiltersProps) {
     return (
         <FilterBar onClear={onClear} canClear={hasActiveFilters} className={className ?? "mb-8"}>
+            <FilterSearch
+                value={search}
+                onChange={onSearchChange}
+                placeholder="Buscar por campaña o fruta..."
+            />
             <FilterSelectField
                 label="Campaña"
                 allLabel="Todas"
@@ -43,11 +48,7 @@ export default function QualityFilters({
                 value={statusFilter}
                 onChange={onStatusChange}
             />
-            <FilterSearch
-                value={search}
-                onChange={onSearchChange}
-                placeholder="Buscar por campaña o fruta..."
-            />
+
         </FilterBar>
     );
 }
