@@ -45,7 +45,7 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
   }
   let nextLocalFileId = 1
   const localFiles = new Map<number, { id: string | number; url: string; name: string; type: string; size: number }>()
-  let localLinks: Array<{ tipo: string; entidadId: number; id: string | number; url: string; name: string; type: string; size: number }> = []
+  let localLinks: Array<{ tipo: string; entidadId: number; id: string | number; archivoId?: string; url: string; name: string; type: string; size: number }> = []
   // Fixtures documentales exclusivos del servidor ficticio de desarrollo.
   const qualityDocumentsReady = Promise.all([
     ...(qualityDemo ? db.analisis_calidad : []).filter(row => row.estado !== 'PENDIENTE').map(row => ({ tipo: 'analisis_calidad', entidadId: Number(row.analisisCalidadId), name: `analisis-${row.analisisCalidadId}.pdf` })),
@@ -54,7 +54,7 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
   ].map(async (entry, index) => {
     const pdf = demoPdf(entry.name, 'Calidad - documento sintetico de demostracion')
     const url = `data:application/pdf;base64,${Buffer.from(await pdf.arrayBuffer()).toString('base64')}`
-    return { ...entry, id: 10000 + index, url, type: pdf.type, size: pdf.size }
+    return { ...entry, id: 10000 + index, archivoId: String(10000 + index), url, type: pdf.type, size: pdf.size }
   })).then(documents => { localLinks = documents })
   const meta = contract['x-database']
   const nextIds = Object.fromEntries(Object.entries(meta).map(([table, def]) => [table, Math.max(0, ...db[table].map(row => Number(row[def.id]))) + 1]))
@@ -413,7 +413,7 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
     else if (pathname === '/api') pathname = '/'
 
     pathname = pathname || '/'
-    if (pathname === '/archivos-locales' && request.method === 'POST') {
+    if ((pathname === '/archivos-locales' || pathname === '/documentos') && request.method === 'POST') {
       const id = nextLocalFileId++
       const chunks: Buffer[] = []
       let size = 0
@@ -431,25 +431,25 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
       localFiles.set(id, file)
       return { status: 201, data: file }
     }
-    if (pathname === '/archivos-locales/vinculos' && request.method === 'GET') return { status: 200, data: localLinks }
-    if (pathname === '/archivos-locales/vinculos' && request.method === 'POST') {
+    if ((pathname === '/archivos-locales/vinculos' || pathname === '/documentos/vinculos') && request.method === 'GET') return { status: 200, data: localLinks }
+    if ((pathname === '/archivos-locales/vinculos' || pathname === '/documentos/vinculos') && request.method === 'POST') {
       const body = await readJson(request) as { tipo: string; entidadId: number; archivoId: number | string }
-      const file = localFiles.get(Number(body.archivoId)) ?? { id: String(body.archivoId), url: `/api/archivos-locales/${body.archivoId}/contenido`, name: 'documento.pdf', type: 'application/pdf', size: 128 }
+      const file = localFiles.get(Number(body.archivoId)) ?? { id: String(body.archivoId), url: `/api/documentos/${body.archivoId}`, name: 'documento.pdf', type: 'application/pdf', size: 128 }
       localLinks = localLinks.filter(item => !(item.tipo === body.tipo && item.entidadId === Number(body.entidadId)))
-      localLinks.push({ tipo: body.tipo, entidadId: Number(body.entidadId), ...file })
+      localLinks.push({ tipo: body.tipo, entidadId: Number(body.entidadId), archivoId: String(body.archivoId), ...file })
       return { status: 201, data: { ok: true } }
     }
-    const unlinkRoute = /^\/archivos-locales\/vinculos\/([^/]+)\/(\d+)$/.exec(pathname)
+    const unlinkRoute = /^\/(?:archivos-locales|documentos)\/vinculos\/([^/]+)\/(\d+)$/.exec(pathname)
     if (unlinkRoute && request.method === 'DELETE') {
       const tipo = decodeURIComponent(unlinkRoute[1])
       const entidadId = Number(unlinkRoute[2])
       localLinks = localLinks.filter(item => !(item.tipo === tipo && item.entidadId === entidadId))
       return { status: 200, data: { ok: true } }
     }
-    const fileContentRoute = /^\/archivos-locales\/(\d+)\/contenido$/.exec(pathname)
+    const fileContentRoute = /^\/(?:archivos-locales|documentos)\/(\d+)(?:\/contenido)?$/.exec(pathname)
     if (fileContentRoute && request.method === 'GET') {
       const id = Number(fileContentRoute[1])
-      const file = localFiles.get(id) ?? { id: String(id), url: `/api/archivos-locales/${id}/contenido`, name: `documento-${id}.pdf`, type: 'application/pdf', size: 128 }
+      const file = localFiles.get(id) ?? { id: String(id), url: `/api/documentos/${id}`, name: `documento-${id}.pdf`, type: 'application/pdf', size: 128 }
       return { status: 200, data: file }
     }
     if (pathname === '/auth/login' && request.method === 'POST') {
@@ -597,7 +597,7 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
     const isMockV1 = url.pathname === '/mock-api/v1' || url.pathname.startsWith('/mock-api/v1/')
     const isMockApi = url.pathname === '/mock-api/api' || url.pathname.startsWith('/mock-api/api/')
     const isMockAuthOrSpecial = url.pathname.startsWith('/mock-api/auth')
-      || url.pathname.startsWith('/mock-api/archivos-locales')
+      || url.pathname.startsWith('/mock-api/archivos-locales') || url.pathname.startsWith('/mock-api/documentos')
       || url.pathname.startsWith('/mock-api/chofer')
     const isDirectApi = url.pathname === '/api' || url.pathname.startsWith('/api/')
       || url.pathname === '/v1' || url.pathname.startsWith('/v1/')

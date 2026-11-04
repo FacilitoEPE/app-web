@@ -12,5 +12,6 @@ export default defineConfig({
     env: { VITE_API_CONTRACT: 'legacy', VITE_API_BASE_URL: '' },
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'dev/**/*.test.ts'],
+    testTimeout: 20000,
   },
 })

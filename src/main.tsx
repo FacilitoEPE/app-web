@@ -1,11 +1,12 @@
 // Polyfill para crypto.randomUUID en contextos no seguros (HTTP / IPs locales) o navegadores sin soporte
 if (typeof window !== 'undefined') {
-  if (!window.crypto) {
-    (window as any).crypto = {};
+  const win = window as unknown as { crypto?: Partial<Crypto> };
+  if (!win.crypto) {
+    win.crypto = {};
   }
-  if (typeof window.crypto.randomUUID !== 'function') {
-    (window.crypto as any).randomUUID = () => {
-      if (typeof window.crypto.getRandomValues === 'function') {
+  if (typeof win.crypto.randomUUID !== 'function') {
+    win.crypto.randomUUID = () => {
+      if (typeof window.crypto?.getRandomValues === 'function') {
         return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
           (
             Number(c) ^
