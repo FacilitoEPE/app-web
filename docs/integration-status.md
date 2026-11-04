@@ -1,12 +1,13 @@
 # 4. Estado de Integración Frontend ↔ Backend (`epe-web`)
 
-> **Único archivo oficial de seguimiento.** Toda auditoría o conexión de vistas/APIs debe actualizarse aquí indicando fecha ISO (`YYYY-MM-DD`) y estado (`Completo`, `Parcial`, `Sin cambios`), conservando el historial en la sección inferior.
+> **Fuente vigente del estado por vista.** Actualiza las entradas superiores al cambiar el estado y sincroniza los documentos afectados según las [reglas de epe-web](../AGENTS.md). Las entradas inferiores son evidencia histórica, no estado vigente; vencen 90 días después de su fecha salvo excepción documentada. Elimina las entradas vencidas al revisar el registro.
 
-## Auditoría estática de API V1 backend — 2026-11-03 · Completo en código / pendiente validación de entorno
+## API V1 backend — Completada · revisión de código 2026-11-03
 
 - Se contrastaron las 252 combinaciones de ruta y método del OpenAPI con los diez controladores NestJS V1, incluido el controlador de catálogos. No hubo operaciones faltantes ni rutas extra.
 - Los controladores delegan en servicios V1 que usan `V1DatabaseService`/TypeORM para leer y escribir en PostgreSQL; las reglas de negocio se ejecutan en backend. Se actualizó el contrato para documentar el prefijo real `/api` y eliminar la descripción de backend pendiente. Las fixtures de frontend quedan descritas solo como apoyo de desarrollo local.
-- Verificación: `nest build` aprobó en ambos backends antes de retirar `epe-backend-security`; el OpenAPI se copió a `dist`. La cobertura de rutas es una comparación estática del código. No se conectó a una base de datos ni se validó el entorno productivo en esta auditoría.
+- La implementación backend se considera completa, según confirmación del usuario. Verificación de código: `nest build` aprobó en `epe-backend`; el OpenAPI se copió a `dist` y la comparación estática no encontró operaciones faltantes ni rutas extra. Esta nota describe el código, no afirma una comprobación de una instancia productiva.
+- El usuario confirma que la parte visual del frontend está completa. El estado de integración funcional por vista se registra en las secciones actuales de este documento; no se debe inferir de los estados históricos inferiores.
 
 ## Auditoría final de Facturación y Liquidación — 2026-11-02 · Completo en desarrollo / pendiente validación productiva
 
@@ -142,7 +143,7 @@
 
 - Retirado `CampaignContextBanner` de `/campaigns/:id/clients/:clientLinkId`, la página abierta por Ver detalles en Gestión de Clientes. Su ficha y métricas ya aportan contexto suficiente.
 - Auditadas las demás páginas con ruta propia abiertas por Ver detalles: campaña, proveedor de campaña, proveedor global, cliente comercial y transportista. No montan `ContextBanner`. Las sub-vistas de gestión conservan sus banners de contexto.
-- `docs/ui-and-design-system.md` ahora prohíbe explícitamente el banner superior en cualquier futura página de Ver detalles con ruta propia, incluso cuando la ruta está anidada.
+- `docs/design-system.md` ahora prohíbe explícitamente el banner superior en cualquier futura página de Ver detalles con ruta propia, incluso cuando la ruta está anidada.
 
 ## Auditoría transversal de rutas y navegación — 2026-11-01 · Parcial
 
@@ -282,12 +283,12 @@
 - **No se puede cerrar QA aún:** el chequeo TypeScript de ambos proyectos pasó y el contrato regenerado desde SQL pasó su verificación; el empaquetado Vite no arrancó porque el runtime no resolvió `rolldown/parseAst`. Faltan suites backend/frontend, aplicar la migración en una base QA nueva y repetir E2E completo con datos nuevos. El API local dejó de responder durante la regresión de navegador. No se modificó ni limpió el conjunto histórico QA.
 - **Estado para Infraestructura:** el esquema/migración y el seed de catálogos están versionados para implementar, pero la base no tiene aún aprobación QA final ni evidencia de migración aplicada. No comunicar “base lista y validada” hasta ejecutar esa verificación. SUNAT real está fuera de alcance actual y S3 queda para una fase posterior.
 
-La evidencia detallada se registra en [resultado E2E](pruebas/qa-e2e-flujos-negocio-v1-2026-10-30.md).
+La evidencia detallada se registra en [resultado E2E](evidence/qa-2026-10-30.md).
 
 ## Historial del E2E inicial — ejecución observada, no aceptación final
 
 - En Chrome sobre `http://localhost:5173/modules` se completó campaña 6 (`QA E2E Orden Correcto 20261030`) desde el alta hasta **Terminado**, con 1,500 kg, recepción, cobro y liquidaciones registrados. El perfil de Chofer se usó después de cerrar sesión de Administrador; se registraron los cinco eventos, checklist y guía de salida, y luego se volvió a Administrador para el cierre.
-- La evidencia por módulo, identificadores y valores queda en [resultado E2E](pruebas/qa-e2e-flujos-negocio-v1-2026-10-30.md). Los registros de QA se conservaron.
+- La evidencia por módulo, identificadores y valores queda en [resultado E2E](evidence/qa-2026-10-30.md). Los registros de QA se conservaron.
 - La integración de vista/comando/persistencia se comprobó para las operaciones de ese recorrido. La emisión electrónica real de SUNAT, pagos bancarios y carga de adjuntos no fue verificada; los botones de adjuntos estaban deshabilitados y logística permitió cerrar con 2/6 documentos y 0/6 archivos.
 - Se corrigió en el formulario de guía la obligatoriedad de los dos códigos de establecimiento (cuatro dígitos), según respuesta requerida por el backend. También se cambió el paso 5 del asistente para guardar la cosecha y abrir `Datos de carga (Anotador)` antes de la guía; una entrega temporal sin carga ahora lleva al formulario de carga. Ambas correcciones se incorporaron tras el E2E y requieren regresión específica en navegador.
 - Estado: el ciclo de negocio disponible en la app pasó con observaciones. Para aprobación de producción faltan validar con negocio el requisito de documentos de cierre y certificar las integraciones externas correspondientes.
@@ -530,11 +531,11 @@ Validación: pruebas HTTP del router y de los adaptadores/almacenes del frontend
 
 ## 4.2. Historial Compacto de Auditorías y Decisiones
 
-- **2026-10-29 · Completo (conexión de pantallas a V1):** adaptadores de lectura y comandos HTTP por dominio, hidratación y refresco de almacenes, formularios asíncronos con errores visibles, eliminación de fallbacks demo en V1 y pruebas de integración del frontend. Snapshot de fuentes en `docs/reference/` para regenerar el contrato desde un clon independiente. Las limitaciones de adjuntos, sesión local, campos sin columna y operaciones compuestas quedan identificadas arriba.
+- **2026-10-29 · Completo (conexión de pantallas a V1):** adaptadores de lectura y comandos HTTP por dominio, hidratación y refresco de almacenes, formularios asíncronos con errores visibles, eliminación de fallbacks demo en V1 y pruebas de integración del frontend. La fuente del contrato se conserva en `docs/api/contract-schema.sql` para regenerarlo desde un clon independiente. Las limitaciones de adjuntos, sesión local, campos sin columna y operaciones compuestas quedan identificadas arriba.
 
-- **2026-10-29 · Completo en ese corte (contrato y fixtures locales; conexión de pantallas pendiente):** contrato V1 documentado en `api-v1-contract.md`, OpenAPI en `api-v1.openapi.json` y catálogo `api-v1-endpoints.md`, derivados del SQL objetivo y acuerdos vigentes. Fixtures separadas en `json/v1-demo/`; middleware local `/mock-api/` y clientes/DTOs tipados por módulo en `api/v1.*`. Esta entrada conserva el estado histórico de octubre; el avance y la conexión actuales están registrados en las auditorías superiores.
+- **2026-10-29 · Completo en ese corte (contrato y fixtures locales; conexión de pantallas pendiente):** contrato V1 documentado en `api/business-rules.md` y OpenAPI en `api/openapi.json`, derivados del SQL fuente. El catálogo de endpoints que se generaba por separado se retiró por duplicar el OpenAPI. Fixtures separadas en `json/v1-demo/`; middleware local `/mock-api/` y clientes/DTOs tipados por módulo en `api/v1.*`. Esta entrada conserva el estado histórico de octubre; el avance y la conexión actuales están registrados en las auditorías superiores.
 - **2026-10-29 · Completo (modo ficticio de desarrollo):** API local de Vite activada explícitamente con `VITE_API_BASE_URL=/mock-api/`. Fixtures editables en `json/` para los recursos consumidos por los servicios actuales; lecturas, CRUD en memoria y relaciones sin modificar páginas, mappers ni el cliente HTTP. Reiniciar Vite restaura las fixtures. Backend real sigue siendo el modo predeterminado y conserva sus errores sin fallback. Build bloqueado si apunta a la API ficticia; archivos/S3 fuera de la simulación. Los almacenes y demos locales sin API mantienen su comportamiento previo.
-- **2026-10-25:** Consolidación de toda la documentación en `docs/` (`architecture-and-solid.md`, `ui-and-design-system.md`, `agent-workflow-and-constraints.md`, `integration-status.md`), unificando los antiguos `reporte-conexion-vistas.md`, `backend-api-integration.md` y `entidades-vistas.md`.
+- **2026-10-25:** Consolidación de toda la documentación en `docs/` (entonces `architecture-and-solid.md`, `ui-and-design-system.md`, `agent-workflow-and-constraints.md` e `integration-status.md`; ahora `architecture.md`, `design-system.md`, `development.md` e `integration-status.md`), unificando los antiguos reportes de conexión, backend y entidades por vista.
 - **2026-10-21:** Implementación de `QualityPage` (`/calidad`) con alcances Exportador e Industria sobre `quality.store.ts` (`// TODO(api)`).
 - **2026-10-19:** Implementación de `CampaignDeliveriesPage` (`/campaigns/:id/deliveries`) con coordinación en memoria y ruta placeholder `CampaignWeeklyDeliveryProgramPage`.
 - **2026-10-17:** Reemplazo de `CampaignCarrierPaymentsPage` (eliminada) por `CampaignCarriersPage` (`/campaigns/:id/carriers`) con acuerdo de pago local (`campaignCarriers.store.ts`). Creación de 4 transportistas de ejemplo en BD local.

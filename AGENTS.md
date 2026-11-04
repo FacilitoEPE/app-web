@@ -1,23 +1,24 @@
-# AGENTS.md — Guía Maestra (`epe-web`)
+# Reglas para agentes de epe-web
 
-Frontend de **Agro Exportaciones F.V.** (`React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 · shadcn/ui · pnpm`).
+Respeta las decisiones de producto y los contratos publicados. No inventes vistas, campos ni endpoints. Si código y documentación no resuelven una ambigüedad funcional, consúltala antes de cambiarla.
 
-> [!IMPORTANT]
-> **Alcance cerrado y fuente única (`docs/`):** Todas las decisiones de producto, diseño y flujos ya están definidas. Prohibido inventar vistas, campos o endpoints. Ante cualquier ambigüedad en un contrato del backend, **detente y pregunta al usuario**.
+## Qué documentación consultar
 
-## 📚 Documentación Normativa (`docs/`)
+- Usa [docs/README.md](docs/README.md) como mapa, sin leer todos los documentos por defecto.
+- Cambios de módulos o límites técnicos: [arquitectura](docs/architecture.md).
+- Cambios visuales: [sistema de diseño](docs/design-system.md).
+- Comandos, fixtures, configuración o restricciones de desarrollo local: [desarrollo](docs/development.md).
+- Cambios de API o integración: [estado de integración](docs/integration-status.md) y [documentación de API](docs/api/README.md).
+- Cambios de acciones disponibles para usuarios: guía correspondiente en `docs/guides/`.
+- `docs/evidence/` contiene resultados fechados, no instrucciones operativas. Verifica su vencimiento antes de reutilizarlos.
 
-Lee el archivo correspondiente antes de tocar código (4 documentos de alta densidad, cero relleno):
+## Reglas de implementación
 
-1. **[`docs/architecture-and-solid.md`](./docs/architecture-and-solid.md)** — **Screaming Architecture y SOLID**: estructura `src/modules/<domain>` vs `src/shared/`, reglas de frontera (`DTO → Mapper → API → UI`), estándar único de formularios (`useModalForm` + `useFormSubmit`), fechas/formatos, y **lista de deuda técnica Senior pendiente**.
-2. **[`docs/ui-and-design-system.md`](./docs/ui-and-design-system.md)** — **Sistema de Diseño, UI y UX**: uso obligatorio de `InputField`, `FormField`, `InfoField`, `AppModal`, `ModalSection`, `TableCard`, escalera de `ContextBanner`, tokens de color claro/oscuro (`src/index.css`) y voz de marca (`es-PE`).
-3. **[`docs/agent-workflow-and-constraints.md`](./docs/agent-workflow-and-constraints.md)** — **Flujo de Agentes IA y Limitaciones**: protocolo en rama `developer`, ciclo TDD (`pnpm test`), almacenes locales (`// TODO(api)` en `.store.ts` + `.demo.ts` solo en `DEV`), caché/SW deshabilitados (`no-store`), `uploadDocument.ts` vs S3 y CORS.
-4. **[`docs/integration-status.md`](./docs/integration-status.md)** — **Estado de Integración API ↔ Vistas**: matriz vigente por pantalla, brechas del backend e historial. **Único archivo a actualizar al auditar o conectar vistas.**
-
-## ⚡ Reglas Innegociables en 5 Líneas
-
-- **Comandos:** Solo `pnpm` (`pnpm test`, `pnpm build`, `pnpm lint`). Para comprobar tipos: `npx tsc --noEmit -p tsconfig.app.json` (`tsc -p .` no hace nada).
-- **Imports:** Siempre `@/` (`@/modules/...`, `@/shared/...`), salvo dentro de `src/shared/components/ui/` (relativos por shadcn).
-- **UI sin wrappers:** Nunca envolver `shared/components/ui/*` solo para dar estilo; editar el control en `ui/`. Nunca usar `bg-white`, hex sueltos ni `gray-*`/`slate-*`.
-- **Frontera de datos:** Componentes y páginas jamás importan `apiClient` ni DTOs crudos. Sin fallbacks mock en vistas conectadas.
-- **Rama `developer`:** Al iniciar sesión en `developer`, revisar primero `docs/integration-status.md` para priorizar lo pendiente.
+- Este es el único AGENTS general de `epe-web`; no agregues reglas por módulo o subcarpeta.
+- Usa `pnpm` para comandos del proyecto. Para comprobar tipos sin build: `npx tsc --noEmit -p tsconfig.app.json`.
+- Usa imports `@/`, salvo dentro de `src/shared/components/ui/`, donde se permiten relativos de shadcn.
+- No envuelvas componentes `src/shared/components/ui/*` solo para estilarlos. Usa tokens de `src/index.css`; no agregues colores fijos ni paletas grises/verde de Tailwind.
+- Componentes y páginas no importan `apiClient` ni DTOs crudos. No agregues fallbacks mock a vistas conectadas.
+- La fuente del OpenAPI se mantiene en `docs/api/contract-schema.sql`. Genera con `pnpm contract:generate` y verifica con `pnpm contract:check`; sincroniza la copia runtime backend en el mismo cambio.
+- Al cambiar contrato, datos o flujo compartido, actualiza los documentos afectados de `epe-backend` y `../docs/` según sus AGENTS. No es requisito consultar documentación fuera del alcance de la tarea.
+- Al iniciar trabajo en la rama `developer`, consulta el estado de integración para priorizar tareas abiertas.

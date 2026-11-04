@@ -1,4 +1,4 @@
-# 2. Sistema de Diseño, Catálogo UI y Reglas de UX
+# Sistema de diseño y experiencia de uso
 
 ## 2.1. Componentes Obligatorios por Patrón Visual
 

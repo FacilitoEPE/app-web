@@ -1,27 +1,15 @@
 # Documentación de epe-web
 
-Índice para la aplicación y su integración con el backend. El historial de cambios de pantallas y conectores se conserva en `integration-status.md`.
+Índice breve para personas y agentes. Consulta únicamente la guía relacionada con el cambio; las reglas generales están en [AGENTS.md](../AGENTS.md).
 
-## V1 y operación
+| Si la tarea afecta… | Consulta… |
+|---|---|
+| Módulos, capas o límites de código | [architecture.md](architecture.md) |
+| Componentes, tokens o interacción visual | [design-system.md](design-system.md) |
+| Comandos, fixtures o configuración local | [development.md](development.md) |
+| Integración disponible por vista | [integration-status.md](integration-status.md) |
+| Rutas, payloads o reglas API | [api/README.md](api/README.md) |
+| Pasos visibles para un usuario | [guides/](guides/) |
+| Resultado de pruebas con alcance y fecha | [evidence/](evidence/) |
 
-- Manuales de usuario V1: [Administrador](manuales/guia-administrador-v1.md) · [Chofer](manuales/guia-chofer-v1.md)
-- [Resultado E2E de negocio V1](pruebas/qa-e2e-flujos-negocio-v1-2026-10-30.md)
-- [Catálogos predeterminados y SQL seguro de producción](../../epe-backend/docs/default-data.md)
-- [Estado de integración por vista](integration-status.md)
-- [Contrato HTTP OpenAPI V1](api-v1.openapi.json) — contrato vigente del backend y fuente de DTOs generados.
-- [Reglas del contrato frontend/backend V1](api-v1-contract.md)
-- [Catálogo de endpoints V1](api-v1-endpoints.md)
-
-## Arquitectura y experiencia de uso
-
-- [Arquitectura y límites de módulos](architecture-and-solid.md)
-- [Sistema visual y accesibilidad](ui-and-design-system.md)
-- [Flujo de trabajo y restricciones](agent-workflow-and-constraints.md)
-- [Acuerdos de referencia](reference/README.md)
-
-## Mantenimiento documental
-
-- Cambios de integración o auditorías de vistas: actualizar `integration-status.md` con fecha ISO y estado, sin crear reportes paralelos.
-- Cambios del contrato V1: actualizar OpenAPI, clientes y fixtures con `pnpm contract:generate`; validar con `pnpm contract:check` y contrastar con el Swagger del backend.
-- Guía de usuario: mantener la ruta de pantalla y el texto visible de cada opción. No asumir que una vista en construcción está lista para operación.
-- Los manuales canónicos V1 viven en `manuales/`; los resultados E2E fechados, en `pruebas/`.
+El estado de integración es el registro operativo por vista. Las guías de usuario describen acciones disponibles, y los informes de `evidence/` son cortes fechados con vigencia limitada.

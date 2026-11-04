@@ -108,7 +108,7 @@ La variable alimenta al [cliente Axios compartido](src/shared/api/client.ts). Si
 
 ### Desarrollo local con datos ficticios
 
-La API V1 está implementada en `epe-backend` bajo `/api` y usa PostgreSQL. Consulta la [guía de la API V1](docs/api-v1-contract.md), el [contrato OpenAPI](docs/api-v1.openapi.json) y el [catálogo de endpoints](docs/api-v1-endpoints.md). Los servicios tipados llaman `/api`; `json/v1-demo/` contiene datos ficticios solo para desarrollo local.
+La API V1 está implementada en `epe-backend` bajo `/api` y usa PostgreSQL. Consulta las [reglas de API](docs/api/business-rules.md) y el [contrato OpenAPI](docs/api/openapi.json). Los servicios tipados llaman `/api`; `json/v1-demo/` contiene datos ficticios solo para desarrollo local.
 
 Para trabajar en el frontend con la API local de prueba, cambia una sola variable en `.env`:
 
@@ -128,7 +128,7 @@ Este modo es exclusivo del servidor de desarrollo: el build se detiene si todav�
 
 Con `VITE_API_BASE_URL=/mock-api/`, las pantallas usan el servidor ficticio de desarrollo. Para el backend real configura su origen, por ejemplo `http://localhost:3000/`, y `VITE_API_CONTRACT=v1`; los servicios llaman las rutas `/api` implementadas por NestJS.
 
-El backend mantiene una copia de ejecución del [OpenAPI](docs/api-v1.openapi.json) para validar solicitudes y convertir filas de PostgreSQL. Ejecuta `pnpm contract:check` para comprobar que el SQL fuente y los archivos generados coincidan.
+El backend mantiene una copia de ejecución del [OpenAPI](docs/api/openapi.json) para validar solicitudes y convertir filas de PostgreSQL. Ejecuta `pnpm contract:check` para comprobar que el SQL fuente y los archivos generados coincidan.
 
 Las escrituras se esperan antes de mostrar éxito. Un fallo HTTP muestra el error y conserva el formulario. El backend transacciona cada operación que lo requiere; los comandos del frontend que abarcan varios requests pueden guardar parcialmente y recargan los datos para mostrar el estado confirmado por el servidor. Los documentos se envían mediante la API de archivos locales; la persistencia del entorno desplegado se describe en el [estado de integración](docs/integration-status.md). La emisión SUNAT se realiza fuera del sistema.
 

@@ -1,25 +1,28 @@
 # Contrato de la API V1 — Agro Exportaciones F.V.
 
-Versión técnica **1.0.0**, preparada el **2026-10-29** para coordinar la implementación de `epe-backend` y la evolución de `epe-web`.
+Versión técnica del contrato **V1**. La implementación backend está completada según confirmación del usuario. Este documento conserva reglas de negocio de la V1; no es un plan de backend futuro.
 
 Este documento describe el contrato HTTP de la API V1 implementada en `epe-backend`. Sus controladores NestJS exponen las operaciones bajo `/api`, y sus servicios leen y escriben en PostgreSQL. El OpenAPI también alimenta los DTOs TypeScript del frontend. Las fixtures de `json/v1-demo/` sirven para desarrollo local y no son la implementación del backend. La API anterior conserva el modo `legacy`.
 
 ## 1. Fuentes del contrato y la implementación
 
-1. Esta guía: responsabilidades, reglas y límites.
-2. [OpenAPI 3.1](api-v1.openapi.json): rutas, métodos, filtros, cuerpos de escritura, respuestas, nulabilidad, enums, decimales y errores. Es el contrato HTTP verificable.
-3. [Catálogo de endpoints](api-v1-endpoints.md): índice por módulo con tabla física y padre de cada ruta.
-4. [SQL objetivo](reference/agro-schema/03_schema_total.sql) y sus [datos iniciales](reference/agro-schema/04_datos_iniciales.sql): referencia de persistencia, no instrucciones para reemplazar una base existente.
-5. [Fixtures de demostración V1](../json/v1-demo/): datos ficticios para desarrollo local; no deben confundirse con datos iniciales de producción.
+1. [SQL fuente del generador](contract-schema.sql): define las tablas y columnas del contrato publicado.
+2. [OpenAPI generado](openapi.json): define rutas, métodos, filtros, cuerpos, respuestas, nulabilidad, enums, decimales y errores; también genera los DTOs frontend.
+3. [OpenAPI runtime backend](../../../epe-backend/src/common/v1/contract/api-v1.openapi.json): copia usada por NestJS; debe coincidir con la salida generada.
+4. Esta guía: reglas de negocio y límites que complementan el OpenAPI.
+5. [Entidades y migraciones backend](../../../epe-backend/src/database/): fuente del esquema implementado; el SQL de generación no sustituye las migraciones.
+6. [Fixtures de demostración V1](../../json/v1-demo/): datos ficticios para desarrollo local; no son datos de producción.
 
-Los nombres de las rutas, la versión HTTP, la paginación y la distribución de DTOs describen la implementación V1. Las reglas de negocio proceden de las fuentes siguientes. La presencia del contrato y del código no acredita que un despliegue productivo esté disponible.
+Las rutas y estructuras se publican en el OpenAPI generado y en su copia de ejecución backend. Si esta guía, las copias OpenAPI o los documentos de otro proyecto difieren, actualiza las fuentes involucradas en el mismo cambio. La disponibilidad de un despliegue es información del entorno, separada del estado de implementación.
 
 ### Precedencia de fuentes
 
-1. Acuerdos vigentes de [app/docs/README](reference/agreements.md) y apartado **Schema actualizado tras la auditoría de cumplimiento** del [reporte específico](reference/agro-schema/01_reporte_especifico.md#schema-actualizado-tras-la-auditoría-de-cumplimiento).
-2. SQL objetivo y diccionarios de ese mismo reporte. Para tablas/columnas se usa el SQL real, no los conteos antiguos que permanecen en auditorías históricas.
-3. [Flujos y relaciones](reference/agro-schema/02_tablas_y_relaciones.md) y prototipo local `app/docs/prototipo/Campaign Management System/src/`, especialmente `store.tsx`, `campaign-lifecycle.ts`, `remission-model.ts` y flujos financieros.
-4. [Arquitectura del frontend](architecture-and-solid.md) y [estado de integración](integration-status.md), que describen el código actual y pueden estar por detrás del objetivo.
+1. Decisiones funcionales confirmadas por el usuario.
+2. Controllers, entidades y migraciones backend para el comportamiento implementado.
+3. OpenAPI compartido para la forma de las solicitudes/respuestas; debe coincidir en frontend y backend.
+4. [Estado de integración](../integration-status.md) para comportamiento frontend y evidencia por vista.
+5. [SQL fuente](contract-schema.sql) como entrada del generador; no prevalece sobre las migraciones implementadas.
+6. Prototipo solo como antecedente cuando esté disponible; no asumir que existe en este checkout ni que describe V1.
 
 OpenAPI incluye `x-source.sha256` del SQL utilizado. `pnpm contract:check` detecta cambios en el SQL o archivos generados que exijan revisar el contrato. Este hash acredita procedencia, no aprobación ni despliegue del SQL.
 
@@ -40,7 +43,7 @@ OpenAPI incluye `x-source.sha256` del SQL utilizado. `pnpm contract:check` detec
 | Monedas | Compra y transporte PEN; ventas usan PEN/USD/EUR según contrato. |
 | Adelantos | Solo transporte; distinguir acordado, desembolsado, aplicado y disponible. Aplicar no es pagar de nuevo. |
 | Facturas | Varias por carga con descuento/cargos; suma de kilos dentro de recepción. Varios cobros no equivalen a varias facturas. |
-| Documentos | FC14 diferido. Referencias reservadas opcionales; sin crear `archivo`, sin endpoint general de upload, sin binarios/base64 en JSON. |
+| Documentos | Algunos flujos de Facturación y Logística usan rutas de archivos locales; sus pruebas disponibles usan el servidor ficticio de desarrollo y no acreditan persistencia en un despliegue. El modelo no incluye un archivo general ni una integración S3 contratada. |
 | Sesiones | No crear `sesion_usuario`; la API V1 usa la autenticación JWT Bearer existente. |
 
 No hay ampliación a tarifas por calidad, adelantos a proveedores, devolución automática de adelantos, multiviaje por entrega, reaperturas, facturación agrupada ni un sistema tributario nuevo.
@@ -56,7 +59,7 @@ No hay ampliación a tarifas por calidad, adelantos a proveedores, devolución a
 - La UI puede exigir archivos donde el objetivo los difiere. Mantener identificada la diferencia; no crear IDs ficticios ni simular una subida exitosa.
 - Coordenadas de finca son obligatorias en el SQL; algunas demos/formularios permiten vacío. El adaptador debe informar el faltante, sin convertirlo en coordenada cero.
 
-Los selectores V1 de finca admiten una variedad; la participación no presenta selección de fincas/variedades porque su origen se especifica en la coordinación. Los adjuntos están deshabilitados mientras FC14 permanezca diferido. Los campos visuales sin columna equivalente se identifican como pendientes y no se envían al backend.
+Los selectores V1 de finca admiten una variedad; la participación no presenta selección de fincas/variedades porque su origen se especifica en la coordinación. Algunos flujos permiten adjuntos mediante rutas locales de desarrollo; no afirmar persistencia productiva, archivo general o S3. Los campos visuales sin columna equivalente se identifican como pendientes y no se envían al backend.
 
 ## 3. Convenciones HTTP
 
@@ -282,4 +285,4 @@ pnpm test
 pnpm build
 ```
 
-`pnpm contract:generate` regenera OpenAPI, catálogo y clientes/DTOs desde el SQL fuente y las decisiones HTTP de `dev/generate-v1-contract.mjs`. Revisar los diffs antes de integrar; no editar los archivos generados a mano. Estos comandos verifican el contrato, pero no aplican migraciones a una base de datos.
+`pnpm contract:generate` regenera OpenAPI y los clientes/DTOs desde el SQL fuente y las decisiones HTTP de `dev/generate-v1-contract.mjs`. Revisar los diffs antes de integrar; no editar los archivos generados a mano. Estos comandos verifican el contrato, pero no aplican migraciones a una base de datos.

@@ -1,4 +1,4 @@
-# 1. Arquitectura (Screaming) y Principios SOLID
+# Arquitectura frontend y principios SOLID
 
 ## 1.1. Screaming Architecture (`src/`)
 

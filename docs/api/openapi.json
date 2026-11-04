@@ -3,7 +3,7 @@
   "info": {
     "title": "Agro Exportaciones F.V. — API V1",
     "version": "1.0.0",
-    "description": "Contrato HTTP de la API V1 implementada por epe-backend. Sus operaciones se exponen bajo /api y usan PostgreSQL. Ver api-v1-contract.md para reglas y límites."
+    "description": "Contrato HTTP de la API V1 implementada por epe-backend. Sus operaciones se exponen bajo /api y usan PostgreSQL. Ver business-rules.md para reglas y límites."
   },
   "servers": [
     {
@@ -12,7 +12,7 @@
     }
   ],
   "x-source": {
-    "path": "reference/agro-schema/03_schema_total.sql",
+    "path": "api/contract-schema.sql",
     "sha256": "5513f6305d8a48a0cce02b943a948bd4901cdeabce08fb1fb62493b622b5117b",
     "date": "2026-10-29"
   },

@@ -1,4 +1,4 @@
-# 3. Flujo de Trabajo de Agentes IA y Restricciones Técnicas
+# Desarrollo local y restricciones técnicas
 
 ## 3.1. Reglas Operativas para Agentes de IA
 

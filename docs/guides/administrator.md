@@ -107,6 +107,6 @@ En **Gestión de Campaña**, abra la campaña y elija **Cerrar campaña** cuando
 ## 11. Límites conocidos de la V1
 
 - La guía y la factura que aparecen como emitidas son registros del flujo de la aplicación; esta prueba no verificó conexión con SUNAT ni con bancos.
-- La carga de adjuntos aparece deshabilitada. El sistema puede guardar estados y checklists, pero no se debe considerar un archivo como enviado si no está disponible la acción de adjuntar.
-- Los catálogos de referencia se mantienen por despliegue/migración; revise [datos predeterminados](../../../epe-backend/docs/default-data.md) antes de preparar una base nueva.
+- Algunos flujos de Facturación y Logística ofrecen adjuntar archivos; su prueba disponible usa el servidor ficticio de desarrollo. Verifique que el archivo quede asociado al registro antes de tratarlo como persistido. No hay emisión directa a SUNAT ni conexión bancaria documentada.
+- Los catálogos de referencia se mantienen por migración/semilla; revise [semillas](../../../epe-backend/docs/seed-data.md) antes de preparar una base nueva.
 - Si una operación no se conserva al volver a abrir la pantalla, reporte módulo, ruta, identificador y acción. No incluya contraseñas ni datos personales innecesarios.
