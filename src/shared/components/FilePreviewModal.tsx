@@ -30,7 +30,8 @@ export default function FilePreviewModal({ open, onOpenChange, file }: FilePrevi
         if (!open || !file || !isStoredFile(file)) return;
         const url = new URL(file.url, window.location.origin);
         const apiOrigin = new URL(apiClient.defaults.baseURL || window.location.origin, window.location.origin).origin;
-        if (url.origin !== apiOrigin || !url.pathname.startsWith('/api/archivos-locales/')) return;
+        const isProtectedPath = url.pathname.startsWith('/api/documentos/') || url.pathname.startsWith('/api/archivos-locales/');
+        if (url.origin !== apiOrigin || !isProtectedPath) return;
         let active = true;
         let blobUrl: string | null = null;
         void apiClient.get<Blob>(url.href, { responseType: 'blob' }).then(({ data }) => {
@@ -42,7 +43,10 @@ export default function FilePreviewModal({ open, onOpenChange, file }: FilePrevi
         return () => { active = false; if (blobUrl) URL.revokeObjectURL(blobUrl); setProtectedUrl(null); setProtectedType(''); };
     }, [open, file]);
 
-    const protectedFile = file && isStoredFile(file) && new URL(file.url, window.location.origin).pathname.startsWith('/api/archivos-locales/');
+    const protectedFile = file && isStoredFile(file) && (() => {
+        const pathname = new URL(file.url, window.location.origin).pathname;
+        return pathname.startsWith('/api/documentos/') || pathname.startsWith('/api/archivos-locales/');
+    })();
     const previewUrl = file && isStoredFile(file) ? (protectedFile ? protectedUrl : file.url) : objectUrl;
     if (!file || !previewUrl) return null;
 

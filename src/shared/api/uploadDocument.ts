@@ -1,38 +1,46 @@
-/** Sube un documento al servidor local y devuelve la dirección protegida de descarga. */
+/** Sube un documento a AWS S3 mediante la API y devuelve la dirección protegida de descarga. */
 import { apiClient } from '@/shared/api/client';
 import type { FileSource, StoredFile } from '@/shared/utils/fileSource';
 
-export interface LocalDocument { id: string; url: string; name: string; type: string; size: number }
-export interface LocalDocumentLink { tipo: string; entidadId: number; archivoId: string; url: string; name: string; type: string; size: number }
+export interface S3Document { id: string; url: string; name: string; type: string; size: number }
+export interface S3DocumentLink { tipo: string; entidadId: number; archivoId: string; url: string; name: string; type: string; size: number }
+export type LocalDocument = S3Document;
+export type LocalDocumentLink = S3DocumentLink;
 
-export async function uploadLocalDocument(file: File): Promise<LocalDocument> {
+export async function uploadS3Document(file: File): Promise<S3Document> {
     const form = new FormData();
     form.append('archivo', file);
-    const { data } = await apiClient.post<LocalDocument>('/api/archivos-locales', form);
+    const { data } = await apiClient.post<S3Document>('/api/documentos', form);
     const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
     return { ...data, url: new URL(data.url, new URL(apiClient.defaults.baseURL || origin, origin)).href };
 }
+export const uploadLocalDocument = uploadS3Document;
+
 export async function persistFile(file: FileSource | null): Promise<StoredFile | null> {
     if (!file) return null;
-    return file instanceof File ? uploadLocalDocument(file) : file;
+    return file instanceof File ? uploadS3Document(file) : file;
 }
 
-export async function linkLocalDocument(tipo: string, entidadId: number, archivoId: string): Promise<void> {
-    await apiClient.post('/api/archivos-locales/vinculos', { tipo, entidadId, archivoId });
+export async function linkS3Document(tipo: string, entidadId: number, archivoId: string): Promise<void> {
+    await apiClient.post('/api/documentos/vinculos', { tipo, entidadId, archivoId });
 }
-export async function unlinkLocalDocument(tipo: string, entidadId: number): Promise<void> {
-    await apiClient.delete(`/api/archivos-locales/vinculos/${tipo}/${entidadId}`);
-}
+export const linkLocalDocument = linkS3Document;
 
-export async function getLocalDocumentLinks(): Promise<LocalDocumentLink[]> {
-    const { data } = await apiClient.get<LocalDocumentLink[]>('/api/archivos-locales/vinculos');
+export async function unlinkS3Document(tipo: string, entidadId: number): Promise<void> {
+    await apiClient.delete(`/api/documentos/vinculos/${tipo}/${entidadId}`);
+}
+export const unlinkLocalDocument = unlinkS3Document;
+
+export async function getS3DocumentLinks(): Promise<S3DocumentLink[]> {
+    const { data } = await apiClient.get<S3DocumentLink[]>('/api/documentos/vinculos');
     const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
     const base = new URL(apiClient.defaults.baseURL || origin, origin);
     return data.map(item => ({ ...item, url: new URL(item.url, base).href }));
 }
+export const getLocalDocumentLinks = getS3DocumentLinks;
 
 export async function uploadDocument(file: File): Promise<string> {
-    const data = await uploadLocalDocument(file);
+    const data = await uploadS3Document(file);
     return new URL(data.url, apiClient.defaults.baseURL || window.location.origin).href;
 }
 

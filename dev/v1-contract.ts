@@ -107,7 +107,10 @@ export function validateV1Schema(contract: Contract, inputSchema: Schema, value:
 }
 
 export function loadV1Contract(root: string): { contract: Contract; database: Database } {
-  const contract: Contract = JSON.parse(fs.readFileSync(path.join(root, 'docs/api-v1.openapi.json'), 'utf8'))
+  const contractPath = fs.existsSync(path.join(root, 'docs/api/openapi.json'))
+    ? path.join(root, 'docs/api/openapi.json')
+    : path.join(root, 'docs/api-v1.openapi.json')
+  const contract: Contract = JSON.parse(fs.readFileSync(contractPath, 'utf8'))
   const database: Database = {}
   for (const [table, definition] of Object.entries(contract['x-database'])) {
     const rows: unknown = JSON.parse(fs.readFileSync(path.join(root, 'json/v1-demo', `${table}.json`), 'utf8'))
