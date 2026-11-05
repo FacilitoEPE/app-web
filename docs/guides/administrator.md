@@ -28,6 +28,9 @@ Frutas, variedades, normas, roles y parámetros UIT son catálogos de referencia
 ## 3. Crear una campaña y vincular proveedores
 
 1. Abra **Gestión de Campaña** (`/campaigns`) y elija **Nueva Campaña**.
+
+En **Lineamientos**, elegir un archivo solo lo deja pendiente; se envía al crear/guardar la campaña. Al consultar un adjunto guardado, verde indica documento verificado, rojo indica que falta o no coincide con sus metadatos: quítelo y vuelva a adjuntarlo. Si aparece «No se pudo verificar», revise la conexión o solicite revisar los permisos del almacenamiento y pulse **Volver a verificar**. La vista previa se deshabilita para documentos confirmados como faltantes o inconsistentes.
+
 2. Ingrese nombre, fruta, meta en kilogramos y fechas; elija **Crear Campaña**. Verifique que figure como **Planificado**.
 3. Abra el detalle de campaña, sección **Proveedores**, y elija **Vincular proveedor**.
 4. Seleccione al proveedor, indique si participa como **Productor** o **Acopiador**, ingrese kilos estimados y guarde.

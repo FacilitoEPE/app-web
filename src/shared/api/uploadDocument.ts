@@ -6,6 +6,18 @@ export interface S3Document { id: string; url: string; name: string; type: strin
 export interface S3DocumentLink { tipo: string; entidadId: number; archivoId: string; url: string; name: string; type: string; size: number }
 export type LocalDocument = S3Document;
 export type LocalDocumentLink = S3DocumentLink;
+export type DocumentAvailability = 'DISPONIBLE' | 'FALTANTE' | 'INVALIDO' | 'NO_VERIFICABLE';
+
+/** Consulta metadatos y objeto real sin descargar el documento ni enviar credenciales a otros orígenes. */
+export async function getDocumentAvailability(documentUrl: string, signal?: AbortSignal): Promise<DocumentAvailability> {
+    const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
+    const base = new URL(apiClient.defaults.baseURL || origin, origin);
+    let url: URL;
+    try { url = new URL(documentUrl, base); } catch { return 'NO_VERIFICABLE'; }
+    if (url.origin !== base.origin || !/\/api\/(?:documentos|archivos-locales)\/[0-9a-f-]{36}$/i.test(url.pathname)) return 'NO_VERIFICABLE';
+    const { data } = await apiClient.get<{ estado: DocumentAvailability }>(`${url.origin}${url.pathname}/estado`, { signal });
+    return ['DISPONIBLE', 'FALTANTE', 'INVALIDO', 'NO_VERIFICABLE'].includes(data?.estado) ? data.estado : 'NO_VERIFICABLE';
+}
 
 /** Tamaño máximo de archivo permitido: 10 MB (alineado con FILE_UPLOAD_MAX_BYTES del backend) */
 export const MAX_DOCUMENT_FILE_SIZE_BYTES = 10 * 1024 * 1024;

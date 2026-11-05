@@ -41,6 +41,8 @@ El tema se aplica con la clase `.dark` en `<html>` (`useTheme.ts`, clave `epe-th
 - **Degradados sobre imágenes:** Fundir siempre hacia el contenedor (`from-card`), **nunca** `from-white`. `text-white` solo es válido sobre `bg-brand`, `--brand-gradient` o fotografías oscurecidas.
 
 ### Jerarquía del Verde en Modo Oscuro
+
+En `FileDropzone`, el verde de un documento guardado requiere verificación positiva del objeto real. Un archivo faltante o inconsistente usa `border-destructive`, `bg-destructive/10` y texto de estado rojo. Durante la comprobación o antes de guardar se muestra una tarjeta neutra; si falla la verificación se muestra un aviso, sin afirmar que el archivo falta. El significado siempre se expresa también en texto.
 - **Gris neutro (`bg-surface-page`, `bg-card`, `bg-popover`):** Toda la estructura (fondos, cards, inputs, cuerpo de tablas, botones secundarios, texto).
 - **Verde lleno (`bg-brand`):** Botones primarios, enlaces, tab/página activa, foco.
 - **Velo verde (`bg-brand-surface`):** Cabecera de tablas (`TABLE_HEAD_BG`), hover de filas, círculos de ícono, `TableCountPill`, badges y avisos.

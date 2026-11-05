@@ -28,6 +28,12 @@ OpenAPI incluye `x-source.sha256` del SQL utilizado. `pnpm contract:check` detec
 
 ## 2. Alcance y decisiones que se conservan
 
+### Disponibilidad de adjuntos
+
+`GET /api/documentos/{id}/estado` (también `/api/archivos-locales/{id}/estado`) requiere sesión de Administrador o Chofer propietario. Responde `{ estado }`: `DISPONIBLE` si existen metadatos y objeto real con tamaño y tipo coincidentes; `FALTANTE` ante ausencia confirmada; `INVALIDO` por metadatos corruptos o tamaño/tipo distintos; `NO_VERIFICABLE` por errores de permisos, configuración o conectividad. No se clasifica un 403 de S3 como ausencia. El 403 de la API impide consultar documentos de otro chofer. La respuesta no expone bucket, claves ni credenciales.
+
+El campo compartido `FileDropzone` verifica cada referencia guardada al montarse o cambiar de URL, cancela consultas anteriores y permite volver a verificar. Verde significa verificado, rojo faltante/inválido; un fallo de verificación se muestra con aviso y los archivos recién elegidos permanecen pendientes de guardar. Los enlaces externos no se validan ni reciben credenciales. La API valida el objeto después de subirlo y antes de guardar un vínculo; la disponibilidad se confirma en ese instante, sin garantizar permanencia futura ni validar el contenido interno del documento.
+
 | Tema | Contrato objetivo |
 |---|---|
 | Empresa y perfiles | Una agroexportadora; Administrador y Chofer. Sin multempresa ni nuevos perfiles. |

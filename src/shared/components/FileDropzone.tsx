@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileText, Upload, Eye, X, Pencil, Image as ImageIcon } from "lucide-react";
 import FilePreviewModal from "@/shared/components/FilePreviewModal";
-import { formatFileSize, isImage, type FileSource, type StoredFile } from "@/shared/utils/fileSource";
+import { formatFileSize, isImage, isStoredFile, type FileSource, type StoredFile } from "@/shared/utils/fileSource";
+import { getDocumentAvailability, type DocumentAvailability } from '@/shared/api/uploadDocument';
 import Hint from "@/shared/components/Hint";
 import { INFO_LABEL_CLASS } from "@/shared/components/InfoField";
 import { cn } from "@/lib/utils";
@@ -59,6 +60,29 @@ export default function FileDropzone({
     const [isDragging, setIsDragging] = useState(false);
     const inputId = `file-dropzone-${label.replace(/\s+/g, "-").toLowerCase()}`;
     const replaceInputRef = useRef<HTMLInputElement>(null);
+    const storedUrl = file && isStoredFile(file) ? file.url : null;
+    const [verification, setVerification] = useState<{ source: FileSource; estado: DocumentAvailability } | null>(null);
+    const [verificationAttempt, setVerificationAttempt] = useState(0);
+    useEffect(() => {
+        if (!storedUrl || !file) return;
+        const abort = new AbortController();
+        void getDocumentAvailability(storedUrl, abort.signal)
+            .then(estado => { if (!abort.signal.aborted) setVerification({ source: file, estado }); })
+            .catch(() => { if (!abort.signal.aborted) setVerification({ source: file, estado: 'NO_VERIFICABLE' }); });
+        return () => abort.abort();
+    }, [file, storedUrl, verificationAttempt]);
+    const availability = storedUrl && verification?.source === file ? verification.estado : null;
+    const available = availability === 'DISPONIBLE';
+    const unavailable = availability === 'FALTANTE' || availability === 'INVALIDO';
+    const statusText = !storedUrl ? 'Pendiente de guardar' : availability === null ? 'Verificando documento…'
+        : available ? 'Documento verificado'
+        : availability === 'FALTANTE' ? 'El documento no existe en el almacenamiento. Vuelve a adjuntarlo.'
+        : availability === 'INVALIDO' ? 'El documento no coincide con sus metadatos. Vuelve a adjuntarlo.'
+        : 'No se pudo verificar el documento. Revisa la conexión o los permisos.';
+    const cardStatusClass = available ? 'border-brand-border bg-brand-surface/40'
+        : unavailable ? 'border-destructive bg-destructive/10'
+        : 'border-border bg-surface-page';
+    const iconStatusClass = available ? 'text-white' : unavailable ? 'bg-destructive/10 text-destructive' : 'bg-muted text-ink-muted';
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -92,9 +116,10 @@ export default function FileDropzone({
                 <Hint label="Ver archivo">
                     <button
                         type="button"
+                        disabled={unavailable}
                         onClick={() => setPreviewOpen(true)}
                         aria-label="Ver archivo"
-                        className={cn("flex items-center justify-center text-ink-muted transition-colors hover:bg-card hover:text-brand active:scale-95 cursor-pointer", box)}
+                        className={cn("flex items-center justify-center text-ink-muted transition-colors hover:bg-card hover:text-brand active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed", box)}
                     >
                         <Eye size={iconSize} strokeWidth={2.5} />
                     </button>
@@ -211,11 +236,11 @@ export default function FileDropzone({
                 )
             ) : (
                 isHorizontal ? (
-                    <div className="flex h-11 w-full min-w-[280px] items-center justify-between gap-2.5 rounded-lg border border-brand-border bg-brand-surface/40 px-3">
+                    <div className={cn("flex h-11 w-full min-w-[280px] items-center justify-between gap-2.5 rounded-lg border px-3", cardStatusClass)}>
                         <div className="flex min-w-0 flex-1 items-center gap-2.5">
                             <span 
-                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-white border border-transparent bg-clip-padding"
-                                style={BRAND_ACTIVE_SURFACE}
+                                className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent bg-clip-padding", iconStatusClass)}
+                                style={available ? BRAND_ACTIVE_SURFACE : undefined}
                             >
                                 <FileIcon size={14} strokeWidth={2.5} />
                             </span>
@@ -227,10 +252,10 @@ export default function FileDropzone({
                         <div className="flex shrink-0 items-center gap-1">{renderActions(true)}</div>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-3 rounded-lg border border-brand-border bg-brand-surface/40 p-3">
+                    <div className={cn("flex items-center gap-3 rounded-lg border p-3", cardStatusClass)}>
                         <span 
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white border border-transparent bg-clip-padding"
-                            style={BRAND_ACTIVE_SURFACE}
+                            className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding", iconStatusClass)}
+                            style={available ? BRAND_ACTIVE_SURFACE : undefined}
                         >
                             <FileIcon size={20} strokeWidth={2.5} />
                         </span>
@@ -241,6 +266,15 @@ export default function FileDropzone({
                         <div className="flex shrink-0 items-center gap-1">{renderActions(false)}</div>
                     </div>
                 )
+            )}
+
+            {file && (
+                <div role="status" aria-live="polite" className={cn('text-[12px] font-medium', unavailable ? 'text-destructive' : availability === 'NO_VERIFICABLE' ? 'text-status-warning' : 'text-ink-muted')}>
+                    {statusText}
+                    {storedUrl && availability !== null && (
+                        <button type="button" className="ml-2 cursor-pointer underline" onClick={() => { setVerification(null); setVerificationAttempt(value => value + 1); }}>Volver a verificar</button>
+                    )}
+                </div>
             )}
 
             {replaceable && file && (

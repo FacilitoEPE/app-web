@@ -237,6 +237,21 @@ for (const [url, table, properties, required] of actions) {
   } }
 }
 
+// Documento general en S3: operación auxiliar sin tabla/CRUD propio en el SQL.
+schemas.DocumentAvailability = {
+  type: 'object', required: ['estado'], additionalProperties: false,
+  properties: { estado: { type: 'string', enum: ['DISPONIBLE', 'FALTANTE', 'INVALIDO', 'NO_VERIFICABLE'] } },
+}
+for (const resource of ['documentos', 'archivos-locales']) {
+  paths[`/${resource}/{id}/estado`] = { get: {
+    operationId: resource === 'documentos' ? 'getDocumentAvailability' : 'getLegacyDocumentAvailability',
+    tags: ['documentos'], summary: 'Verificar metadatos y objeto real en S3 sin descargar el documento',
+    'x-roles': ['Administrador', 'Chofer'],
+    parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+    responses: { 200: response(ref('DocumentAvailability')), ...errorResponses },
+  } }
+}
+
 const contract = {
   openapi: '3.1.0', info: { title: 'Agro Exportaciones F.V. — API V1', version: '1.0.0', description: 'Contrato HTTP de la API V1 implementada por epe-backend. Sus operaciones se exponen bajo /api y usan PostgreSQL. Ver business-rules.md para reglas y límites.' },
   servers: [{ url: '/api', description: 'Backend EPE (NestJS)' }],

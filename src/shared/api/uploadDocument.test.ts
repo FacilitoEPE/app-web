@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { apiClient } from "@/shared/api/client";
-import { getUploadErrorMessage, uploadDocument } from "@/shared/api/uploadDocument";
+import { getDocumentAvailability, getUploadErrorMessage, uploadDocument } from "@/shared/api/uploadDocument";
 
 describe("uploadDocument", () => {
     it("sube el archivo a S3 mediante la API", async () => {
@@ -24,5 +24,38 @@ describe("uploadDocument", () => {
 
     it("muestra el error específico si supera 10 MB", () => {
         expect(getUploadErrorMessage(new Error("El archivo supera el tamaño máximo permitido de 10 MB."))).toMatch(/10 MB/);
+    });
+});
+
+describe('verificación de documentos guardados', () => {
+    const id = 'd4c005b3-7082-4a13-bba6-55a0a7ba0bd7';
+    it.each(['DISPONIBLE', 'FALTANTE', 'INVALIDO', 'NO_VERIFICABLE'] as const)('consulta el estado real: %s', async estado => {
+        apiClient.defaults.baseURL = 'http://localhost:3000/';
+        const get = vi.spyOn(apiClient, 'get').mockResolvedValue({ data: { estado } });
+        try {
+            await expect(getDocumentAvailability(`http://localhost:3000/api/documentos/${id}`)).resolves.toBe(estado);
+            expect(get).toHaveBeenCalledWith(`http://localhost:3000/api/documentos/${id}/estado`, { signal: undefined });
+        } finally { get.mockRestore(); }
+    });
+    it('no envía credenciales a enlaces externos', async () => {
+        apiClient.defaults.baseURL = 'http://localhost:3000/';
+        const get = vi.spyOn(apiClient, 'get');
+        try {
+            await expect(getDocumentAvailability(`https://otro.example/api/documentos/${id}`)).resolves.toBe('NO_VERIFICABLE');
+            expect(get).not.toHaveBeenCalled();
+        } finally { get.mockRestore(); }
+    });
+    it('no considera disponible una respuesta incompleta o una página HTML', async () => {
+        apiClient.defaults.baseURL = 'http://localhost:3000/';
+        const get = vi.spyOn(apiClient, 'get').mockResolvedValue({ data: '<html>SPA</html>' });
+        try {
+            await expect(getDocumentAvailability(`/api/documentos/${id}`)).resolves.toBe('NO_VERIFICABLE');
+        } finally { get.mockRestore(); }
+    });
+    it('conserva fallos de red para que la UI muestre que no pudo verificar', async () => {
+        apiClient.defaults.baseURL = 'http://localhost:3000/';
+        const get = vi.spyOn(apiClient, 'get').mockRejectedValue(new Error('timeout'));
+        try { await expect(getDocumentAvailability(`/api/documentos/${id}`)).rejects.toThrow('timeout'); }
+        finally { get.mockRestore(); }
     });
 });

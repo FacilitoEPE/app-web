@@ -7,9 +7,12 @@
 | Módulos, capas o límites de código | [architecture.md](architecture.md) |
 | Componentes, tokens o interacción visual | [design-system.md](design-system.md) |
 | Comandos, fixtures o configuración local | [development.md](development.md) |
+| Variables e imágenes Docker para S3 y diferencias del despliegue | [Diagnóstico compartido](../../epe-backend/docs/diagnostico-s3-despliegue.md) |
 | Integración disponible por vista | [integration-status.md](integration-status.md) |
 | Rutas, payloads o reglas API | [api/README.md](api/README.md) |
 | Pasos visibles para un usuario | [guides/](guides/) |
 | Resultado de pruebas con alcance y fecha | [evidence/](evidence/) |
 
 El estado de integración es el registro operativo por vista. Las guías de usuario describen acciones disponibles, y los informes de `evidence/` son cortes fechados con vigencia limitada.
+
+La disponibilidad y los colores de los adjuntos se describen en [integración](integration-status.md#disponibilidad-real-de-adjuntos--2026-11-05--implementada-pendiente-verificación-productiva) y el [contrato de disponibilidad](api/business-rules.md#disponibilidad-de-adjuntos).

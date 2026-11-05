@@ -38193,6 +38193,258 @@
           }
         }
       }
+    },
+    "/documentos/{id}/estado": {
+      "get": {
+        "operationId": "getDocumentAvailability",
+        "tags": [
+          "documentos"
+        ],
+        "summary": "Verificar metadatos y objeto real en S3 sin descargar el documento",
+        "x-roles": [
+          "Administrador",
+          "Chofer"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación correcta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentAvailability"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/archivos-locales/{id}/estado": {
+      "get": {
+        "operationId": "getLegacyDocumentAvailability",
+        "tags": [
+          "documentos"
+        ],
+        "summary": "Verificar metadatos y objeto real en S3 sin descargar el documento",
+        "x-roles": [
+          "Administrador",
+          "Chofer"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación correcta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentAvailability"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -53179,6 +53431,24 @@
           "fechaEmision"
         ],
         "additionalProperties": false
+      },
+      "DocumentAvailability": {
+        "type": "object",
+        "required": [
+          "estado"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "DISPONIBLE",
+              "FALTANTE",
+              "INVALIDO",
+              "NO_VERIFICABLE"
+            ]
+          }
+        }
       }
     }
   }

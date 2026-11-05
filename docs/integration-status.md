@@ -2,6 +2,12 @@
 
 > **Fuente vigente del estado por vista.** Actualiza las entradas superiores al cambiar el estado y sincroniza los documentos afectados según las [reglas de epe-web](../AGENTS.md). Las entradas inferiores son evidencia histórica, no estado vigente; vencen 90 días después de su fecha salvo excepción documentada. Elimina las entradas vencidas al revisar el registro.
 
+## Disponibilidad real de adjuntos — 2026-11-05 · Implementada, pendiente verificación productiva
+
+- El campo compartido de archivos, incluido Lineamientos de campaña, consulta `GET /api/documentos/:id/estado`: verde solo tras verificar metadatos y existencia/tamaño/tipo del objeto; rojo si falta o no coincide; aviso si no pudo verificarse por red o permisos. Un archivo recién elegido queda pendiente de guardar. Se puede volver a verificar y reemplazar/quitar adjuntos faltantes.
+- El backend verifica el binario después de subirlo y antes de vincularlo. Un error leyendo el índice deja de simular una lista vacía, evitando sobrescribir vínculos ante fallos de permisos o conectividad. No usa almacenamiento local. Contrato en [API](api/README.md), implementación en el [flujo backend](../../epe-backend/docs/backend-flow.md#41-servicio-general-de-documentos-y-vínculos-en-s3-apidocumentos). Esto no confirma el estado de archivos ni el despliegue de un servidor productivo.
+- Validación: 107 pruebas backend y 377 frontend aprobadas; contrato generado y copia runtime sincronizados. Las pruebas cubren metadatos presentes con documento faltante, inconsistencias de tamaño/tipo, errores de permisos/red y rechazo de vínculos inválidos. No se hizo una comprobación contra el bucket productivo.
+
 ## API V1 backend — Completada · revisión de código 2026-11-03
 
 - Se contrastaron las 252 combinaciones de ruta y método del OpenAPI con los diez controladores NestJS V1, incluido el controlador de catálogos. No hubo operaciones faltantes ni rutas extra.
