@@ -38,7 +38,7 @@ for (const match of sql.matchAll(/CREATE TABLE "([^"]+)" \(([\s\S]*?)\n\);/g)) {
     if (/^varchar\(\d+\)/.test(baseType)) property.maxLength = Number(/\((\d+)\)/.exec(baseType)[1])
     if (type === 'string' && !nullable && !property.format) property.minLength = 1
     const decimal = /numeric\((\d+),(\d+)\)/.exec(baseType)
-    if (decimal) property.multipleOf = 10 ** -Number(decimal[2])
+    if (decimal) property.multipleOf = Number(`1e-${Number(decimal[2])}`)
     if (enums[baseType]) property.enum = [...enums[baseType], ...(nullable ? [null] : [])]
     const constraint = new RegExp(`(?:CHECK \\(|AND )${column} IN \\(([^)]+)\\)`).exec(body)
     if (constraint) property.enum = [...constraint[1].matchAll(/'([^']+)'/g)].map(item => item[1]).concat(nullable ? [null] : [])

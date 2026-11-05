@@ -21,7 +21,8 @@ import { formatDisplayDate, formatMoney } from "@/shared/utils/format";
 import { paginate } from "@/shared/utils/paginate";
 import { plural } from "@/shared/utils/plural";
 import type { TableExport } from "@/shared/utils/exportTable";
-import { getCarriers } from "@/modules/carriers/api/carrier.api";
+import { reportActionError } from "@/shared/api/action-errors";
+import { getCarriers, getCarriersForCampaign } from "@/modules/carriers/api/carrier.api";
 import { useCarrierExtras } from "@/modules/carriers/carrierExtras.store";
 import { useCarrierQuotations } from "@/modules/carriers/carrierQuotations.store";
 import { CARRIER_TIPOS, carrierIdentification, toCarrierProfile, type CarrierProfile } from "@/modules/carriers/carrierProfile.utils";
@@ -79,6 +80,8 @@ export default function CampaignCarriersPage() {
 
     const [carriers, setCarriers] = useState<Carrier[]>([]);
     const [isLoading, setIsLoading] = useState(isValidCampaign);
+    const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
+    const [directoryLoaded, setDirectoryLoaded] = useState(!usesV1());
     const [loadError, setLoadError] = useState<string | null>(isValidCampaign ? null : "La campaña no es válida.");
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -94,14 +97,14 @@ export default function CampaignCarriersPage() {
     const load = useCallback(async () => {
         if (!isValidCampaign) return;
         try {
-            setCarriers(await getCarriers());
+            setCarriers(await getCarriersForCampaign(campaniaId));
             setLoadError(null);
         } catch {
             setLoadError("No se pudieron cargar los transportistas. Verifica la conexión e inténtalo nuevamente.");
         } finally {
             setIsLoading(false);
         }
-    }, [isValidCampaign]);
+    }, [campaniaId, isValidCampaign]);
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void load(); }, [load]);
@@ -109,6 +112,20 @@ export default function CampaignCarriersPage() {
     const retry = () => {
         setIsLoading(true);
         void load();
+    };
+
+    const openLinkDialog = async () => {
+        setLinkOpen(true);
+        if (!usesV1() || directoryLoaded || isLoadingDirectory) return;
+        setIsLoadingDirectory(true);
+        try {
+            setCarriers(await getCarriers());
+            setDirectoryLoaded(true);
+        } catch {
+            reportActionError(new Error("No se pudieron cargar los transportistas disponibles. Inténtalo nuevamente."));
+        } finally {
+            setIsLoadingDirectory(false);
+        }
     };
 
     const profiles = useMemo(() => carriers.map((carrier) => toCarrierProfile(carrier, extras[carrier.id])), [carriers, extras]);
@@ -198,7 +215,7 @@ export default function CampaignCarriersPage() {
                     : "Vincula al primer transportista de esta campaña para registrar su acuerdo de pago.",
                 action: hasActiveFilters
                     ? { label: "Limpiar filtros", icon: <ListFilter size={18} strokeWidth={2.5} />, onClick: () => setSearch(""), tone: "secondary" as const }
-                    : { label: "Vincular transportista", icon: <Link2 size={18} strokeWidth={2.5} />, onClick: () => setLinkOpen(true) },
+                    : { label: "Vincular transportista", icon: <Link2 size={18} strokeWidth={2.5} />, onClick: () => void openLinkDialog() },
             };
 
     const tipoBadge = (row: Row) =>
@@ -240,7 +257,7 @@ export default function CampaignCarriersPage() {
                 title="Transportistas de la Campaña"
                 description="Vincula transportistas, asigna sus unidades y registra el acuerdo de pago de cada uno."
                 action={
-                    <Button size="xl" onClick={() => setLinkOpen(true)} disabled={!isValidCampaign}>
+                    <Button size="xl" onClick={() => void openLinkDialog()} disabled={!isValidCampaign || isLoadingDirectory}>
                         <Link2 size={20} strokeWidth={2.5} /> Vincular transportista
                     </Button>
                 }
@@ -343,7 +360,7 @@ export default function CampaignCarriersPage() {
                 onOpenChange={setLinkOpen}
                 campaignName={campaign?.nombre ?? "Campaña"}
                 carriers={available}
-                isLoading={isLoading}
+                isLoading={isLoading || isLoadingDirectory}
                 onSave={async (carrierId, cotizacion) => {
                     await linkCampaignCarrier(campaniaId, carrierId, usesV1() ? null : cotizacion);
                     setLinkOpen(false);

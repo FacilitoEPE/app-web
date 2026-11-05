@@ -61,17 +61,17 @@ export default function FileDropzone({
     const inputId = `file-dropzone-${label.replace(/\s+/g, "-").toLowerCase()}`;
     const replaceInputRef = useRef<HTMLInputElement>(null);
     const storedUrl = file && isStoredFile(file) ? file.url : null;
-    const [verification, setVerification] = useState<{ source: FileSource; estado: DocumentAvailability } | null>(null);
+    const [verification, setVerification] = useState<{ source: string; estado: DocumentAvailability } | null>(null);
     const [verificationAttempt, setVerificationAttempt] = useState(0);
     useEffect(() => {
-        if (!storedUrl || !file) return;
+        if (!storedUrl) return;
         const abort = new AbortController();
         void getDocumentAvailability(storedUrl, abort.signal)
-            .then(estado => { if (!abort.signal.aborted) setVerification({ source: file, estado }); })
-            .catch(() => { if (!abort.signal.aborted) setVerification({ source: file, estado: 'NO_VERIFICABLE' }); });
+            .then(estado => { if (!abort.signal.aborted) setVerification({ source: storedUrl, estado }); })
+            .catch(() => { if (!abort.signal.aborted) setVerification({ source: storedUrl, estado: 'NO_VERIFICABLE' }); });
         return () => abort.abort();
-    }, [file, storedUrl, verificationAttempt]);
-    const availability = storedUrl && verification?.source === file ? verification.estado : null;
+    }, [storedUrl, verificationAttempt]);
+    const availability = storedUrl && verification?.source === storedUrl ? verification.estado : null;
     const available = availability === 'DISPONIBLE';
     const unavailable = availability === 'FALTANTE' || availability === 'INVALIDO';
     const statusText = !storedUrl ? 'Pendiente de guardar' : availability === null ? 'Verificando documento…'

@@ -17,7 +17,7 @@ import CarrierDriverModal from "@/modules/carriers/components/CarrierDriverModal
 import CarrierSuccessModal, { type CarrierSuccessMode } from "@/modules/carriers/components/CarrierSuccessModal";
 import { createDriver, createVehicle, deleteDriver, deleteVehicle, getCarrier, updateCarrier, updateDriver, updateVehicle } from "@/modules/carriers/api/carrier.api";
 import type { Carrier, Driver, Vehicle } from "@/modules/carriers/carriers.data";
-import { setCarrierExtras, useCarrierExtras } from "@/modules/carriers/carrierExtras.store";
+import { useCarrierExtras } from "@/modules/carriers/carrierExtras.store";
 import { splitCarrierValues, toCarrierProfile, type CarrierFormValues } from "@/modules/carriers/carrierProfile.utils";
 import { toDriverInput, toVehicleInput, type DriverFormValues, type VehicleFormValues } from "@/modules/carriers/carrierRecords.utils";
 import { PageError, PageLoading } from "@/shared/components/PageState";
@@ -121,7 +121,6 @@ function CarrierDetailsView({ carrier, onRefresh }: { carrier: Carrier; onRefres
     async function saveCarrier(values: CarrierFormValues) {
         const { input, extras: carrierExtras } = splitCarrierValues(values);
         await updateCarrier(carrier.id, input, carrierExtras);
-        await setCarrierExtras(carrier.id, carrierExtras);
         await onRefresh();
         setEditingCarrier(false);
         showSuccess("carrier-updated");

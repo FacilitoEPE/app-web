@@ -6,6 +6,7 @@ import { commitRemote } from '@/shared/api/data-contract';
 import { operationsContext, readAllV1 } from '@/modules/operations/api/operations-context.api';
 const map = (row: ClienteNegocioV1) => toClienteNegocio({ ...row, correoCorporativo: row.correoCorporativo ?? '' });
 export const clientScreenV1 = {
+    get: async (id: number) => map(await clienteNegocioV1.get(id)),
     list: async () => (await readAllV1<ClienteNegocioV1>('/clientes-negocio')).map(map),
     create: async (input: ClienteNegocioInput) => map(await commitRemote(() => clienteNegocioV1.create(input))),
     update: async (id: number, input: Partial<ClienteNegocioInput>) => map(await commitRemote(() => clienteNegocioV1.update(id, input))),

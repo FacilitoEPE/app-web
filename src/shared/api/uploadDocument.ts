@@ -1,5 +1,7 @@
 /** Sube un documento a AWS S3 mediante la API y devuelve la dirección protegida de descarga. */
 import { apiClient } from '@/shared/api/client';
+import { recordRemoteMutation } from '@/shared/api/remote-mutations';
+import { getAuthToken } from '@/shared/offline/session';
 import type { FileSource, StoredFile } from '@/shared/utils/fileSource';
 
 export interface S3Document { id: string; url: string; name: string; type: string; size: number }
@@ -40,12 +42,17 @@ export async function persistFile(file: FileSource | null): Promise<StoredFile |
 }
 
 export async function linkS3Document(tipo: string, entidadId: number, archivoId: string): Promise<void> {
-    await apiClient.post('/api/documentos/vinculos', { tipo, entidadId, archivoId });
+    const token = getAuthToken();
+    const { data } = await apiClient.post<S3DocumentLink>('/api/documentos/vinculos', { tipo, entidadId, archivoId });
+    const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
+    recordRemoteMutation('/documentos/vinculos', { ...data, url: new URL(data.url, new URL(apiClient.defaults.baseURL || origin, origin)).href }, undefined, token);
 }
 export const linkLocalDocument = linkS3Document;
 
 export async function unlinkS3Document(tipo: string, entidadId: number): Promise<void> {
+    const token = getAuthToken();
     await apiClient.delete(`/api/documentos/vinculos/${tipo}/${entidadId}`);
+    recordRemoteMutation(`/documentos/vinculos/${tipo}/${entidadId}`, undefined, undefined, token);
 }
 export const unlinkLocalDocument = unlinkS3Document;
 

@@ -13,6 +13,12 @@ export async function getCampaniaProveedoresByCampania(campaniaId: number): Prom
   const { data } = await apiClient.get<CampaniaProveedorDto[]>(`/campanias-proveedores/campania/${campaniaId}`);
   return data;
 }
+export async function getCampaignParticipation(campaniaId: number, cxpId: number): Promise<CampaniaProveedor> {
+  if (usesV1()) return campaignScreenV1.provider(campaniaId, cxpId);
+  const relation = (await getCampaniaProveedoresByCampania(campaniaId)).find(row => row.cxpId === cxpId);
+  if (!relation) throw new Error('No se encontró el proveedor en esta campaña.');
+  return relation;
+}
 
 export async function createCampaniaProveedor(input: CreateCampaniaProveedorDto): Promise<CampaniaProveedor> {
   if (usesV1()) return campaignScreenV1.createProvider(input);

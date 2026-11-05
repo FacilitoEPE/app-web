@@ -17,7 +17,7 @@ import CampaignProviderContextBanner from "@/modules/campaigns/components/Campai
 import CampaignExamModal, { type ExamModalMode } from "@/modules/campaigns/components/CampaignExamModal";
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import { getCampana } from "@/modules/campaigns/api/campaign.api";
-import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
+import { getCampaignParticipation } from "@/modules/campaigns/api/campania-proveedor.api";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
 import { examEstadoLabel, type ExamValues, type LocalExam } from "@/modules/campaigns/campaignExam";
@@ -83,8 +83,7 @@ export default function CampaignExamsPage() {
         }
         setLoadState({ status: "loading" });
         try {
-            const [campaign, relations] = await Promise.all([getCampana(campaignId), getCampaniaProveedoresByCampania(campaignId)]);
-            const relation = relations.find((item) => item.cxpId === cxpId);
+            const [campaign, relation] = await Promise.all([getCampana(campaignId), getCampaignParticipation(campaignId, cxpId)]);
             if (!relation) {
                 setLoadState({ status: "error", message: "No se encontró este proveedor en la campaña." });
                 return;

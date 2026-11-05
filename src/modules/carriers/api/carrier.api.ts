@@ -110,6 +110,11 @@ export async function getCarriers(): Promise<Carrier[]> {
   return data.map(toCarrier);
 }
 
+export async function getCarriersForCampaign(campaignId: number): Promise<Carrier[]> {
+  if (usesV1()) return carrierScreenV1.listForCampaign(campaignId);
+  return getCarriers();
+}
+
 export async function getCarrier(id: number): Promise<Carrier> {
   if (usesV1()) return carrierScreenV1.get(id);
   const { data } = await apiClient.get<CarrierDto>(`/empresas-transporte-externo/${id}`);

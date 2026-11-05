@@ -1,6 +1,6 @@
 import { solicitudTransporteV1, invitacionTransporteV1, cotizacionTransporteV1, empresaTransporteExternoV1 } from '@/modules/carriers/api/v1.api';
-import { operationsContext, type OperationsContext } from '@/modules/operations/api/operations-context.api';
-import { commitRemote, requireId } from '@/shared/api/data-contract';
+import { ensureViewDocuments, operationsContext, readAllV1, type OperationsContext } from '@/modules/operations/api/operations-context.api';
+import { commitRemote, refreshRemoteData, requireId } from '@/shared/api/data-contract';
 import { linkLocalDocument, uploadLocalDocument } from '@/shared/api/uploadDocument';
 import { formatFecha } from '@/modules/campaigns/api/fecha.util';
 import type { CarrierExtras } from '@/modules/carriers/carrierProfile.utils';
@@ -18,6 +18,13 @@ export function projectCarrierData(g: OperationsContext) {
     return { extras, quotations };
 }
 export const requestCampaignOptions = () => operationsContext().campaigns.filter(c => c.estado !== 'terminado').map(c => ({ value: String(c.campaniaId), label: c.nombre }));
+export async function loadCarrierQuotations() {
+    const context = operationsContext();
+    for (const invitation of context.invitations) await readAllV1(`/invitaciones-transporte/${invitation.invitacionTransporteId}/cotizaciones`);
+    if (operationsContext() !== context) return;
+    await ensureViewDocuments();
+    if (operationsContext() === context) await refreshRemoteData();
+}
 export const quotationCommands = {
     send: (input: {
         campaniaId: number;

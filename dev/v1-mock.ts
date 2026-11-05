@@ -436,8 +436,9 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
       const body = await readJson(request) as { tipo: string; entidadId: number; archivoId: number | string }
       const file = localFiles.get(Number(body.archivoId)) ?? { id: String(body.archivoId), url: `/api/documentos/${body.archivoId}`, name: 'documento.pdf', type: 'application/pdf', size: 128 }
       localLinks = localLinks.filter(item => !(item.tipo === body.tipo && item.entidadId === Number(body.entidadId)))
-      localLinks.push({ tipo: body.tipo, entidadId: Number(body.entidadId), archivoId: String(body.archivoId), ...file })
-      return { status: 201, data: { ok: true } }
+      const link = { tipo: body.tipo, entidadId: Number(body.entidadId), archivoId: String(body.archivoId), ...file }
+      localLinks.push(link)
+      return { status: 201, data: link }
     }
     const unlinkRoute = /^\/(?:archivos-locales|documentos)\/vinculos\/([^/]+)\/(\d+)$/.exec(pathname)
     if (unlinkRoute && request.method === 'DELETE') {

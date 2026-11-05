@@ -15,7 +15,7 @@ import CampaignProviderContextBanner from "@/modules/campaigns/components/Campai
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import CampaignInterviewModal, { type InterviewSubmission } from "@/modules/campaigns/components/CampaignInterviewModal";
 import { getCampana, getFrutas } from "@/modules/campaigns/api/campaign.api";
-import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
+import { getCampaignParticipation } from "@/modules/campaigns/api/campania-proveedor.api";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
 import { getCampaignInterviews, getNextCampaignFincaCode, saveCampaignInterview, type CampaignInterviewRecord } from "@/modules/campaigns/campaignInterview.utils";
@@ -57,11 +57,10 @@ export default function CampaignInterviewsPage() {
         }
         setLoadState({ status: "loading" });
         try {
-            const [campaign, relations] = await Promise.all([
+            const [campaign, relation] = await Promise.all([
                 getCampana(campaignId),
-                getCampaniaProveedoresByCampania(campaignId),
+                getCampaignParticipation(campaignId, cxpId),
             ]);
-            const relation = relations.find((item) => item.cxpId === cxpId);
             if (!relation || relation.tipoProveedor !== "productor") {
                 setLoadState({ status: "error", message: "No se encontró este productor en la campaña." });
                 return;

@@ -21,10 +21,11 @@ import {
 import type { Carrier } from "@/modules/carriers/carriers.data";
 import {
     removeCarrierExtras,
-    setCarrierExtras,
     useCarrierExtras,
 } from "@/modules/carriers/carrierExtras.store";
 import { useCarrierQuotations } from "@/modules/carriers/carrierQuotations.store";
+import { loadCarrierQuotations } from '@/modules/carriers/api/quotation-commands.api';
+import { usesV1 } from '@/shared/api/data-contract';
 import {
     splitCarrierValues,
     toCarrierProfile,
@@ -49,6 +50,12 @@ export default function CarriersPage() {
     const [typeFilter, setTypeFilter] = useState("all");
     const extras = useCarrierExtras();
     const quotations = useCarrierQuotations();
+    useEffect(() => {
+        if (activeTab !== 'cotizaciones' || !usesV1()) return;
+        let active = true;
+        void loadCarrierQuotations().catch(() => { if (active) setError('No se pudieron cargar las cotizaciones. Vuelve a abrir la pestaña para reintentarlo.'); });
+        return () => { active = false; };
+    }, [activeTab]);
 
     const profiles = useMemo(
         () => carriers.map((carrier) => toCarrierProfile(carrier, extras[carrier.id])),
@@ -110,8 +117,7 @@ export default function CarriersPage() {
 
     const handleCreateCarrier = async (values: CarrierFormValues) => {
         const { input, extras: carrierExtras } = splitCarrierValues(values);
-        const created = await createCarrier(input, carrierExtras);
-        await setCarrierExtras(created.id, carrierExtras);
+        await createCarrier(input, carrierExtras);
         await loadCarriers();
         setIsCreateModalOpen(false);
         showSuccess("carrier-created");
@@ -120,7 +126,6 @@ export default function CarriersPage() {
     const handleUpdateCarrier = async (id: number, values: CarrierFormValues) => {
         const { input, extras: carrierExtras } = splitCarrierValues(values);
         await updateCarrier(id, input, carrierExtras);
-        await setCarrierExtras(id, carrierExtras);
         await loadCarriers();
     };
 

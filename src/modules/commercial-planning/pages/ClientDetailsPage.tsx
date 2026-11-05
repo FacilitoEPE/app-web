@@ -7,7 +7,7 @@ import PageHeader from "@/shared/layout/PageHeader";
 import ClientFormModal from "@/modules/commercial-planning/components/ClientFormModal";
 import ClientOverviewCard from "@/modules/commercial-planning/components/ClientOverviewCard";
 import ClientSuccessModal from "@/modules/commercial-planning/components/ClientSuccessModal";
-import { getClientesNegocio } from "@/modules/clients/api/cliente-negocio.api";
+import { getClienteNegocio } from "@/modules/clients/api/cliente-negocio.api";
 import type { ClienteNegocio } from "@/modules/clients/api/cliente-negocio.mapper";
 import { PageError, PageLoading } from "@/shared/components/PageState";
 
@@ -31,7 +31,7 @@ export default function ClientDetailsPage() {
         }
         if (showLoading) setLoadState({ status: "loading" });
         try {
-            const client = (await getClientesNegocio()).find((item) => item.clienteNegocioId === clientId);
+            const client = await getClienteNegocio(clientId);
             setLoadState(client
                 ? { status: "ready", client }
                 : { status: "error", message: "No se encontró el cliente solicitado." });

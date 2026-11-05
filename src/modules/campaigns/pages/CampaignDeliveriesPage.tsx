@@ -16,7 +16,7 @@ import { formatDisplayDate, formatKg } from "@/shared/utils/format";
 import { paginate } from "@/shared/utils/paginate";
 import { plural } from "@/shared/utils/plural";
 import type { TableExport } from "@/shared/utils/exportTable";
-import { getCarriers } from "@/modules/carriers/api/carrier.api";
+import { getCarriersForCampaign } from "@/modules/carriers/api/carrier.api";
 import type { Carrier } from "@/modules/carriers/carriers.data";
 import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
@@ -75,7 +75,7 @@ export default function CampaignDeliveriesPage() {
             const [relations, campaignProviders, carriers] = await Promise.all([
                 getClientesNegocioCampana(campaniaId),
                 getCampaniaProveedoresByCampania(campaniaId),
-                getCarriers(),
+                getCarriersForCampaign(campaniaId),
             ]);
             setData({ relations, campaignProviders, carriers });
             setLoadError(null);

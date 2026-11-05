@@ -13,9 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import FileDropzone from "@/shared/components/FileDropzone";
 import type { FileSource } from '@/shared/utils/fileSource';
 import { linkLocalDocument, unlinkLocalDocument, uploadLocalDocument } from '@/shared/api/uploadDocument';
-import { operationsContext } from '@/modules/operations/api/operations-context.api';
+import { reportActionError } from '@/shared/api/action-errors';
 import { Button } from "@/shared/components/ui/button";
-import { createCampana, getCampana, getFrutaDerivadas, getFrutas, updateCampana } from "@/modules/campaigns/api/campaign.api";
+import { createCampana, getCampana, getCampaignDocument, getFrutaDerivadas, getFrutas, updateCampana } from "@/modules/campaigns/api/campaign.api";
 import type { CampanaEstado, FrutaDerivadaDto, FrutaDto } from "@/modules/campaigns/api/campaign.dto";
 import { campaignFormSchema } from "@/modules/campaigns/api/campaign-form.schema";
 import { formatFecha, parseFecha } from "@/modules/campaigns/api/fecha.util";
@@ -73,6 +73,7 @@ export default function CampaignFormModal({
     const [errors, setErrors] = useState<FormFieldErrors>({});
     const [isLoading, setIsLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [hadDocument, setHadDocument] = useState(false);
 
     // Cada apertura es una sesión nueva: vacía en alta, o con la campaña recién leída en edición
     useEffect(() => {
@@ -81,6 +82,7 @@ export default function CampaignFormModal({
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setValues(EMPTY_CAMPAIGN);
         setErrors({});
+        setHadDocument(false);
         setIsLoading(isEdit);
 
         getFrutas()
@@ -89,9 +91,10 @@ export default function CampaignFormModal({
 
         if (isEdit && campaniaId !== null) {
             getCampana(campaniaId)
-                .then((campana) => {
+                .then(async (campana) => {
+                    const file = usesV1() ? await getCampaignDocument(campana.campaniaId) : null;
                     if (!active) return;
-                    const file = usesV1() ? operationsContext().localDocuments?.find(item => item.tipo === 'campana' && item.entidadId === campana.campaniaId) : undefined;
+                    setHadDocument(Boolean(file));
                     setValues({
                         ...EMPTY_CAMPAIGN,
                         nombre: campana.nombre,
@@ -163,8 +166,12 @@ export default function CampaignFormModal({
             };
             const uploaded = usesV1() && values.lineamientos instanceof File ? await uploadLocalDocument(values.lineamientos) : undefined;
             const saved = isEdit && campaniaId !== null ? await updateCampana(campaniaId, input) : await createCampana(input);
-            if (uploaded) { await linkLocalDocument('campana', saved.campaniaId, uploaded.id); await refreshRemoteData(); }
-            else if (usesV1() && isEdit && !values.lineamientos) { await unlinkLocalDocument('campana', saved.campaniaId); await refreshRemoteData(); }
+            try {
+                if (uploaded) { await linkLocalDocument('campana', saved.campaniaId, uploaded.id); await refreshRemoteData(); }
+                else if (usesV1() && isEdit && hadDocument && !values.lineamientos) { await unlinkLocalDocument('campana', saved.campaniaId); await refreshRemoteData(); }
+            } catch {
+                reportActionError(new Error('La campaña se guardó, pero no se pudo actualizar su documento. Edita la campaña guardada para volver a adjuntarlo; no repitas el alta.'));
+            }
             onSuccess?.();
         } catch (requestError) {
             const apiErrors = getBadRequestFieldErrors(requestError, BACKEND_FIELDS);

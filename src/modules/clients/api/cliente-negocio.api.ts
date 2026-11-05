@@ -9,6 +9,11 @@ export async function getClientesNegocio(): Promise<ClienteNegocio[]> {
   const { data } = await apiClient.get<ClienteNegocioDto[]>("/clientes-negocio");
   return data.map(toClienteNegocio);
 }
+export async function getClienteNegocio(id: number): Promise<ClienteNegocio> {
+  if (usesV1()) return clientScreenV1.get(id);
+  const { data } = await apiClient.get<ClienteNegocioDto>(`/clientes-negocio/${id}`);
+  return toClienteNegocio(data);
+}
 
 export async function createClienteNegocio(input: ClienteNegocioInput): Promise<ClienteNegocio> {
   if (usesV1()) return clientScreenV1.create(input);

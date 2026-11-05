@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import CampaignLinkProviderModal from "@/modules/campaigns/components/CampaignLinkProviderModal";
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import ProviderOverviewCard from "@/modules/providers/components/ProviderOverviewCard";
-import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
+import { getCampaignParticipation } from "@/modules/campaigns/api/campania-proveedor.api";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
 import { examEstadoLabel, type LocalExam } from "@/modules/campaigns/campaignExam";
 import { useProviderExams } from "@/modules/campaigns/campaignExams.store";
@@ -74,8 +74,7 @@ export default function CampaignProviderDetailsPage() {
         }
         if (showLoading) setLoadState({ status: "loading" });
         try {
-            const relations = await getCampaniaProveedoresByCampania(campaniaId);
-            const relation = relations.find((item) => item.cxpId === cxpId);
+            const relation = await getCampaignParticipation(campaniaId, cxpId);
             if (!relation) {
                 setLoadState({ status: "error", message: "No se encontró el proveedor en esta campaña." });
                 return;

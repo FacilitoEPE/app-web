@@ -4,6 +4,14 @@ import { apiClient } from "@/shared/api/client";
 import type { CampanaDto, FrutaDto, FrutaDerivadaDto, UpdateCampanaDto } from "@/modules/campaigns/api/campaign.dto";
 import { toCampana, toCreateCampanaDto, type Campana, type CampaignFormInput } from "@/modules/campaigns/api/campaign.mapper";
 import { formatFecha } from "@/modules/campaigns/api/fecha.util";
+import { ensureViewDocuments } from '@/modules/operations/api/operations-context.api';
+import type { StoredFile } from '@/shared/utils/fileSource';
+
+export async function getCampaignDocument(id: number): Promise<StoredFile | null> {
+  const files = await ensureViewDocuments();
+  const file = files.find(item => item.tipo === 'campana' && item.entidadId === id);
+  return file ? { url: file.url, name: file.name, type: file.type, size: file.size } : null;
+}
 
 export async function getFrutas(): Promise<FrutaDto[]> {
   if (usesV1()) return campaignScreenV1.fruits();

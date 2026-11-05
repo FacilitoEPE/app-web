@@ -15,7 +15,7 @@ import CampaignClientContextBanner from "@/modules/campaigns/components/Campaign
 import CampaignClientContractModal from "@/modules/campaigns/components/CampaignClientContractModal";
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import { getCampana } from "@/modules/campaigns/api/campaign.api";
-import { getClientesNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.api";
+import { getCampaignRequirement } from "@/modules/campaigns/api/cliente-negocio-campana.api";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { ClienteNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.mapper";
 import type { CampaignClientContractLocal, CampaignClientContractValues } from "@/modules/campaigns/campaignClientContract.utils";
@@ -50,8 +50,7 @@ export default function CampaignClientContractsPage() {
         }
         setLoadState({ status: "loading" });
         try {
-            const [campaign, relations] = await Promise.all([getCampana(campaniaId), getClientesNegocioCampana(campaniaId)]);
-            const relation = relations.find((item) => item.clienteNegocioCampanaId === relationId);
+            const [campaign, relation] = await Promise.all([getCampana(campaniaId), getCampaignRequirement(campaniaId, relationId)]);
             if (!relation) throw new Error("not-found");
             setLoadState({ status: "ready", campaign, relation });
         } catch {

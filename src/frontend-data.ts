@@ -1,4 +1,5 @@
-import { clearOperationsContext, loadOperationsContext } from '@/modules/operations/api/operations-context.api';
+import { clearOperationsContext, getOperationsPlan, loadOperationsContext, operationsContext, type OperationsContext } from '@/modules/operations/api/operations-context.api';
+import { remoteMutationRevision } from '@/shared/api/remote-mutations';
 import { projectProviderData } from '@/modules/providers/api/provider-screen-data';
 import { projectCampaignData } from '@/modules/campaigns/api/campaign-screen-data';
 import { projectCarrierData } from '@/modules/carriers/api/quotation-commands.api';
@@ -33,64 +34,43 @@ type Status = {
     phase: 'idle' | 'loading' | 'ready' | 'error';
     refreshing: boolean;
     error: string;
+    pathname: string;
 };
-let state: Status = { phase: 'idle', refreshing: false, error: '' };
-let inFlight: Promise<void> | undefined, requested = 0, completed = 0, generation = 0;
+let state: Status = { phase: 'idle', refreshing: false, error: '', pathname: '' };
+let inFlight: Promise<void> | undefined, inFlightPath = '', generation = 0;
 const listeners = new Set<() => void>();
 export const getFrontendDataStatus = () => state;
 export const subscribeFrontendData = (listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
 function publish(next: Status) { state = next; listeners.forEach(listener => listener()); }
+export function cancelFrontendDataLoad() { resetFrontendData(); }
 export function resetFrontendData() {
     generation++;
     inFlight = undefined;
-    requested = 0;
-    completed = 0;
     clearOperationsContext();
     hydrateDriverData({ drivers: [], loads: [] });
-    publish({ phase: 'idle', refreshing: false, error: '' });
+    publish({ phase: 'idle', refreshing: false, error: '', pathname: '' });
 }
 /** App orchestration: HTTP DTOs are projected in their owning domains before publishing view state. */
-export function refreshFrontendData(): Promise<void> {
-    requested++;
-    if (inFlight)
+export function refreshFrontendData(pathname = getOperationsPlan().pathname): Promise<void> {
+    if (inFlight && inFlightPath === pathname)
         return inFlight;
-    publish({ ...state, phase: state.phase === 'ready' ? 'ready' : 'loading', refreshing: true, error: '' });
-    const activeGeneration = generation;
+    const activeGeneration = ++generation;
+    inFlightPath = pathname;
+    publish({ ...state, pathname, phase: state.phase === 'ready' && state.pathname === pathname ? 'ready' : 'loading', refreshing: true, error: '' });
     const job = (async () => {
         try {
+            let revision: number;
             do {
-                const revision = requested, g = await loadOperationsContext();
+                revision = remoteMutationRevision();
+                const g = await loadOperationsContext(pathname, () => activeGeneration === generation);
                 if (activeGeneration !== generation) return;
-                const providers = projectProviderData(g), campaigns = projectCampaignData(g), carriers = projectCarrierData(g), quality = projectQualityData(g), billing = projectBillingData(g), settlements = projectSettlementData(g), logistics = projectLogisticsData(g), drivers = projectDriverData(g);
-                CATALOGO_FRUTAS.splice(0, CATALOGO_FRUTAS.length, ...g.fruits.map(f => ({ id: String(f.frutaId), nombre: f.name, variedades: g.varieties.filter(v => v.frutaId === f.frutaId).map(v => v.name) })));
-                PRODUCER_FARM_OPTIONS.splice(0, PRODUCER_FARM_OPTIONS.length, ...g.participations.flatMap(p => g.farms.filter(f => f.proveedorId === p.proveedorId).map(f => ({ value: `${p.cxpId}:${f.fincaId}`, productor: `${g.providers.find(v => v.proveedorId === p.proveedorId)?.nombres ?? ''} ${g.providers.find(v => v.proveedorId === p.proveedorId)?.apellido ?? ''}`.trim(), finca: f.nombreFinca, campaniaId: p.campaniaId }))));
-                ORGANIC_NORMS_CATALOG.splice(0, ORGANIC_NORMS_CATALOG.length, ...g.standards.map(n => ({ id: n.codigo, label: n.nombre, certText: n.nombre })));
-                const parameter = g.uit.find(p => p.anio === new Date().getFullYear());
-                clearUitParameters();
-                for (const item of g.uit) setUitParameters(item.valor, item.limiteUit, item.anio);
-                if (!parameter) setUitParameters(0, 0);
-                hydrateProviderData(providers);
-                hydrateCampaignContracts(campaigns.contracts);
-                hydrateCampaignDeliveries(campaigns.deliveries);
-                hydrateCampaignCertificates(campaigns.certificates);
-                hydrateCampaignCarriers(campaigns.carriers);
-                hydrateCampaignInterviews(campaigns.interviews);
-                hydrateCampaignExams(campaigns.exams);
-                hydrateCarrierExtras(carriers.extras);
-                hydrateCarrierQuotations(carriers.quotations);
-                hydrateQualityCampaigns(quality.campaigns);
-                hydrateQualityAnalyses(quality.analyses);
-                hydrateQualityOperations(quality.loads);
-                hydrateBillingData(billing);
-                hydrateSettlementData(settlements);
-                hydrateLogisticsData(logistics);
-                hydrateDriverData(drivers);
-                completed = revision;
-            } while (completed < requested);
-            if (activeGeneration === generation) publish({ phase: 'ready', refreshing: false, error: '' });
+                publishViewData(g);
+            } while (revision !== remoteMutationRevision());
+            if (activeGeneration === generation) publish({ phase: 'ready', pathname, refreshing: false, error: '' });
         }
         catch (error) {
-            if (activeGeneration === generation) publish({ phase: state.phase === 'ready' ? 'ready' : 'error', refreshing: false, error: actionErrorMessage(error) });
+            if (activeGeneration !== generation) return;
+            publish({ phase: state.phase === 'ready' ? 'ready' : 'error', pathname, refreshing: false, error: actionErrorMessage(error) });
             throw error;
         }
         finally {
@@ -100,10 +80,43 @@ export function refreshFrontendData(): Promise<void> {
     inFlight = job;
     return job;
 }
-registerDataRefresh(async () => {
+function publishViewData(g: OperationsContext) {
+    const plan = getOperationsPlan();
+    const providers = projectProviderData(g), campaigns = projectCampaignData(g), carriers = projectCarrierData(g);
+    const quality = plan.projection === 'billing' ? { campaigns: [], analyses: [], loads: [] } : projectQualityData(g);
+    CATALOGO_FRUTAS.splice(0, CATALOGO_FRUTAS.length, ...g.fruits.map(f => ({ id: String(f.frutaId), nombre: f.name, variedades: g.varieties.filter(v => v.frutaId === f.frutaId).map(v => v.name) })));
+    PRODUCER_FARM_OPTIONS.splice(0, PRODUCER_FARM_OPTIONS.length, ...g.participations.flatMap(p => g.farms.filter(f => f.proveedorId === p.proveedorId).map(f => ({ value: `${p.cxpId}:${f.fincaId}`, productor: `${g.providers.find(v => v.proveedorId === p.proveedorId)?.nombres ?? ''} ${g.providers.find(v => v.proveedorId === p.proveedorId)?.apellido ?? ''}`.trim(), finca: f.nombreFinca, campaniaId: p.campaniaId }))));
+    ORGANIC_NORMS_CATALOG.splice(0, ORGANIC_NORMS_CATALOG.length, ...g.standards.map(n => ({ id: n.codigo, label: n.nombre, certText: n.nombre })));
+    const parameter = g.uit.find(p => p.anio === new Date().getFullYear());
+    clearUitParameters();
+    for (const item of g.uit) setUitParameters(item.valor, item.limiteUit, item.anio);
+    if (!parameter) setUitParameters(0, 0);
+    hydrateProviderData(providers);
+    hydrateCampaignContracts(campaigns.contracts);
+    hydrateCampaignDeliveries(campaigns.deliveries);
+    hydrateCampaignCertificates(campaigns.certificates);
+    hydrateCampaignCarriers(campaigns.carriers);
+    hydrateCampaignInterviews(campaigns.interviews);
+    hydrateCampaignExams(campaigns.exams);
+    hydrateCarrierExtras(carriers.extras);
+    hydrateCarrierQuotations(carriers.quotations);
+    hydrateQualityCampaigns(quality.campaigns);
+    hydrateQualityAnalyses(quality.analyses);
+    hydrateQualityOperations(quality.loads);
+    if (plan.pathname === '*' || plan.projection === 'billing') hydrateBillingData(projectBillingData(g));
+    if (plan.pathname === '*' || plan.projection === 'settlement') hydrateSettlementData(projectSettlementData(g));
+    if (plan.pathname === '*' || plan.projection === 'logistics') hydrateLogisticsData(projectLogisticsData(g));
+    if (plan.pathname === '*') hydrateDriverData(projectDriverData(g));
+}
+registerDataRefresh(async (reconcile = false) => {
     const { getSession } = await import('@/shared/offline/session');
     if (getSession()?.user.rol.nombre === 'Chofer') {
         const { refreshDriverData } = await import('@/modules/driver-portal/api/driver-context.api');
         await refreshDriverData();
-    } else await refreshFrontendData();
+    } else if (state.phase === 'idle') return;
+    else if (reconcile) await refreshFrontendData(state.pathname);
+    else {
+        publishViewData(operationsContext());
+        publish({ ...state, error: '' });
+    }
 });

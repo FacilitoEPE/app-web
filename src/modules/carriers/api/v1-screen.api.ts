@@ -15,6 +15,11 @@ export function mapCarrierV1(row: EmpresaTransporteExternoV1): Carrier {
 const fields = (input: Partial<CarrierInput>, extras?: CarrierExtras) => ({ nombreCompleto: input.nombre, numero: input.numero, correo: input.correo || null, ruc: input.ruc || null, ...(extras ? { tipoTransportista: extras.tipo === 'privado' ? 'INDEPENDIENTE' as const : 'EMPRESA' as const, tipoDocumento: extras.tipo === 'privado' ? 'DNI' : null, numeroDocumento: extras.documento || null, registroMtc: extras.mtc || null, departamento: extras.departamento || null, provincia: extras.provincia || null, ciudad: extras.ciudad || null } : {}) });
 export const carrierScreenV1 = {
     list: async () => (await readAllV1<EmpresaTransporteExternoV1>('/transportistas')).map(mapCarrierV1),
+    listForCampaign: (campaignId: number) => {
+        const g = operationsContext();
+        const ids = new Set(g.agreements.filter(row => row.campaniaId === campaignId).map(row => row.idEmpresaTransporteExterno));
+        return g.carriers.filter(row => ids.has(row.idEmpresaTransporteExterno)).map(mapCarrierV1);
+    },
     get: async (id: number) => mapCarrierV1(await empresaTransporteExternoV1.get(id)),
     create: async (input: CarrierInput, extras?: CarrierExtras) => mapCarrierV1(await commitRemote(() => empresaTransporteExternoV1.create(fields(input, extras) as Parameters<typeof empresaTransporteExternoV1.create>[0]))),
     update: async (id: number, input: Partial<CarrierInput>, extras?: CarrierExtras) => mapCarrierV1(await commitRemote(() => empresaTransporteExternoV1.update(id, fields(input, extras)))),

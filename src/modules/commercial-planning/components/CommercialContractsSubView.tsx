@@ -72,23 +72,9 @@ export default function CommercialContractsSubView({ clientId }: { clientId?: nu
             .then(async (campanas) => {
                 const collected: CommercialParticipationRow[] = [];
                 for (const campana of campanas) {
-                    const rels = await getClientesNegocioCampana(campana.campaniaId);
+                    const rels = await getClientesNegocioCampana(campana.campaniaId, clientId);
                     for (const rel of rels) {
                         if (clientId !== undefined && rel.clienteNegocioId !== clientId) continue;
-                        const contracts =
-                            contractRecords[`${campana.campaniaId}:${rel.clienteNegocioCampanaId}`] ?? [];
-                        const deliveries = contracts.flatMap((c) =>
-                            (
-                                deliveryRecords[
-                                    `${campana.campaniaId}:${rel.clienteNegocioCampanaId}:${c.id}`
-                                ] ?? []
-                            ).map((d) => ({
-                                contractId: c.id,
-                                contractName: c.archivo?.name ?? "Sin adjunto",
-                                delivery: d,
-                            })),
-                        );
-                        const acordados = contracts.reduce((s, c) => s + c.cantidadPropuestaKg, 0);
                         collected.push({
                             id: `${campana.campaniaId}-${rel.clienteNegocioCampanaId}`,
                             campaniaId: campana.campaniaId,
@@ -105,14 +91,14 @@ export default function CommercialContractsSubView({ clientId }: { clientId?: nu
                                     : "Exportador",
                             pais: "",
                             cantidadRequeridaKg: rel.kilosAcordados ?? 0,
-                            kilosAcordados: acordados,
+                            kilosAcordados: 0,
                             fechaRegistro:
                                 rel.fechaRegistro instanceof Date
                                     ? rel.fechaRegistro.toISOString().slice(0, 10)
                                     : String(rel.fechaRegistro ?? ""),
                             observaciones: "",
-                            contracts,
-                            deliveries,
+                            contracts: [],
+                            deliveries: [],
                         });
                     }
                 }
@@ -124,9 +110,15 @@ export default function CommercialContractsSubView({ clientId }: { clientId?: nu
         return () => {
             active = false;
         };
-    }, [contractRecords, deliveryRecords, retry, clientId]);
+    }, [retry, clientId]);
 
-    const rows = apiRows;
+    const rows = useMemo(() => apiRows.map(row => {
+        const contracts = contractRecords[`${row.campaniaId}:${row.relationId}`] ?? [];
+        const deliveries = contracts.flatMap(contract =>
+            (deliveryRecords[`${row.campaniaId}:${row.relationId}:${contract.id}`] ?? [])
+                .map(delivery => ({ contractId: contract.id, contractName: contract.archivo?.name ?? 'Sin adjunto', delivery })));
+        return { ...row, contracts, deliveries, kilosAcordados: contracts.reduce((sum, contract) => sum + contract.cantidadPropuestaKg, 0) };
+    }), [apiRows, contractRecords, deliveryRecords]);
 
     const campaignOptions = useMemo(
         () => Array.from(new Set(rows.map((r) => r.campaniaNombre))),

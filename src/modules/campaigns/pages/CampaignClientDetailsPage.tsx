@@ -10,7 +10,7 @@ import { PageError, PageLoading } from "@/shared/components/PageState";
 import PageHeader from "@/shared/layout/PageHeader";
 import { formatDisplayDate, formatKg } from "@/shared/utils/format";
 import { getCampana } from "@/modules/campaigns/api/campaign.api";
-import { getClientesNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.api";
+import { getCampaignRequirement } from "@/modules/campaigns/api/cliente-negocio-campana.api";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { ClienteNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.mapper";
 import CampaignClientRecordModal from "@/modules/campaigns/components/CampaignClientRecordModal";
@@ -44,8 +44,7 @@ export default function CampaignClientDetailsPage() {
         }
         setState({ status: "loading" });
         try {
-            const [campaign, relations] = await Promise.all([getCampana(campaignId), getClientesNegocioCampana(campaignId)]);
-            const relation = relations.find((item) => item.clienteNegocioCampanaId === relationId);
+            const [campaign, relation] = await Promise.all([getCampana(campaignId), getCampaignRequirement(campaignId, relationId)]);
             if (sequence === loadSequence.current) setState(relation
                 ? { status: "ready", campaign, relation }
                 : { status: "error", message: "Este cliente no está vinculado a la campaña." });

@@ -1,5 +1,5 @@
 import { campanaV1, campaniaXProveedoresV1, clienteNegocioCampanaV1 } from '@/modules/campaigns/api/v1.api';
-import type { CampanaV1, CampaniaXProveedoresV1, ClienteNegocioCampanaV1 } from '@/modules/campaigns/api/v1.dto';
+import type { CampanaV1, CampaniaXProveedoresV1, ClienteNegocioCampanaV1, FrutaDerivadaV1 } from '@/modules/campaigns/api/v1.dto';
 import { operationsContext, readAllV1 } from '@/modules/operations/api/operations-context.api';
 import { commitRemote } from '@/shared/api/data-contract';
 import { formatFecha, parseFecha } from '@/modules/campaigns/api/fecha.util';
@@ -31,13 +31,14 @@ function campaignInput(input: Partial<CampaignFormInput>) {
 }
 export const campaignScreenV1 = {
     fruits: async () => operationsContext().fruits,
-    varieties: async (id: number) => operationsContext().varieties.filter(row => row.frutaId === id),
+    varieties: async (id: number) => readAllV1<FrutaDerivadaV1>(`/frutas/${id}/variedades`),
     list: async () => (await readAllV1<CampanaV1>('/campanas')).map(mapCampaignV1),
     get: async (id: number) => mapCampaignV1(await campanaV1.get(id)),
     create: async (input: CampaignFormInput) => mapCampaignV1(await commitRemote(() => campanaV1.create(campaignInput(input) as Parameters<typeof campanaV1.create>[0]))),
     update: async (id: number, input: Partial<CampaignFormInput>) => mapCampaignV1(await commitRemote(() => campanaV1.update(id, campaignInput(input)))),
     remove: (id: number) => commitRemote(() => campanaV1.remove(id)),
     providers: async (id: number) => (await readAllV1<CampaniaXProveedoresV1>(`/campanas/${id}/proveedores`)).map(mapParticipationV1),
+    provider: async (parent: number, id: number) => mapParticipationV1(await campaniaXProveedoresV1(parent).get(id)),
     createProvider: async (input: CreateCampaniaProveedorDto) => mapParticipationV1(await commitRemote(() => campaniaXProveedoresV1(input.campaniaId).create({ proveedorId: input.proveedorId, cantidadProveedor: input.cantidadProveedor, tipoProveedor: input.tipoProveedor, precioCompraKg: input.precioCompraKg, moneda: input.moneda, observaciones: input.observaciones, frutaConvencionalEstimado: input.frutaConvencionalEstimado }))),
     updateProvider: async (id: number, input: UpdateCampaniaProveedorDto) => {
         const row = operationsContext().participations.find(item => item.cxpId === id);
@@ -51,7 +52,8 @@ export const campaignScreenV1 = {
             throw new Error('No se encontró la participación del proveedor.');
         return commitRemote(() => campaniaXProveedoresV1(row.campaniaId).remove(id));
     },
-    clients: async (id: number) => (await readAllV1<ClienteNegocioCampanaV1>(`/campanas/${id}/requerimientos`)).map(mapRequirementV1),
+    clients: async (id: number, clienteNegocioId?: number) => (await readAllV1<ClienteNegocioCampanaV1>(`/campanas/${id}/requerimientos`, clienteNegocioId === undefined ? {} : { clienteNegocioId })).map(mapRequirementV1),
+    client: async (parent: number, id: number) => mapRequirementV1(await clienteNegocioCampanaV1(parent).get(id)),
     createClient: async (id: number, input: CreateClienteNegocioCampanaDto) => mapRequirementV1(await commitRemote(() => clienteNegocioCampanaV1(id).create(input))),
     updateClient: async (parent: number, id: number, input: UpdateClienteNegocioCampanaDto) => mapRequirementV1(await commitRemote(() => clienteNegocioCampanaV1(parent).update(id, input))),
     deleteClient: (parent: number, id: number) => commitRemote(() => clienteNegocioCampanaV1(parent).remove(id)),

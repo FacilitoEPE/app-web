@@ -8,7 +8,6 @@ import FormField from "@/shared/components/FormField";
 import { Button } from "@/shared/components/ui/button";
 import { Combobox } from "@/shared/components/ui/combobox";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { getProveedores } from "@/modules/providers/api/proveedor.api";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
 import { useProviderLocalData } from "@/modules/providers/providerLocalData.store";
 import { createCampaniaProveedor, getCampaniaProveedoresByCampania, updateCampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.api";
@@ -20,7 +19,7 @@ import {
     type CampaniaProveedorDraft,
 } from "@/modules/campaigns/api/campania-proveedor-form";
 import { createCampaniaProveedorSubmissionController } from "@/modules/campaigns/api/campania-proveedor-submission";
-import { fetchCampaignProviderOptions } from "@/modules/campaigns/api/campaign-provider-options";
+import { fetchCampaignProviderOptions, loadCampaignProviderOptions } from "@/modules/campaigns/api/campaign-provider-options";
 import { MONEDA_OPTIONS, getMonedaSymbol } from "@/modules/campaigns/campaignCertificate.utils";
 
 interface CampaignLinkProviderModalProps {
@@ -152,7 +151,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
         setIsLoadingProviders(true);
 
         const requests: Promise<unknown>[] = [
-            fetchCampaignProviderOptions(getProveedores).then(({ providers, failed }) => {
+            fetchCampaignProviderOptions(loadCampaignProviderOptions).then(({ providers, failed }) => {
                 if (!active) return;
                 setProveedores(providers);
                 if (failed) setFormError("No se pudieron cargar los proveedores. Cierra y vuelve a abrir el formulario.");
