@@ -12,7 +12,17 @@ describe("uploadDocument", () => {
         post.mockRestore();
     });
 
-    it("muestra un error de subida", () => {
+    it("rechaza archivos que superen los 10 MB antes de enviarlos", async () => {
+        const largeFile = new File(['x'], 'pesado.pdf', { type: 'application/pdf' });
+        Object.defineProperty(largeFile, 'size', { value: 11 * 1024 * 1024 });
+        await expect(uploadDocument(largeFile)).rejects.toThrow(/supera el tamaño máximo permitido de 10 MB/);
+    });
+
+    it("muestra un error de subida genérico", () => {
         expect(getUploadErrorMessage(new Error("network"))).toMatch(/No se pudo subir/);
+    });
+
+    it("muestra el error específico si supera 10 MB", () => {
+        expect(getUploadErrorMessage(new Error("El archivo supera el tamaño máximo permitido de 10 MB."))).toMatch(/10 MB/);
     });
 });

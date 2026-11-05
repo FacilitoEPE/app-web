@@ -15,7 +15,23 @@ export function getBadRequestFieldErrors(
   error: unknown,
   backendToFormField: Record<string, string>,
 ): FormFieldErrors {
+  if (typeof error === "string") {
+    if (error.includes("413") || /too large/i.test(error)) {
+      return { _form: "El archivo adjunto supera el tamaño máximo permitido (máx. 10 MB)." };
+    }
+  }
+
+  if (error instanceof Error && error.message) {
+    if (/10\s*mb/i.test(error.message) || error.message.includes("413") || /too large/i.test(error.message)) {
+      return { _form: error.message };
+    }
+  }
+
   const body = asRecord(error);
+  if (body?.statusCode === 413 || body?.error === "Payload Too Large") {
+    return { _form: "El archivo adjunto supera el tamaño máximo permitido (máx. 10 MB)." };
+  }
+
   const messages = Array.isArray(body?.message)
     ? body.message.filter((message): message is string => typeof message === "string")
     : typeof body?.message === "string" ? [body.message] : [];

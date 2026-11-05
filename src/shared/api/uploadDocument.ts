@@ -7,7 +7,13 @@ export interface S3DocumentLink { tipo: string; entidadId: number; archivoId: st
 export type LocalDocument = S3Document;
 export type LocalDocumentLink = S3DocumentLink;
 
+/** Tamaño máximo de archivo permitido: 10 MB (alineado con FILE_UPLOAD_MAX_BYTES del backend) */
+export const MAX_DOCUMENT_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 export async function uploadS3Document(file: File): Promise<S3Document> {
+    if (file.size > MAX_DOCUMENT_FILE_SIZE_BYTES) {
+        throw new Error('El archivo supera el tamaño máximo permitido de 10 MB.');
+    }
     const form = new FormData();
     form.append('archivo', file);
     const { data } = await apiClient.post<S3Document>('/api/documentos', form);
@@ -46,6 +52,11 @@ export async function uploadDocument(file: File): Promise<string> {
 
 /** Mensaje para mostrar en un formulario cuando falló la subida de un archivo */
 export function getUploadErrorMessage(error: unknown): string {
-    void error;
-    return "No se pudo subir el archivo. Inténtalo nuevamente.";
+    if (error instanceof Error && (/10\s*mb/i.test(error.message) || error.message.includes('413') || /too large/i.test(error.message))) {
+        return error.message;
+    }
+    if (typeof error === 'string' && (error.includes('413') || /too large/i.test(error))) {
+        return 'El archivo supera el tamaño máximo permitido de 10 MB.';
+    }
+    return 'No se pudo subir el archivo. Inténtalo nuevamente.';
 }

@@ -20,4 +20,14 @@ describe("API form errors", () => {
       _form: "Invalid request",
     });
   });
+
+  it("handles 413 Request Entity Too Large error gracefully", () => {
+    expect(getBadRequestFieldErrors("<html>413 Request Entity Too Large</html>", {})).toEqual({
+      _form: "El archivo adjunto supera el tamaño máximo permitido (máx. 10 MB).",
+    });
+
+    expect(getBadRequestFieldErrors({ statusCode: 413, error: "Payload Too Large" }, {})).toEqual({
+      _form: "El archivo adjunto supera el tamaño máximo permitido (máx. 10 MB).",
+    });
+  });
 });
