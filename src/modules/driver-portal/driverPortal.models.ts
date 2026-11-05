@@ -1,6 +1,7 @@
 import type { DispatchStage } from "@/shared/components/DispatchStepProgress";
 import type { FileSource } from "@/shared/utils/fileSource";
 export interface DriverProfile {
+    personaId?: number | null;
     id: string;
     nombre: string;
     documento: string;
@@ -41,6 +42,7 @@ export interface DriverStageHistoryItem {
     nota: string;
 }
 export interface DriverArrivalChecklist {
+    evidenciaDescarte?: FileSource | null;
     kilosEnPlanta: string;
     huboDescarte: boolean;
     kilosDescarte: string;
@@ -58,6 +60,11 @@ export interface DriverVehicleExitGuide {
     observaciones: string;
 }
 export interface DriverLoad {
+    pendienteRegistro?: boolean;
+    permiteEditarCarga?: boolean;
+    rechazada?: boolean;
+    cumpleRequisitosIndustria?: boolean;
+    estadoCampania?: string;
     id: string;
     codigo: string;
     campaniaId: number;

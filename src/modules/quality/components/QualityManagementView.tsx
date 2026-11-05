@@ -16,10 +16,7 @@ import { TableCountPill, TableExportMenu, TableToolbar } from "@/shared/componen
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
 import TableGridCard, { TableGridCardField, TableGridCardFields } from "@/shared/components/TableGridCard";
 import RowActions from "@/shared/components/RowActions";
-import AppModal from "@/shared/components/AppModal";
-import FormField from "@/shared/components/FormField";
 import { Button } from "@/shared/components/ui/button";
-import { Combobox } from "@/shared/components/ui/combobox";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/shared/components/ui/table";
 import { formatDisplayDate, formatKg } from "@/shared/utils/format";
 
@@ -38,9 +35,6 @@ export default function QualityManagementView({ campaign, scope, section }: Prop
     const [analysisModal, setAnalysisModal] = useState<{ record: QualityAnalysisRecord | null; readOnly: boolean } | null>(null);
     const [loadEdit, setLoadEdit] = useState<QualityDeliveryLoadItem | null>(null);
     const [detail, setDetail] = useState<Row | null>(null);
-    const [choosing, setChoosing] = useState(false);
-    const [target, setTarget] = useState("");
-    const [targetError, setTargetError] = useState("");
     const isAnalysis = section === "analisis";
     const Icon = isAnalysis ? FlaskConical : PackageCheck;
     const title = titles[section];
@@ -52,11 +46,10 @@ export default function QualityManagementView({ campaign, scope, section }: Prop
         : loads.filter(l => !l.id.startsWith("entrega-")).map(l => ({ id: l.id, title: l.codigoCarga, subtitle: `${l.cliente} · ${l.contratoRef}`, date: l.fechaCargaReal, type: l.placa, result: `${formatKg(kilos(l))} kg`, document: l.destino, load: l }));
     const filtered = rows.filter(r => isAnalysis || ((!type || r.type === type) && (!search.trim() || [r.title, r.subtitle, r.type, r.document, r.load?.transportista, r.load?.proveedoresCarga.map(p => `${p.proveedorNombre} ${p.fincaNombre}`).join(" ")].join(" ").toLocaleLowerCase("es").includes(search.trim().toLocaleLowerCase("es")))))
         .sort((a, b) => (descending ? -1 : 1) * (a.date.localeCompare(b.date) || a.id.localeCompare(b.id)));
-    const targets = loads.filter(l => l.id.startsWith("entrega-"));
     const options = isAnalysis ? ANALYSIS_TYPE_OPTIONS : [...new Set(rows.map(r => r.type))].map(value => ({ value, label: value }));
     const openRegister = () => {
         if (isAnalysis) setAnalysisModal({ record: null, readOnly: false });
-        else { setTarget(""); setTargetError(""); setChoosing(true); }
+
     };
     const edit = (row: Row) => {
         if (row.analysis) setAnalysisModal({ record: row.analysis, readOnly: false });
@@ -71,7 +64,7 @@ export default function QualityManagementView({ campaign, scope, section }: Prop
         <QualityCampaignContextBanner campaign={campaign} scope={scope} caption={title} count={rows.length}
             singular={isAnalysis ? "análisis" : "carga"}
             plural={isAnalysis ? "análisis" : "cargas"} />
-        <PageHeader icon={<Icon size={24} />} title={title} description={`${campaign.nombre} · ${scope === "exportador" ? "Exportador" : "Industria"}. ${isAnalysis ? "Registra muestras, MTD y resultados por proveedor y finca." : "Registra los kilos y envases de cada entrega coordinada."}`} action={<Button size="xl" onClick={openRegister}><Plus size={20} />{register}</Button>} />
+        <PageHeader icon={<Icon size={24} />} title={title} description={`${campaign.nombre} · ${scope === "exportador" ? "Exportador" : "Industria"}. ${isAnalysis ? "Registra muestras, MTD y resultados por proveedor y finca." : "Consulta los kilos y envases registrados por el chofer para cada entrega."}`} action={isAnalysis ? <Button size="xl" onClick={openRegister}><Plus size={20} />{register}</Button> : undefined} />
         <FilterBar className="mb-8" onClear={clear} canClear={hasFilters}>
             <FilterSearch value={search} onChange={setSearch} placeholder={isAnalysis ? "Buscar proveedor, finca o análisis…" : "Buscar carga, cliente, proveedor o destino…"} />
             <FilterSelectField label={isAnalysis ? "Tipo de análisis" : "Placa"} allLabel="Todos" options={options} value={type} onChange={setType} />
@@ -79,8 +72,8 @@ export default function QualityManagementView({ campaign, scope, section }: Prop
         </FilterBar>
         <TableCard icon={<Icon size={24} />} title={isAnalysis ? "Muestreo y análisis por proveedor y finca" : "Cargas registradas"} description={isAnalysis ? "Consulta cada muestra y completa sus resultados cuando lleguen del laboratorio." : "Consulta los registros y sus datos relacionados."}
             isEmpty={filtered.length === 0} emptyTitle={hasFilters ? "Sin resultados para estos filtros" : `Aún no hay ${isAnalysis ? "análisis" : "cargas"} registrados`}
-            emptyDescription={hasFilters ? "Prueba otra búsqueda o limpia los filtros." : isAnalysis ? "Registra una muestra de un proveedor y finca de esta campaña." : "Selecciona una entrega coordinada para registrar su carga."}
-            emptyAction={hasFilters ? { label: "Limpiar filtros", onClick: clear, tone: "secondary" } : { label: register, onClick: openRegister }} page={1} pageCount={1} onPageChange={() => {}}
+            emptyDescription={hasFilters ? "Prueba otra búsqueda o limpia los filtros." : isAnalysis ? "Registra una muestra de un proveedor y finca de esta campaña." : "El chofer registra la carga desde su portal móvil."}
+            emptyAction={hasFilters ? { label: "Limpiar filtros", onClick: clear, tone: "secondary" } : isAnalysis ? { label: register, onClick: openRegister } : undefined} page={1} pageCount={1} onPageChange={() => {}}
             headerRight={<TableToolbar><TableCountPill icon={<Icon size={16} />} count={filtered.length} singular="registro" plural="registros" /><TableExportMenu getData={() => ({ title: `${title} · ${campaign.nombre}`, filename: `calidad-${section}-${campaign.campaniaId}`, header: headers, rows: filtered.map(r => [r.title + " · " + r.subtitle, formatDisplayDate(r.date), r.type, r.result, r.document]) })} /></TableToolbar>}>
             <div className="flex flex-col gap-3 sm:hidden">
                 {filtered.map(row => <TableGridCard key={row.id} accentColor="border-l-brand" icon={<Icon size={18} />} title={row.title} subtitle={row.subtitle}
@@ -105,10 +98,6 @@ export default function QualityManagementView({ campaign, scope, section }: Prop
         </TableCard>
         {analysisModal && <QualityAnalysisModal open onOpenChange={open => { if (!open) setAnalysisModal(null); }} campaignId={campaign.campaniaId} record={analysisModal.record} readOnly={analysisModal.readOnly} />}
         {loadEdit && <QualityLoadFormModal open onOpenChange={open => { if (!open) setLoadEdit(null); }} load={loadEdit} onSave={saveQualityLoadRealData} />}
-        <AppModal open={choosing} onOpenChange={setChoosing} title={register} description="Elige una entrega con transporte, proveedor y finca coordinados." icon={<Icon size={22} />} size="md" footer={<><Button variant="outline" onClick={() => setChoosing(false)}>Cancelar</Button><Button onClick={() => { const load = targets.find(l => l.id === target); if (!load) { setTargetError("Selecciona un registro para continuar."); return; } setChoosing(false); setLoadEdit(load); }}>Continuar</Button></>}>
-            <FormField label="Entrega coordinada" required error={targetError}><Combobox options={targets.map(l => ({ value: l.id, label: `${l.codigoCarga || "Entrega programada"} · ${l.cliente} · ${formatDisplayDate(l.fechaProgramada)} · ${formatKg(l.kilosProgramados)} kg` }))} value={target} onChange={value => { setTarget(value); setTargetError(""); }} placeholder="Seleccionar…" /></FormField>
-            {targets.length === 0 && <p className="mt-4 text-sm text-ink-muted">No hay entregas coordinadas sin carga. Completa la coordinación de una entrega en la campaña.</p>}
-        </AppModal>
         {detail?.load && <QualityLoadDetailModal load={detail.load} onClose={() => setDetail(null)} />}
     </div>;
 }

@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
     Calendar,
@@ -8,14 +7,12 @@ import {
     Clock,
     Compass,
     FileCheck2,
-    LayoutGrid,
     LogOut,
     MapPin,
     Navigation,
     PackageCheck,
     Sprout,
     Truck,
-    UserCheck,
 } from "lucide-react";
 import DispatchStepProgress, { type DispatchStage } from "@/shared/components/DispatchStepProgress";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -28,7 +25,6 @@ import StatusBadge from "@/shared/components/StatusBadge";
 import SuccessModal from "@/shared/components/SuccessModal";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import PageHeader from "@/shared/layout/PageHeader";
@@ -38,13 +34,15 @@ import { getCampaignFruitIcon } from "@/modules/campaigns/campaignFruit";
 import DriverLoadDataModal from "@/modules/driver-portal/components/DriverLoadDataModal";
 import DriverRouteMapModal from "@/modules/driver-portal/components/DriverRouteMapModal";
 import type { DriverLoad } from "@/modules/driver-portal/driverPortal.models";
+import type { FileSource } from '@/shared/utils/fileSource';
+import { getSession } from '@/shared/offline/session';
+import { createInFlightGuard } from '@/shared/utils/inFlightGuard';
 import {
     advanceDriverLoadStage,
     getRegisteredDrivers,
     saveDriverArrivalChecklist,
     saveDriverLoadFieldData,
     saveDriverVehicleExitGuide,
-    setActiveDriver,
     useDriverPortalState,
 } from "@/modules/driver-portal/driverPortal.store";
 
@@ -68,10 +66,10 @@ interface DriverPortalPageProps {
 }
 
 export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
-    const navigate = useNavigate();
     const { activeDriverId, loads } = useDriverPortalState();
     const drivers = getRegisteredDrivers();
-    const currentDriver = drivers.find((d) => d.id === activeDriverId) ?? drivers[0];
+    const identity = getSession()?.user;
+    const currentDriver = identity?.rol.nombre === 'Chofer' ? drivers.find(driver => driver.personaId === identity.personaId) : drivers.find((d) => d.id === activeDriverId) ?? drivers[0];
     const currentDriverId = currentDriver?.id ?? "";
 
     const driverLoads = loads.filter((item) => item.driverId === currentDriverId);
@@ -111,6 +109,8 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
     const [stageNote, setStageNote] = useState("");
     const [successInfo, setSuccessInfo] = useState<{ title: string; description: string } | null>(null);
     const [actionError, setActionError] = useState("");
+    const [actionGuard] = useState(createInFlightGuard);
+    const [actionBusy, setActionBusy] = useState(false);
 
     const activeLoad = useMemo(
         () => driverLoads.find((l) => l.id === selectedLoadId) ?? driverLoads[0] ?? null,
@@ -123,6 +123,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
     const [kilosDescarte, setKilosDescarte] = useState("");
     const [motivoDescarte, setMotivoDescarte] = useState("");
     const [observacionesEntrega, setObservacionesEntrega] = useState("");
+    const [evidenciaDescarte, setEvidenciaDescarte] = useState<FileSource | null>(null);
 
     const [numeroGuiaSalida, setNumeroGuiaSalida] = useState("");
     const [motivoSalida, setMotivoSalida] = useState("");
@@ -138,6 +139,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
         setKilosDescarte(target.checklistLlegada.kilosDescarte);
         setMotivoDescarte(target.checklistLlegada.motivoDescarte);
         setObservacionesEntrega(target.checklistLlegada.observacionesEntrega);
+        setEvidenciaDescarte(target.checklistLlegada.evidenciaDescarte ?? null);
 
         setNumeroGuiaSalida(target.guiaSalida.numeroGuia);
         setMotivoSalida(target.guiaSalida.motivoSalida);
@@ -148,6 +150,8 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
     };
 
     const openDispatch = (load: DriverLoad) => {
+        setActionError('');
+        setStageNote('');
         setSelectedLoadId(load.id);
         syncActiveLoadForms(load);
         setView("despacho");
@@ -158,13 +162,10 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
         return driverLoads.filter((l) => l.campaniaId === selectedCampaignId);
     }, [driverLoads, selectedCampaignId]);
 
-    const driverItems = drivers.map((d) => ({
-        value: d.id,
-        label: `${d.nombre} · ${d.placaAsignada}`,
-    }));
 
     const handleAdvanceStage = async () => {
-        if (!activeLoad) return;
+        if (!activeLoad || !actionGuard.acquire()) return;
+        setActionBusy(true);
         setActionError("");
         try {
             await advanceDriverLoadStage(activeLoad.id, stageNote);
@@ -175,13 +176,15 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
             });
         } catch (cause) {
             setActionError(cause instanceof Error ? cause.message : "No se pudo actualizar la etapa del despacho.");
-        }
+        } finally { actionGuard.release(); setActionBusy(false); }
     };
 
     const handleSaveChecklist = async () => {
-        if (!activeLoad) return;
+        if (!activeLoad || !actionGuard.acquire()) return;
+        setActionBusy(true);
         setActionError("");
         try { await saveDriverArrivalChecklist(activeLoad.id, {
+            evidenciaDescarte,
             kilosEnPlanta,
             huboDescarte,
             kilosDescarte: huboDescarte ? kilosDescarte : "0",
@@ -194,10 +197,12 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
             description: "Los kilos en planta y el reporte de descarte quedaron registrados para Logística.",
         });
         } catch (cause) { setActionError(cause instanceof Error ? cause.message : "No se pudo guardar el checklist."); }
+        finally { actionGuard.release(); setActionBusy(false); }
     };
 
     const handleSaveExitGuide = async () => {
-        if (!activeLoad) return;
+        if (!activeLoad || !actionGuard.acquire()) return;
+        setActionBusy(true);
         setActionError("");
         try { await saveDriverVehicleExitGuide(activeLoad.id, {
             requiereGuia: true,
@@ -213,12 +218,13 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
             description: "El documento de salida del vehículo fue actualizado correctamente.",
         });
         } catch (cause) { setActionError(cause instanceof Error ? cause.message : "No se pudo guardar la guía de salida."); }
+        finally { actionGuard.release(); setActionBusy(false); }
     };
 
     if (!currentDriver) return <div className="p-8 text-ink-muted">Registra un chofer y coordina una entrega para utilizar el portal.</div>;
 
     return (
-        <div className="px-4 py-5 pb-24 sm:px-8 lg:px-14">
+        <div className="mx-auto w-full max-w-xl px-4 py-5 pb-24 sm:px-6">
             {/* Cabecera del Portal Móvil del Chofer */}
             <PageHeader
                 icon={<Truck size={24} strokeWidth={2.5} />}
@@ -226,32 +232,6 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                 description="Consulta tus campañas activas, ubicación de fincas, avance de ruta, checklist de llegada y guía de salida."
                 action={
                     <div className="flex flex-wrap items-center gap-2.5">
-                        <div className="min-w-64">
-                            <Select
-                                items={driverItems}
-                                value={currentDriver.id}
-                                onValueChange={async (next) => {
-                                    if (!next) return;
-                                    await setActiveDriver(next as string);
-                                    setSelectedCampaignId(null);
-                                }}
-                            >
-                                <SelectTrigger aria-label="Seleccionar chofer activo" className="h-11 rounded-xl bg-card font-semibold">
-                                    <UserCheck size={16} className="mr-1.5 text-brand" />
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {drivers.map((d) => (
-                                        <SelectItem key={d.id} value={d.id}>
-                                            {d.nombre} · {d.placaAsignada} ({d.transportista})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <Button variant="outline" size="lg" onClick={() => navigate("/modules")}>
-                            <LayoutGrid size={17} strokeWidth={2.3} /> Módulos
-                        </Button>
                         {onLogout && (
                             <Button variant="outline" size="lg" onClick={onLogout}>
                                 <LogOut size={17} strokeWidth={2.3} /> Salir
@@ -307,18 +287,22 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                 }))}
                 value={view}
                 onChange={(next) => {
-                    if (next === "despacho" && activeLoad) {
-                        syncActiveLoadForms(activeLoad);
+                    if (next === "despacho") {
+                        const target = activeLoad && !activeLoad.pendienteRegistro ? activeLoad : driverLoads.find(load => !load.pendienteRegistro);
+                        if (!target) return;
+                        setSelectedLoadId(target.id);
+                        syncActiveLoadForms(target);
                     }
                     setView(next as DriverView);
                 }}
                 showLabelsOnMobile
-                className="mb-6"
+                className="mb-6 hidden sm:flex"
             />
 
             {/* VISTA 1: MIS CAMPAÑAS (CHOFER) */}
             {view === "campanias" && (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 ">
+                    {campaigns.length === 0 && <p role="status" className="rounded-2xl border border-dashed border-border p-6 text-sm text-ink-muted">Aún no tienes entregas asignadas. El administrador debe vincularte a una entrega de campaña.</p>}
                     {campaigns.map((camp) => {
                         const FruitIcon = getCampaignFruitIcon(camp.nombre, camp.fruta) || Sprout;
                         const totalKg = camp.cargas.reduce(
@@ -343,7 +327,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                                 </p>
                                             </div>
                                         </div>
-                                        <StatusBadge status="En ejecución" />
+                                        <StatusBadge status={camp.cargas[0]?.estadoCampania ?? "Pendiente"} />
                                     </div>
 
                                     <SummaryBar
@@ -364,7 +348,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                                     <span className="font-bold text-ink">{load.codigo}</span>{" "}
                                                     <span className="text-ink-muted">· {load.cliente}</span>
                                                 </div>
-                                                <StatusBadge status={load.etapa} />
+                                                <StatusBadge status={load.rechazada ? "Rechazada" : load.pendienteRegistro ? "Por completar" : load.etapa} />
                                             </div>
                                         ))}
                                     </div>
@@ -402,7 +386,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 ">
                         {filteredLoads.map((load) => {
                             const totalLoadedKg = load.proveedores.reduce((sum, p) => sum + p.kilosCargados, 0);
                             const totalJabas = load.proveedores.reduce(
@@ -425,10 +409,10 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                                     {load.cliente} · <span className="text-ink-muted">{load.campaniaNombre}</span>
                                                 </p>
                                             </div>
-                                            <StatusBadge status={load.etapa} />
+                                            <StatusBadge status={load.rechazada ? "Rechazada" : load.pendienteRegistro ? "Por completar" : load.etapa} />
                                         </div>
 
-                                        <DispatchStepProgress stage={load.etapa} variant="compact" />
+                                        {!load.pendienteRegistro && <DispatchStepProgress stage={load.etapa} variant="compact" />}
 
                                         <div className="grid grid-cols-1 gap-3 rounded-xl border border-border bg-surface-page p-3.5 sm:grid-cols-2">
                                             <div className="flex items-start gap-2.5">
@@ -484,12 +468,13 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                             <Button
                                                 variant="outline"
                                                 size="default"
-                                                onClick={() => setLoadDataModalLoad(load)}
+                                                disabled={!load.permiteEditarCarga} onClick={() => setLoadDataModalLoad(load)}
                                             >
-                                                <PackageCheck size={16} strokeWidth={2.3} /> Datos de carga
+                                                <PackageCheck size={16} strokeWidth={2.3} /> {load.pendienteRegistro ? 'Registrar carga' : 'Datos de carga'}
                                             </Button>
                                             <Button
                                                 size="default"
+                                                disabled={load.pendienteRegistro || load.rechazada}
                                                 onClick={() => openDispatch(load)}
                                             >
                                                 <Navigation size={16} strokeWidth={2.3} /> Ver mi despacho
@@ -504,7 +489,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
             )}
 
             {/* VISTA 4, 5 Y 6: MI DESPACHO + CHECKLIST DE LLEGADA + GUÍA DE SALIDA */}
-            {view === "despacho" && activeLoad && (
+            {view === "despacho" && activeLoad && !activeLoad.pendienteRegistro && (
                 <div className="flex flex-col gap-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <Button variant="outline" onClick={() => setView("cargas")}>
@@ -514,7 +499,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                             <Button variant="outline" onClick={() => setRouteModalLoad(activeLoad)}>
                                 <Compass size={17} strokeWidth={2.3} /> Ver mapa de fincas y ruta
                             </Button>
-                            <Button variant="outline" onClick={() => setLoadDataModalLoad(activeLoad)}>
+                            <Button variant="outline" disabled={!activeLoad.permiteEditarCarga} onClick={() => setLoadDataModalLoad(activeLoad)}>
                                 <PackageCheck size={17} strokeWidth={2.3} /> Editar datos de carga
                             </Button>
                         </div>
@@ -555,7 +540,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                         />
                                     </div>
                                     <Button size="xl" onClick={handleAdvanceStage}
-                                        disabled={activeLoad.etapa === "Llegada"
+                                        disabled={actionBusy || activeLoad.etapa === "Llegada"
                                             && (!activeLoad.cierreFisicoConfirmado || !activeLoad.checklistLlegada.registrado)}
                                         className="shrink-0">
                                         <CheckCircle2 size={19} strokeWidth={2.5} /> {NEXT_STAGE_LABELS[activeLoad.etapa]}
@@ -604,7 +589,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                     </Card>
 
                     {/* Grid de 2 columnas: Checklist de Llegada + Guía de Salida */}
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-6 ">
                         {/* VISTA 5: CHECKLIST DE ENTREGA EN LLEGADA */}
                         <Card className="rounded-2xl border-border shadow-card">
                             <CardContent className="flex flex-col gap-5 p-5 sm:p-6">
@@ -618,7 +603,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                         )
                                     }
                                 >
-                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <fieldset disabled={actionBusy || activeLoad.etapa !== "Llegada" || activeLoad.estadoCampania !== "en proceso"} className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
                                         <InputField
                                             id="chk-kilos-planta"
                                             label="Kilos recibidos en planta"
@@ -658,6 +643,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                                     value={motivoDescarte}
                                                     onChange={setMotivoDescarte}
                                                 />
+                                                <div className="sm:col-span-2"><FileDropzone label="Evidencia del descarte" file={evidenciaDescarte} onChange={setEvidenciaDescarte} variant="horizontal" readOnly={activeLoad.etapa !== 'Llegada'} replaceable /></div>
                                             </>
                                         )}
 
@@ -675,9 +661,9 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                                 onChange={(e) => setObservacionesEntrega(e.target.value)}
                                             />
                                         </FormField>
-                                    </div>
+                                    </fieldset>
                                     <div className="flex justify-end">
-                                        <Button size="lg" onClick={handleSaveChecklist}>
+                                        <Button size="lg" disabled={actionBusy || activeLoad.etapa !== 'Llegada' || activeLoad.estadoCampania !== 'en proceso'} onClick={handleSaveChecklist}>
                                             <ClipboardCheck size={18} strokeWidth={2.4} /> Guardar checklist de llegada
                                         </Button>
                                     </div>
@@ -693,45 +679,13 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                     aside="Retorno de jabas vacías o descarte"
                                 >
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                        <InputField
-                                            id="exit-numero-guia"
-                                            label="N° Guía de salida"
-                                            required
-                                            placeholder="Ej. EG01-000412"
-                                            value={numeroGuiaSalida}
-                                            onChange={setNumeroGuiaSalida}
-                                        />
-                                        <InputField
-                                            id="exit-motivo"
-                                            label="Motivo de salida"
-                                            placeholder="Retorno de envases / fruta descarte"
-                                            value={motivoSalida}
-                                            onChange={setMotivoSalida}
-                                        />
-                                        <InputField
-                                            id="exit-bultos-vacios"
-                                            label="Bultos vacíos en retorno"
-                                            step="1"
-                                            min={0}
-                                            unit="und."
-                                            value={bultosVaciosRetorno}
-                                            onChange={setBultosVaciosRetorno}
-                                        />
-                                        <InputField
-                                            id="exit-kilos-descarte"
-                                            label="Fruta de descarte en retorno"
-                                            step="1"
-                                            min={0}
-                                            unit="kg"
-                                            value={kilosDescarteRetorno}
-                                            onChange={setKilosDescarteRetorno}
-                                        />
                                         <div className="sm:col-span-2">
                                             <FileDropzone
                                                 label="Documento de guía de salida firmada"
                                                 file={archivoGuiaSalida}
                                                 onChange={(f) => setArchivoGuiaSalida(f)}
                                                 variant="horizontal"
+                                                readOnly={actionBusy || !["Llegada", "Cierre"].includes(activeLoad.etapa) || activeLoad.estadoCampania !== 'en proceso'}
                                                 replaceable
                                             />
                                         </div>
@@ -744,6 +698,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                             <Textarea
                                                 id="exit-obs"
                                                 rows={2}
+                                                disabled={actionBusy || !['Llegada', 'Cierre'].includes(activeLoad.etapa) || activeLoad.estadoCampania !== 'en proceso'}
                                                 placeholder="Control patrimonial en garita, firma de almacén de envases..."
                                                 value={observacionesGuiaSalida}
                                                 onChange={(e) => setObservacionesGuiaSalida(e.target.value)}
@@ -751,7 +706,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                         </FormField>
                                     </div>
                                     <div className="flex justify-end">
-                                        <Button size="lg" onClick={handleSaveExitGuide}>
+                                        <Button size="lg" disabled={actionBusy || !['Llegada', 'Cierre'].includes(activeLoad.etapa) || activeLoad.estadoCampania !== 'en proceso'} onClick={handleSaveExitGuide}>
                                             <FileCheck2 size={18} strokeWidth={2.4} /> Guardar guía de salida
                                         </Button>
                                     </div>
@@ -808,9 +763,13 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                         <button
                             key={tab.id}
                             type="button"
+                            disabled={tab.id === 'despacho' && !driverLoads.some(load => !load.pendienteRegistro)}
                             onClick={() => {
-                                if (tab.id === "despacho" && activeLoad) {
-                                    syncActiveLoadForms(activeLoad);
+                                if (tab.id === "despacho") {
+                                    const target = activeLoad && !activeLoad.pendienteRegistro ? activeLoad : driverLoads.find(load => !load.pendienteRegistro);
+                                    if (!target) return;
+                                    setSelectedLoadId(target.id);
+                                    syncActiveLoadForms(target);
                                 }
                                 setView(tab.id as DriverView);
                             }}
@@ -839,8 +798,8 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                 onSave={async (loadId, payload) => {
                     await saveDriverLoadFieldData(loadId, payload);
                     setSuccessInfo({
-                        title: "Datos de carga actualizados",
-                        description: "El desglose de kilos, bultos y viáticos del camión se guardó correctamente.",
+                        title: payload.cumpleRequisitosIndustria === false ? 'Rechazo registrado' : 'Datos de carga actualizados',
+                        description: payload.cumpleRequisitosIndustria === false ? 'La entrega quedó rechazada y no habilita un despacho.' : 'El desglose de kilos, bultos y viáticos del camión se guardó correctamente.',
                     });
                 }}
             />

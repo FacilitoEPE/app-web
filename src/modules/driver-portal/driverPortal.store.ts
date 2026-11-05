@@ -112,6 +112,7 @@ export function saveDriverVehicleExitGuide(loadId: string, guiaSalida: DriverVeh
 export function saveDriverLoadFieldData(
     loadId: string,
     payload: {
+        cumpleRequisitosIndustria?: boolean;
         fechaCarga: string;
         anotador: string;
         viaticosMovilidad: number;

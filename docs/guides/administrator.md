@@ -100,12 +100,9 @@ En **Lineamientos**, elegir un archivo solo lo deja pendiente; se envía al crea
 **Dirección:** `Módulos > Facturación y Cobros / Liquidación de Compra / Logística`.  
 **Opción:** verifique que saldo, importes y estados coincidan con los documentos y pagos reales.
 
-## 10. Cerrar la campaña
+## 10. Seguimiento de campaña
 
-En **Gestión de Campaña**, abra la campaña y elija **Cerrar campaña** cuando la cosecha, entrega, cobranza y liquidaciones estén revisadas. Ingrese un motivo claro, confirme y verifique el estado final.
-
-**Dirección:** `/campaigns > detalle de campaña > Cerrar campaña`.  
-**Opción:** cierre únicamente al completar los hitos operativos y financieros previstos.
+En **Gestión de Campaña**, abra la campaña para consultar su avance integral, programa semanal de entregas y estado operativo. La edición de datos está habilitada exclusivamente mientras la campaña permanece en estado **Planificado**.
 
 ## 11. Límites conocidos de la V1
 

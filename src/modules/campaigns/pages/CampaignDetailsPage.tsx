@@ -1,5 +1,4 @@
 import { usesV1 } from '@/shared/api/data-contract';
-import CampaignClosureAction from '@/modules/campaigns/components/CampaignClosureAction';
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CalendarRange, ClipboardCheck, FileSpreadsheet, PackageCheck, Pencil, Play, Receipt, Sprout, Truck } from "lucide-react";
@@ -13,6 +12,9 @@ import PageHeader from "@/shared/layout/PageHeader";
 import { getCampana, getFrutaDerivadas, updateCampana } from "@/modules/campaigns/api/campaign.api";
 import { getCampaniaProveedoresByCampania } from "@/modules/campaigns/api/campania-proveedor.api";
 import { getClientesNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.api";
+import { getUserById } from "@/modules/auth/api/auth.api";
+import { getSession } from "@/shared/offline/session";
+import { operationsContext } from "@/modules/operations/api/operations-context.api";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { FrutaDerivadaDto } from "@/modules/campaigns/api/campaign.dto";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
@@ -50,6 +52,8 @@ function toOverviewCampaign(campana: Campana): Campaign {
         estado: campana.estado === "planificacion" ? "Planificado" : campana.estado === "en proceso" ? "En ejecución" : "Terminado",
         fruta: campana.fruta?.name,
         variedades: [],
+        temporada: campana.temporada,
+        observaciones: campana.observaciones,
     };
 }
 
@@ -98,6 +102,8 @@ interface CampaignDetailsData {
     proveedores: CampaniaProveedor[];
     clientes: ClienteNegocioCampana[];
     derivadas: FrutaDerivadaDto[];
+    responsableNombre: string;
+    lineamientos: { name: string; url: string } | null;
 }
 
 type LoadState = { status: "loading" } | { status: "error" } | { status: "success"; data: CampaignDetailsData };
@@ -137,7 +143,35 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
         ])
             .then(async ([campana, proveedores, clientes]) => {
                 const derivadas = campana.frutaId ? await getFrutaDerivadas(campana.frutaId) : [];
-                if (active) setState({ status: "success", data: { campana, proveedores, clientes, derivadas } });
+
+                const sessionUser = getSession()?.user;
+                let responsableNombre = "Sin asignar";
+                if (campana.responsableUsuarioId != null) {
+                    if (campana.responsableUsuarioId === sessionUser?.usuarioId) {
+                        responsableNombre = `${sessionUser.nombres} ${sessionUser.apellidos}`.trim() || sessionUser.usuario;
+                    } else {
+                        try {
+                            const u = await getUserById(campana.responsableUsuarioId);
+                            responsableNombre = `${u.nombres} ${u.apellidos}`.trim() || u.usuario;
+                        } catch {
+                            responsableNombre = `Usuario #${campana.responsableUsuarioId}`;
+                        }
+                    }
+                }
+
+                const file = usesV1()
+                    ? operationsContext().localDocuments?.find(
+                          (item) => item.tipo === "campana" && item.entidadId === campana.campaniaId
+                      )
+                    : undefined;
+                const lineamientos = file ? { name: file.name, url: file.url } : null;
+
+                if (active) {
+                    setState({
+                        status: "success",
+                        data: { campana, proveedores, clientes, derivadas, responsableNombre, lineamientos },
+                    });
+                }
             })
             .catch(() => { if (active) setState({ status: "error" }); });
         return () => { active = false; };
@@ -166,8 +200,15 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
         return <PageError icon={<Sprout />} title="No se pudo cargar la campaña" message="Verifica la conexión e inténtalo nuevamente." onRetry={retry} back={BACK_TO_CAMPAIGNS} />;
     }
 
-    const { campana, proveedores, clientes, derivadas } = state.data;
-    const campaign = { ...toOverviewCampaign(campana), variedades: derivadas.map((derivada) => derivada.name) };
+    const { campana, proveedores, clientes, derivadas, responsableNombre, lineamientos } = state.data;
+    const campaign: Campaign = {
+        ...toOverviewCampaign(campana),
+        variedades: derivadas.map((derivada) => derivada.name),
+        temporada: campana.temporada,
+        responsable: responsableNombre,
+        observaciones: campana.observaciones,
+        lineamientos,
+    };
     const timing = getCampaignTiming(campaign.inicio, campaign.fin);
 
     const estimatedKg = proveedores.reduce((sum, item) => sum + (Number(item.cantidadProveedor) || 0), 0);
@@ -199,10 +240,11 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                             <Button variant="outline" size="xl" onClick={() => navigate(`/campaigns/${campaniaId}/weekly-delivery-program`)}>
                                 <CalendarRange size={19} strokeWidth={2.3} /> Programa semanal
                             </Button>
-                            <Button variant="outline" size="xl" onClick={() => setOpenModal("edit")}>
-                                <Pencil size={19} strokeWidth={2.5} /> Editar campaña
-                            </Button>
-                            <CampaignClosureAction campaignId={campaniaId} closed={campana.estado === "terminado"} onClosed={retry} />
+                            {campana.estado === "planificacion" && (
+                                <Button variant="outline" size="xl" onClick={() => setOpenModal("edit")}>
+                                    <Pencil size={19} strokeWidth={2.5} /> Editar campaña
+                                </Button>
+                            )}
                         </div>
                     }
                 />

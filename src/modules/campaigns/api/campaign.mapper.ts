@@ -5,6 +5,7 @@ export interface Campana {
   responsableUsuarioId?: number | null;
   temporada?: string | null;
   observaciones?: string | null;
+  lineamientosArchivoId?: number | null;
   campaniaId: number;
   nombre: string;
   frutaId: number;

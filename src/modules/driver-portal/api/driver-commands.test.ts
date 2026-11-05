@@ -1,13 +1,25 @@
 import { describe, expect, it, vi } from 'vitest';
 import { apiClient } from '@/shared/api/client';
 import { driverCommands } from '@/modules/driver-portal/api/driver-commands.api';
+vi.mock('@/modules/driver-portal/api/driver-screen-data', () => ({ projectDriverData: () => ({ loads: [{ id: '7', permiteEditarCarga: true, kilosProgramados: 100, proveedores: [{ proveedorId: '1' }] }] }) }));
+vi.mock('@/modules/operations/api/operations-context.api', () => ({ operationsContext: () => ({}) }));
 
 describe('registro de carga del chofer', () => {
+  const provider = { proveedorId: '1', proveedorNombre: 'Productor', tipo: 'Productor' as const, fincaNombre: 'Finca', variedad: 'Kent', kilosCargados: 50, jabasCargadas: 2, jabasVacias: 0, binesCargados: 0, binesVacios: 0, mallasCargadas: 0, mallasVacias: 0 };
+  const value = { fechaCarga: '2035-01-01', anotador: 'Ana', viaticosMovilidad: 0, viaticosInsumos: 0, gastoCuadrilla: 0, gastoAnotadores: 0, observacionesCarga: '', proveedores: [provider] };
   it('envía los datos al endpoint restringido de la carga seleccionada', async () => {
     const patch = vi.spyOn(apiClient, 'patch').mockResolvedValue({ data: { ok: true } });
-    const value = { fechaCarga: '2035-01-01', anotador: 'Ana', viaticosMovilidad: 0, viaticosInsumos: 0, gastoCuadrilla: 0, gastoAnotadores: 0, observacionesCarga: '', proveedores: [] };
     await driverCommands.load('7', value);
     expect(patch).toHaveBeenCalledWith('/api/chofer/cargas/7/datos', value);
+    patch.mockRestore();
+  });
+  it('rechaza proveedores ajenos, pesos inválidos y gastos negativos antes de escribir', async () => {
+    const patch = vi.spyOn(apiClient, 'patch').mockResolvedValue({ data: { ok: true } });
+    await expect(driverCommands.load('7', { ...value, proveedores: [] })).rejects.toThrow(/proveedores/);
+    await expect(driverCommands.load('7', { ...value, proveedores: [{ ...provider, proveedorId: '2' }] })).rejects.toThrow(/proveedores/);
+    await expect(driverCommands.load('7', { ...value, proveedores: [{ ...provider, kilosCargados: -1 }] })).rejects.toThrow(/kilos/);
+    await expect(driverCommands.load('7', { ...value, gastoCuadrilla: -1 })).rejects.toThrow(/gastos/);
+    expect(patch).not.toHaveBeenCalled();
     patch.mockRestore();
   });
 });

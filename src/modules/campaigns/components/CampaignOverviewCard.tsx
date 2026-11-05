@@ -1,4 +1,4 @@
-import { CalendarDays, Clock3 } from "lucide-react";
+import { CalendarDays, Clock3, ExternalLink, FileText, User } from "lucide-react";
 import { Card } from "@/shared/components/ui/card";
 import StatusBadge from "@/shared/components/StatusBadge";
 import type { Campaign } from "@/modules/campaigns/campaigns.data";
@@ -21,12 +21,53 @@ export default function CampaignOverviewCard({ campaign, duration }: CampaignOve
     return (
         <Card className="campaign-panel campaign-overview">
             <div className="campaign-overview-copy">
-                <p className="campaign-eyebrow">{campaign.estado === "Terminado" ? "Campaña finalizada" : "Campaña agrícola"}</p>
+                <p className="campaign-eyebrow">
+                    {campaign.estado === "Terminado" ? "Campaña finalizada" : "Campaña agrícola"}
+                    {campaign.temporada ? ` · Temporada ${campaign.temporada}` : ""}
+                </p>
                 <div className="campaign-title-row">
                     <h2>{campaign.nombre}</h2>
                     <StatusBadge status={campaign.estado} />
                 </div>
-                <p className="campaign-description">Gestión integral de la producción, comercialización y exportación {fruit.description} de la más alta calidad.</p>
+
+                <div className="campaign-meta-row">
+                    <span className="campaign-meta-item">
+                        <User size={13} className="text-brand shrink-0" aria-hidden="true" />
+                        <span className="campaign-meta-label">Responsable:</span>
+                        <span className="campaign-meta-value">{campaign.responsable || "Sin asignar"}</span>
+                    </span>
+                    {campaign.lineamientos ? (
+                        <a
+                            href={campaign.lineamientos.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="campaign-meta-item campaign-meta-link"
+                            title={`Abrir lineamientos: ${campaign.lineamientos.name}`}
+                        >
+                            <FileText size={13} className="text-brand shrink-0" aria-hidden="true" />
+                            <span className="campaign-meta-label">Lineamientos:</span>
+                            <span className="campaign-meta-value truncate max-w-[170px] underline decoration-dotted underline-offset-2">
+                                {campaign.lineamientos.name}
+                            </span>
+                            <ExternalLink size={11} className="opacity-70 shrink-0" aria-hidden="true" />
+                        </a>
+                    ) : null}
+                </div>
+
+                {campaign.observaciones ? (
+                    <div className="campaign-observations-box">
+                        <div className="campaign-observations-header">
+                            <FileText size={12} className="text-brand shrink-0" aria-hidden="true" />
+                            <span>Observaciones</span>
+                        </div>
+                        <p className="campaign-observations-text">{campaign.observaciones}</p>
+                    </div>
+                ) : (
+                    <p className="campaign-description">
+                        Gestión integral de la producción, comercialización y exportación {fruit.description} de la más alta calidad.
+                    </p>
+                )}
+
                 <dl className="campaign-dates">
                     {dates.map(({ label, value, icon: Icon }) => (
                         <div key={label}>

@@ -17,6 +17,12 @@ Si no puede ingresar o no aparecen sus viajes asignados, comuníquese con el Adm
 
 ## 2. Revisar el viaje
 
+Las entregas coordinadas que aún no tienen carga aparecen como **Por completar**. Abra **Registrar carga**, compruebe los proveedores y fincas asignados, seleccione la variedad, ingrese los kilos y marque cada tipo de bulto utilizado para completar cargados y vacíos. Registre fecha, responsable, viáticos, gastos y observaciones; guarde antes de abrir el despacho. El registro usa la misma carga que consulta Cosecha y Control de Calidad.
+
+El chofer no puede cambiar de conductor desde el portal. La edición de datos de carga se habilita durante **En carga**, en una campaña en ejecución y antes de emitir una guía. La creación en producción requiere que el backend autorice este flujo al chofer sobre sus propias entregas; la validación realizada hasta ahora corresponde al entorno de desarrollo.
+
+En Industria, elija primero **Sí cumple** o **No cumple**. La segunda opción guarda el rechazo de la entrega sin exigir kilos ni crear una carga; el registro queda disponible para consulta y no habilita el despacho.
+
 1. En **Mis campañas**, abra la campaña que corresponde a su viaje.
 2. En **Mis cargas**, elija la carga asignada.
 3. Revise código, cliente/destino, fecha, placa, kilos y bultos.
@@ -51,13 +57,13 @@ En cada etapa, elija la acción que aparece como siguiente estado y añada una o
 
 ## 5. Guardar la guía de salida del vehículo
 
-1. En **Guía de salida del vehículo**, ingrese el número del documento que corresponda y el motivo de salida.
-2. Registre los envases vacíos que retornan y los kilos de descarte, si aplica.
-3. Añada observaciones y elija **Guardar guía de salida**.
+1. Después de confirmar la llegada, abra **Guía de salida del vehículo**.
+2. Adjunte la guía de salida firmada; puede reemplazar un documento anterior.
+3. Añada observaciones si corresponde y elija **Guardar guía de salida**.
 4. Vuelva a abrir el panel para comprobar que los datos quedaron guardados.
 
 **Dirección:** `/chofer > Mi despacho > Guía de salida del vehículo`.  
-**Opción:** seleccione el motivo real y anote cantidades físicas verificadas.
+**Opción:** compruebe el documento adjunto y su vínculo con la entrega.
 
 ## 6. Coordinar el cierre del despacho
 

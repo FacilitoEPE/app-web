@@ -7,6 +7,10 @@ export interface Campaign {
     estado: string;
     fruta?: string;
     variedades?: string[];
+    temporada?: string | null;
+    responsable?: string | null;
+    observaciones?: string | null;
+    lineamientos?: { name: string; url: string } | null;
 }
 
 /** Datos de muestra mientras el módulo no consume el backend. */

@@ -57,6 +57,38 @@ afterEach(async () => {
 })
 
 describe('existing frontend with the V1 HTTP contract', () => {
+  it('shows assigned deliveries before the driver registers their loads', () => {
+    const g = structuredClone(operationsContext())
+    g.loads = []
+    g.loadProviders = []
+    const data = projectDriverData(g)
+    expect(data.loads).toHaveLength(g.coordinations.length)
+    expect(data.loads.every(load => load.pendienteRegistro && load.id.startsWith('entrega-'))).toBe(true)
+    for (const load of data.loads) {
+      const coordination = g.coordinations.find(item => item.entregaProgramadaId === Number(load.id.slice('entrega-'.length)))!
+      expect(load.driverId).toBe(String(coordination.idChoferTransporteExterno))
+      expect(load.proveedores.length).toBeGreaterThan(0)
+      expect(load.historial).toEqual([])
+      expect(load.proveedores.every(provider => provider.kilosCargados === 0)).toBe(true)
+    }
+  })
+  it('locks driver load editing after departure, guide issue, rejection or campaign completion', () => {
+    const source = operationsContext()
+    const load = source.loads[0]
+    const coordination = source.coordinations.find(item => item.coordinacionEntregaId === load.coordinacionEntregaId)!
+    const context = structuredClone(source)
+    context.histories = [{ ...context.histories[0], coordinacionEntregaId: coordination.coordinacionEntregaId, estado: 'SALIDA', fechaHora: '2026-11-05T12:00:00Z' }]
+    expect(projectDriverData(context).loads.find(item => item.id === String(load.cargaId))?.permiteEditarCarga).toBe(false)
+    context.histories = []
+    context.guides = context.guides.map(guide => ({ ...guide, emitidaAt: '2026-11-05T12:00:00Z' }))
+    expect(projectDriverData(context).loads.find(item => item.id === String(load.cargaId))?.permiteEditarCarga).toBe(false)
+    context.guides = []
+    context.harvests = context.harvests.map(harvest => ({ ...harvest, industria: { ...harvest.industria, inspectionResult: 'No cumple' } }))
+    expect(projectDriverData(context).loads.find(item => item.id === String(load.cargaId))?.rechazada).toBe(true)
+    expect(projectDriverData(context).loads.find(item => item.id === String(load.cargaId))?.permiteEditarCarga).toBe(false)
+    context.campaigns = context.campaigns.map(campaign => ({ ...campaign, estado: 'terminado' }))
+    expect(projectDriverData(context).loads.every(item => !item.permiteEditarCarga)).toBe(true)
+  })
   it('sums each client contract at its own price and keeps currencies separate', () => {
     const g = structuredClone(operationsContext())
     const contract = g.contracts[0]
@@ -105,12 +137,12 @@ describe('existing frontend with the V1 HTTP contract', () => {
     const g = operationsContext(), loads = projectQualityData(g).loads
     expect(loads.filter(l => l.cargaId !== undefined)).toHaveLength(g.loads.length)
     expect(loads[0].mtdRegistros[0]).toMatchObject({ capturas: null, trampas: null, diasExposicion: null, mtdCalculado: 0.01 })
-    expect(projectDriverData(g).loads[0].fincas.map(f => f.kilosEstimados)).toEqual([600, 400])
+    expect(projectDriverData(g).loads.find(load => load.id === String(g.loads[0].cargaId))!.fincas.map(f => f.kilosEstimados)).toEqual([600, 400])
     const multiOrigin = structuredClone(g)
     multiOrigin.loadOrigins = []
     const origin = multiOrigin.deliveryOrigins[0]
     multiOrigin.deliveryOrigins.push({ ...origin, fincaId: 2, origenEntregaId: 999 })
-    expect(projectDriverData(multiOrigin).loads[0].fincas.filter(f => f.id === '1')[0].kilosEstimados).toBeNull()
+    expect(projectDriverData(multiOrigin).loads.find(load => load.id === String(multiOrigin.loads[0].cargaId))!.fincas.filter(f => f.id === '1')[0].kilosEstimados).toBeNull()
   })
 
   it('persists an editable certificate total independently of covered producer estimates', async () => {

@@ -5,7 +5,7 @@ import crypto from 'node:crypto'
 // Run with pnpm contract:generate. This reads the agreed SQL; it never executes it.
 const root = path.resolve(import.meta.dirname, '..')
 const sqlPath = path.resolve(root, 'docs/api/contract-schema.sql')
-const sql = fs.readFileSync(sqlPath, 'utf8')
+const sql = fs.readFileSync(sqlPath, 'utf8').replace(/\r\n/g, '\n')
 const check = process.argv.includes('--check')
 const camel = value => value.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
 const pascal = value => camel(value).replace(/^./, letter => letter.toUpperCase())
@@ -262,7 +262,7 @@ const contract = {
 function write(file, content) {
   const target = path.join(root, file)
   if (check) {
-    if (!fs.existsSync(target) || fs.readFileSync(target, 'utf8') !== content) throw new Error(`Contrato desactualizado: ${file}. Ejecuta pnpm contract:generate.`)
+    if (!fs.existsSync(target) || fs.readFileSync(target, 'utf8').replace(/\r\n/g, '\n') !== content) throw new Error(`Contrato desactualizado: ${file}. Ejecuta pnpm contract:generate.`)
   } else {
     fs.mkdirSync(path.dirname(target), { recursive: true })
     fs.writeFileSync(target, content)
