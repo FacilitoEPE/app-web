@@ -5,6 +5,8 @@ Respeta las decisiones de producto y los contratos publicados. No inventes vista
 ## Decisiones del desarrollador y alcance de los cambios
 
 - El desarrollador (usuario) define el resultado deseado y toma la decisión final. Una solicitud de cambio autoriza modificar las vistas, campos e interacciones necesarios para cumplirla, usando los patrones visuales existentes y resolviendo detalles menores con criterio propio. Consulta solo decisiones de producto pendientes que cambien el alcance o el significado del flujo; no pidas otra aprobación de lo ya solicitado.
+- En lógica de negocio, el desarrollador define los requisitos y acepta las propuestas. Puedes analizar los flujos y proponer mejoras o soluciones; implementa las decisiones aceptadas y consulta las reglas funcionales que falten, sin inventarlas. Una solicitud concreta autoriza su implementación dentro del alcance indicado, sin pedir otra aprobación de lo ya definido.
+- Resuelve los detalles técnicos con criterio de frontend senior: buenas prácticas, nomenclatura clara y consistente, separación de responsabilidades, arquitectura existente, principios SOLID y patrones de diseño adecuados al problema. Evita abstracciones y complejidad innecesarias.
 - Una nueva regla solicitada puede cambiar el comportamiento anterior. Actualiza conjuntamente la vista, la lógica, la documentación y el mock afectado según el [flujo de cambios](docs/development.md#cambios-de-vistas-reglas-de-negocio-y-mock). Contrasta con el backend: si el alcance lo incluye, implementa lo necesario; si queda pendiente, identifica la diferencia sin presentar la simulación como integración real. Las validaciones del frontend complementan las del backend y no sustituyen su autoridad.
 - Al cerrar, explica en 3–5 viñetas breves qué cambió para el usuario, qué regla y datos simulados se ajustaron, qué implica para el desarrollador y qué se verificó o queda pendiente. Usa lenguaje cotidiano; menciona detalles técnicos solo si hacen falta para actuar. Si no hay impacto en backend o datos existentes, dilo en una frase.
 
@@ -21,6 +23,7 @@ Respeta las decisiones de producto y los contratos publicados. No inventes vista
 ## Reglas de implementación
 
 - Se recomienda Ponytail como apoyo opcional al implementar, depurar, refactorizar o revisar código cuando ayude a entender dependencias, reutilizar soluciones o evitar complejidad innecesaria. Su uso e instalación no son requisitos para cumplir el flujo de cambios de vistas, reglas de negocio y mock. No lo apliques por rutina a consultas, textos, ajustes visuales simples o documentación. Si decides usarlo, consulta las [recomendaciones de uso](docs/development.md#disponibilidad-de-ponytail).
+- Las recomendaciones de Ponytail deben respetar las decisiones del desarrollador, la arquitectura y los contratos con el backend. Simplificar no autoriza cambios visuales o funcionales no solicitados, ni eliminar validaciones, manejo de errores, seguridad, accesibilidad o pruebas necesarias.
 - Este es el único AGENTS general de `epe-web`; no agregues reglas por módulo o subcarpeta.
 - Usa `pnpm` para comandos del proyecto. Para comprobar tipos sin build: `npx tsc --noEmit -p tsconfig.app.json`.
 - Usa imports `@/`, salvo dentro de `src/shared/components/ui/`, donde se permiten relativos de shadcn.
