@@ -7,6 +7,7 @@
 | Módulos, capas o límites de código | [architecture.md](architecture.md) |
 | Componentes, tokens o interacción visual | [design-system.md](design-system.md) |
 | Comandos, fixtures o configuración local | [development.md](development.md) |
+| Cambiar vistas, reglas de negocio y mock, y explicar sus implicaciones | [Flujo de cambios](development.md#cambios-de-vistas-reglas-de-negocio-y-mock) |
 | Variables e imágenes Docker para S3 y diferencias del despliegue | [Diagnóstico compartido](../../epe-backend/docs/diagnostico-s3-despliegue.md) |
 | Integración disponible por vista | [integration-status.md](integration-status.md) |
 | Rutas, payloads o reglas API | [api/README.md](api/README.md) |

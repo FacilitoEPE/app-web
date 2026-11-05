@@ -2,21 +2,38 @@
 
 ## 3.1. Reglas Operativas para Agentes de IA
 
+### Disponibilidad de Ponytail
+
+- Ponytail es una recomendación opcional para entender dependencias, reutilizar soluciones y reducir complejidad en tareas de implementación, depuración, refactorización o revisión. No se aplica por rutina a consultas, textos, ajustes visuales simples ni documentación.
+- El flujo de cambios de vistas, reglas de negocio y mock funciona con las reglas del proyecto, aunque Ponytail no esté instalado. Su ausencia no bloquea el trabajo ni reduce las verificaciones o la comunicación de implicaciones al desarrollador.
+- Si decides usarlo, comprueba que esté disponible y lee la skill `ponytail` (`ponytail:ponytail` en entornos con plugins). Respeta el alcance y las decisiones del desarrollador; usa `full` como referencia inicial salvo otra indicación. No afirmes que lo usaste si no cargaste la skill.
+- Si falta y resulta útil, puedes recomendar su instalación desde el gestor de plugins/skills del entorno y continuar con las reglas del proyecto. Instálalo solo si se solicita o existe autorización para ello. No inventes repositorios ni comandos ni lo añadas a `package.json`: es una herramienta del agente, no una dependencia de la aplicación.
+
 > [!CAUTION]
-> **Alcance Cerrado — Cero Invención:**
-> Todas las decisiones de producto, vistas y campos ya están definidas por el usuario. Está **prohibido** inventar endpoints, agregar o quitar campos de formularios por cuenta propia, o usar mocks como fallback silencioso en vistas ya conectadas al backend.
+> **Cambios guiados por la solicitud:**
+> Los agentes pueden modificar vistas, campos, reglas de negocio y datos simulados para cumplir lo pedido por el desarrollador. Resuelven detalles menores con los patrones existentes y consultan solo decisiones funcionales que falten. No amplían el producto por iniciativa propia ni usan mocks como fallback silencioso en vistas conectadas al backend.
+
+### Cambios de vistas, reglas de negocio y mock
+
+1. **Entender el cambio:** identifica la vista y el resultado pedido; revisa la regla vigente y los flujos que dependen de ella. Una solicitud concreta autoriza los ajustes necesarios sin otra aprobación.
+2. **Actualizar el comportamiento:** ajusta campos, acciones, validaciones, cálculos, estados y permisos afectados. Mantén coherentes las pantallas relacionadas; un cambio solo visual no exige cambiar reglas ni datos.
+3. **Actualizar la simulación:** para V1, revisa `json/v1-demo/` y `dev/v1-mock.ts`; ajusta los registros y el comportamiento HTTP que cambien. Usa `dev/mock-api.ts`, otros JSON o `*.demo.ts` solo si el flujo afectado realmente los consume. Conserva identificadores, relaciones, fechas, estados y totales coherentes; incluye casos válidos y de rechazo relevantes. No basta cambiar el JSON si el mock sigue aceptando una operación ahora prohibida. Añade o ajusta pruebas del comportamiento afectado.
+4. **Separar regla solicitada de implementación real:** comprueba si el backend admite el cambio. Cuando esté dentro del alcance, actualiza servicios, contrato y migraciones que correspondan, además de sus consumidores. Si el trabajo se limita a interfaz/mock, registra la adaptación backend pendiente en `integration-status.md` y en la regla afectada; conserva el contrato publicado hasta implementar esa adaptación. No envíes campos incompatibles a la API real ni anuncies guardados que no ocurrieron. Si el flujo necesita un contrato nuevo, consulta su definición antes de implementarlo y continúa el trabajo independiente.
+5. **Mantener la documentación:** actualiza `api/business-rules.md` para reglas funcionales, la guía de usuario si cambian sus pasos y `../../docs/business/processes.md` si cambia un proceso compartido. Distingue lo implementado en API real, lo disponible solo en mock y lo pendiente. Actualiza índices y resúmenes solo cuando su información cambie; evita reportes paralelos.
+6. **Explicar el impacto:** cierra con 3–5 viñetas cortas: cambio visible, regla y simulación ajustadas, implicación para el desarrollador y verificación/pendientes. Indica, cuando aplique, si habrá que adaptar el backend, completar datos anteriores o revisar otra pantalla. Ejemplo: «Ahora cada entrega requiere un chofer. Los ejemplos ya lo incluyen y la simulación rechaza entregas sin chofer. Para usarlo con datos reales, falta exigirlo también en el backend y completar las entregas existentes. Se verificó el flujo en modo simulado».
 
 ### Protocolo paso a paso en cada tarea
 1. **Rama `developer` (Hook `.claude/settings.json`):** Al iniciar sesión en `developer`, leer [`docs/integration-status.md`](./integration-status.md) para identificar qué vistas o contratos están pendientes y priorizarlos.
 2. **Ante una ambigüedad de contrato (Backend vs. UI):**
-   - Si falta el endpoint en `epe-backend/src`, si un DTO exige campos que la UI no tiene, o si el mapeo de negocio no es evidente: **detenerse y preguntar al usuario**.
-   - Mientras el usuario responde, registrar la vista en `docs/integration-status.md` como `Sin cambios — YYYY-MM-DD / requiere definición`.
+   - Contrasta la solicitud con `epe-backend/src` y el contrato. Una diferencia conocida no exige volver a aprobar lo solicitado: aplica el flujo anterior y consulta solo la definición funcional o de contrato que falte, continuando las partes independientes.
+   - Registra en `docs/integration-status.md` qué parte funciona con API real, cuál solo en mock y qué definición o adaptación queda pendiente; no marques toda la vista como `Sin cambios` si hubo avances.
 3. **Ciclo TDD y Verificación Obligatoria:**
    - Lógica de negocio, validaciones y mappers se prueban con Vitest (`pnpm test`).
-   - Antes de dar por terminada cualquier tarea, ejecutar y aprobar:
+   - Antes de terminar cambios de código, ejecutar y aprobar:
      - `pnpm test`
      - `npx tsc --noEmit -p tsconfig.app.json` (o `pnpm build`)
      - `npx eslint <archivos-tocados>`
+   - Para cambios únicamente documentales, revisa coherencia, referencias y enlaces; no hace falta ejecutar pruebas, tipos ni lint de código.
 4. **Reporte de Integración Único:**
    - Cualquier auditoría o cambio de conexión API↔Vista se documenta **únicamente** en [`docs/integration-status.md`](./integration-status.md) indicando fecha ISO (`YYYY-MM-DD`) y estado (`Completo`, `Parcial`, `Sin cambios`), conservando el historial. Prohibido crear archivos de reporte paralelos.
 
