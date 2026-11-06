@@ -56,6 +56,10 @@ No hay ampliación a tarifas por calidad, adelantos a proveedores, devolución a
 
 ### Diferencias que no deben resolverse silenciosamente
 
+- **Variedades de contratos y entregas (2026-11-05, simulación visual solicitada):** el payload HTTP continúa guardando solo `kilosAcordados` o `kilosProgramados`; el backend no recibe campos nuevos ni un desglose oculto en observaciones. Después de un guardado exitoso se conserva en memoria de la sesión el desglose introducido en los modales. El almacén arranca vacío, se pierde al recargar, se aísla por sesión y no cubre errores de API. No tratarlo como persistencia del acuerdo por el servidor.
+
+  Entregas filtra las variedades acordadas en esa simulación y calcula para cada una `disponible = acordado − consumo de otras entregas` y `quedaría = disponible − kilos de esa variedad en el borrador`. La edición excluye sus filas originales. Una variedad no presta saldo a otra; un exceso se muestra inmediatamente y se rechaza al guardar, además del límite total real. Se usa precisión de tres decimales sin ocultar saldos negativos. Las entregas consumen su desglose visual o el detalle HTTP existente si coincide con su total. Un registro sin desglose no se reparte automáticamente: se identifica la simulación parcial. Un total remoto cambiado invalida la simulación anterior. La validación y persistencia autoritativas por variedad, la migración de históricos y la actualización del contrato publicado siguen pendientes de backend; el mock HTTP mantiene el contrato actual.
+
 - La UI actual permite varios cultivos/variedades por finca; el modelo objetivo admite una variedad. El mapper debe detectar registros múltiples y pedir corrección; nunca elegir el primer valor y perder datos.
 - IDs locales como `exam-…`, nombres de finca y claves `campaña:vínculo:contrato` deben reemplazarse por PK reales. No enviar esos textos como FK.
 - `FYV` de algunas demos no reemplaza el patrón `FVV` del SQL.

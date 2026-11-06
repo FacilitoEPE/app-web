@@ -48,6 +48,12 @@ En **Lineamientos**, elegir un archivo solo lo deja pendiente; se envía al crea
 **Dirección:** `/campaigns/:id/clients > Vincular cliente`.  
 **Opción:** indique la moneda, precio, variedad y destino que figuran en el acuerdo comercial confirmado.
 
+En **Contratos > Registrar/Editar contrato** y **Entregas > Registrar/Editar entrega**, la fruta se muestra desde la campaña. Seleccione una variedad, ingrese sus kilos y use **Agregar variedad** para añadir otra; no puede repetir una variedad. La cantidad se habilita al elegirla. Quite una fila con **×** y revise **Total acordado** o **Total de la entrega**. Los demás campos conservan su uso habitual.
+
+**Simulación visual actual:** complete y guarde las variedades y kilos en **Editar contrato** antes de simular entregas. El total se guarda en el servidor; el desglose se conserva únicamente durante esta sesión para mostrar los contadores. Al recargar deberá volver a indicar ese reparto, hasta completar la integración backend. No se asigna automáticamente el total del contrato a cada variedad.
+
+En cada variedad de la entrega verá **Disponible de la variedad**, **En esta entrega** y **Quedaría de la variedad**. Por ejemplo, Hass con 10,000 kg menos 1,000 kg muestra 9,000 kg; Fuerte con 5,000 kg menos 200 kg muestra 4,800 kg. Escribir, cambiar de variedad o quitar una fila actualiza únicamente el contador correspondiente. Una variedad no puede usar el saldo de otra. Al guardar y volver a editar durante la sesión se recuperan las filas sin descontarlas dos veces; nuevas entregas descuentan el consumo previo de cada variedad. Si existen entregas antiguas sin desglose, aparece un aviso de simulación parcial.
+
 ## 5. Vincular transporte y coordinar la entrega
 
 1. En el detalle de campaña, abra **Transportistas** y vincule al transportista.

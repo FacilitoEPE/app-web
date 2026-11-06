@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { PackageCheck, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FormField from "@/shared/components/FormField";
@@ -9,40 +8,60 @@ import {
     EMPTY_CONTRACT_DELIVERY,
     deliveryToValues,
     validateContractDelivery,
-    type CampaignContractDeliveryErrors,
     type CampaignContractDeliveryLocal,
     type CampaignContractDeliveryValues,
 } from "@/modules/campaigns/campaignContractDelivery.utils";
+import CampaignVarietyQuantitiesFields from '@/modules/campaigns/components/CampaignVarietyQuantitiesFields';
+import { deliveryVarietyBalances, sumVarietyKilos, toVarietyQuantities, validateVarietyQuantities, varietyQuantitiesToRows, type ContractVarietyOption, type VarietyQuantity, type VarietyQuantityRow } from '@/modules/campaigns/campaignVarietyQuantities.utils';
+import { useModalForm } from '@/shared/hooks/useModalForm';
+import { useFormSubmit } from '@/shared/hooks/useFormSubmit';
+import { formatKg } from '@/shared/utils/format';
 
 interface Props {
     open: boolean;
     delivery: CampaignContractDeliveryLocal | null;
-    varietyOptions?: Array<{ value: string; label: string }>;
+    fruitName: string;
+    varietyOptions: ContractVarietyOption[];
+    initialVarieties: VarietyQuantity[];
+    agreedVarieties: VarietyQuantity[];
+    deliveryBreakdowns: Array<{ id: number; varieties: VarietyQuantity[] }>;
+    availableTotal: number;
     onOpenChange: (open: boolean) => void;
-    onSave: (values: CampaignContractDeliveryValues) => void;
+    onSave: (values: CampaignContractDeliveryValues, varieties: VarietyQuantity[]) => void | Promise<void>;
 }
 
-export default function CampaignContractDeliveryModal({ open, delivery, onOpenChange, onSave }: Props) {
-    const [values, setValues] = useState<CampaignContractDeliveryValues>(EMPTY_CONTRACT_DELIVERY);
-    const [errors, setErrors] = useState<CampaignContractDeliveryErrors>({});
-
-    useEffect(() => {
-        if (!open) return;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setValues(delivery ? deliveryToValues(delivery) : EMPTY_CONTRACT_DELIVERY);
-        setErrors({});
-    }, [open, delivery]);
+export default function CampaignContractDeliveryModal({ open, delivery, fruitName, varietyOptions, initialVarieties, agreedVarieties, deliveryBreakdowns, availableTotal, onOpenChange, onSave }: Props) {
+    const [values, setValues] = useModalForm<CampaignContractDeliveryValues>(open, delivery ? deliveryToValues(delivery) : EMPTY_CONTRACT_DELIVERY);
+    const [rows, setRows] = useModalForm<VarietyQuantityRow[]>(open, initialVarieties.length ? varietyQuantitiesToRows(initialVarieties) : [{ frutaDerivadaId: '', kilos: delivery ? String(delivery.kilosProgramados) : '' }]);
+    const balances = deliveryVarietyBalances(agreedVarieties, deliveryBreakdowns, rows, delivery?.id);
+    const incompleteHistory = deliveryBreakdowns.some(row => row.id !== delivery?.id && !row.varieties.length);
+    const { errors, setErrors, saving, submit } = useFormSubmit<CampaignContractDeliveryValues>({
+        open,
+        validate: current => ({
+            ...validateContractDelivery(current),
+            ...validateVarietyQuantities(rows, varietyOptions),
+            ...Object.fromEntries(rows.flatMap((row, index) => {
+                const balance = balances.find(item => String(item.frutaDerivadaId) === row.frutaDerivadaId);
+                return balance && balance.remaining < 0 ? [[`variedades.${index}.kilos`, `Supera los ${formatKg(balance.available)} kg disponibles de esta variedad.`]] : [];
+            })),
+            ...(sumVarietyKilos(rows) > availableTotal ? { variedades: `El total supera los ${formatKg(availableTotal)} kg disponibles del contrato.` } : {}),
+        }),
+        onSubmit: current => onSave(current, toVarietyQuantities(rows)),
+        backendFields: { fecha: 'fecha', kilosProgramados: 'variedades', destino: 'destino', observaciones: 'observaciones' },
+    });
 
     const update = (field: keyof CampaignContractDeliveryValues, value: string) => {
         setValues((current) => ({ ...current, [field]: value }));
         setErrors((current) => ({ ...current, [field]: undefined }));
     };
 
-    const save = async () => {
-        const nextErrors = validateContractDelivery(values);
-        setErrors(nextErrors);
-        if (Object.keys(nextErrors).length === 0) await onSave(values);
+    const updateRows = (next: VarietyQuantityRow[]) => {
+        setRows(next);
+        setErrors(current => Object.fromEntries(Object.entries(current).filter(([field]) => !field.startsWith('variedades') && field !== 'kilosProgramados')));
     };
+
+    // La API vigente recibe el total; no asignar todas las filas a una sola variedad.
+    const save = () => submit({ fecha: values.fecha, destino: values.destino, observaciones: values.observaciones, kilosProgramados: String(sumVarietyKilos(rows)) });
 
     return (
         <AppModal
@@ -52,20 +71,26 @@ export default function CampaignContractDeliveryModal({ open, delivery, onOpenCh
             title={delivery ? "Editar Entrega" : "Registrar Entrega"}
             description="Programa la cantidad y destino correspondiente a este contrato."
             size="lg"
+            busy={saving}
             footer={(
                 <>
-                    <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}><X size={19} /> Cancelar</Button>
-                    <Button size="xl" onClick={save}><Save size={19} /> {delivery ? "Guardar cambios" : "Guardar entrega"}</Button>
+                    <Button variant="outline" size="xl" disabled={saving} onClick={() => onOpenChange(false)}><X size={19} /> Cancelar</Button>
+                    <Button size="xl" disabled={saving} onClick={save}><Save size={19} /> {saving ? 'Guardando…' : delivery ? "Guardar cambios" : "Guardar entrega"}</Button>
                 </>
             )}
         >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <InputField id="delivery-date" type="date" label="Fecha programada" required value={values.fecha} error={errors.fecha} onChange={(value) => update("fecha", value)} />
-                <InputField id="delivery-kilos" label="Kilos programados" required unit="kg" min={0} step="0.001" placeholder="0.00" value={values.kilosProgramados} error={errors.kilosProgramados} onChange={(value) => update("kilosProgramados", value)} />
+                <CampaignVarietyQuantitiesFields id="delivery" fruitName={fruitName} rows={rows} options={varietyOptions} errors={{ ...errors, variedades: errors.variedades ?? errors.kilosProgramados }} totalLabel="Total de la entrega" varietyBalances={balances} onChange={updateRows} disabled={saving} />
+                <FormField hint={!agreedVarieties.length
+                    ? 'Para simular los saldos por variedad, completa y guarda el desglose en Editar contrato. No se reparte el total automáticamente.'
+                    : incompleteHistory ? 'Simulación visual parcial: hay entregas anteriores sin desglose. Sus kilos no pueden asignarse a una variedad. El total del contrato sigue validándose.'
+                    : 'Simulación visual por variedad: el desglose se conserva solo durante esta sesión y se reinicia al recargar. El servidor guarda el total.'} className="sm:col-span-2" />
                 <InputField id="delivery-destination" label="Destino" required placeholder="Ej. Puerto del Callao" value={values.destino} error={errors.destino} onChange={(value) => update("destino", value)} className="sm:col-span-2" />
                 <FormField id="delivery-notes" label="Observaciones" optional className="sm:col-span-2">
                     <Textarea id="delivery-notes" className="min-h-20 resize-none" placeholder="Añade indicaciones para esta entrega..." value={values.observaciones} onChange={(event) => update("observaciones", event.target.value)} />
                 </FormField>
+                <FormField error={errors._form} className="sm:col-span-2" />
             </div>
         </AppModal>
     );

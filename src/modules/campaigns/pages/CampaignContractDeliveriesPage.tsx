@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { usesV1 } from '@/shared/api/data-contract';
+import { contractVarietyContext, deliveryVarietyQuantities } from '@/modules/campaigns/api/contract-variety-context';
+import { availableContractKilos, type VarietyQuantity } from '@/modules/campaigns/campaignVarietyQuantities.utils';
+import { deliveryPreviewKey, matchingVarietyPreview, saveDeliveryVarietyPreview, useVarietyPreviews } from '@/modules/campaigns/campaignVarietiesPreview.store';
 import { useParams } from "react-router-dom";
 import { PackageCheck, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -86,6 +90,13 @@ function DeliveriesView({
     contract: CampaignClientContractLocal;
 }) {
     const deliveries = useCampaignContractDeliveries(campaign.campaniaId, relation.clienteNegocioCampanaId, contract.id);
+    const previews = useVarietyPreviews();
+    const agreedVarieties = matchingVarietyPreview(previews.contracts[contract.id], contract.cantidadPropuestaKg);
+    const deliveryBreakdowns = deliveries.map(delivery => {
+        const preview = matchingVarietyPreview(previews.deliveries[deliveryPreviewKey(contract.id, delivery.id)], delivery.kilosProgramados);
+        return { id: delivery.id, varieties: preview.length ? preview : usesV1() ? deliveryVarietyQuantities(delivery.id) : [] };
+    });
+    const varietyContext = usesV1() ? contractVarietyContext(campaign.campaniaId, relation.clienteNegocioCampanaId) : { fruitName: campaign.fruta?.name ?? '', options: [] };
     const [page, setPage] = useState(1);
     const [editing, setEditing] = useState<{ open: boolean; delivery: CampaignContractDeliveryLocal | null }>({
         open: false,
@@ -102,10 +113,16 @@ function DeliveriesView({
         ],
     });
 
-    const save = async (values: CampaignContractDeliveryValues) => {
-        if (editing.delivery)
+    const save = async (values: CampaignContractDeliveryValues, varieties: VarietyQuantity[]) => {
+        let savedId: number | undefined;
+        if (editing.delivery) {
             await updateCampaignContractDelivery(campaign.campaniaId, relation.clienteNegocioCampanaId, contract.id, editing.delivery.id, values);
-        else await addCampaignContractDelivery(campaign.campaniaId, relation.clienteNegocioCampanaId, contract.id, values);
+            savedId = editing.delivery.id;
+        } else {
+            const saved = await addCampaignContractDelivery(campaign.campaniaId, relation.clienteNegocioCampanaId, contract.id, values);
+            if (saved) savedId = saved.entregaProgramadaId;
+        }
+        if (savedId !== undefined) saveDeliveryVarietyPreview(contract.id, savedId, Number(values.kilosProgramados), varieties);
         setEditing((current) => ({ ...current, open: false }));
         setSuccessOpen(true);
     };
@@ -212,6 +229,12 @@ function DeliveriesView({
             <CampaignContractDeliveryModal
                 open={editing.open}
                 delivery={editing.delivery}
+                fruitName={varietyContext.fruitName}
+                varietyOptions={varietyContext.options.filter(option => agreedVarieties.some(row => String(row.frutaDerivadaId) === option.value))}
+                agreedVarieties={agreedVarieties}
+                deliveryBreakdowns={deliveryBreakdowns}
+                initialVarieties={editing.delivery ? deliveryBreakdowns.find(row => row.id === editing.delivery?.id)?.varieties ?? [] : []}
+                availableTotal={availableContractKilos(contract.cantidadPropuestaKg, deliveries, editing.delivery?.id)}
                 onOpenChange={(open) => setEditing((current) => ({ ...current, open }))}
                 onSave={save}
             />

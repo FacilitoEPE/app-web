@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FileSignature, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -13,43 +13,48 @@ import {
     EMPTY_CAMPAIGN_CLIENT_CONTRACT,
     contractToValues,
     validateCampaignClientContract,
-    type CampaignClientContractErrors,
     type CampaignClientContractLocal,
     type CampaignClientContractValues,
 } from "@/modules/campaigns/campaignClientContract.utils";
+import CampaignVarietyQuantitiesFields from '@/modules/campaigns/components/CampaignVarietyQuantitiesFields';
+import { sumVarietyKilos, toVarietyQuantities, validateVarietyQuantities, varietyQuantitiesToRows, type ContractVarietyOption, type VarietyQuantity, type VarietyQuantityRow } from '@/modules/campaigns/campaignVarietyQuantities.utils';
+import { useModalForm, useResetOnToggle } from '@/shared/hooks/useModalForm';
+import { useFormSubmit } from '@/shared/hooks/useFormSubmit';
 
 interface Props {
     open: boolean;
     mode: "create" | "edit" | "view";
     contract: CampaignClientContractLocal | null;
+    fruitName: string;
+    varietyOptions: ContractVarietyOption[];
+    initialVarieties: VarietyQuantity[];
     onOpenChange: (open: boolean) => void;
-    onSave: (values: CampaignClientContractValues, archivo: File | null) => void;
+    onSave: (values: CampaignClientContractValues, archivo: File | null, varieties: VarietyQuantity[]) => void | Promise<void>;
 }
 
-export default function CampaignClientContractModal({ open, mode, contract, onOpenChange, onSave }: Props) {
-    const [values, setValues] = useState(EMPTY_CAMPAIGN_CLIENT_CONTRACT);
+export default function CampaignClientContractModal({ open, mode, contract, fruitName, varietyOptions, initialVarieties, onOpenChange, onSave }: Props) {
+    const [values, setValues] = useModalForm(open, contract ? contractToValues(contract) : EMPTY_CAMPAIGN_CLIENT_CONTRACT);
+    const [rows, setRows] = useModalForm<VarietyQuantityRow[]>(open, initialVarieties.length ? varietyQuantitiesToRows(initialVarieties) : [{ frutaDerivadaId: '', kilos: contract ? String(contract.cantidadPropuestaKg) : '' }]);
     const [archivo, setArchivo] = useState<File | null>(null);
-    const [errors, setErrors] = useState<CampaignClientContractErrors>({});
-
-    useEffect(() => {
-        if (!open) return;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setValues(contract ? contractToValues(contract) : EMPTY_CAMPAIGN_CLIENT_CONTRACT);
-        setArchivo(null);
-        setErrors({});
-    }, [open, contract]);
+    useResetOnToggle(open, () => setArchivo(null));
+    const { errors, setErrors, saving, submit } = useFormSubmit<CampaignClientContractValues>({
+        open,
+        validate: current => ({ ...validateCampaignClientContract(current, archivo, Boolean(contract?.archivo)), ...validateVarietyQuantities(rows, varietyOptions) }),
+        onSubmit: current => onSave(current, archivo, toVarietyQuantities(rows)),
+        backendFields: { precioKg: 'precioKg', moneda: 'moneda', kilosAcordados: 'variedades', condicionesPago: 'condicionesPago', condicionesEntrega: 'condicionesEntrega' },
+    });
 
     const update = (field: keyof CampaignClientContractValues, value: string) => {
         setValues((current) => ({ ...current, [field]: value }));
         setErrors((current) => ({ ...current, [field]: undefined }));
     };
 
-    const save = async () => {
-        const nextErrors = validateCampaignClientContract(values, archivo, Boolean(contract?.archivo));
-        setErrors(nextErrors);
-        if (Object.keys(nextErrors).length > 0) return;
-        await onSave(values, archivo);
+    const updateRows = (next: VarietyQuantityRow[]) => {
+        setRows(next);
+        setErrors(current => Object.fromEntries(Object.entries(current).filter(([field]) => !field.startsWith('variedades') && field !== 'cantidadPropuestaKg')));
     };
+
+    const save = () => submit({ ...values, cantidadPropuestaKg: String(sumVarietyKilos(rows)) });
 
     const symbol = CONTRACT_CURRENCIES.find((item) => item.value === values.moneda)?.symbol ?? "$";
     const viewOnly = mode === "view";
@@ -62,12 +67,13 @@ export default function CampaignClientContractModal({ open, mode, contract, onOp
             title={viewOnly ? "Detalle del Contrato" : mode === "edit" ? "Editar Contrato" : "Registrar Contrato"}
             description={viewOnly ? "Consulta las condiciones comerciales acordadas." : "Registra las condiciones comerciales y adjunta el documento firmado."}
             size="xl"
+            busy={saving}
             footer={viewOnly ? (
                 <Button size="xl" onClick={() => onOpenChange(false)}>Cerrar</Button>
             ) : (
                 <>
-                    <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}><X size={19} /> Cancelar</Button>
-                    <Button size="xl" onClick={save}><Save size={19} /> {mode === "edit" ? "Guardar cambios" : "Guardar contrato"}</Button>
+                    <Button variant="outline" size="xl" disabled={saving} onClick={() => onOpenChange(false)}><X size={19} /> Cancelar</Button>
+                    <Button size="xl" disabled={saving} onClick={save}><Save size={19} /> {saving ? 'Guardando…' : mode === "edit" ? "Guardar cambios" : "Guardar contrato"}</Button>
                 </>
             )}
         >
@@ -96,7 +102,8 @@ export default function CampaignClientContractModal({ open, mode, contract, onOp
                             </SelectContent>
                         </Select>
                     </FormField>
-                    <InputField id="contract-quantity" label="Cantidad propuesta" required unit="kg" min={0} step="0.001" placeholder="0.00" hint="Al registrar, esta cantidad se considera como kilos acordados." value={values.cantidadPropuestaKg} error={errors.cantidadPropuestaKg} onChange={(value) => update("cantidadPropuestaKg", value)} />
+                    <CampaignVarietyQuantitiesFields id="contract" fruitName={fruitName} rows={rows} options={varietyOptions} errors={{ ...errors, variedades: errors.variedades ?? errors.cantidadPropuestaKg }} totalLabel="Total acordado" onChange={updateRows} disabled={saving} />
+                    <FormField hint="El total se guarda en el contrato. El desglose se conserva solo en esta sesión para simular los saldos por variedad; se reinicia al recargar." className="sm:col-span-2" />
                     <InputField id="contract-payment" label="Condiciones de pago" required placeholder="Ej. 50% adelanto y saldo contra entrega" value={values.condicionesPago} error={errors.condicionesPago} onChange={(value) => update("condicionesPago", value)} />
                     <InputField id="contract-delivery" label="Condiciones de entrega" required placeholder="Ej. FOB Puerto del Callao" value={values.condicionesEntrega} error={errors.condicionesEntrega} onChange={(value) => update("condicionesEntrega", value)} />
                     <FormField id="contract-notes" label="Observaciones" optional>
@@ -105,6 +112,7 @@ export default function CampaignClientContractModal({ open, mode, contract, onOp
                     <FormField error={errors.archivo} className="sm:col-span-2">
                         <FileDropzone label="Contrato" variant="horizontal" required hint="PDF o imagen · Máx. 10 MB" file={archivo ?? contract?.archivo ?? null} replaceable={Boolean(contract?.archivo)} onChange={(file) => { setArchivo(file); setErrors((current) => ({ ...current, archivo: undefined })); }} />
                     </FormField>
+                    <FormField error={errors._form} className="sm:col-span-2" />
                 </div>
             )}
         </AppModal>
