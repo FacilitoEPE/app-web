@@ -6,6 +6,7 @@ import { billingCampaignClosed, collectedAmount, invoiceBalance, invoiceIsIssued
 import { registerBillingCollection, useBillingClients } from "@/modules/billing/billing.store";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
 import FilterBar, { FilterSearch } from "@/shared/components/FilterBar";
+import FilePreviewModal from "@/shared/components/FilePreviewModal";
 import { SummaryBar } from "@/shared/components/InfoField";
 import { PageError } from "@/shared/components/PageState";
 import TableCard from "@/shared/components/TableCard";
@@ -16,6 +17,7 @@ import { Card } from "@/shared/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import PageHeader from "@/shared/layout/PageHeader";
 import { formatDisplayDate, formatMoney } from "@/shared/utils/format";
+import type { FileSource } from "@/shared/utils/fileSource";
 
 const money = (value: number, currency: string) => `${currency === "USD" ? "US$" : currency === "EUR" ? "€" : "S/"} ${formatMoney(value)}`;
 
@@ -26,11 +28,19 @@ export default function BillingCollectionsPage() {
     const invoice = load?.facturas.find(item => item.id === invoiceId);
     const [search, setSearch] = useState("");
     const [registerOpen, setRegisterOpen] = useState(false);
+    const [preview, setPreview] = useState<{ open: boolean; file: FileSource | null }>({ open: false, file: null });
     const back = `/facturacion-cobros/${campaignId}/clientes/${clientId}/facturas/${invoiceId}`;
     if (!client || !load || !invoice) return <PageError title="Factura no encontrada" message="No se encontró el historial de esta factura."
         back={{ to: back, label: "Volver a la factura" }} />;
-    const filtered = invoice.cobros.filter(item => `${item.medio} ${item.referencia} ${item.fecha}`.toLocaleLowerCase("es")
-        .includes(search.trim().toLocaleLowerCase("es")));
+    const query = search.trim().toLocaleLowerCase("es");
+    const filtered = invoice.cobros.filter(item =>
+        `${item.medio} ${item.referencia} ${item.fecha} ${formatDisplayDate(item.fecha)}`.toLocaleLowerCase("es").includes(query));
+    const evidenceAction = (file?: FileSource | null) => file ? (
+        <Button variant="link" className="h-auto max-w-full whitespace-normal px-0 text-left wrap-anywhere text-brand"
+            onClick={() => setPreview({ open: true, file })}>
+            {file.name}
+        </Button>
+    ) : "Sin documento";
     const balance = invoiceBalance(invoice);
     return <div className="px-4 py-5 sm:px-8 lg:px-14">
         <PageHeader icon={<Banknote size={24} />} title="Cobros de la factura"
@@ -54,16 +64,17 @@ export default function BillingCollectionsPage() {
             <div className="flex flex-col gap-3 sm:hidden">{filtered.map(item => <TableGridCard key={item.id} accentColor="border-l-brand"
                 icon={<Banknote size={18} />} title={money(item.importe, invoice.moneda)} subtitle={formatDisplayDate(item.fecha)}>
                 <TableGridCardFields><TableGridCardField label="Medio" value={item.medio} /><TableGridCardField label="Referencia" value={item.referencia} />
-                    <TableGridCardField label="Evidencia" value={item.evidencia?.name || "Sin documento"} /></TableGridCardFields>
+                    <TableGridCardField label="Evidencia" value={evidenceAction(item.evidencia)} className="col-span-2" /></TableGridCardFields>
             </TableGridCard>)}</div>
             <div className="hidden overflow-hidden rounded-xl border border-border sm:block"><Table><TableHeader className={TABLE_HEAD_BG}><TableRow className="border-border hover:bg-transparent">
                 {["Fecha", "Importe", "Medio", "Referencia", "Evidencia"].map(label => <TableHead key={label} className="h-14 px-4 font-semibold text-ink">{label}</TableHead>)}
             </TableRow></TableHeader><TableBody>{filtered.map(item => <TableRow key={item.id} className="border-border">
                 <TableCell className="relative h-20 px-4"><TableRowAccent color="bg-brand" /><TableRowLead icon={<Banknote size={18} />} title={formatDisplayDate(item.fecha)} /></TableCell>
                 <TableCell className="font-semibold">{money(item.importe, invoice.moneda)}</TableCell><TableCell>{item.medio}</TableCell><TableCell>{item.referencia}</TableCell>
-                <TableCell>{item.evidencia && "url" in item.evidencia ? <a className="font-semibold text-brand underline" href={item.evidencia.url} target="_blank" rel="noreferrer">{item.evidencia.name}</a> : "Sin documento"}</TableCell>
+                <TableCell>{evidenceAction(item.evidencia)}</TableCell>
             </TableRow>)}</TableBody></Table></div>
         </TableCard>
+        <FilePreviewModal open={preview.open} file={preview.file} onOpenChange={(open) => setPreview(current => ({ ...current, open }))} />
         <BillingRegisterCollectionModal open={registerOpen} onOpenChange={setRegisterOpen} client={client} load={load} invoice={invoice}
             onRegister={async (id, loadId, invoiceId, movement) => { await registerBillingCollection(id, loadId, invoiceId, movement); }} />
     </div>;

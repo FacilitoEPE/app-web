@@ -1,12 +1,12 @@
 import { usesV1 } from '@/shared/api/data-contract';
-import { useState } from "react";
 import { LandPlot, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FormField from "@/shared/components/FormField";
 import InputField from "@/shared/components/InputField";
 import ModalSection from "@/shared/components/ModalSection";
 import { Button } from "@/shared/components/ui/button";
-import { useModalForm, useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useModalForm } from "@/shared/hooks/useModalForm";
+import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import FruitVarietyPicker from "@/modules/providers/components/FruitVarietyPicker";
 import { CATALOGO_FRUTAS } from "@/modules/providers/providerCatalogo";
 import {
@@ -16,7 +16,6 @@ import {
     validateFinca,
     validateFincaCultivo,
     type Finca,
-    type FincaErrors,
     type FincaField,
     type FincaFormValues,
 } from "@/modules/providers/providerFinca.utils";
@@ -30,7 +29,7 @@ interface ProviderFincaModalProps {
     registeredFincas: Finca[];
     /** Finca a editar; sin ella, el modal registra una nueva */
     finca?: Finca | null;
-    onSave: (finca: Finca) => void;
+    onSave: (finca: Finca) => void | Promise<void>;
 }
 
 /**
@@ -40,11 +39,19 @@ interface ProviderFincaModalProps {
 export default function ProviderFincaModal({ open, onOpenChange, providerName, registeredFincas, finca = null, onSave }: ProviderFincaModalProps) {
     const isEdit = finca !== null;
     const [values, , set] = useModalForm<FincaFormValues>(open, finca ? fincaToFormValues(finca) : EMPTY_FINCA);
-    const [errors, setErrors] = useState<FincaErrors>({});
-
-    useResetOnToggle(open, () => setErrors({}));
-
-    const clearError = (field: keyof FincaFormValues) => setErrors((current) => ({ ...current, [field]: undefined }));
+    const { errors, saving, clearError, submit } = useFormSubmit<FincaFormValues>({
+        open,
+        validate: current => ({
+            ...validateFinca(current, registeredFincas.map(item => item.nombre), usesV1()),
+            ...validateFincaCultivo(current),
+        }),
+        onSubmit: current => onSave(toFinca(current)),
+        backendFields: {
+            nombreFinca: "nombre", codigoLugarProduccion: "codigoSenasa", codigoCatastral: "codigoCatastral",
+            departamento: "departamento", provincia: "provincia", distrito: "distrito",
+            latitud: "latitud", longitud: "longitud", haTotalFinca: "haTotal", haCultivo: "haCultivo",
+        },
+    });
 
     const bind = (field: FincaField, required = false) => ({
         id: `finca-${field}`,
@@ -57,19 +64,11 @@ export default function ProviderFincaModal({ open, onOpenChange, providerName, r
         },
     });
 
-    const handleSave = async () => {
-        const nextErrors = { ...validateFinca(values, registeredFincas.map((finca) => finca.nombre), usesV1()), ...validateFincaCultivo(values) };
-        if (Object.keys(nextErrors).length > 0) {
-            setErrors(nextErrors);
-            return;
-        }
-        await onSave(toFinca(values));
-    };
-
     return (
         <AppModal
             open={open}
             onOpenChange={onOpenChange}
+            busy={saving}
             icon={<LandPlot size={22} strokeWidth={2} />}
             title={isEdit ? "Editar finca" : "Registrar finca"}
             description={providerName}
@@ -79,13 +78,14 @@ export default function ProviderFincaModal({ open, onOpenChange, providerName, r
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={20} strokeWidth={2.5} /> Cancelar
                     </Button>
-                    <Button size="xl" onClick={handleSave}>
-                        <Save size={20} strokeWidth={2.5} /> {isEdit ? "Guardar cambios" : "Guardar finca"}
+                    <Button size="xl" disabled={saving} onClick={() => submit(values)}>
+                        <Save size={20} strokeWidth={2.5} /> {saving ? "Guardando…" : isEdit ? "Guardar cambios" : "Guardar finca"}
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-6">
+                {errors._form && <FormField error={errors._form} />}
                 <ModalSection title="Identificación de la finca">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
                         <InputField {...bind("nombre", true)} label="Nombre de la finca" maxLength={150} placeholder="Ej. Fundo Tambogrande" className="sm:col-span-6" />

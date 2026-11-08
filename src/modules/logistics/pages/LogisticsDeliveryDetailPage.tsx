@@ -3,6 +3,7 @@ import { ArrowRight, CalendarDays, Check, ClipboardCheck, FileCheck2, Layers, Pa
 import { useLogisticsLoads } from "@/modules/logistics/logistics.store";
 import { formatLogisticsDateTime, logisticsLoadKg, logisticsStageLabel } from "@/modules/logistics/logistics.utils";
 import EntityOverviewCard from "@/shared/components/EntityOverviewCard";
+import FileDropzone from "@/shared/components/FileDropzone";
 import { InfoField } from "@/shared/components/InfoField";
 import MetricCards from "@/shared/components/MetricCards";
 import { PageError } from "@/shared/components/PageState";
@@ -120,11 +121,15 @@ export default function LogisticsDeliveryDetailPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                     <InfoField label="Inicio de descarga" value={formatLogisticsDateTime(reception.inicioDescarga)} />
                     <InfoField label="Término de descarga" value={formatLogisticsDateTime(reception.terminoDescarga)} />
+                    <InfoField label="Responsable de recepción" value={fallback(reception.responsableRecepcion)} multiline />
+                    <FileDropzone label="Evidencia de descarga" file={reception.evidenciaDescarga ?? null} readOnly variant="horizontal" onChange={() => {}} />
+                    <InfoField label="Observaciones de descarga" value={fallback(reception.observacionesDescarga)} multiline className="sm:col-span-2" />
                     <InfoField label="Peso en origen" value={`${formatKg(kg)} kg`} />
                     <InfoField label="Peso en planta" value={reception.pesoRecibidoPlanta ? `${formatKg(reception.pesoRecibidoPlanta)} kg` : "—"} />
                     <InfoField label="Resultado" value={reception.pesoRecibidoPlanta ? reception.resultadoRecepcion : "—"} />
                     <InfoField label="Descarte" value={reception.huboDescarte ? `${formatKg(reception.kilosDescarte)} kg` : "Sin descarte registrado"} />
                     <InfoField label="Porcentaje de descarte" value={reception.huboDescarte && kg ? `${formatDecimal((reception.kilosDescarte / kg) * 100)} %` : "Sin registro"} />
+                    <InfoField label="Motivo del descarte en recepción" value={fallback(reception.motivoDescarte)} multiline />
                     <InfoField label="Informe de recepción" value={docName(reception.reporteRecepcionArchivo)} />
                     <InfoField label="Evidencia de descarte" value={docName(reception.actaDescarteArchivo)} />
                 </div>
@@ -151,7 +156,7 @@ export default function LogisticsDeliveryDetailPage() {
                     <InfoField label="Kilos informados en planta" value={load.checklistChofer?.kilosEnPlanta ? `${load.checklistChofer.kilosEnPlanta} kg` : "—"} />
                     <InfoField label="Descarte informado" value={load.checklistChofer?.llegadaRegistrada ? (load.checklistChofer.huboDescarte ? `${load.checklistChofer.kilosDescarte} kg` : "Sin descarte") : "Pendiente"} />
                     <InfoField label="Guía de salida" value={load.checklistChofer?.guiaSalidaNumero || "Pendiente"} />
-                    <InfoField label="Motivo del descarte" value={load.checklistChofer?.motivoDescarte || "—"} multiline />
+                    <InfoField label="Motivo del descarte informado por el chofer" value={load.checklistChofer?.motivoDescarte || "—"} multiline />
                     <InfoField label="Observaciones de entrega" value={load.checklistChofer?.observacionesEntrega || "—"} multiline />
                     <InfoField label="Documento de salida" value={docName(load.checklistChofer?.guiaSalidaArchivo ?? null)} />
                 </div>

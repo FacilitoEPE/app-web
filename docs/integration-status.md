@@ -370,6 +370,7 @@ Validación prevista para los cambios: pruebas HTTP con las funciones reales y f
 - **Pruebas con base real:** migración aplicada únicamente en `epe_e2e_varieties_20261105`, PostgreSQL local dedicado. Se comprobaron 10,000/5,000 → entrega 1,000/200 → 9,000/4,800; edición 2,000/200 → 8,000/4,800, repetición sin cambios, eliminación de filas y entrega, recuperación con una nueva instancia, rechazo de excesos/duplicados/referencias, restricciones contractuales, rollback provocado en la segunda línea y dos consumos concurrentes del mismo cupo. También se comprobaron la reducción contractual concurrente, referencias/unicidad PostgreSQL, conservación de entregas usadas, confirmación explícita de históricos y compatibilidad de columnas entre las cuatro entidades y la base migrada. Suite e2e completa: 32 pruebas en 4 archivos, incluidas 8 de variedades con PostgreSQL real y un recorrido HTTP de las nuevas respuestas.
 - **Verificaciones de proyecto:** frontend 456 pruebas en 70 archivos; backend 118 unitarias en 25 archivos. Tipos, ESLint frontend, build de ambos proyectos, lint backend, `contract:check` e igualdad SHA-256 de las copias OpenAPI aprobados. Persisten las advertencias previas de lint backend y de tamaño de chunks frontend, sin errores.
 - **Despliegue:** pendiente en el entorno real. Backend y frontend se publican en la misma ventana tras aplicar la migración. Los clientes externos deben enviar el desglose por variedad para que el backend derive los totales. El recorrido visual en navegador queda pendiente. [Aplicación, verificación y reversión](../../epe-backend/docs/database.md#aplicación-y-verificación-en-el-entorno-real).
+- **Revisión 2026-11-07 · Parcial:** se confirmó en el código del frontend el envío y la lectura del desglose por API. Pasaron 11 pruebas enfocadas, incluidas escrituras HTTP con el mock, lectura posterior y edición repetida sin doble descuento. `pnpm contract:check` pasó. El `.env` de este checkout apunta al mock de Vite. La evidencia de PostgreSQL corresponde a la ejecución de desarrollo registrada arriba. La conexión con el despliegue real y la aplicación de la migración en ese entorno siguen sin verificación en este checkout.
 - **Antecedente sustituido:** la simulación de sesión del 2026-11-05 (456 pruebas previas) fue reemplazada por esta persistencia. Se conserva esta nota hasta 2027-02-03 para rastrear la transición; no describe el comportamiento vigente.
 
 ## Disponibilidad real de adjuntos — 2026-11-05 · Implementada, pendiente verificación productiva
@@ -622,6 +623,11 @@ Validación prevista para los cambios: pruebas HTTP con las funciones reales y f
 
 - En el contrato actual, el alta envía `responsableUsuarioId` con el administrador de la sesión; la edición conserva el responsable guardado y consulta `GET /api/auth/usuarios/:id` cuando difiere del usuario en sesión para mostrar su nombre completo.
 - Verificación: pruebas unitarias, integración V1 (`dev/frontend-v1.test.ts`) y E2E (`test/v1-api.e2e-spec.ts`) aprobadas.
+
+## Nombre libre del responsable de campaña — 2026-11-08 · Parcial
+
+- **Interfaz:** el alta acepta un nombre opcional y lo muestra como temporal en el detalle de la campaña creada. El valor se guarda en memoria y se pierde al recargar o cerrar sesión. La demo usa el mismo comportamiento.
+- **API:** el alta sigue enviando `responsableUsuarioId` conforme al contrato publicado. Queda pendiente incorporar un nombre libre persistente, compatible con campañas existentes, y conectar su lectura y escritura en el frontend.
 
 ## Carga de datos por vista — 2026-10-30 · Parcial
 

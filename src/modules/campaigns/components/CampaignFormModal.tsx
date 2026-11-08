@@ -6,7 +6,8 @@ import RemovableChip from "@/shared/components/RemovableChip";
 import FormField from "@/shared/components/FormField";
 import InputField from "@/shared/components/InputField";
 import { InfoField } from "@/shared/components/InfoField";
-import { getSession } from "@/shared/offline/session";
+import { getAuthToken, getSession } from "@/shared/offline/session";
+import { setTemporaryCampaignResponsible, useTemporaryCampaignResponsible } from "@/modules/campaigns/campaignResponsible.store";
 import { getUserById } from "@/modules/auth/api/auth.api";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
@@ -66,6 +67,7 @@ export default function CampaignFormModal({
 }: CampaignFormModalProps) {
     const isEdit = mode === "edit";
     const user = getSession()?.user;
+    const temporaryResponsible = useTemporaryCampaignResponsible(campaniaId);
     const [values, setValues] = useState<CampaignFormValues>(EMPTY_CAMPAIGN);
     const [frutas, setFrutas] = useState<FrutaDto[]>([]);
     const [derivadas, setDerivadas] = useState<FrutaDerivadaDto[]>([]);
@@ -156,6 +158,7 @@ export default function CampaignFormModal({
         }
         setSaving(true);
         setErrors({});
+        const sessionToken = getAuthToken();
         try {
             if (usesV1() && !isEdit && !user?.usuarioId) throw new Error("No se pudo identificar al administrador de la sesión.");
             const input = {
@@ -166,6 +169,9 @@ export default function CampaignFormModal({
             };
             const uploaded = usesV1() && values.lineamientos instanceof File ? await uploadLocalDocument(values.lineamientos) : undefined;
             const saved = isEdit && campaniaId !== null ? await updateCampana(campaniaId, input) : await createCampana(input);
+            if (!isEdit && sessionToken && sessionToken === getAuthToken()) {
+                setTemporaryCampaignResponsible(saved.campaniaId, values.responsable);
+            }
             try {
                 if (uploaded) { await linkLocalDocument('campana', saved.campaniaId, uploaded.id); await refreshRemoteData(); }
                 else if (usesV1() && isEdit && hadDocument && !values.lineamientos) { await unlinkLocalDocument('campana', saved.campaniaId); await refreshRemoteData(); }
@@ -218,7 +224,14 @@ export default function CampaignFormModal({
                 {/* Fila 1 */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InputField id="campaign-nombre" label="Nombre de Campaña:" placeholder="Ej: Campaña Mango 2026" value={values.nombre} onChange={(value) => set("nombre", value)} error={errors.nombre} />
-                    {usesV1() ? <InfoField label="Responsable" value={isEdit ? values.responsable : `${user?.nombres ?? ""} ${user?.apellidos ?? ""}`.trim() || "Sesión no disponible"} /> : <InputField id="campaign-responsable" label="Responsable:" placeholder="Nombre del administrador" value={values.responsable} onChange={(value) => set("responsable", value)} error={errors.responsable} />}
+                    {isEdit ? (
+                        <InfoField label="Responsable" value={temporaryResponsible ? `${temporaryResponsible} (temporal)` : values.responsable} multiline />
+                    ) : (
+                        <InputField id="campaign-responsable" label="Responsable" optional maxLength={150}
+                            placeholder="Nombre del responsable" value={values.responsable}
+                            hint="El nombre es temporal y se pierde al recargar la página."
+                            onChange={(value) => set("responsable", value)} />
+                    )}
                 </div>
 
                 {/* Fila 2 */}

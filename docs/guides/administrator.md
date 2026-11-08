@@ -31,7 +31,7 @@ Frutas, variedades, normas, roles y parámetros UIT son catálogos de referencia
 
 En **Lineamientos**, elegir un archivo solo lo deja pendiente; se envía al crear/guardar la campaña. Al consultar un adjunto guardado, verde indica documento verificado, rojo indica que falta o no coincide con sus metadatos: quítelo y vuelva a adjuntarlo. Si aparece «No se pudo verificar», revise la conexión o solicite revisar los permisos del almacenamiento y pulse **Volver a verificar**. La vista previa se deshabilita para documentos confirmados como faltantes o inconsistentes.
 
-2. Ingrese nombre, fruta, meta en kilogramos y fechas; elija **Crear Campaña**. Verifique que figure como **Planificado**.
+2. Ingrese nombre, fruta, meta en kilogramos y fechas. Si lo desea, escriba un **Responsable**. El nombre se muestra como temporal en el detalle y se pierde al recargar o cerrar sesión. Elija **Crear Campaña** y verifique que figure como **Planificado**.
 3. Abra el detalle de campaña, sección **Proveedores**, y elija **Vincular proveedor**.
 4. Seleccione al proveedor, indique si participa como **Productor** o **Acopiador**, ingrese kilos estimados y guarde.
 5. Para un productor, abra **Ver detalles > Entrevistas > Vincular finca**. Seleccione la finca y complete los datos agronómicos de esta campaña.
@@ -52,6 +52,8 @@ En **Contratos > Registrar/Editar contrato** y **Entregas > Registrar/Editar ent
 
 Complete y guarde las variedades y kilos en **Editar contrato** antes de programar entregas. El servidor guarda el desglose y calcula el total; al recargar o volver a entrar se recuperan las filas. Un contrato no admite reducir ni quitar variedades con kilos ya programados.
 
+En **Ver detalles** de un contrato o entrega, consulte los kilos de cada variedad. Si el registro histórico tiene el desglose pendiente, la ficha lo indica. En el listado de entregas del contrato también puede abrir la ficha sin editar.
+
 En cada variedad de la entrega verá **Disponible de la variedad**, **En esta entrega** y **Quedaría de la variedad**. Por ejemplo, Hass con 10,000 kg menos 1,000 kg muestra 9,000 kg; Fuerte con 5,000 kg menos 200 kg muestra 4,800 kg. Escribir, cambiar de variedad o quitar una fila actualiza únicamente el contador correspondiente. Una variedad no puede usar el saldo de otra. Al guardar y volver a editar se recuperan las filas sin descontarlas dos veces. Reducir una cantidad, quitar una fila o eliminar una entrega libera ese consumo cuando el flujo permite la operación. Los históricos pendientes se identifican y no afectan los cupos actuales, por decisión del desarrollador; completarlos y guardarlos los incorpora al cálculo. No se les asignan kilos automáticamente.
 
 ## 5. Vincular transporte y coordinar la entrega
@@ -63,6 +65,8 @@ En cada variedad de la entrega verá **Disponible de la variedad**, **En esta en
 
 **Dirección:** `/campaigns/:id/carriers` y `/campaigns/:id/deliveries`.  
 **Opción:** use el vehículo y chofer pertenecientes al transportista vinculado y asigne una entrega real de la campaña.
+
+En el listado de **Choferes** de una empresa transportista, abra **Ver detalles** para consultar el documento y la licencia registrados.
 
 ## 6. Calidad y autorización de cosecha
 
@@ -97,11 +101,15 @@ En cada variedad de la entrega verá **Disponible de la variedad**, **En esta en
 **Dirección:** `/logistica-despacho > Recepción en planta / Documentos y cierre`.  
 **Opción:** cierre físico antes del evento final del chofer; cierre administrativo después de que el chofer complete ese evento.
 
+El **Detalle de carga** muestra el responsable, las observaciones y la evidencia de descarga. Los motivos de descarte de recepción y del chofer aparecen en sus respectivas secciones.
+
 ## 9. Facturación, cobranza y liquidaciones
 
 - **Facturación y Cobros** (`/facturacion-cobros`): prepare la facturación de la campaña, revise cliente, kilos, precio y moneda, emita el registro de factura y registre la cobranza con referencia, fecha e importe.
 - **Liquidación de Compra** (`/liquidacion-compra`): liquide al proveedor según kilos aceptados y precio pactado; revise retenciones/alertas del límite UIT y registre el pago con referencia bancaria.
 - **Liquidaciones de Transporte** (desde la sección operativa correspondiente): revise flete y costos de ruta y registre el pago con referencia.
+
+En el historial de cobros puede buscar por la fecha visible y abrir un voucher desde escritorio o celular. El historial del detalle de liquidación también permite abrir el comprobante de cada pago cuando está registrado.
 
 **Dirección:** `Módulos > Facturación y Cobros / Liquidación de Compra / Logística`.  
 **Opción:** verifique que saldo, importes y estados coincidan con los documentos y pagos reales.

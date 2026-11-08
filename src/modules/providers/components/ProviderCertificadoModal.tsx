@@ -6,11 +6,11 @@ import FormField from "@/shared/components/FormField";
 import InputField from "@/shared/components/InputField";
 import { Button } from "@/shared/components/ui/button";
 import { useModalForm, useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import { validateCertificadoProveedorFile } from "@/modules/providers/api/provider-subresources.validation";
 import {
     EMPTY_CERTIFICADO,
     validateCertificado,
-    type CertificadoErrors,
     type CertificadoFormValues,
     type CertificadoLocal,
 } from "@/modules/providers/providerCertificado.utils";
@@ -23,7 +23,7 @@ interface ProviderCertificadoModalProps {
     /** Certificado a editar; sin él, el modal registra uno nuevo */
     certificate: CertificadoLocal | null;
     /** Al editar, `file` es null si no se cambió el documento */
-    onSave: (values: CertificadoFormValues, file: File | null) => void;
+    onSave: (values: CertificadoFormValues, file: File | null) => void | Promise<void>;
 }
 
 /** Registro y edición de un certificado propio del proveedor: nombre, fecha de revisión SENASA y su documento. */
@@ -35,34 +35,27 @@ export default function ProviderCertificadoModal({ open, onOpenChange, providerN
 
     const [values, , set] = useModalForm<CertificadoFormValues>(open, initial);
     const [file, setFile] = useState<File | null>(null);
-    const [errors, setErrors] = useState<CertificadoErrors>({});
-    const [fileError, setFileError] = useState<string | undefined>();
-
-    useResetOnToggle(open, () => {
-        setFile(null);
-        setErrors({});
-        setFileError(undefined);
+    useResetOnToggle(open, () => setFile(null));
+    const { errors, saving, clearError, submit } = useFormSubmit<CertificadoFormValues>({
+        open,
+        validate: current => {
+            const fileError = file ? validateCertificadoProveedorFile(file) : certificate?.documento ? undefined : "Adjunta el documento del certificado.";
+            return { ...validateCertificado(current), ...(fileError ? { documento: fileError } : {}) };
+        },
+        onSubmit: current => onSave(current, file),
+        backendFields: { nombre: "nombre", fechaRevisionSenasa: "fechaRevisionSenasa", documentoUrl: "documento" },
     });
 
     const update = (field: keyof CertificadoFormValues) => (next: string) => {
         set(field)(next);
-        setErrors((current) => ({ ...current, [field]: undefined }));
-    };
-
-    const handleSave = async () => {
-        const nextErrors = validateCertificado(values);
-        // Al registrar el documento es obligatorio; al editar, sin archivo nuevo se conserva el actual
-        const nextFileError = file ? validateCertificadoProveedorFile(file) : certificate?.documento ? undefined : "Adjunta el documento del certificado.";
-        setErrors(nextErrors);
-        setFileError(nextFileError);
-        if (Object.keys(nextErrors).length > 0 || nextFileError) return;
-        await onSave(values, file);
+        clearError(field);
     };
 
     return (
         <AppModal
             open={open}
             onOpenChange={onOpenChange}
+            busy={saving}
             icon={<ShieldCheck size={22} strokeWidth={2} />}
             title={isEdit ? "Editar certificado" : "Registrar certificado"}
             description={providerName}
@@ -72,13 +65,14 @@ export default function ProviderCertificadoModal({ open, onOpenChange, providerN
                     <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
                         <X size={20} strokeWidth={2.5} /> Cancelar
                     </Button>
-                    <Button size="xl" onClick={handleSave}>
-                        <Save size={20} strokeWidth={2.5} /> Guardar certificado
+                    <Button size="xl" disabled={saving} onClick={() => submit(values)}>
+                        <Save size={20} strokeWidth={2.5} /> {saving ? "Guardando…" : "Guardar certificado"}
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-6">
+                {errors._form && <FormField error={errors._form} />}
                 <InputField
                     id="certificado-nombre"
                     label="Nombre del certificado"
@@ -100,7 +94,7 @@ export default function ProviderCertificadoModal({ open, onOpenChange, providerN
                     onChange={update("fechaRevisionSenasa")}
                 />
 
-                <FormField error={fileError}>
+                <FormField error={errors.documento}>
                     <FileDropzone
                         label="Documento del certificado"
                         required
@@ -109,7 +103,7 @@ export default function ProviderCertificadoModal({ open, onOpenChange, providerN
                         // Al editar se muestra el documento actual; el lápiz de la tarjeta lo reemplaza
                         file={file ?? certificate?.documento ?? null}
                         replaceable={isEdit}
-                        onChange={(next) => { setFile(next); setFileError(undefined); }}
+                        onChange={(next) => { setFile(next); clearError("documento"); }}
                     />
                 </FormField>
             </div>

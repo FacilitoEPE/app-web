@@ -31,10 +31,10 @@ export default function CampaignOverviewCard({ campaign, duration }: CampaignOve
                 </div>
 
                 <div className="campaign-meta-row">
-                    <span className="campaign-meta-item">
+                    <span className="campaign-meta-item min-w-0">
                         <User size={13} className="text-brand shrink-0" aria-hidden="true" />
                         <span className="campaign-meta-label">Responsable:</span>
-                        <span className="campaign-meta-value">{campaign.responsable || "Sin asignar"}</span>
+                        <span className="campaign-meta-value min-w-0 wrap-anywhere">{campaign.responsable || "Sin asignar"}</span>
                     </span>
                     {campaign.lineamientos ? (
                         <a

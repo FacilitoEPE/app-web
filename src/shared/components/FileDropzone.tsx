@@ -158,7 +158,7 @@ export default function FileDropzone({
     const FileIcon = file && isImage(file) ? ImageIcon : FileText;
 
     return (
-        <div className={cn("flex flex-col", readOnly ? "gap-2" : "gap-2.5", className)}>
+        <div className={cn("flex min-w-0 flex-col", readOnly ? "gap-2" : "gap-2.5", className)}>
             {/* Como visualizador es un dato más del detalle: misma etiqueta que InfoField */}
             {readOnly ? (
                 <span className={cn(INFO_LABEL_CLASS, hideLabel && "sr-only")}>{label}</span>
@@ -180,7 +180,7 @@ export default function FileDropzone({
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                         className={cn(
-                            "group relative flex h-11 w-full min-w-[280px] cursor-pointer items-center justify-between gap-3 rounded-lg border-2 border-dashed border-border px-3.5 transition-colors hover:border-brand/40 hover:bg-brand-surface/40 has-[:focus-visible]:border-brand has-[:focus-visible]:ring-1 has-[:focus-visible]:ring-brand/30",
+                            "group relative flex min-h-11 w-full min-w-0 cursor-pointer flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border-2 border-dashed border-border px-3.5 py-1.5 transition-colors hover:border-brand/40 hover:bg-brand-surface/40 has-[:focus-visible]:border-brand has-[:focus-visible]:ring-1 has-[:focus-visible]:ring-brand/30",
                             isDragging && "border-brand bg-brand-surface/70",
                             disabled && "pointer-events-none opacity-50"
                         )}
@@ -202,7 +202,7 @@ export default function FileDropzone({
                             </span>
                         </div>
                         {hint && (
-                            <span className="shrink-0 text-[11px] font-medium text-ink-muted/80 pl-2">
+                            <span className="min-w-0 wrap-anywhere text-[11px] font-medium text-ink-muted/80">
                                 {hint}
                             </span>
                         )}
@@ -236,7 +236,7 @@ export default function FileDropzone({
                 )
             ) : (
                 isHorizontal ? (
-                    <div className={cn("flex h-11 w-full min-w-[280px] items-center justify-between gap-2.5 rounded-lg border px-3", cardStatusClass)}>
+                    <div className={cn("flex min-h-11 w-full min-w-0 items-center justify-between gap-2.5 rounded-lg border px-3", cardStatusClass)}>
                         <div className="flex min-w-0 flex-1 items-center gap-2.5">
                             <span 
                                 className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent bg-clip-padding", iconStatusClass)}

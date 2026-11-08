@@ -1,6 +1,12 @@
 import { operationsContext } from '@/modules/operations/api/operations-context.api';
 import type { ContractVarietyOption, VarietyQuantity } from '@/modules/campaigns/campaignVarietyQuantities.utils';
 
+export function campaignVarietyNames(campaignId: number): ReadonlyMap<number, string> {
+    const data = operationsContext();
+    const fruitId = data.campaigns.find(item => item.campaniaId === campaignId)?.frutaId;
+    return new Map(data.varieties.filter(item => item.frutaId === fruitId).map(item => [item.frutaDerivadaId, item.name]));
+}
+
 /** Opciones del requerimiento ya cargado, filtradas por fruta de campaña. */
 export function contractVarietyContext(campaignId: number, requirementId: number) {
     const data = operationsContext();

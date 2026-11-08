@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { apiClient } from "@/shared/api/client";
-import { getDocumentAvailability, getUploadErrorMessage, uploadDocument } from "@/shared/api/uploadDocument";
+import { getDocumentAvailability, getProtectedDocument, getUploadErrorMessage, uploadDocument } from "@/shared/api/uploadDocument";
 
 describe("uploadDocument", () => {
     it("sube el archivo a S3 mediante la API", async () => {
@@ -57,5 +57,27 @@ describe('verificación de documentos guardados', () => {
         const get = vi.spyOn(apiClient, 'get').mockRejectedValue(new Error('timeout'));
         try { await expect(getDocumentAvailability(`/api/documentos/${id}`)).rejects.toThrow('timeout'); }
         finally { get.mockRestore(); }
+    });
+});
+
+describe('vista previa de documentos protegidos', () => {
+    it('lee el documento del servidor configurado y admite cancelación', async () => {
+        apiClient.defaults.baseURL = 'http://localhost:3000/';
+        const signal = new AbortController().signal;
+        const data = new Blob(['%PDF'], { type: 'application/pdf' });
+        const get = vi.spyOn(apiClient, 'get').mockResolvedValue({ data });
+        try {
+            await expect(getProtectedDocument('/api/documentos/123', signal)).resolves.toBe(data);
+            expect(get).toHaveBeenCalledWith('http://localhost:3000/api/documentos/123', { responseType: 'blob', signal });
+        } finally { get.mockRestore(); }
+    });
+
+    it('rechaza rutas de otro origen antes de enviar la solicitud', async () => {
+        apiClient.defaults.baseURL = 'http://localhost:3000/';
+        const get = vi.spyOn(apiClient, 'get');
+        try {
+            await expect(getProtectedDocument('https://otro.example/api/documentos/123', new AbortController().signal)).rejects.toThrow();
+            expect(get).not.toHaveBeenCalled();
+        } finally { get.mockRestore(); }
     });
 });

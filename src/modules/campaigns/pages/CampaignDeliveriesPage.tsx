@@ -26,6 +26,7 @@ import { useProviderLocalData } from "@/modules/providers/providerLocalData.stor
 import CampaignContextBanner from "@/modules/campaigns/components/CampaignContextBanner";
 import CampaignDeliveryCoordinationModal from "@/modules/campaigns/components/CampaignDeliveryCoordinationModal";
 import CampaignDeliveryDetailsModal from "@/modules/campaigns/components/CampaignDeliveryDetailsModal";
+import { campaignVarietyNames } from "@/modules/campaigns/api/contract-variety-context";
 import type { DeliveryProviderOption } from "@/modules/campaigns/components/CampaignDeliveryProviderPicker";
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import { useCampaignContractRecords } from "@/modules/campaigns/campaignClientContracts.store";
@@ -128,7 +129,7 @@ export default function CampaignDeliveriesPage() {
 
     const entryClient = (entry: CampaignDeliveryEntry) => clientNames[entry.relationId] ?? "Cliente no disponible";
     const entryContract = (entry: CampaignDeliveryEntry) => contractNames[entry.key] ?? "";
-    const entryVariety = (entry: CampaignDeliveryEntry) => entry.delivery.variedad ?? "Kent";
+    const entryVariety = (entry: CampaignDeliveryEntry) => entry.delivery.variedad?.trim() || "Sin variedad registrada";
     const hasActiveFilters = search !== "";
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase();
@@ -309,10 +310,11 @@ export default function CampaignDeliveriesPage() {
             <CampaignDeliveryDetailsModal
                 open={details.open}
                 onOpenChange={(open) => setDetails((current) => ({ ...current, open }))}
-                entry={details.entry}
+                delivery={details.entry?.delivery ?? null}
                 campaignName={campaignName}
                 clientName={details.entry ? entryClient(details.entry) : ""}
                 contractName={details.entry ? entryContract(details.entry) : ""}
+                varietyNames={campaignVarietyNames(campaniaId)}
                 carriers={data.carriers}
                 providers={providers}
             />

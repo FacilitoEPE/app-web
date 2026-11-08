@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil, Trash2, UserRound, ListFilter } from "lucide-react";
+import { Eye, Pencil, Trash2, UserRound, ListFilter } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import TableCard from "@/shared/components/TableCard";
 import { TABLE_HEAD_BG, TableRowLead } from "@/shared/components/DataTableRow";
@@ -7,6 +7,9 @@ import TableGridCard, { TableGridCardFields, TableGridCardField } from "@/shared
 import { TableToolbar, TableCountPill } from "@/shared/components/TableToolbar";
 import RowActions, { type RowAction } from "@/shared/components/RowActions";
 import ConfirmModal from "@/shared/components/ConfirmModal";
+import AppModal from "@/shared/components/AppModal";
+import { InfoField } from "@/shared/components/InfoField";
+import { Button } from "@/shared/components/ui/button";
 import type { Driver } from "@/modules/carriers/carriers.data";
 import { paginate } from "@/shared/utils/paginate";
 
@@ -26,11 +29,13 @@ export default function CarrierDriversTable({ data, isLoading = false, error, on
     const [page, setPage] = useState(1);
     // Se guarda el chofer completo: al confirmar sale de `data` y el texto no debe vaciarse mientras el modal se cierra
     const [deleting, setDeleting] = useState<{ open: boolean; driver: Driver | null }>({ open: false, driver: null });
+    const [details, setDetails] = useState<{ open: boolean; driver: Driver | null }>({ open: false, driver: null });
 
     const { pageCount, currentPage, visible: visibleData } = paginate(data, page);
 
     const getRowActions = (row: Driver): { primary: RowAction[] } => ({
         primary: [
+            { label: "Ver detalles", icon: <Eye size={18} />, onClick: () => setDetails({ open: true, driver: row }) },
             { label: "Editar", icon: <Pencil size={18} strokeWidth={2.5} />, onClick: () => onEdit(row) },
             { label: "Eliminar", icon: <Trash2 size={18} strokeWidth={2.5} />, variant: "destructive", onClick: () => setDeleting({ open: true, driver: row }) },
         ],
@@ -52,7 +57,7 @@ export default function CarrierDriversTable({ data, isLoading = false, error, on
             emptyTitle={isLoading ? "Cargando registros..." : error ? "Registros no disponibles" : hasActiveFilters ? "Sin resultados" : "Aún no hay choferes"}
             emptyDescription={
                 isLoading ? "Consultando los datos del transportista." : error ?? (hasActiveFilters
-                    ? "Ningún chofer coincide con la búsqueda. Prueba con otro nombre o placa."
+                    ? "Ningún chofer coincide con la búsqueda. Prueba con otro nombre, teléfono o correo."
                     : "Esta empresa todavía no tiene choferes registrados.")
             }
             emptyAction={
@@ -115,6 +120,25 @@ export default function CarrierDriversTable({ data, isLoading = false, error, on
                 </Table>
             </div>
         </TableCard>
+
+        <AppModal
+            open={details.open}
+            onOpenChange={(open) => setDetails(current => ({ ...current, open }))}
+            title="Detalle del chofer"
+            description={details.driver?.nombre}
+            icon={<UserRound size={22} />}
+            size="md"
+            footer={<Button variant="outline" size="xl" onClick={() => setDetails(current => ({ ...current, open: false }))}>Cerrar</Button>}
+        >
+            {details.driver && <div className="grid gap-4 sm:grid-cols-2">
+                <InfoField label="Nombre completo" value={details.driver.nombre} multiline className="sm:col-span-2" />
+                <InfoField label="Tipo de documento" value={details.driver.tipoDocumento || "Sin registro"} />
+                <InfoField label="Número de documento" value={details.driver.numeroDocumento || "Sin registro"} />
+                <InfoField label="Licencia de conducir" value={details.driver.numeroLicencia || "Sin registro"} />
+                <InfoField label="Teléfono" value={details.driver.telefono || "Sin registro"} />
+                <InfoField label="Correo electrónico" value={details.driver.correo || "Sin registro"} multiline className="sm:col-span-2" />
+            </div>}
+        </AppModal>
 
         <ConfirmModal
             open={deleting.open}

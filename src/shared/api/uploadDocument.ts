@@ -10,6 +10,28 @@ export type LocalDocument = S3Document;
 export type LocalDocumentLink = S3DocumentLink;
 export type DocumentAvailability = 'DISPONIBLE' | 'FALTANTE' | 'INVALIDO' | 'NO_VERIFICABLE';
 
+const protectedDocumentPath = /^\/api\/(?:documentos|archivos-locales)\//;
+
+export function isProtectedDocumentUrl(documentUrl: string): boolean {
+    const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
+    try {
+        return protectedDocumentPath.test(new URL(documentUrl, origin).pathname);
+    } catch {
+        return false;
+    }
+}
+
+export async function getProtectedDocument(documentUrl: string, signal: AbortSignal): Promise<Blob> {
+    const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
+    const base = new URL(apiClient.defaults.baseURL || origin, origin);
+    const url = new URL(documentUrl, base);
+    if (url.origin !== base.origin || !protectedDocumentPath.test(url.pathname)) {
+        throw new Error('La dirección del documento no permite una vista previa segura.');
+    }
+    const { data } = await apiClient.get<Blob>(url.href, { responseType: 'blob', signal });
+    return data;
+}
+
 /** Consulta metadatos y objeto real sin descargar el documento ni enviar credenciales a otros orígenes. */
 export async function getDocumentAvailability(documentUrl: string, signal?: AbortSignal): Promise<DocumentAvailability> {
     const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;

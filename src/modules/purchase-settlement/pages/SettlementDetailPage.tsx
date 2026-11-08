@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, FileSpreadsheet, Truck } from 'lucide-react';
 import PageHeader from '@/shared/layout/PageHeader';
@@ -6,6 +7,8 @@ import { Card, CardContent } from '@/shared/components/ui/card';
 import { InfoField, SummaryBar } from '@/shared/components/InfoField';
 import StatusBadge from '@/shared/components/StatusBadge';
 import FileDropzone from '@/shared/components/FileDropzone';
+import FilePreviewModal from '@/shared/components/FilePreviewModal';
+import type { FileSource } from '@/shared/utils/fileSource';
 import TableCard from '@/shared/components/TableCard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/components/ui/table';
 import { TABLE_HEAD_BG } from '@/shared/components/DataTableRow';
@@ -18,6 +21,7 @@ const money = (amount: number, currency?: string) => `${currency === 'USD' ? 'US
 export default function SettlementDetailPage() {
     const { campaignId, loadId, section, entryId } = useParams();
     const navigate = useNavigate();
+    const [preview, setPreview] = useState<{ open: boolean; file: FileSource | null }>({ open: false, file: null });
     const { loads } = usePurchaseSettlementState();
     const load = loads.find(row => row.id === loadId && row.campaniaId === Number(campaignId));
     const isCarrier = section === 'transportista';
@@ -61,7 +65,32 @@ export default function SettlementDetailPage() {
             </div>
         </div>
         <TableCard className="mt-5" icon={<FileSpreadsheet size={22} />} title="Historial de pagos" description="Desembolsos y adelantos aplicados a esta liquidación." isEmpty={payments.length === 0} emptyTitle="Sin pagos registrados" emptyDescription="El historial aparecerá cuando se registre un pago." page={1} pageCount={1} onPageChange={() => {}}>
-            <div className="overflow-x-auto rounded-xl border border-border"><Table><TableHeader className={TABLE_HEAD_BG}><TableRow><TableHead>Fecha</TableHead><TableHead>Modo</TableHead><TableHead>Medio</TableHead><TableHead>Referencia</TableHead><TableHead className="text-right">Importe</TableHead></TableRow></TableHeader><TableBody>{payments.map(payment => <TableRow key={payment.id}><TableCell>{formatDisplayDate(payment.fecha)}</TableCell><TableCell>{payment.modo}</TableCell><TableCell>{payment.medio}</TableCell><TableCell>{payment.referencia || '—'}</TableCell><TableCell className="text-right font-semibold">{money(payment.importe, currency)}</TableCell></TableRow>)}</TableBody></Table></div>
+            <div className="overflow-x-auto rounded-xl border border-border">
+                <Table>
+                    <TableHeader className={TABLE_HEAD_BG}>
+                        <TableRow>
+                            <TableHead>Fecha</TableHead><TableHead>Modo</TableHead><TableHead>Medio</TableHead>
+                            <TableHead>Referencia</TableHead><TableHead className="text-right">Importe</TableHead>
+                            <TableHead>Comprobante</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {payments.map(payment => <TableRow key={payment.id}>
+                            <TableCell>{formatDisplayDate(payment.fecha)}</TableCell>
+                            <TableCell>{payment.modo}</TableCell><TableCell>{payment.medio}</TableCell>
+                            <TableCell>{payment.referencia || '—'}</TableCell>
+                            <TableCell className="text-right font-semibold">{money(payment.importe, currency)}</TableCell>
+                            <TableCell>{payment.evidencia ? (
+                                <Button variant="link" className="h-auto max-w-full whitespace-normal px-0 text-left wrap-anywhere text-brand"
+                                    onClick={() => setPreview({ open: true, file: payment.evidencia ?? null })}>
+                                    {payment.evidencia.name}
+                                </Button>
+                            ) : 'Sin comprobante'}</TableCell>
+                        </TableRow>)}
+                    </TableBody>
+                </Table>
+            </div>
         </TableCard>
+        <FilePreviewModal open={preview.open} file={preview.file} onOpenChange={(open) => setPreview(current => ({ ...current, open }))} />
     </div>;
 }

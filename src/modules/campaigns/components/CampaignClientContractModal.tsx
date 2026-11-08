@@ -17,6 +17,7 @@ import {
     type CampaignClientContractValues,
 } from "@/modules/campaigns/campaignClientContract.utils";
 import CampaignVarietyQuantitiesFields from '@/modules/campaigns/components/CampaignVarietyQuantitiesFields';
+import CampaignVarietyBreakdown from "@/modules/campaigns/components/CampaignVarietyBreakdown";
 import { sumVarietyKilos, toVarietyQuantities, validateVarietyQuantities, varietyQuantitiesToRows, type ContractVarietyOption, type VarietyQuantity, type VarietyQuantityRow } from '@/modules/campaigns/campaignVarietyQuantities.utils';
 import { useModalForm, useResetOnToggle } from '@/shared/hooks/useModalForm';
 import { useFormSubmit } from '@/shared/hooks/useFormSubmit';
@@ -27,12 +28,13 @@ interface Props {
     contract: CampaignClientContractLocal | null;
     fruitName: string;
     varietyOptions: ContractVarietyOption[];
+    varietyNames: ReadonlyMap<number, string>;
     initialVarieties: VarietyQuantity[];
     onOpenChange: (open: boolean) => void;
     onSave: (values: CampaignClientContractValues, archivo: File | null, varieties: VarietyQuantity[]) => void | Promise<void>;
 }
 
-export default function CampaignClientContractModal({ open, mode, contract, fruitName, varietyOptions, initialVarieties, onOpenChange, onSave }: Props) {
+export default function CampaignClientContractModal({ open, mode, contract, fruitName, varietyOptions, varietyNames, initialVarieties, onOpenChange, onSave }: Props) {
     const [values, setValues] = useModalForm(open, contract ? contractToValues(contract) : EMPTY_CAMPAIGN_CLIENT_CONTRACT);
     const [rows, setRows] = useModalForm<VarietyQuantityRow[]>(open, initialVarieties.length ? varietyQuantitiesToRows(initialVarieties) : [{ frutaDerivadaId: '', kilos: contract ? String(contract.cantidadPropuestaKg) : '' }]);
     const [archivo, setArchivo] = useState<File | null>(null);
@@ -82,6 +84,8 @@ export default function CampaignClientContractModal({ open, mode, contract, frui
                     <InfoField label="Precio por kg" value={`${symbol} ${contract.precioKg.toLocaleString("es-PE", { maximumFractionDigits: 4 })}`} />
                     <InfoField label="Moneda" value={contract.moneda} />
                     <InfoField label="Cantidad propuesta" value={contract.cantidadPropuestaKg.toLocaleString("es-PE", { maximumFractionDigits: 3 })} suffix="kg" />
+                    <InfoField label="Fruta de la campaña" value={fruitName || "Sin registro"} />
+                    <CampaignVarietyBreakdown varieties={contract.variedades} varietyNames={varietyNames} pending={contract.desglosePendiente} />
                     <InfoField label="Condiciones de pago" value={contract.condicionesPago} />
                     <InfoField label="Condiciones de entrega" value={contract.condicionesEntrega} />
                     <InfoField label="Observaciones" value={contract.observaciones || "Sin observaciones"} />

@@ -2,32 +2,33 @@ import { PackageCheck, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import { InfoField } from "@/shared/components/InfoField";
 import ModalSection from "@/shared/components/ModalSection";
+import CampaignVarietyBreakdown from "@/modules/campaigns/components/CampaignVarietyBreakdown";
 import { Button } from "@/shared/components/ui/button";
 import { formatDisplayDate, formatKg } from "@/shared/utils/format";
 import type { Carrier } from "@/modules/carriers/carriers.data";
 import type { DeliveryProviderOption } from "@/modules/campaigns/components/CampaignDeliveryProviderPicker";
-import type { CampaignDeliveryEntry } from "@/modules/campaigns/campaignDeliveryCoordination.utils";
+import type { CampaignContractDeliveryLocal } from "@/modules/campaigns/campaignContractDelivery.utils";
 
 const NOT_REGISTERED = "No registrado";
 
 interface CampaignDeliveryDetailsModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    entry: CampaignDeliveryEntry | null;
+    delivery: CampaignContractDeliveryLocal | null;
     campaignName: string;
     clientName: string;
     contractName: string;
-    carriers: Carrier[];
-    providers: DeliveryProviderOption[];
+    varietyNames: ReadonlyMap<number, string>;
+    carriers?: Carrier[];
+    providers?: DeliveryProviderOption[];
 }
 
 /** Detalle de solo lectura de una entrega: programación, transporte, proveedores y carga registrados. */
-export default function CampaignDeliveryDetailsModal({ open, onOpenChange, entry, campaignName, clientName, contractName, carriers, providers }: CampaignDeliveryDetailsModalProps) {
-    if (!entry) return null;
+export default function CampaignDeliveryDetailsModal({ open, onOpenChange, delivery, campaignName, clientName, contractName, varietyNames, carriers, providers }: CampaignDeliveryDetailsModalProps) {
+    if (!delivery) return null;
 
-    const { delivery } = entry;
-    const coordination = delivery.coordinacion;
-    const carrier = coordination ? carriers.find((item) => item.id === coordination.carrierId) : undefined;
+    const coordination = carriers && providers ? delivery.coordinacion : null;
+    const carrier = carriers?.find((item) => item.id === coordination?.carrierId);
     const vehicle = carrier?.vehiculos.find((item) => item.id === coordination?.vehicleId);
     const driver = carrier?.choferes.find((item) => item.id === coordination?.driverId);
 
@@ -53,6 +54,7 @@ export default function CampaignDeliveryDetailsModal({ open, onOpenChange, entry
                         <InfoField label="Fecha programada" value={formatDisplayDate(delivery.fecha)} />
                         <InfoField label="Cantidad programada" value={`${formatKg(delivery.kilosProgramados)} kg`} />
                         <InfoField label="Destino" value={delivery.destino} />
+                        <CampaignVarietyBreakdown varieties={delivery.variedades} varietyNames={varietyNames} pending={delivery.desglosePendiente} legacyNames={delivery.variedad} />
                         {delivery.observaciones && <InfoField label="Notas de la programación" value={delivery.observaciones} multiline className="sm:col-span-2" />}
                     </div>
                 </ModalSection>
@@ -72,7 +74,7 @@ export default function CampaignDeliveryDetailsModal({ open, onOpenChange, entry
                         <ModalSection title="Proveedores y fincas">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 {coordination.proveedores.map((selection) => {
-                                    const provider = providers.find((item) => item.id === selection.proveedorId);
+                                    const provider = providers?.find((item) => item.id === selection.proveedorId);
                                     return (
                                         <InfoField
                                             key={selection.proveedorId}
@@ -92,7 +94,7 @@ export default function CampaignDeliveryDetailsModal({ open, onOpenChange, entry
                             </div>
                         </ModalSection>
                     </>
-                ) : (
+                ) : carriers && providers && (
                     <p className="rounded-xl border border-dashed border-border px-4 py-5 text-center text-[13px] text-ink-muted">
                         No hay datos de transporte, proveedores ni fincas registrados para esta entrega. Puedes agregarlos desde Editar.
                     </p>

@@ -28,6 +28,10 @@ OpenAPI incluye `x-source.sha256` del SQL utilizado. `pnpm contract:check` detec
 
 ## 2. Alcance y decisiones que se conservan
 
+### Responsable de campaña
+
+El contrato vigente guarda `responsableUsuarioId`. Al crear una campaña, la interfaz permite escribir un nombre libre opcional y mostrarlo temporalmente en la sesión. El nombre libre todavía no forma parte del contrato HTTP. Consulte el [estado de integración](../integration-status.md#nombre-libre-del-responsable-de-campaña--2026-11-08--parcial).
+
 ### Disponibilidad de adjuntos
 
 `GET /api/documentos/{id}/estado` (también `/api/archivos-locales/{id}/estado`) requiere sesión de Administrador o Chofer propietario. Responde `{ estado }`: `DISPONIBLE` si existen metadatos y objeto real con tamaño y tipo coincidentes; `FALTANTE` ante ausencia confirmada; `INVALIDO` por metadatos corruptos o tamaño/tipo distintos; `NO_VERIFICABLE` por errores de permisos, configuración o conectividad. No se clasifica un 403 de S3 como ausencia. El 403 de la API impide consultar documentos de otro chofer. La respuesta no expone bucket, claves ni credenciales.

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { usesV1 } from '@/shared/api/data-contract';
-import { contractVarietyContext } from '@/modules/campaigns/api/contract-variety-context';
+import { campaignVarietyNames, contractVarietyContext } from '@/modules/campaigns/api/contract-variety-context';
 import { availableContractKilos, type VarietyQuantity } from '@/modules/campaigns/campaignVarietyQuantities.utils';
 import { useParams } from "react-router-dom";
-import { PackageCheck, Pencil, Plus, Trash2 } from "lucide-react";
+import { Eye, PackageCheck, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
@@ -15,6 +15,7 @@ import { TableCountPill, TableToolbar } from "@/shared/components/TableToolbar";
 import PageHeader from "@/shared/layout/PageHeader";
 import CampaignContractContextBanner from "@/modules/campaigns/components/CampaignContractContextBanner";
 import CampaignContractDeliveryModal from "@/modules/campaigns/components/CampaignContractDeliveryModal";
+import CampaignDeliveryDetailsModal from "@/modules/campaigns/components/CampaignDeliveryDetailsModal";
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
 import { getCampana } from "@/modules/campaigns/api/campaign.api";
 import { getCampaignRequirement } from "@/modules/campaigns/api/cliente-negocio-campana.api";
@@ -98,11 +99,13 @@ function DeliveriesView({
         delivery: null,
     });
     const [deleting, setDeleting] = useState<CampaignContractDeliveryLocal | null>(null);
+    const [details, setDetails] = useState<{ open: boolean; delivery: CampaignContractDeliveryLocal | null }>({ open: false, delivery: null });
     const [successOpen, setSuccessOpen] = useState(false);
     const { pageCount, currentPage, visible } = paginate(deliveries, page);
     const openCreate = () => setEditing({ open: true, delivery: null });
     const actionsFor = (delivery: CampaignContractDeliveryLocal): { primary: RowAction[] } => ({
         primary: [
+            { label: "Ver detalles", icon: <Eye size={18} />, onClick: () => setDetails({ open: true, delivery }) },
             { label: "Editar", icon: <Pencil size={18} />, onClick: () => setEditing({ open: true, delivery }) },
             { label: "Eliminar", icon: <Trash2 size={17} />, variant: "destructive", onClick: () => setDeleting(delivery) },
         ],
@@ -218,6 +221,15 @@ function DeliveriesView({
                     </Table>
                 </div>
             </TableCard>
+            <CampaignDeliveryDetailsModal
+                open={details.open}
+                onOpenChange={(open) => setDetails(current => ({ ...current, open }))}
+                delivery={details.delivery}
+                campaignName={campaign.nombre}
+                clientName={relation.clienteNegocio?.nombreEmpresa ?? "Cliente"}
+                contractName={`Contrato #${String(contract.id).padStart(2, "0")}`}
+                varietyNames={campaignVarietyNames(campaign.campaniaId)}
+            />
             <CampaignContractDeliveryModal
                 open={editing.open}
                 delivery={editing.delivery}

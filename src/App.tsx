@@ -8,6 +8,7 @@ import './App.css'
 import DashboardLayout from '@/shared/layout/DashboardLayout'
 import FrontendDataBoundary from '@/FrontendDataBoundary'
 import { resetFrontendData } from '@/frontend-data'
+import { clearTemporaryCampaignResponsibles } from '@/modules/campaigns/campaignResponsible.store'
 import OfflinePage from '@/shared/components/OfflinePage'
 import { PageError, PageLoading } from '@/shared/components/PageState'
 import WelcomeSplash from '@/shared/components/WelcomeSplash'
@@ -139,7 +140,11 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const expireSession = () => { resetFrontendData(); setSession(null) }
+    const expireSession = () => {
+      clearTemporaryCampaignResponsibles()
+      resetFrontendData()
+      setSession(null)
+    }
     window.addEventListener('epe:auth-expired', expireSession)
     return () => window.removeEventListener('epe:auth-expired', expireSession)
   }, [])
@@ -172,6 +177,7 @@ function App() {
     if (showIntro) unlockSplashAudio()
   }
   const handleLogout = () => {
+    clearTemporaryCampaignResponsibles()
     resetFrontendData()
     setSession(null)
     clearSession()

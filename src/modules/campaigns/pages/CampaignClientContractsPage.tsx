@@ -1,5 +1,5 @@
 import { usesV1 } from '@/shared/api/data-contract';
-import { contractVarietyContext } from '@/modules/campaigns/api/contract-variety-context';
+import { campaignVarietyNames, contractVarietyContext } from '@/modules/campaigns/api/contract-variety-context';
 import type { VarietyQuantity } from '@/modules/campaigns/campaignVarietyQuantities.utils';
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -230,6 +230,7 @@ function ContractsView({ campaign, relation }: { campaign: Campana; relation: Cl
                 contract={panel.contract}
                 fruitName={varietyContext.fruitName}
                 varietyOptions={varietyContext.options}
+                varietyNames={campaignVarietyNames(campaign.campaniaId)}
                 initialVarieties={panel.contract?.variedades ?? []}
                 onOpenChange={(open) => {
                     if (!open) setPanel((current) => ({ ...current, open: null }));
