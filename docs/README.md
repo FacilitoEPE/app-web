@@ -12,6 +12,7 @@
 | Integración disponible por vista | [integration-status.md](integration-status.md) |
 | Peticiones por pantalla y actualización tras escrituras | [Optimización implementada](integration-status.md#optimización-de-peticiones-por-vista--2026-11-05--implementada-en-desarrollo-y-revisada) y [referencia de diseño](integration-status.md#plan-de-consumo-api-por-vista--2026-11-05--referencia-de-diseño) |
 | Rutas, payloads o reglas API | [api/README.md](api/README.md) |
+| Nombre libre del responsable de campaña | [Contrato y ejemplo](api/README.md#responsable-libre-de-campaña) |
 | Pasos visibles para un usuario | [guides/](guides/) |
 | Resultado de pruebas con alcance y fecha | [evidence/](evidence/) |
 

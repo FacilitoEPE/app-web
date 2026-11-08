@@ -53,6 +53,7 @@ for (const match of sql.matchAll(/CREATE TABLE "([^"]+)" \(([\s\S]*?)\n\);/g)) {
     if (table === 'historial_chofer' && ['id_chofer_transporte_externo','carga_id','fecha_hora'].includes(column)
       || table === 'recepcion_planta' && column === 'id_chofer_transporte_externo') property.readOnly = true
     if (/archivo_id$|^(archivo_id|comprobante_id|evidencia_id|guia_salida_id|evidencia_descarte_id|reporte_recepcion_id)$/.test(column)) property.description = 'Referencia documental reservada. En esta versión solo null; almacenamiento diferido (FC14).'
+    if (table === 'campana' && column === 'responsable_nombre') property.description = 'Nombre libre, independiente de responsableUsuarioId. Se recortan los espacios antes de validar la longitud y el texto vacío se guarda como null. Si se omite en PATCH, se conserva el valor guardado.'
     const defaultMatch = /DEFAULT (.+?)(?:,)?$/.exec(definition)
     if (defaultMatch) {
       const raw = defaultMatch[1]

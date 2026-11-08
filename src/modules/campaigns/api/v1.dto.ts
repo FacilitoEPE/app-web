@@ -36,6 +36,7 @@ export interface CampanaV1 {
   frutaId: number
   temporada: string | null
   responsableUsuarioId: number | null
+  responsableNombre: string | null
   lineamientosArchivoId: number | null
   observaciones: string | null
   cerradaAt: string | null
@@ -53,6 +54,7 @@ export interface CreateCampanaV1 {
   frutaId: number
   temporada?: string | null
   responsableUsuarioId?: number | null
+  responsableNombre?: string | null
   observaciones?: string | null
   calidad?: JsonObject
 }

@@ -30,7 +30,7 @@ OpenAPI incluye `x-source.sha256` del SQL utilizado. `pnpm contract:check` detec
 
 ### Responsable de campaña
 
-El contrato vigente guarda `responsableUsuarioId`. Al crear una campaña, la interfaz permite escribir un nombre libre opcional y mostrarlo temporalmente en la sesión. El nombre libre todavía no forma parte del contrato HTTP. Consulte el [estado de integración](../integration-status.md#nombre-libre-del-responsable-de-campaña--2026-11-08--parcial).
+El nombre libre del responsable de campaña puede corresponder a cualquier persona. Se guarda de forma independiente de la cuenta de usuario asociada a la campaña. [Reglas de escritura y lectura](README.md#responsable-libre-de-campaña).
 
 ### Disponibilidad de adjuntos
 

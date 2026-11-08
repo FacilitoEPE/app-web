@@ -13,7 +13,7 @@
   ],
   "x-source": {
     "path": "api/contract-schema.sql",
-    "sha256": "fc56cb2bc8b4722b0876cb73ad76755c5140734d20d3542e5822f171d334aeaf",
+    "sha256": "2199c3bff3d4d947b97d64d2f21aa114dd29bf02acce13f70bace0f54933a134",
     "date": "2026-10-29"
   },
   "x-database": {
@@ -38200,6 +38200,15 @@
             "x-column": "responsable_usuario_id",
             "minimum": 1
           },
+          "responsableNombre": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "x-column": "responsable_nombre",
+            "maxLength": 150,
+            "description": "Nombre libre, independiente de responsableUsuarioId. Se recortan los espacios antes de validar la longitud y el texto vacío se guarda como null. Si se omite en PATCH, se conserva el valor guardado."
+          },
           "lineamientosArchivoId": {
             "type": [
               "integer",
@@ -38262,6 +38271,7 @@
           "frutaId",
           "temporada",
           "responsableUsuarioId",
+          "responsableNombre",
           "lineamientosArchivoId",
           "observaciones",
           "cerradaAt",
@@ -46017,6 +46027,15 @@
             "x-column": "responsable_usuario_id",
             "minimum": 1
           },
+          "responsableNombre": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "x-column": "responsable_nombre",
+            "maxLength": 150,
+            "description": "Nombre libre, independiente de responsableUsuarioId. Se recortan los espacios antes de validar la longitud y el texto vacío se guarda como null. Si se omite en PATCH, se conserva el valor guardado."
+          },
           "observaciones": {
             "type": [
               "string",
@@ -46093,6 +46112,15 @@
             ],
             "x-column": "responsable_usuario_id",
             "minimum": 1
+          },
+          "responsableNombre": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "x-column": "responsable_nombre",
+            "maxLength": 150,
+            "description": "Nombre libre, independiente de responsableUsuarioId. Se recortan los espacios antes de validar la longitud y el texto vacío se guarda como null. Si se omite en PATCH, se conserva el valor guardado."
           },
           "observaciones": {
             "type": [

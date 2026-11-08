@@ -14,6 +14,38 @@ Genera y verifica desde `epe-web/` con `pnpm contract:generate` y `pnpm contract
 
 El SQL de esta carpeta es distinto del [modelo objetivo compartido](../../../docs/target-model/README.md). No los copies ni sincronices automáticamente: el primero alimenta el generador V1 y el segundo documenta una propuesta de modelo.
 
+## Responsable libre de campaña
+
+`POST /api/campanas` acepta `responsableNombre` como texto opcional. La API recorta los espacios de los extremos, admite hasta 150 caracteres después del recorte y devuelve `422 VALIDATION_FAILED` si excede el límite. Un texto vacío o `null` se guarda como `null`. El nombre se guarda aunque la persona no tenga cuenta y es independiente de `responsableUsuarioId`.
+
+`GET /api/campanas/{id}` devuelve el valor persistido, incluido `null` para campañas anteriores. En `PATCH /api/campanas/{id}`, omitir el campo conserva el valor guardado y enviar `null` lo borra.
+
+Ejemplo de solicitud a `POST /api/campanas`
+
+```json
+{
+  "nombre": "Campaña Mango 2027",
+  "frutaId": 3,
+  "fechaInicio": "2027-01-01",
+  "fechaFin": "2027-06-30",
+  "requerimientoComercial": 500,
+  "responsableNombre": "  Lucía Torres  "
+}
+```
+
+La respuesta `201 Created` y la lectura posterior del detalle incluyen estos campos, entre otros
+
+```json
+{
+  "campaniaId": 42,
+  "nombre": "Campaña Mango 2027",
+  "responsableNombre": "Lucía Torres",
+  "responsableUsuarioId": null
+}
+```
+
+El frontend puede usar `responsableNombre` de la respuesta para reemplazar el valor temporal tras guardar y para mostrar el nombre al recargar la campaña.
+
 ## Desglose de contratos y entregas
 
 Se conservan las rutas `POST/PATCH /api/requerimientos/{parentId}/contratos[/{id}]` y `POST/PATCH /api/contratos/{parentId}/entregas[/{id}]`. Reciben `variedades: [{ frutaDerivadaId, kilos }]`: obligatorio al crear, al menos una fila, IDs únicos y kilos positivos con hasta tres decimales. En PATCH, enviar `variedades` sustituye todas las líneas; omitirlo conserva el desglose confirmado y permite editar otros campos. Los históricos pendientes requieren completar primero sus líneas. Se conservan los demás campos editables. `kilosAcordados` y `kilosProgramados` son ahora solo lectura: los calcula el backend; enviarlos en una escritura se rechaza.

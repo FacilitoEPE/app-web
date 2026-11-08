@@ -54,6 +54,7 @@ CREATE TABLE "campana" (
   "fruta_id" integer NOT NULL,
   "temporada" varchar(30),
   "responsable_usuario_id" integer,
+  "responsable_nombre" varchar(150),
   "lineamientos_archivo_id" integer,
   "observaciones" text,
   "cerrada_at" timestamptz,

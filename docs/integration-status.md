@@ -619,15 +619,15 @@ Validación prevista para los cambios: pruebas HTTP con las funciones reales y f
    - **Frontend (`epe-web`)**: **55 archivos / 281 pruebas aprobadas** (`vitest run`), `tsc -b && vite build` aprobado y `eslint .` aprobado con **0 errores y 0 advertencias**.
    - **Backend (`epe-backend`)**: **24 archivos / 91 pruebas unitarias aprobadas**, **3 archivos / 23 pruebas E2E aprobadas** en base aislada temporal `epe_e2e_cierre_20261101` (creada y eliminada automáticamente sin tocar `desarrolloEPE`), `nest build` aprobado y `oxlint` con **0 errores**.
 
-## Responsable de campaña — 2026-11-01 · Completo
+## Responsable de campaña asociado a una cuenta — 2026-11-01 · Completo
 
 - En el contrato actual, el alta envía `responsableUsuarioId` con el administrador de la sesión; la edición conserva el responsable guardado y consulta `GET /api/auth/usuarios/:id` cuando difiere del usuario en sesión para mostrar su nombre completo.
 - Verificación: pruebas unitarias, integración V1 (`dev/frontend-v1.test.ts`) y E2E (`test/v1-api.e2e-spec.ts`) aprobadas.
 
-## Nombre libre del responsable de campaña — 2026-11-08 · Parcial
+## Responsable libre de campaña — 2026-11-08 · Parcial
 
 - **Interfaz:** el alta acepta un nombre opcional y lo muestra como temporal en el detalle de la campaña creada. El valor se guarda en memoria y se pierde al recargar o cerrar sesión. La demo usa el mismo comportamiento.
-- **API:** el alta sigue enviando `responsableUsuarioId` conforme al contrato publicado. Queda pendiente incorporar un nombre libre persistente, compatible con campañas existentes, y conectar su lectura y escritura en el frontend.
+- **API:** el backend admite `responsableNombre` en el alta y lo devuelve al consultar. El contrato y los DTO generados incluyen el campo. La conexión del formulario y del mock queda pendiente. [Contrato y ejemplo](api/README.md#responsable-libre-de-campaña).
 
 ## Carga de datos por vista — 2026-10-30 · Parcial
 
