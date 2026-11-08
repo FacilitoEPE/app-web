@@ -14,6 +14,7 @@ export interface Schema {
   minLength?: number
   maxLength?: number
   minProperties?: number
+  minItems?: number
   minimum?: number
   maximum?: number
   multipleOf?: number
@@ -90,7 +91,10 @@ export function validateV1Schema(contract: Contract, inputSchema: Schema, value:
       if (Math.abs(scaled - Math.round(scaled)) > Math.max(0.00001, Number.EPSILON * Math.abs(scaled) * 4)) errors[key] = 'Exceso de decimales para este campo.'
     }
   }
-  if (Array.isArray(value)) value.forEach((item, index) => Object.assign(errors, validateV1Schema(contract, schema.items ?? {}, item, `${prefix}[${index}]`)))
+  if (Array.isArray(value)) {
+    if (schema.minItems !== undefined && value.length < schema.minItems) errors[key] = 'Agrega al menos una variedad.'
+    value.forEach((item, index) => Object.assign(errors, validateV1Schema(contract, schema.items ?? {}, item, `${prefix}[${index}]`)))
+  }
   else if (value && typeof value === 'object') {
     const row = value as Row
     if (schema.minProperties && Object.keys(row).length < schema.minProperties) errors[key] = 'Envía al menos un campo editable.'

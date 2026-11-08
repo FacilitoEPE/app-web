@@ -41,7 +41,7 @@ export default function CampaignClientContractModal({ open, mode, contract, frui
         open,
         validate: current => ({ ...validateCampaignClientContract(current, archivo, Boolean(contract?.archivo)), ...validateVarietyQuantities(rows, varietyOptions) }),
         onSubmit: current => onSave(current, archivo, toVarietyQuantities(rows)),
-        backendFields: { precioKg: 'precioKg', moneda: 'moneda', kilosAcordados: 'variedades', condicionesPago: 'condicionesPago', condicionesEntrega: 'condicionesEntrega' },
+        backendFields: { variedades: 'variedades', precioKg: 'precioKg', moneda: 'moneda', kilosAcordados: 'variedades', condicionesPago: 'condicionesPago', condicionesEntrega: 'condicionesEntrega' },
     });
 
     const update = (field: keyof CampaignClientContractValues, value: string) => {
@@ -103,7 +103,7 @@ export default function CampaignClientContractModal({ open, mode, contract, frui
                         </Select>
                     </FormField>
                     <CampaignVarietyQuantitiesFields id="contract" fruitName={fruitName} rows={rows} options={varietyOptions} errors={{ ...errors, variedades: errors.variedades ?? errors.cantidadPropuestaKg }} totalLabel="Total acordado" onChange={updateRows} disabled={saving} />
-                    <FormField hint="El total se guarda en el contrato. El desglose se conserva solo en esta sesión para simular los saldos por variedad; se reinicia al recargar." className="sm:col-span-2" />
+                    <FormField hint="El total se calcula sumando las variedades. El desglose queda guardado en el servidor." className="sm:col-span-2" />
                     <InputField id="contract-payment" label="Condiciones de pago" required placeholder="Ej. 50% adelanto y saldo contra entrega" value={values.condicionesPago} error={errors.condicionesPago} onChange={(value) => update("condicionesPago", value)} />
                     <InputField id="contract-delivery" label="Condiciones de entrega" required placeholder="Ej. FOB Puerto del Callao" value={values.condicionesEntrega} error={errors.condicionesEntrega} onChange={(value) => update("condicionesEntrega", value)} />
                     <FormField id="contract-notes" label="Observaciones" optional>

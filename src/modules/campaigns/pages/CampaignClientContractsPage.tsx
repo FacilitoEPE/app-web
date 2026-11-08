@@ -1,6 +1,5 @@
 import { usesV1 } from '@/shared/api/data-contract';
 import { contractVarietyContext } from '@/modules/campaigns/api/contract-variety-context';
-import { matchingVarietyPreview, saveContractVarietyPreview, useVarietyPreviews } from '@/modules/campaigns/campaignVarietiesPreview.store';
 import type { VarietyQuantity } from '@/modules/campaigns/campaignVarietyQuantities.utils';
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -80,7 +79,6 @@ export default function CampaignClientContractsPage() {
 }
 
 function ContractsView({ campaign, relation }: { campaign: Campana; relation: ClienteNegocioCampana }) {
-    const previews = useVarietyPreviews();
     const varietyContext = usesV1() ? contractVarietyContext(campaign.campaniaId, relation.clienteNegocioCampanaId) : { fruitName: campaign.fruta?.name ?? '', options: [] };
     const navigate = useNavigate();
     const contracts = useCampaignClientContracts(campaign.campaniaId, relation.clienteNegocioCampanaId);
@@ -110,15 +108,12 @@ function ContractsView({ campaign, relation }: { campaign: Campana; relation: Cl
     });
 
     const save = async (values: CampaignClientContractValues, archivo: File | null, varieties: VarietyQuantity[]) => {
-        let savedId: number | undefined;
+        values = { ...values, variedades: varieties };
         if (panel.open === "edit" && panel.contract) {
             await updateCampaignClientContract(campaign.campaniaId, relation.clienteNegocioCampanaId, panel.contract.id, values, archivo);
-            savedId = panel.contract.id;
         } else if (archivo || usesV1()) {
-            const saved = await addCampaignClientContract(campaign.campaniaId, relation.clienteNegocioCampanaId, values, archivo);
-            if (saved) savedId = saved.contratoVentaId;
+            await addCampaignClientContract(campaign.campaniaId, relation.clienteNegocioCampanaId, values, archivo);
         }
-        if (savedId !== undefined) saveContractVarietyPreview(savedId, Number(values.cantidadPropuestaKg), varieties);
         setPanel((current) => ({ ...current, open: null }));
         setSuccessOpen(true);
     };
@@ -235,7 +230,7 @@ function ContractsView({ campaign, relation }: { campaign: Campana; relation: Cl
                 contract={panel.contract}
                 fruitName={varietyContext.fruitName}
                 varietyOptions={varietyContext.options}
-                initialVarieties={panel.contract ? matchingVarietyPreview(previews.contracts[panel.contract.id], panel.contract.cantidadPropuestaKg) : []}
+                initialVarieties={panel.contract?.variedades ?? []}
                 onOpenChange={(open) => {
                     if (!open) setPanel((current) => ({ ...current, open: null }));
                 }}

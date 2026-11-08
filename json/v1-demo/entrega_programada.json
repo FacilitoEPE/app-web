@@ -7,7 +7,15 @@
     "kilosProgramados": 1000,
     "observaciones": null,
     "createdAt": "2026-10-29T13:00:00.000Z",
-    "updatedAt": "2026-10-29T13:00:00.000Z"
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "variedades": [
+      {
+        "frutaDerivadaId": 1,
+        "kilos": 1000
+      }
+    ],
+    "desglosePendiente": true,
+    "desgloseConfirmado": false
   },
   {
     "entregaProgramadaId": 2,
@@ -17,7 +25,15 @@
     "kilosProgramados": 500,
     "observaciones": null,
     "createdAt": "2026-10-29T13:00:00.000Z",
-    "updatedAt": "2026-10-29T13:00:00.000Z"
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "variedades": [
+      {
+        "frutaDerivadaId": 1,
+        "kilos": 500
+      }
+    ],
+    "desglosePendiente": true,
+    "desgloseConfirmado": false
   },
   {
     "entregaProgramadaId": 3,
@@ -27,7 +43,15 @@
     "kilosProgramados": 5000,
     "observaciones": "Primera entrega programada de Palta Hass",
     "createdAt": "2026-10-29T13:00:00.000Z",
-    "updatedAt": "2026-10-29T13:00:00.000Z"
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "variedades": [
+      {
+        "frutaDerivadaId": 3,
+        "kilos": 5000
+      }
+    ],
+    "desglosePendiente": true,
+    "desgloseConfirmado": false
   },
   {
     "entregaProgramadaId": 4,
@@ -37,7 +61,10 @@
     "kilosProgramados": 600,
     "observaciones": "Entrega de prueba pendiente de coordinación",
     "createdAt": "2026-10-29T13:00:00.000Z",
-    "updatedAt": "2026-10-29T13:00:00.000Z"
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "variedades": [],
+    "desglosePendiente": true,
+    "desgloseConfirmado": false
   },
   {
     "entregaProgramadaId": 5,
@@ -47,6 +74,9 @@
     "kilosProgramados": 900,
     "observaciones": "Segunda entrega de prueba pendiente de coordinación",
     "createdAt": "2026-10-29T13:00:00.000Z",
-    "updatedAt": "2026-10-29T13:00:00.000Z"
+    "updatedAt": "2026-10-29T13:00:00.000Z",
+    "variedades": [],
+    "desglosePendiente": true,
+    "desgloseConfirmado": false
   }
 ]

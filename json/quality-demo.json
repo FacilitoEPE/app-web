@@ -289,7 +289,11 @@
         "createdAt": "2026-10-29T13:00:00.000Z",
         "updatedAt": "2026-10-29T13:00:00.000Z",
         "condicionesEntrega": "Planta Piura",
-        "observaciones": null
+        "observaciones": null,
+        "variedades": [],
+        "desglosePendiente": true,
+        "saldosVariedades": [],
+        "desgloseConfirmado": false
       }
     ],
     "replace": []
@@ -360,7 +364,10 @@
         "kilosProgramados": 800,
         "observaciones": null,
         "createdAt": "2026-10-29T13:00:00.000Z",
-        "updatedAt": "2026-10-29T13:00:00.000Z"
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "variedades": [],
+        "desglosePendiente": true,
+        "desgloseConfirmado": false
       },
       {
         "entregaProgramadaId": 7,
@@ -370,7 +377,10 @@
         "kilosProgramados": 1000,
         "observaciones": null,
         "createdAt": "2026-10-29T13:00:00.000Z",
-        "updatedAt": "2026-10-29T13:00:00.000Z"
+        "updatedAt": "2026-10-29T13:00:00.000Z",
+        "variedades": [],
+        "desglosePendiente": true,
+        "desgloseConfirmado": false
       }
     ],
     "replace": []

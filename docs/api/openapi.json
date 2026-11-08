@@ -13,7 +13,7 @@
   ],
   "x-source": {
     "path": "api/contract-schema.sql",
-    "sha256": "5513f6305d8a48a0cce02b943a948bd4901cdeabce08fb1fb62493b622b5117b",
+    "sha256": "fc56cb2bc8b4722b0876cb73ad76755c5140734d20d3542e5822f171d334aeaf",
     "date": "2026-10-29"
   },
   "x-database": {
@@ -1048,6 +1048,7 @@
     "contrato_venta": {
       "id": "contratoVentaId",
       "defaults": {
+        "desgloseConfirmado": false,
         "estado": "VIGENTE"
       },
       "references": [
@@ -1071,13 +1072,15 @@
         "clienteNegocioCampanaId",
         "canal",
         "fecha",
-        "kilosAcordados",
-        "moneda"
+        "moneda",
+        "variedades"
       ]
     },
     "entrega_programada": {
       "id": "entregaProgramadaId",
-      "defaults": {},
+      "defaults": {
+        "desgloseConfirmado": false
+      },
       "references": [
         {
           "fields": [
@@ -1095,7 +1098,7 @@
         "contratoVentaId",
         "destino",
         "fecha",
-        "kilosProgramados"
+        "variedades"
       ]
     },
     "entrega_x_fruta_derivada": {
@@ -2307,6 +2310,42 @@
         "monto",
         "medio",
         "referencia"
+      ]
+    },
+    "contrato_x_fruta_derivada": {
+      "id": "contratoXFrutaDerivadaId",
+      "defaults": {},
+      "references": [
+        {
+          "fields": [
+            "contratoVentaId"
+          ],
+          "table": "contrato_venta",
+          "target": [
+            "contratoVentaId"
+          ]
+        },
+        {
+          "fields": [
+            "frutaDerivadaId"
+          ],
+          "table": "fruta_derivada",
+          "target": [
+            "frutaDerivadaId"
+          ]
+        }
+      ],
+      "unique": [
+        [
+          "contratoVentaId",
+          "frutaDerivadaId"
+        ]
+      ],
+      "schema": "ContratoXFrutaDerivada",
+      "required": [
+        "contratoVentaId",
+        "frutaDerivadaId",
+        "kilosAcordados"
       ]
     }
   },
@@ -15847,6 +15886,14 @@
             }
           },
           {
+            "name": "desgloseConfirmado",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "x-column": "desglose_confirmado"
+            }
+          },
+          {
             "name": "contratoVentaId",
             "in": "query",
             "schema": {
@@ -15872,6 +15919,14 @@
               "x-column": "estado",
               "maxLength": 25,
               "minLength": 1
+            }
+          },
+          {
+            "name": "desglosePendiente",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "x-virtual": true
             }
           }
         ],
@@ -16142,6 +16197,15 @@
               "type": "integer",
               "minimum": 1
             }
+          },
+          {
+            "name": "excluirEntregaId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Excluye todas las líneas de esta entrega. Debe pertenecer al contrato."
           }
         ],
         "x-roles": [
@@ -16566,6 +16630,14 @@
             }
           },
           {
+            "name": "desgloseConfirmado",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "x-column": "desglose_confirmado"
+            }
+          },
+          {
             "name": "entregaProgramadaId",
             "in": "query",
             "schema": {
@@ -16581,6 +16653,14 @@
               "type": "string",
               "x-column": "fecha",
               "format": "date"
+            }
+          },
+          {
+            "name": "desglosePendiente",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "x-virtual": true
             }
           }
         ],
@@ -17236,7 +17316,7 @@
         "parentTable": "entrega_programada",
         "scope": "entregaProgramadaId",
         "module": "commercial-planning",
-        "mode": "crud"
+        "mode": "r"
       },
       "get": {
         "operationId": "getEntregaXFrutaDerivada",
@@ -17398,140 +17478,6 @@
             }
           }
         }
-      },
-      "post": {
-        "operationId": "postEntregaXFrutaDerivada",
-        "tags": [
-          "commercial-planning"
-        ],
-        "summary": "POST /entregas/{parentId}/variedades",
-        "parameters": [
-          {
-            "name": "parentId",
-            "in": "path",
-            "required": true,
-            "description": "PK de entrega_programada",
-            "schema": {
-              "type": "integer",
-              "minimum": 1
-            }
-          }
-        ],
-        "x-roles": [
-          "Administrador"
-        ],
-        "responses": {
-          "201": {
-            "description": "Operación correcta",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EntregaXFrutaDerivada"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateEntregaXFrutaDerivada"
-              }
-            }
-          }
-        }
       }
     },
     "/entregas/{parentId}/variedades/{id}": {
@@ -17575,275 +17521,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "operationId": "patchEntregaXFrutaDerivadaById",
-        "tags": [
-          "commercial-planning"
-        ],
-        "summary": "PATCH /entregas/{parentId}/variedades/{id}",
-        "parameters": [
-          {
-            "name": "parentId",
-            "in": "path",
-            "required": true,
-            "description": "PK de entrega_programada",
-            "schema": {
-              "type": "integer",
-              "minimum": 1
-            }
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "minimum": 1
-            }
-          }
-        ],
-        "x-roles": [
-          "Administrador"
-        ],
-        "responses": {
-          "200": {
-            "description": "Operación correcta",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EntregaXFrutaDerivada"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Error: ver code, message y fieldErrors",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateEntregaXFrutaDerivada"
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "deleteEntregaXFrutaDerivadaById",
-        "tags": [
-          "commercial-planning"
-        ],
-        "summary": "DELETE /entregas/{parentId}/variedades/{id}",
-        "parameters": [
-          {
-            "name": "parentId",
-            "in": "path",
-            "required": true,
-            "description": "PK de entrega_programada",
-            "schema": {
-              "type": "integer",
-              "minimum": 1
-            }
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "minimum": 1
-            }
-          }
-        ],
-        "x-roles": [
-          "Administrador"
-        ],
-        "responses": {
-          "204": {
-            "description": "Eliminado sin contenido. Rechaza referencias/historial protegido."
           },
           "400": {
             "description": "Error: ver code, message y fieldErrors",
@@ -41190,6 +40867,12 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "desgloseConfirmado": {
+            "type": "boolean",
+            "x-column": "desglose_confirmado",
+            "default": false,
+            "readOnly": true
+          },
           "contratoVentaId": {
             "type": "integer",
             "x-column": "contrato_venta_id",
@@ -41225,7 +40908,8 @@
           "kilosAcordados": {
             "type": "number",
             "x-column": "kilos_acordados",
-            "multipleOf": 0.001
+            "multipleOf": 0.001,
+            "readOnly": true
           },
           "precioKg": {
             "type": [
@@ -41295,9 +40979,69 @@
               "null"
             ],
             "x-column": "observaciones"
+          },
+          "variedades": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "frutaDerivadaId": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "kilos": {
+                  "type": "number",
+                  "minimum": 0.001,
+                  "maximum": 99999999999.999,
+                  "multipleOf": 0.001
+                }
+              },
+              "required": [
+                "frutaDerivadaId",
+                "kilos"
+              ]
+            },
+            "x-virtual": true
+          },
+          "desglosePendiente": {
+            "type": "boolean",
+            "readOnly": true,
+            "x-virtual": true
+          },
+          "saldosVariedades": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "frutaDerivadaId": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "kilosAcordados": {
+                  "type": "number"
+                },
+                "kilosProgramados": {
+                  "type": "number"
+                },
+                "kilosDisponibles": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "frutaDerivadaId",
+                "kilosAcordados",
+                "kilosProgramados",
+                "kilosDisponibles"
+              ]
+            },
+            "readOnly": true,
+            "x-virtual": true
           }
         },
         "required": [
+          "desgloseConfirmado",
           "contratoVentaId",
           "clienteNegocioCampanaId",
           "numero",
@@ -41312,7 +41056,10 @@
           "createdAt",
           "updatedAt",
           "condicionesEntrega",
-          "observaciones"
+          "observaciones",
+          "variedades",
+          "desglosePendiente",
+          "saldosVariedades"
         ],
         "x-table": "contrato_venta"
       },
@@ -41320,6 +41067,12 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "desgloseConfirmado": {
+            "type": "boolean",
+            "x-column": "desglose_confirmado",
+            "default": false,
+            "readOnly": true
+          },
           "entregaProgramadaId": {
             "type": "integer",
             "x-column": "entrega_programada_id",
@@ -41344,7 +41097,8 @@
           "kilosProgramados": {
             "type": "number",
             "x-column": "kilos_programados",
-            "multipleOf": 0.001
+            "multipleOf": 0.001,
+            "readOnly": true
           },
           "observaciones": {
             "type": [
@@ -41364,9 +41118,39 @@
             "x-column": "updated_at",
             "format": "date-time",
             "readOnly": true
+          },
+          "variedades": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "frutaDerivadaId": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "kilos": {
+                  "type": "number",
+                  "minimum": 0.001,
+                  "maximum": 99999999999.999,
+                  "multipleOf": 0.001
+                }
+              },
+              "required": [
+                "frutaDerivadaId",
+                "kilos"
+              ]
+            },
+            "x-virtual": true
+          },
+          "desglosePendiente": {
+            "type": "boolean",
+            "readOnly": true,
+            "x-virtual": true
           }
         },
         "required": [
+          "desgloseConfirmado",
           "entregaProgramadaId",
           "contratoVentaId",
           "destino",
@@ -41374,7 +41158,9 @@
           "kilosProgramados",
           "observaciones",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "variedades",
+          "desglosePendiente"
         ],
         "x-table": "entrega_programada"
       },
@@ -44618,6 +44404,54 @@
         ],
         "x-table": "cobro_venta"
       },
+      "ContratoXFrutaDerivada": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "contratoXFrutaDerivadaId": {
+            "type": "integer",
+            "x-column": "contrato_x_fruta_derivada_id",
+            "minimum": 1,
+            "readOnly": true
+          },
+          "contratoVentaId": {
+            "type": "integer",
+            "x-column": "contrato_venta_id",
+            "minimum": 1
+          },
+          "frutaDerivadaId": {
+            "type": "integer",
+            "x-column": "fruta_derivada_id",
+            "minimum": 1
+          },
+          "kilosAcordados": {
+            "type": "number",
+            "x-column": "kilos_acordados",
+            "multipleOf": 0.001
+          },
+          "createdAt": {
+            "type": "string",
+            "x-column": "created_at",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "x-column": "updated_at",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "contratoXFrutaDerivadaId",
+          "contratoVentaId",
+          "frutaDerivadaId",
+          "kilosAcordados",
+          "createdAt",
+          "updatedAt"
+        ],
+        "x-table": "contrato_x_fruta_derivada"
+      },
       "ApiError": {
         "type": "object",
         "additionalProperties": false,
@@ -47804,11 +47638,6 @@
             "x-column": "fecha",
             "format": "date"
           },
-          "kilosAcordados": {
-            "type": "number",
-            "x-column": "kilos_acordados",
-            "multipleOf": 0.001
-          },
           "precioKg": {
             "type": [
               "number",
@@ -47855,13 +47684,38 @@
               "null"
             ],
             "x-column": "observaciones"
+          },
+          "variedades": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "frutaDerivadaId": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "kilos": {
+                  "type": "number",
+                  "minimum": 0.001,
+                  "maximum": 99999999999.999,
+                  "multipleOf": 0.001
+                }
+              },
+              "required": [
+                "frutaDerivadaId",
+                "kilos"
+              ]
+            },
+            "x-virtual": true,
+            "minItems": 1
           }
         },
         "required": [
           "canal",
           "fecha",
-          "kilosAcordados",
-          "moneda"
+          "moneda",
+          "variedades"
         ]
       },
       "UpdateContratoVenta": {
@@ -47889,11 +47743,6 @@
             "x-column": "fecha",
             "format": "date"
           },
-          "kilosAcordados": {
-            "type": "number",
-            "x-column": "kilos_acordados",
-            "multipleOf": 0.001
-          },
           "precioKg": {
             "type": [
               "number",
@@ -47940,6 +47789,31 @@
               "null"
             ],
             "x-column": "observaciones"
+          },
+          "variedades": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "frutaDerivadaId": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "kilos": {
+                  "type": "number",
+                  "minimum": 0.001,
+                  "maximum": 99999999999.999,
+                  "multipleOf": 0.001
+                }
+              },
+              "required": [
+                "frutaDerivadaId",
+                "kilos"
+              ]
+            },
+            "x-virtual": true,
+            "minItems": 1
           }
         },
         "required": [],
@@ -47990,23 +47864,43 @@
             "x-column": "fecha",
             "format": "date"
           },
-          "kilosProgramados": {
-            "type": "number",
-            "x-column": "kilos_programados",
-            "multipleOf": 0.001
-          },
           "observaciones": {
             "type": [
               "string",
               "null"
             ],
             "x-column": "observaciones"
+          },
+          "variedades": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "frutaDerivadaId": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "kilos": {
+                  "type": "number",
+                  "minimum": 0.001,
+                  "maximum": 99999999999.999,
+                  "multipleOf": 0.001
+                }
+              },
+              "required": [
+                "frutaDerivadaId",
+                "kilos"
+              ]
+            },
+            "x-virtual": true,
+            "minItems": 1
           }
         },
         "required": [
           "destino",
           "fecha",
-          "kilosProgramados"
+          "variedades"
         ]
       },
       "UpdateEntregaProgramada": {
@@ -48023,17 +47917,37 @@
             "x-column": "fecha",
             "format": "date"
           },
-          "kilosProgramados": {
-            "type": "number",
-            "x-column": "kilos_programados",
-            "multipleOf": 0.001
-          },
           "observaciones": {
             "type": [
               "string",
               "null"
             ],
             "x-column": "observaciones"
+          },
+          "variedades": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "frutaDerivadaId": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "kilos": {
+                  "type": "number",
+                  "minimum": 0.001,
+                  "maximum": 99999999999.999,
+                  "multipleOf": 0.001
+                }
+              },
+              "required": [
+                "frutaDerivadaId",
+                "kilos"
+              ]
+            },
+            "x-virtual": true,
+            "minItems": 1
           }
         },
         "required": [],

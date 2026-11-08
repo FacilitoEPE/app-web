@@ -590,6 +590,7 @@ CREATE TABLE "cliente_negocio_campana_x_fruta_derivada" (
 -- TABLA PROPUESTA: contrato_venta
 
 CREATE TABLE "contrato_venta" (
+  "desglose_confirmado" boolean NOT NULL DEFAULT false,
   "contrato_venta_id" integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   "cliente_negocio_campana_id" integer NOT NULL,
   "numero" varchar(60) NOT NULL DEFAULT ('CTR-' || gen_random_uuid()::text),
@@ -615,6 +616,7 @@ CREATE TABLE "contrato_venta" (
 -- TABLA PROPUESTA: entrega_programada
 
 CREATE TABLE "entrega_programada" (
+  "desglose_confirmado" boolean NOT NULL DEFAULT false,
   "entrega_programada_id" integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   "contrato_venta_id" integer NOT NULL,
   "destino" text NOT NULL,
@@ -2075,3 +2077,16 @@ REVOKE ALL ON ALL TABLES IN SCHEMA agro FROM PUBLIC;
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA agro FROM PUBLIC;
 
 COMMIT;
+
+CREATE TABLE "contrato_x_fruta_derivada" (
+  "contrato_x_fruta_derivada_id" integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "contrato_venta_id" integer NOT NULL,
+  "fruta_derivada_id" integer NOT NULL,
+  "kilos_acordados" numeric(14,3) NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (contrato_venta_id, fruta_derivada_id),
+  CHECK (kilos_acordados > 0)
+);
+ALTER TABLE "contrato_x_fruta_derivada" ADD CONSTRAINT "fk_contrato_variedad_contrato" FOREIGN KEY ("contrato_venta_id") REFERENCES "contrato_venta" ("contrato_venta_id") ON DELETE CASCADE;
+ALTER TABLE "contrato_x_fruta_derivada" ADD CONSTRAINT "fk_contrato_variedad_fruta" FOREIGN KEY ("fruta_derivada_id") REFERENCES "fruta_derivada" ("fruta_derivada_id");

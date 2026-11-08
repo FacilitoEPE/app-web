@@ -1,4 +1,6 @@
+import type { VarietyQuantity } from '@/modules/campaigns/campaignVarietyQuantities.utils';
 export interface CampaignContractDeliveryValues {
+    variedades?: VarietyQuantity[];
     fecha: string;
     kilosProgramados: string;
     destino: string;
@@ -27,6 +29,8 @@ export interface DeliveryCoordination {
 }
 
 export interface CampaignContractDeliveryLocal {
+    variedades?: VarietyQuantity[];
+    desglosePendiente?: boolean;
     id: number;
     fecha: string;
     kilosProgramados: number;

@@ -1,3 +1,4 @@
+import type { VarietyQuantity } from '@/modules/campaigns/campaignVarietyQuantities.utils';
 import type { FileSource } from '@/shared/utils/fileSource';
 export const CONTRACT_CURRENCIES = [
     { value: "USD", label: "USD · Dólar", symbol: "$" },
@@ -5,6 +6,7 @@ export const CONTRACT_CURRENCIES = [
 ];
 
 export interface CampaignClientContractValues {
+    variedades?: VarietyQuantity[];
     precioKg: string;
     moneda: string;
     cantidadPropuestaKg: string;
@@ -16,6 +18,8 @@ export interface CampaignClientContractValues {
 export type CampaignClientContractErrors = Partial<Record<keyof CampaignClientContractValues | "archivo", string>>;
 
 export interface CampaignClientContractLocal {
+    variedades?: VarietyQuantity[];
+    desglosePendiente?: boolean;
     id: number;
     fechaRegistro: string;
     precioKg: number;

@@ -1,3 +1,4 @@
+import { mockVarietyBalances, prepareMockVarieties, persistMockVarieties } from './v1-varieties.ts'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import type { IncomingMessage } from 'node:http'
@@ -533,7 +534,15 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
     if (params.id && !current) throw new ApiV1Error(404,'NOT_FOUND','El recurso no existe en este contexto.')
     let status = 200, data: unknown
     if (method === 'get') {
-      if (current) data = current
+      if (current) {
+        if (table === 'contrato_venta') for (const [key, raw] of url.searchParams) {
+          const parameter = operation.parameters?.find(p => p.in === 'query' && p.name === key)
+          if (!parameter) throw new ApiV1Error(400,'INVALID_QUERY',`Filtro no permitido: ${key}.`)
+          const errors = validateV1Schema(contract,parameter.schema,Number(raw),key)
+          if (Object.keys(errors).length) throw new ApiV1Error(400,'INVALID_QUERY','Revisa los filtros.',errors)
+        }
+        data = table === 'contrato_venta' ? {...current,saldosVariedades:mockVarietyBalances(db,current.contratoVentaId,url.searchParams.has('excluirEntregaId')?Number(url.searchParams.get('excluirEntregaId')):undefined)} : current
+      }
       else {
         const allowed = operation.parameters?.filter(parameter => parameter.in === 'query') ?? []
         const query: Row = { page:1,pageSize:20 }
@@ -549,12 +558,14 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
         const filtered = rows.filter(row => Object.entries(query).every(([key,value]) => ['page','pageSize'].includes(key) || row[key] === value))
           .sort((a,b) => number(a,definition.id) - number(b,definition.id))
         const page = Number(query.page), pageSize = Number(query.pageSize)
-        data = { items:filtered.slice((page-1)*pageSize,page*pageSize),total:filtered.length,page,pageSize }
+        data = { items:filtered.slice((page-1)*pageSize,page*pageSize).map(row=>table==='contrato_venta'?{...row,saldosVariedades:mockVarietyBalances(db,row.contratoVentaId)}:row),total:filtered.length,page,pageSize }
       }
     } else if (method === 'delete') {
       protect(table,current!,current)
-      const referenced = Object.entries(meta).some(([child,def]) => def.references.some(ref => ref.table === table && db[child].some(row => ref.fields.every((field,index) => row[field] != null && row[field] === current![ref.target[index]]))))
+      const referenced = Object.entries(meta).filter(([child])=>!(table==='contrato_venta'&&child==='contrato_x_fruta_derivada'||table==='entrega_programada'&&child==='entrega_x_fruta_derivada')).some(([child,def]) => def.references.some(ref => ref.table === table && db[child].some(row => ref.fields.every((field,index) => row[field] != null && row[field] === current![ref.target[index]]))))
       if (referenced) fail('RESOURCE_IN_USE','Conserva el recurso que tiene referencias o historial.')
+      if(table==='entrega_programada') db.entrega_x_fruta_derivada=db.entrega_x_fruta_derivada.filter(v=>v.entregaProgramadaId!==current!.entregaProgramadaId)
+      if(table==='contrato_venta') db.contrato_x_fruta_derivada=db.contrato_x_fruta_derivada.filter(v=>v.contratoVentaId!==current!.contratoVentaId)
       db[table] = db[table].filter(row => row !== current)
       status = 204
     } else {
@@ -571,17 +582,21 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
         Object.assign(row,current,input,{ [definition.id]:current?.[definition.id] ?? nextIds[table],updatedAt:now })
         if (resource?.scope) row[resource.scope] = params.parentId
         if ('registradoPorUsuarioId' in row && !current) row.registradoPorUsuarioId = 1
+        if (['contrato_venta','entrega_programada'].includes(table) && current?.desglosePendiente && (input as Row).variedades === undefined) fail('HISTORICAL_BREAKDOWN_REQUIRED','Envía el desglose completo para confirmar un registro histórico.')
         protect(table,row,current)
         references(table,row)
+        prepareMockVarieties(db,table,row,current)
         compute(table,row,current)
         business(table,row,current)
         references(table,row)
       }
+      if(table==='contrato_venta') row.saldosVariedades=[]
       const outputErrors = validateV1Schema(contract,{ $ref:`#/components/schemas/${definition.schema}` },row)
       if (Object.keys(outputErrors).length) throw new ApiV1Error(422,'INCOMPLETE_RESOURCE','El recurso no satisface el contrato.',outputErrors)
       if (current) db[table][db[table].indexOf(current)] = row
       else { db[table].push(row); nextIds[table]++; status = 201 }
-      data = row
+      persistMockVarieties(db,table,row)
+      data = table==='contrato_venta'?{...row,saldosVariedades:mockVarietyBalances(db,row.contratoVentaId)}:row
     }
     const responseSchema = operation.responses[String(status)]?.content?.['application/json'].schema
     if (responseSchema) {

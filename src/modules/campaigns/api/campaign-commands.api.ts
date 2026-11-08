@@ -2,7 +2,7 @@ import { operationsContext } from '@/modules/operations/api/operations-context.a
 import { commitRemote, requireId } from '@/shared/api/data-contract';
 import { linkLocalDocument, uploadDocument, uploadLocalDocument } from '@/shared/api/uploadDocument';
 import { formatFecha } from '@/modules/campaigns/api/fecha.util';
-import { contratoVentaV1, entregaProgramadaV1, entregaXFrutaDerivadaV1 } from '@/modules/commercial-planning/api/v1.api';
+import { contratoVentaV1, entregaProgramadaV1 } from '@/modules/commercial-planning/api/v1.api';
 import { clienteNegocioCampanaV1, clienteNegocioCampanaXFrutaDerivadaV1, coordinacionEntregaV1, origenEntregaV1, entrevistaExtencionV1, certificadoCampanaV1, certificadoCampanaXProveedorV1, ampliacionCertificadoCampanaV1, pagoCertificadoCampanaV1 } from '@/modules/campaigns/api/v1.api';
 import { examenProveedorV1 } from '@/modules/providers/api/v1.api';
 import { acuerdoTransporteV1 } from '@/modules/carriers/api/v1.api';
@@ -21,21 +21,12 @@ function currency(value: string): 'PEN' | 'USD' {
         throw new Error('Selecciona soles o dólares.');
     return value;
 }
-function selectedVariety(name: string | undefined, fruitId: number) {
-    if (!name)
-        return null;
-    const g = operationsContext(), fruit = g.fruits.find(f => f.frutaId === fruitId);
-    const row = g.varieties.find(v => v.frutaId === fruitId && (v.name === name || v.name === `${fruit?.name} ${name}`));
-    if (!row)
-        throw new Error('Selecciona una variedad válida del catálogo de la campaña.');
-    return row.frutaDerivadaId;
-}
 export const campaignCommands = {
     contract: (parent: number, values: CampaignClientContractValues, file: File | null, id?: number) => commitRemote(async () => {
         const g = operationsContext(), req = g.requirements.find(r => r.clienteNegocioCampanaId === parent), client = g.clients.find(c => c.clienteNegocioId === req?.clienteNegocioId);
         if (!req || !client)
             throw new Error('No se encontró el requerimiento del cliente.');
-        const body: CreateContratoVentaV1 = { fecha: formatFecha(new Date()), canal: client.tipoCliente === 'industria' ? 'INDUSTRIA' : 'EXPORTACION', precioKg: values.precioKg.trim() ? Number(values.precioKg) : null, moneda: currency(values.moneda), kilosAcordados: Number(values.cantidadPropuestaKg), condicionesPago: values.condicionesPago, condicionesEntrega: values.condicionesEntrega, observaciones: values.observaciones };
+        const body: CreateContratoVentaV1 = { fecha: formatFecha(new Date()), canal: client.tipoCliente === 'industria' ? 'INDUSTRIA' : 'EXPORTACION', precioKg: values.precioKg.trim() ? Number(values.precioKg) : null, moneda: currency(values.moneda), variedades: values.variedades ?? [], condicionesPago: values.condicionesPago, condicionesEntrega: values.condicionesEntrega, observaciones: values.observaciones };
         const uploaded = file ? await uploadLocalDocument(file) : undefined;
         const saved = await (id ? contratoVentaV1(parent).update(id, body) : contratoVentaV1(parent).create(body));
         if (uploaded) await linkLocalDocument('contrato_venta', saved.contratoVentaId, uploaded.id);
@@ -46,19 +37,8 @@ export const campaignCommands = {
         const g = operationsContext(), fruit = g.campaigns.find(c => c.campaniaId === campaignId)?.frutaId;
         if (!fruit)
             throw new Error('No se encontró la fruta de la campaña.');
-        const variety = selectedVariety(values.variedad, fruit), body = { fecha: values.fecha, kilosProgramados: Number(values.kilosProgramados), destino: values.destino.trim(), observaciones: values.observaciones.trim() };
+        const body = { fecha: values.fecha, variedades: values.variedades ?? [], destino: values.destino.trim(), observaciones: values.observaciones.trim() };
         const saved = id ? await entregaProgramadaV1(contractId).update(id, body) : await entregaProgramadaV1(contractId).create(body);
-        if (variety) {
-            const existing = g.deliveryVarieties.filter(v => v.entregaProgramadaId === saved.entregaProgramadaId);
-            for (const v of existing)
-                if (v.frutaDerivadaId !== variety)
-                    await entregaXFrutaDerivadaV1(saved.entregaProgramadaId).remove(v.entregaXFrutaDerivadaId);
-            const current = existing.find(v => v.frutaDerivadaId === variety);
-            if (current)
-                await entregaXFrutaDerivadaV1(saved.entregaProgramadaId).update(current.entregaXFrutaDerivadaId, { kilosProgramados: body.kilosProgramados });
-            else
-                await entregaXFrutaDerivadaV1(saved.entregaProgramadaId).create({ frutaDerivadaId: variety, kilosProgramados: body.kilosProgramados });
-        }
         return saved;
     }),
     deleteDelivery: (parent: number, id: number) => commitRemote(() => entregaProgramadaV1(parent).remove(id)),

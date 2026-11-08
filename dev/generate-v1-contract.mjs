@@ -95,6 +95,19 @@ for (const [key,shape] of Object.entries(jsonShapes)) {
   Object.assign(schemas[tables[table].schema].properties[field],shape)
 }
 
+// Desgloses relacionales, escritos atómicamente con su cabecera.
+for (const [table, total] of [['contrato_venta','kilosAcordados'], ['entrega_programada','kilosProgramados']]) {
+  const schema = schemas[tables[table].schema]
+  schema.properties.desgloseConfirmado.readOnly = true
+  schema.properties[total].readOnly = true
+  tables[table].required = tables[table].required.filter(name => name !== total)
+  const quantity = {type:'object',additionalProperties:false,properties:{frutaDerivadaId:{type:'integer',minimum:1},kilos:{type:'number',minimum:0.001,maximum:99999999999.999,multipleOf:0.001}},required:['frutaDerivadaId','kilos']}
+  schema.properties.variedades = {type:'array',items:quantity,'x-virtual':true}
+  schema.properties.desglosePendiente = {type:'boolean',readOnly:true,'x-virtual':true}
+  schema.required.push('variedades','desglosePendiente')
+  tables[table].required.push('variedades')
+}
+
 // Domain routes represent operations/screens, not a generated CRUD for all physical tables.
 // [table, collection path, module, parent table, parent column, operations]
 const definitions = [
@@ -123,7 +136,7 @@ const definitions = [
   ['cliente_negocio_campana_x_fruta_derivada','/requerimientos/{parentId}/variedades','campaigns','cliente_negocio_campana','clienteNegocioCampanaId','crud'],
   ['contrato_venta','/requerimientos/{parentId}/contratos','commercial-planning','cliente_negocio_campana','clienteNegocioCampanaId','crud'],
   ['entrega_programada','/contratos/{parentId}/entregas','commercial-planning','contrato_venta','contratoVentaId','crud'],
-  ['entrega_x_fruta_derivada','/entregas/{parentId}/variedades','commercial-planning','entrega_programada','entregaProgramadaId','crud'],
+  ['entrega_x_fruta_derivada','/entregas/{parentId}/variedades','commercial-planning','entrega_programada','entregaProgramadaId','r'],
   ['empresa_transporte_externo','/transportistas','carriers',null,null,'crud'],
   ['vehiculo_externo','/transportistas/{parentId}/vehiculos','carriers','empresa_transporte_externo','idEmpresaTransporteExterno','crud'],
   ['chofer_transporte_externo','/transportistas/{parentId}/choferes','carriers','empresa_transporte_externo','idEmpresaTransporteExterno','crud'],
@@ -168,6 +181,7 @@ for (const [table, url, module, parentTable, scope, mode] of definitions) {
   const info = tables[table]
   const schema = schemas[info.schema]
   const editable = Object.fromEntries(Object.entries(schema.properties).filter(([name, property]) => !property.readOnly && name !== scope))
+  if (editable.variedades) editable.variedades = {...editable.variedades,minItems:1}
   if (table === 'campana') editable.estado = { ...editable.estado, enum: ['planificacion','en proceso'] }
   const createName = `Create${info.schema}`
   schemas[createName] = { type: 'object', additionalProperties: false, properties: editable, required: info.required.filter(name => name !== scope) }
@@ -210,6 +224,10 @@ for (const [table, url, module, parentTable, scope, mode] of definitions) {
   }
   ;(modules[module] ??= []).push({ table, url, scope, mode, schema: info.schema, createName })
 }
+
+schemas.ContratoVenta.properties.saldosVariedades = {type:'array',items:{type:'object',additionalProperties:false,properties:{frutaDerivadaId:id,kilosAcordados:decimal,kilosProgramados:decimal,kilosDisponibles:decimal},required:['frutaDerivadaId','kilosAcordados','kilosProgramados','kilosDisponibles']},readOnly:true,'x-virtual':true}
+schemas.ContratoVenta.required.push('saldosVariedades')
+paths['/requerimientos/{parentId}/contratos/{id}'].get.parameters.push({name:'excluirEntregaId',in:'query',schema:id,description:'Excluye todas las líneas de esta entrega. Debe pertenecer al contrato.'})
 
 // The driver's entry point derives ownership from authenticated identity in the real backend.
 const loadCollection = paths['/coordinaciones/{parentId}/cargas']
@@ -272,6 +290,7 @@ write('docs/api/openapi.json', JSON.stringify(contract, null, 2) + '\n')
 
 // DTOs live in their owning module. Shared contains only HTTP and generic types.
 function tsType(property) {
+  if (property['x-virtual'] && property.type === 'array') return `{ ${Object.entries(property.items.properties).map(([name, prop]) => `${name}: ${tsType(prop)}`).join('; ')} }[]`
   if (property.enum) return property.enum.map(value => JSON.stringify(value)).join(' | ')
   const types = Array.isArray(property.type) ? property.type : [property.type]
   return types.map(type => type === 'null' ? 'null' : type === 'number' || type === 'integer' ? 'number' : type === 'boolean' ? 'boolean' : type === 'array' ? 'JsonValue[]' : type === 'object' ? 'JsonObject' : 'string').join(' | ')
@@ -290,6 +309,7 @@ for (const [module, entries] of Object.entries(modules)) {
   // Import only used JSON aliases to keep noUnusedLocals enabled.
   if (!dto.includes(': JsonValue[]')) dto = dto.replace('JsonObject, JsonValue', 'JsonObject')
   if (!dto.includes(': JsonObject') && dto.includes('JsonObject,')) dto = dto.replace('JsonObject, ', '')
+  if (!dto.includes(': JsonObject') && !dto.includes(': JsonValue[]')) dto = dto.replace(/^import type \{[^\n]+\n/m, '')
   write(`src/modules/${module}/api/v1.dto.ts`, dto)
   let api = '// Generated by pnpm contract:generate. Pages should use domain adapters/mappers.\n'
   const helpers = [...new Set(entries.map(entry => entry.mode === 'r' ? 'createV1ReadResource' : entry.mode === 'a' ? 'createV1AppendResource' : 'createV1Resource'))]

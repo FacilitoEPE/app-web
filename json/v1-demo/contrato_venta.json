@@ -14,7 +14,11 @@
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z",
     "condicionesEntrega": "FOB Paita",
-    "observaciones": null
+    "observaciones": null,
+    "variedades": [],
+    "desglosePendiente": true,
+    "saldosVariedades": [],
+    "desgloseConfirmado": false
   },
   {
     "contratoVentaId": 2,
@@ -31,7 +35,11 @@
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z",
     "condicionesEntrega": "FOB Paita",
-    "observaciones": null
+    "observaciones": null,
+    "variedades": [],
+    "desglosePendiente": true,
+    "saldosVariedades": [],
+    "desgloseConfirmado": false
   },
   {
     "contratoVentaId": 3,
@@ -48,6 +56,10 @@
     "createdAt": "2026-10-29T13:00:00.000Z",
     "updatedAt": "2026-10-29T13:00:00.000Z",
     "condicionesEntrega": "FOB Callao",
-    "observaciones": "Palta Hass calibre 16-20"
+    "observaciones": "Palta Hass calibre 16-20",
+    "variedades": [],
+    "desglosePendiente": true,
+    "saldosVariedades": [],
+    "desgloseConfirmado": false
   }
 ]

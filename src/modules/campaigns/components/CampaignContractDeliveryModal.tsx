@@ -47,7 +47,7 @@ export default function CampaignContractDeliveryModal({ open, delivery, fruitNam
             ...(sumVarietyKilos(rows) > availableTotal ? { variedades: `El total supera los ${formatKg(availableTotal)} kg disponibles del contrato.` } : {}),
         }),
         onSubmit: current => onSave(current, toVarietyQuantities(rows)),
-        backendFields: { fecha: 'fecha', kilosProgramados: 'variedades', destino: 'destino', observaciones: 'observaciones' },
+        backendFields: { variedades: 'variedades', fecha: 'fecha', kilosProgramados: 'variedades', destino: 'destino', observaciones: 'observaciones' },
     });
 
     const update = (field: keyof CampaignContractDeliveryValues, value: string) => {
@@ -60,7 +60,7 @@ export default function CampaignContractDeliveryModal({ open, delivery, fruitNam
         setErrors(current => Object.fromEntries(Object.entries(current).filter(([field]) => !field.startsWith('variedades') && field !== 'kilosProgramados')));
     };
 
-    // La API vigente recibe el total; no asignar todas las filas a una sola variedad.
+    // El backend vuelve a calcular el total desde las filas enviadas.
     const save = () => submit({ fecha: values.fecha, destino: values.destino, observaciones: values.observaciones, kilosProgramados: String(sumVarietyKilos(rows)) });
 
     return (
@@ -83,9 +83,9 @@ export default function CampaignContractDeliveryModal({ open, delivery, fruitNam
                 <InputField id="delivery-date" type="date" label="Fecha programada" required value={values.fecha} error={errors.fecha} onChange={(value) => update("fecha", value)} />
                 <CampaignVarietyQuantitiesFields id="delivery" fruitName={fruitName} rows={rows} options={varietyOptions} errors={{ ...errors, variedades: errors.variedades ?? errors.kilosProgramados }} totalLabel="Total de la entrega" varietyBalances={balances} onChange={updateRows} disabled={saving} />
                 <FormField hint={!agreedVarieties.length
-                    ? 'Para simular los saldos por variedad, completa y guarda el desglose en Editar contrato. No se reparte el total automáticamente.'
-                    : incompleteHistory ? 'Simulación visual parcial: hay entregas anteriores sin desglose. Sus kilos no pueden asignarse a una variedad. El total del contrato sigue validándose.'
-                    : 'Simulación visual por variedad: el desglose se conserva solo durante esta sesión y se reinicia al recargar. El servidor guarda el total.'} className="sm:col-span-2" />
+                    ? 'Completa y guarda las variedades acordadas en Editar contrato antes de programar entregas.'
+                    : incompleteHistory ? 'Hay entregas históricas pendientes de desglose. Por la política vigente, no consumen los cupos actuales.'
+                    : 'Los saldos se validan por variedad al guardar. El desglose queda guardado en el servidor.'} className="sm:col-span-2" />
                 <InputField id="delivery-destination" label="Destino" required placeholder="Ej. Puerto del Callao" value={values.destino} error={errors.destino} onChange={(value) => update("destino", value)} className="sm:col-span-2" />
                 <FormField id="delivery-notes" label="Observaciones" optional className="sm:col-span-2">
                     <Textarea id="delivery-notes" className="min-h-20 resize-none" placeholder="Añade indicaciones para esta entrega..." value={values.observaciones} onChange={(event) => update("observaciones", event.target.value)} />

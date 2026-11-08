@@ -1,7 +1,7 @@
 import { operationsContext } from '@/modules/operations/api/operations-context.api';
 import type { ContractVarietyOption, VarietyQuantity } from '@/modules/campaigns/campaignVarietyQuantities.utils';
 
-/** Contexto ya cargado: no agrega rutas ni simula un desglose contractual inexistente en V1. */
+/** Opciones del requerimiento ya cargado, filtradas por fruta de campaña. */
 export function contractVarietyContext(campaignId: number, requirementId: number) {
     const data = operationsContext();
     const campaign = data.campaigns.find(item => item.campaniaId === campaignId);
@@ -16,6 +16,6 @@ export function deliveryVarietyQuantities(deliveryId: number): VarietyQuantity[]
     const rows = data.deliveryVarieties.filter(item => item.entregaProgramadaId === deliveryId)
         .map(item => ({ frutaDerivadaId: item.frutaDerivadaId, kilos: item.kilosProgramados }));
     const total = data.deliveries.find(item => item.entregaProgramadaId === deliveryId)?.kilosProgramados;
-    // El guardado actual solo modifica el total; un desglose histórico distinto no describe ese total.
+    // Un desglose histórico incoherente no describe el total de su cabecera.
     return total !== undefined && Math.round(rows.reduce((sum, row) => sum + row.kilos, 0) * 1000) === Math.round(total * 1000) ? rows : [];
 }

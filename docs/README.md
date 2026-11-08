@@ -18,3 +18,5 @@
 El estado de integración es el registro operativo por vista. Las guías de usuario describen acciones disponibles, y los informes de `evidence/` son cortes fechados con vigencia limitada.
 
 La disponibilidad y los colores de los adjuntos se describen en [integración](integration-status.md#disponibilidad-real-de-adjuntos--2026-11-05--implementada-pendiente-verificación-productiva) y el [contrato de disponibilidad](api/business-rules.md#disponibilidad-de-adjuntos).
+
+Los contratos y entregas guardan variedades y cantidades mediante una escritura atómica. Consulte el [contrato y compatibilidad HTTP](api/README.md#desglose-de-contratos-y-entregas) y el [estado de integración](integration-status.md#variedades-en-contratos-y-entregas--2026-11-05--completo-en-desarrollo-despliegue-pendiente).
