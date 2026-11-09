@@ -181,7 +181,7 @@ Proveedor y cliente permiten opcionales del objetivo; no repetir validaciones le
 
 Una campaña habilitada incluye `planificacion` y `en proceso`. Solo una habilitada por fruta. La fecha de fin no cierra la campaña. Crear/editar permite esos dos estados; `terminado` se obtiene con `POST /campanas/{id}/cerrar`.
 
-Participación: precio simple `precioCompraKg`, PEN y disponibilidad; el padre se toma de la URL. Fincas se vinculan en entrevistas/orígenes. Conservar `entrevistaAplica`; no hacer obligatoria una entrevista para un acopiador ni exigirle el perfil agronómico legacy de productor.
+Participación con precio simple `precioCompraKg`, PEN y disponibilidad. Se puede vincular a productores y acopiadores en planificación y en ejecución. El padre se toma de la URL y las fincas se vinculan en entrevistas y orígenes. Se conserva `entrevistaAplica`. El acopiador puede participar sin entrevista ni perfil agronómico de productor.
 
 ### Exámenes y certificaciones
 

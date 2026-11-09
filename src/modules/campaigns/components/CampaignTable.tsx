@@ -130,8 +130,7 @@ export default function CampaignTable({ data, isLoading, loadError, onRetry, onC
             // Las certificaciones solo tienen sentido mientras la campaña se está planificando
             secondary.push({ label: "Gestionar certificaciones", icon: <ShieldCheck size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/certifications`) });
         }
-        // Transporte y entregas solo aplican una vez que la campaña está en ejecución; los proveedores se siguen
-        // gestionando, pero ahí solo se vinculan acopiadores
+        // Transporte y entregas solo aplican una vez que la campaña está en ejecución.
         if (row.estado === "en proceso") {
             secondary.push({ label: "Ver proveedores", icon: <Briefcase size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/providers`) });
             secondary.push({ label: "Transportistas", icon: <Truck size={16} strokeWidth={2.5} />, onClick: () => navigate(`/campaigns/${row.campaniaId}/carriers`) });

@@ -8,6 +8,8 @@
     "telefono": "900000002",
     "correo": "persona2@example.com",
     "numeroLicencia": "Q40000002",
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "40000002",
     "personaId": 2,
     "usuarioId": 2,
     "activo": true
@@ -21,6 +23,8 @@
     "telefono": "900000008",
     "correo": "pedro.morales@transnorte.com",
     "numeroLicencia": "Q40000008",
+    "tipoDocumento": "DNI",
+    "numeroDocumento": "40000008",
     "personaId": 8,
     "usuarioId": null,
     "activo": true

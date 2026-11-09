@@ -1,16 +1,15 @@
-import { harvestedWeeklyItems } from "@/modules/campaigns/weeklyHarvest.utils";
-import { useQualityDeliveryLoads } from "@/modules/quality/qualityOperations.store";
-import { PageError } from '@/shared/components/PageState';
-import { useEffect, useMemo, useState } from "react";
+import { weeklyCampaignItems } from "@/modules/campaigns/api/weekly-screen-data";
+import { getOperationsRevision, subscribeOperationsContext } from "@/modules/operations/api/operations-context.api";
+import { useState, useSyncExternalStore } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-    AlertTriangle,
     Calendar,
     CalendarRange,
     Layers,
     PackageCheck,
     Sprout,
     Truck,
+    Users,
 } from "lucide-react";
 import { ContextBannerPlaceholder } from "@/shared/components/ContextBanner";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
@@ -31,7 +30,6 @@ import {
 import PageHeader from "@/shared/layout/PageHeader";
 import type { TableExport } from "@/shared/utils/exportTable";
 import { formatKg } from "@/shared/utils/format";
-import { getFrutaDerivadas } from "@/modules/campaigns/api/campaign.api";
 import CampaignContextBanner from "@/modules/campaigns/components/CampaignContextBanner";
 import CampaignWeeklySlotModal, {
     type WeeklySlotDeliveryItem,
@@ -90,110 +88,69 @@ export default function CampaignWeeklyDeliveryProgramPage() {
     const campaniaId = Number(id);
     const campaign = useCampaign(campaniaId);
 
-    const qualityLoads = useQualityDeliveryLoads();
-
-    const [dataError, setDataError] = useState(false);
-    const [retry, setRetry] = useState(0);
-    const [varietiesFromApi, setVarietiesFromApi] = useState<string[]>([]);
-    const [selectedWeekId, setSelectedWeekId] = useState<string>("");
-    const [selectedVariety, setSelectedVariety] = useState<string>("all");
+    useSyncExternalStore(subscribeOperationsContext, getOperationsRevision);
+    const [selectedWeekId, setSelectedWeekId] = useState("");
+    const [selectedDate, setSelectedDate] = useState("all");
+    const [selectedVariety, setSelectedVariety] = useState("all");
+    const [selectedPlate, setSelectedPlate] = useState("all");
     const [slotModal, setSlotModal] = useState<{
         open: boolean;
-        variedad: string;
+        contextLabel: string;
         dayLabel: string;
         dateIso: string;
         items: WeeklySlotDeliveryItem[];
     }>({
         open: false,
-        variedad: "",
+        contextLabel: "",
         dayLabel: "",
         dateIso: "",
         items: [],
     });
 
-    useEffect(() => {
-        if (!campaign?.frutaId) return;
-        let active = true;
-        void getFrutaDerivadas(campaign.frutaId)
-            .then((items) => {
-                if (active) setVarietiesFromApi(items.map((item) => item.name));
-            })
-            .catch(() => {
-                if (active) setDataError(true);
-            });
-        return () => {
-            active = false;
-        };
-    }, [campaign?.frutaId, retry]);
+    const weeklyItems = weeklyCampaignItems(campaniaId);
+    const varieties = [...new Set(weeklyItems.map(item => item.variedad))].sort();
+    const plates = [...new Set(weeklyItems.map(item => item.placa).filter(plate => plate !== "—"))].sort();
 
-    const weeklyItems = useMemo(() => harvestedWeeklyItems(qualityLoads, campaniaId), [qualityLoads, campaniaId]);
-
-    const varieties = useMemo(() => [...new Set([...varietiesFromApi, ...weeklyItems.map(item => item.variedad)])], [varietiesFromApi, weeklyItems]);
-
-    const weeks = useMemo<WeekDefinition[]>(() => {
-        const mondaySet = new Set<string>();
-        for (const item of weeklyItems) {
-            mondaySet.add(getMondayIso(item.fecha));
-        }
-        const sortedMondays = [...mondaySet].sort();
-        if (sortedMondays.length === 0) {
-            sortedMondays.push(getMondayIso(campaign?.fechaInicio ? `${campaign.fechaInicio.getFullYear()}-${String(campaign.fechaInicio.getMonth()+1).padStart(2,"0")}-${String(campaign.fechaInicio.getDate()).padStart(2,"0")}` : new Date().toISOString().slice(0,10)));
-        }
-        return sortedMondays.map((mondayIso, idx) => buildWeekDefinition(mondayIso, idx));
-    }, [weeklyItems, campaign]);
-
-    const activeWeek = useMemo(
-        () => weeks.find((w) => w.id === selectedWeekId) ?? weeks[0],
-        [weeks, selectedWeekId],
+    const mondays = [...new Set(weeklyItems.map(item => getMondayIso(item.fecha)))].sort();
+    if (!mondays.length) {
+        const start = campaign?.fechaInicio ?? new Date();
+        const date = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
+        mondays.push(getMondayIso(date));
+    }
+    const weeks = mondays.map(buildWeekDefinition);
+    const activeWeek = weeks.find(week => week.id === selectedWeekId) ?? weeks[0];
+    const dates = new Set(activeWeek.days.map(day => day.iso));
+    const weekItems = weeklyItems.filter(item =>
+        dates.has(item.fecha) &&
+        (selectedDate === "all" || item.fecha === selectedDate) &&
+        (selectedVariety === "all" || item.variedad === selectedVariety) &&
+        (selectedPlate === "all" || item.placa === selectedPlate),
     );
 
-    const weekItems = useMemo(() => {
-        const dayIsoSet = new Set(activeWeek.days.map((d) => d.iso));
-        return weeklyItems.filter(
-            (item) =>
-                dayIsoSet.has(item.fecha) &&
-                (selectedVariety === "all" || item.variedad === selectedVariety),
-        );
-    }, [weeklyItems, activeWeek, selectedVariety]);
+    const clients = [...new Map(weekItems.map(item => [item.clienteId, item.cliente])).entries()]
+        .sort(([, a], [, b]) => a.localeCompare(b));
+    const deliveryCount = new Set(weekItems.map(item => item.deliveryId)).size;
 
-    const visibleVarieties = useMemo(() => {
-        const all = Array.from(new Set([...varieties, ...weeklyItems.map((i) => i.variedad)]));
-        if (selectedVariety !== "all") return all.filter((v) => v === selectedVariety);
-        return all;
-    }, [varieties, weeklyItems, selectedVariety]);
-
-    const multiVarietyCount = useMemo(
-        () => weekItems.filter((item) => item.kilosVariedad < item.kilosTotalesEntrega).length,
-        [weekItems],
-    );
-
-    const totalWeekKilos = useMemo(
-        () => weekItems.reduce((sum, item) => sum + item.kilosVariedad, 0),
-        [weekItems],
-    );
-
-    const activeDaysCount = useMemo(
-        () => new Set(weekItems.map((item) => item.fecha)).size,
-        [weekItems],
-    );
+    const totalWeekKilos = weekItems.reduce((sum, item) => sum + item.kilosVariedad, 0);
+    const activeDaysCount = new Set(weekItems.map(item => item.fecha)).size;
 
     const metrics: Metric[] = [
         {
-            title: "Cargas en la semana",
-            value: String(new Set(weekItems.map(i => i.loadId)).size),
-            unit: new Set(weekItems.map(i => i.loadId)).size === 1 ? "carga" : "cargas",
+            title: "Entregas en la semana",
+            value: String(deliveryCount),
+            unit: deliveryCount === 1 ? "entrega" : "entregas",
             description: activeWeek.label,
             icon: PackageCheck,
         },
         {
-            title: "Volumen semanal cargado",
+            title: "Volumen semanal programado",
             value: formatKg(totalWeekKilos),
             unit: "kg",
             description: "Suma de variedades en la semana seleccionada",
             icon: Sprout,
         },
         {
-            title: "Variedades en despacho",
+            title: "Variedades programadas",
             value: String(new Set(weekItems.map((i) => i.variedad)).size),
             unit: new Set(weekItems.map((i) => i.variedad)).size === 1 ? "variedad" : "variedades",
             description: `De ${varieties.length} ${varieties.length === 1 ? "variedad registrada" : "variedades registradas"} en campaña`,
@@ -203,50 +160,48 @@ export default function CampaignWeeklyDeliveryProgramPage() {
             title: "Días con actividad",
             value: `${activeDaysCount} de 7`,
             unit: "días",
-            description: "Según las fechas reales de carga",
+            description: "Según las fechas programadas",
             icon: Calendar,
             warm: weekItems.some((i) => !i.coordinada),
         },
     ];
 
-    const getCellItems = (variedad: string, dateIso: string) =>
-        weekItems.filter((item) => item.variedad === variedad && item.fecha === dateIso);
+    const getCellItems = (clienteId: number, dateIso: string) =>
+        weekItems.filter((item) => item.clienteId === clienteId && item.fecha === dateIso);
 
     const getExportData = (): TableExport => ({
         filename: `programa_semanal_campana_${campaniaId}_${activeWeek.mondayIso}`,
         title: `Programa Semanal de Entregas · ${activeWeek.label}`,
         header: [
-            "Variedad",
+            "Cliente",
             ...activeWeek.days.map((d) => `${d.dayName} (${d.shortDate})`),
             "Total semanal (kg)",
         ],
-        rows: visibleVarieties.map((variedad) => {
+        rows: clients.map(([clienteId, cliente]) => {
             const dayValues = activeWeek.days.map((d) => {
-                const items = getCellItems(variedad, d.iso);
+                const items = getCellItems(clienteId, d.iso);
                 const kg = items.reduce((s, i) => s + i.kilosVariedad, 0);
-                return kg > 0 ? `${kg} kg (${items.length})` : "—";
+                return items.length ? `${kg} kg` : "—";
             });
             const rowTotal = activeWeek.days.reduce((sum, d) => {
-                const items = getCellItems(variedad, d.iso);
+                const items = getCellItems(clienteId, d.iso);
                 return sum + items.reduce((s, i) => s + i.kilosVariedad, 0);
             }, 0);
-            return [variedad, ...dayValues, String(rowTotal)];
+            return [cliente, ...dayValues, String(rowTotal)];
         }),
     });
 
-    const hasActiveFilters = selectedVariety !== "all" || (selectedWeekId !== "" && selectedWeekId !== weeks[0]?.id);
-
-    if (dataError) return <PageError title="No se pudo cargar el programa semanal" message="Verifica la conexión e inténtalo nuevamente." onRetry={()=>{setDataError(false);setRetry(n=>n+1)}} back={{ to: "/campaigns", label: "Volver a campañas" }} />;
+    const hasActiveFilters = selectedDate !== "all" || selectedVariety !== "all" || selectedPlate !== "all" || activeWeek.id !== weeks[0].id;
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
             {campaign ? (
                 <CampaignContextBanner
                     campaign={campaign}
-                    caption="Cargas reales por día y variedad"
+                    caption="Entregas programadas por cliente y día"
                     stats={[
-                        { label: "cargas en semana", value: String(weekItems.length) },
-                        { label: "cargados", value: `${formatKg(totalWeekKilos)} kg` },
+                        { label: "entregas en semana", value: String(deliveryCount) },
+                        { label: "programados", value: `${formatKg(totalWeekKilos)} kg` },
                     ]}
                 />
             ) : (
@@ -256,7 +211,7 @@ export default function CampaignWeeklyDeliveryProgramPage() {
             <PageHeader
                 icon={<CalendarRange size={24} strokeWidth={2.5} />}
                 title="Programa semanal de entregas"
-                description="Kilos realmente cargados por fecha de carga y variedad. Abre el total de cada día para consultar sus clientes."
+                description="Consulta los kilos programados por cliente y fecha."
                 action={
                     <Button
                         variant="outline"
@@ -272,30 +227,18 @@ export default function CampaignWeeklyDeliveryProgramPage() {
                 <MetricCards label="Indicadores del programa semanal" metrics={metrics} />
             </div>
 
-            {multiVarietyCount > 0 && (
-                <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-status-warning/40 bg-status-warning-bg/25 px-4 py-3 text-[13px] text-ink">
-                    <span className="inline-flex items-center gap-2 font-medium">
-                        <AlertTriangle size={17} className="shrink-0 text-status-warning" />
-                        <span>
-                            Esta semana incluye{" "}
-                            <strong className="font-bold">{multiVarietyCount} registros compartidos</strong> en entregas
-                            con más de una variedad. Haz clic en cualquier celda para ver el desglose por variedad vs.
-                            el total del camión.
-                        </span>
-                    </span>
-                </div>
-            )}
-
             <FilterBar
                 canClear={hasActiveFilters}
                 onClear={() => {
                     setSelectedWeekId(weeks[0]?.id ?? "");
+                    setSelectedDate("all");
                     setSelectedVariety("all");
+                    setSelectedPlate("all");
                 }}
             >
                 <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
                     <div className="w-full sm:w-72">
-                        <Select value={activeWeek.id} onValueChange={(v) => setSelectedWeekId(v ?? "")}>
+                        <Select value={activeWeek.id} onValueChange={(v) => { setSelectedWeekId(v ?? ""); setSelectedDate("all"); }}>
                             <SelectTrigger aria-label="Semana del programa">
                                 <SelectValue>{activeWeek.label}</SelectValue>
                             </SelectTrigger>
@@ -304,6 +247,20 @@ export default function CampaignWeeklyDeliveryProgramPage() {
                                     <SelectItem key={wk.id} value={wk.id}>
                                         {wk.label}
                                     </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="w-full sm:w-48">
+                        <Select value={selectedDate} onValueChange={(v) => setSelectedDate(v ?? "all")}>
+                            <SelectTrigger aria-label="Filtrar por fecha">
+                                <SelectValue>{selectedDate === "all" ? "Todas las fechas" : activeWeek.days.find(day => day.iso === selectedDate)?.shortDate}</SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todas las fechas</SelectItem>
+                                {activeWeek.days.map(day => (
+                                    <SelectItem key={day.iso} value={day.iso}>{day.dayName} {day.shortDate}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -318,9 +275,18 @@ export default function CampaignWeeklyDeliveryProgramPage() {
                                 <SelectItem value="all">Todas las variedades</SelectItem>
                                 {varieties.map((v) => (
                                     <SelectItem key={v} value={v}>
-                                        Variedad {v}
+                                        {v}
                                     </SelectItem>
                                 ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="w-full sm:w-48">
+                        <Select value={selectedPlate} onValueChange={(v) => setSelectedPlate(v ?? "all")}>
+                            <SelectTrigger aria-label="Filtrar por placa"><SelectValue>{selectedPlate === "all" ? "Todas las placas" : selectedPlate}</SelectValue></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todas las placas</SelectItem>
+                                {plates.map(plate => <SelectItem key={plate} value={plate}>{plate}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -330,20 +296,20 @@ export default function CampaignWeeklyDeliveryProgramPage() {
             <TableCard
                 icon={<CalendarRange size={24} strokeWidth={2.2} />}
                 title={`Matriz semanal · ${activeWeek.label}`}
-                description="Abre una celda por variedad o el total diario para consultar los clientes y kilos realmente cargados."
+                description="Abre una celda o el total diario para ver las variedades, cantidades y vehículos asignados."
                 headerRight={
                     <TableToolbar>
                         <TableCountPill
-                            icon={<Sprout size={16} strokeWidth={2.5} className="text-brand" />}
-                            count={visibleVarieties.length}
-                            singular="variedad"
-                            plural="variedades"
+                            icon={<Users size={16} strokeWidth={2.5} className="text-brand" />}
+                            count={clients.length}
+                            singular="cliente"
+                            plural="clientes"
                         />
                         <TableExportMenu getData={getExportData} />
                     </TableToolbar>
                 }
-                isEmpty={visibleVarieties.length === 0}
-                emptyTitle="No hay variedades para mostrar"
+                isEmpty={clients.length === 0}
+                emptyTitle="No hay entregas programadas para mostrar"
                 emptyDescription="Limpia los filtros para visualizar la matriz semanal."
                 page={1}
                 pageCount={1}
@@ -353,7 +319,7 @@ export default function CampaignWeeklyDeliveryProgramPage() {
                     <Table>
                         <TableHeader>
                             <TableRow className={`${TABLE_HEAD_BG} hover:bg-brand-surface`}>
-                                <TableHead className="min-w-44 py-3.5 pl-6 pr-3 font-bold text-ink">Variedad</TableHead>
+                                <TableHead className="min-w-44 py-3.5 pl-6 pr-3 font-bold text-ink">Cliente</TableHead>
                                 {activeWeek.days.map((day) => (
                                     <TableHead key={day.iso} className="min-w-32 px-2.5 py-3 text-center font-bold text-ink">
                                         <div className="flex flex-col items-center leading-tight">
@@ -370,33 +336,26 @@ export default function CampaignWeeklyDeliveryProgramPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-border/60">
-                            {visibleVarieties.map((variedad) => {
-                                const rowTotal = activeWeek.days.reduce((sum, day) => {
-                                    const cellItems = getCellItems(variedad, day.iso);
-                                    return sum + cellItems.reduce((s, i) => s + i.kilosVariedad, 0);
-                                }, 0);
-                                const rowCount = activeWeek.days.reduce((sum, day) => {
-                                    return sum + getCellItems(variedad, day.iso).length;
-                                }, 0);
+                            {clients.map(([clienteId, cliente]) => {
+                                const rowItems = weekItems.filter(item => item.clienteId === clienteId);
+                                const rowTotal = rowItems.reduce((sum, item) => sum + item.kilosVariedad, 0);
+                                const rowCount = new Set(rowItems.map(item => item.deliveryId)).size;
 
                                 return (
-                                    <TableRow key={variedad} className="transition-colors hover:bg-muted/30">
+                                    <TableRow key={clienteId} className="transition-colors hover:bg-muted/30">
                                         <TableCell className="relative py-3.5 pl-6 pr-3">
                                             <TableRowAccent color={rowTotal > 0 ? "bg-brand" : "bg-status-neutral"} />
                                             <TableRowLead
-                                                icon={<Sprout size={18} strokeWidth={2.2} />}
-                                                title={variedad}
-                                                subtitle={
-                                                    rowCount > 0
-                                                        ? `${rowCount} ${rowCount === 1 ? "carga" : "cargas"}`
-                                                        : "Sin cargas esta semana"
-                                                }
+                                                icon={<Users size={18} strokeWidth={2.2} />}
+                                                title={cliente}
+                                                subtitle={`${rowCount} ${rowCount === 1 ? "entrega" : "entregas"}`}
                                             />
                                         </TableCell>
 
                                         {activeWeek.days.map((day) => {
-                                            const cellItems = getCellItems(variedad, day.iso);
+                                            const cellItems = getCellItems(clienteId, day.iso);
                                             const cellKilos = cellItems.reduce((s, i) => s + i.kilosVariedad, 0);
+                                            const cellCount = new Set(cellItems.map(item => item.deliveryId)).size;
                                             const hasPending = cellItems.some((i) => !i.coordinada);
 
                                             return (
@@ -407,7 +366,7 @@ export default function CampaignWeeklyDeliveryProgramPage() {
                                                             onClick={() =>
                                                                 setSlotModal({
                                                                     open: true,
-                                                                    variedad,
+                                                                    contextLabel: cliente,
                                                                     dayLabel: day.dayName,
                                                                     dateIso: day.iso,
                                                                     items: cellItems,
@@ -419,8 +378,7 @@ export default function CampaignWeeklyDeliveryProgramPage() {
                                                                 {formatKg(cellKilos)} kg
                                                             </span>
                                                             <span className="mt-0.5 text-[11px] font-semibold text-ink-muted group-hover:text-ink">
-                                                                {cellItems.length}{" "}
-                                                                {cellItems.length === 1 ? "carga" : "cargas"}
+                                                                {cellCount} {cellCount === 1 ? "entrega" : "entregas"}
                                                                 {hasPending ? " · ⚠" : ""}
                                                             </span>
                                                         </button>
@@ -448,16 +406,14 @@ export default function CampaignWeeklyDeliveryProgramPage() {
                                     Total diario
                                 </TableCell>
                                 {activeWeek.days.map((day) => {
-                                    const dayTotal = visibleVarieties.reduce((sum, variedad) => {
-                                        const items = getCellItems(variedad, day.iso);
-                                        return sum + items.reduce((s, i) => s + i.kilosVariedad, 0);
-                                    }, 0);
+                                    const dayItems = weekItems.filter(item => item.fecha === day.iso);
+                                    const dayTotal = dayItems.reduce((sum, item) => sum + item.kilosVariedad, 0);
                                     return (
                                         <TableCell
                                             key={day.iso}
                                             className="px-2.5 py-3.5 text-center text-[13px] font-extrabold tabular-nums text-ink"
                                         >
-                                            {dayTotal > 0 ? <button type="button" className="cursor-pointer text-brand underline underline-offset-4" aria-label={"Ver clientes del " + day.shortDate} onClick={() => setSlotModal({ open: true, variedad: "Todas las variedades", dayLabel: day.dayName, dateIso: day.iso, items: weekItems.filter(item => item.fecha === day.iso) })}>{formatKg(dayTotal)} kg</button> : "—"}
+                                            {dayItems.length > 0 ? <button type="button" className="cursor-pointer text-brand underline underline-offset-4" aria-label={"Ver clientes del " + day.shortDate} onClick={() => setSlotModal({ open: true, contextLabel: "Total diario", dayLabel: day.dayName, dateIso: day.iso, items: dayItems })}>{formatKg(dayTotal)} kg</button> : "—"}
                                         </TableCell>
                                     );
                                 })}
@@ -474,7 +430,7 @@ export default function CampaignWeeklyDeliveryProgramPage() {
                 open={slotModal.open}
                 onOpenChange={(open) => setSlotModal((current) => ({ ...current, open }))}
                 campaniaId={campaniaId}
-                variedad={slotModal.variedad}
+                contextLabel={slotModal.contextLabel}
                 dayLabel={slotModal.dayLabel}
                 dateIso={slotModal.dateIso}
                 items={slotModal.items}

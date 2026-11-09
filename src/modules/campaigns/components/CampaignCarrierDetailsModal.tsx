@@ -138,7 +138,7 @@ export default function CampaignCarrierDetailsModal({
 
                         {cotizacionFile ? (
                             <FileDropzone
-                                label="Documento de cotización"
+                                label="Cotización adjunta a la vinculación"
                                 variant="horizontal"
                                 hasColon={false}
                                 file={cotizacionFile}

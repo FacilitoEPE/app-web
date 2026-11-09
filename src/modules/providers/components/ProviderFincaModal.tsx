@@ -1,12 +1,13 @@
 import { usesV1 } from '@/shared/api/data-contract';
 import { LandPlot, Save, X } from "lucide-react";
+import { useState } from "react";
 import AppModal from "@/shared/components/AppModal";
 import FormField from "@/shared/components/FormField";
 import InputField from "@/shared/components/InputField";
 import ModalSection from "@/shared/components/ModalSection";
 import UbigeoFields from "@/shared/components/UbigeoFields";
 import { Button } from "@/shared/components/ui/button";
-import { useModalForm } from "@/shared/hooks/useModalForm";
+import { useModalForm, useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import FruitVarietyPicker from "@/modules/providers/components/FruitVarietyPicker";
 import { CATALOGO_FRUTAS } from "@/modules/providers/providerCatalogo";
@@ -39,6 +40,8 @@ interface ProviderFincaModalProps {
  */
 export default function ProviderFincaModal({ open, onOpenChange, providerName, registeredFincas, finca = null, onSave }: ProviderFincaModalProps) {
     const isEdit = finca !== null;
+    const [showMap, setShowMap] = useState(false);
+    useResetOnToggle(open, () => setShowMap(false));
     const [values, , set] = useModalForm<FincaFormValues>(open, finca ? fincaToFormValues(finca) : EMPTY_FINCA);
     const { errors, saving, clearError, submit } = useFormSubmit<FincaFormValues>({
         open,
@@ -64,6 +67,10 @@ export default function ProviderFincaModal({ open, onOpenChange, providerName, r
             clearError(field);
         },
     });
+    const lat = Number(values.latitud);
+    const lng = Number(values.longitud);
+    const canShowMap = Boolean(values.latitud.trim() && values.longitud.trim()) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+    const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.02},${lat - 0.02},${lng + 0.02},${lat + 0.02}&layer=mapnik&marker=${lat},${lng}`;
 
     return (
         <AppModal
@@ -106,6 +113,14 @@ export default function ProviderFincaModal({ open, onOpenChange, providerName, r
                         />
                         <InputField {...bind("latitud", usesV1())} label="Latitud" optional={!usesV1()} placeholder="-5.1945" step="0.0000001" className="sm:col-span-3" />
                         <InputField {...bind("longitud", usesV1())} label="Longitud" optional={!usesV1()} placeholder="-80.6328" step="0.0000001" className="sm:col-span-3" />
+                        {canShowMap && (
+                            <div className="space-y-3 sm:col-span-6">
+                                <Button type="button" variant="outline" aria-expanded={showMap} onClick={() => setShowMap(value => !value)}>
+                                    {showMap ? "Ocultar mapa" : "Ver ubicación en el mapa"}
+                                </Button>
+                                {showMap && <iframe title="Ubicación de la finca" src={mapUrl} className="h-56 w-full rounded-xl border" loading="lazy" />}
+                            </div>
+                        )}
                     </div>
                 </ModalSection>
 

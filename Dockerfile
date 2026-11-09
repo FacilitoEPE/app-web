@@ -10,7 +10,9 @@ COPY . .
 
 # Vite embeds VITE_* variables into the static bundle during the build.
 ARG VITE_API_BASE_URL
+ARG VITE_PICKUP_ROUTE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_PICKUP_ROUTE_URL=$VITE_PICKUP_ROUTE_URL
 RUN pnpm build
 
 # Runtime stage

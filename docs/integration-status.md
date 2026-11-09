@@ -2,6 +2,14 @@
 
 > **Fuente vigente del estado por vista.** Actualiza las entradas superiores al cambiar el estado y sincroniza los documentos afectados según las [reglas de epe-web](../AGENTS.md). Las entradas inferiores son evidencia histórica, no estado vigente; vencen 90 días después de su fecha salvo excepción documentada. Elimina las entradas vencidas al revisar el registro.
 
+## Registro de choferes, entregas y adjuntos — 2026-11-08 · Completo en desarrollo
+
+- El documento y la licencia del chofer se recuperan al volver a abrir su ficha. La API y el mock conservan el número como texto. La [migración](../../epe-backend/docs/database.md#documento-del-chofer) incorpora los campos y copia el documento de la persona vinculada cuando existe.
+- Las fotos de identidad y las fichas técnicas pueden subirse con una URL base relativa. El detalle de certificación abre la evidencia por pago. El detalle del transportista permite consultar la cotización vinculada incluso si el acuerdo está en borrador.
+- El programa semanal agrupa entregas programadas por cliente y día, con filtros de fecha, variedad y placa. Esta vista usa kilos programados, por lo que sustituye el comportamiento histórico que mostraba cargas realizadas. En campañas en ejecución se puede vincular a productores y acopiadores.
+- El registro de transportista selecciona ciudad con el catálogo de ubigeo y el de finca permite ver un marcador con sus coordenadas. En el portal del chofer se puede usar la ubicación actual o marcar una salida para trazar la ruta a una finca. El mapa estima kilómetros y minutos con `VITE_PICKUP_ROUTE_URL`, que apunta a un endpoint OSRM. Si el endpoint no se configura en producción, el recorrido se abre en Google Maps.
+- La migración y los flujos con almacenamiento real quedan por verificar en el entorno de destino.
+
 ## Optimización de peticiones por vista — 2026-11-05 · Implementada en desarrollo y revisada
 
 Se corrigió el origen de las recargas globales sin cambiar estilos, distribución de pantallas, endpoints, esquema de datos ni librerías. La implementación ajusta el diseño del reporte a los proyectores y las reglas que ya existen: usa un contexto explícito de la ruta activa y los DTOs confirmados por el backend para actualizarlo. La matriz de diseño inferior sigue describiendo dependencias y oportunidades de optimización; este apartado describe lo que efectivamente se implementó.

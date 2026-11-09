@@ -7,6 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatKg } from "@/shared/utils/format";
 import type { DriverLoad } from "@/modules/driver-portal/driverPortal.models";
+import DriverPickupMap from "@/modules/driver-portal/components/DriverPickupMap";
 
 interface DriverRouteMapModalProps {
     open: boolean;
@@ -155,7 +156,9 @@ export default function DriverRouteMapModal({ open, onOpenChange, load }: Driver
 
                         {/* Visor cartográfico */}
                         <div className="flex flex-col gap-3 lg:col-span-7">
-                            <div className="relative h-72 sm:h-80 w-full overflow-hidden rounded-2xl border border-brand-border/60 bg-surface-page">
+                            {open && activeFarm && focusLat !== null && focusLng !== null ? (
+                                <DriverPickupMap key={`${load.id}:${activeFarm.id}`} latitude={focusLat} longitude={focusLng} />
+                            ) : <div className="relative h-72 sm:h-80 w-full overflow-hidden rounded-2xl border border-brand-border/60 bg-surface-page">
                                 {osmEmbedUrl ? <iframe
                                     title={`Mapa de ${focusTitle}`}
                                     src={osmEmbedUrl}
@@ -171,7 +174,7 @@ export default function DriverRouteMapModal({ open, onOpenChange, load }: Driver
                                         {focusLat?.toFixed(4)} {focusLng?.toFixed(4)}
                                     </span>
                                 </div>
-                            </div>
+                            </div>}
                         </div>
                     </div>
                 </ModalSection>

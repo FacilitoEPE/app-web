@@ -100,7 +100,8 @@ export function operationsPlan(pathname = '*'): OperationsPlan {
             if (segments[5]) { plan.contractId = Number(segments[5]); add(...participants, ...transport); }
         } else if (section === 'certifications') { add(...participants, ...certificates); plan.documents = true; }
         else if (section === 'carriers') { add(...loads, ...finance); plan.documents = true; }
-        else { add(...loads); if (section === 'weekly-delivery-program') add('guides'); }
+        else if (section === 'weekly-delivery-program') add(...commercial, 'agreements', 'carriers', 'vehicles', 'coordinations');
+        else add(...loads);
     } else if (area === 'proveedores') {
         add('providers', 'fruits', 'varieties');
         plan.providerId = second ? Number(second) : undefined;

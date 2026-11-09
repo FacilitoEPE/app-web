@@ -3,6 +3,19 @@ import { apiClient } from "@/shared/api/client";
 import { getDocumentAvailability, getProtectedDocument, getUploadErrorMessage, uploadDocument } from "@/shared/api/uploadDocument";
 
 describe("uploadDocument", () => {
+    it("resuelve una base relativa una sola vez antes de devolver la URL", async () => {
+        const originalBase = apiClient.defaults.baseURL;
+        apiClient.defaults.baseURL = "/mock-api/";
+        const post = vi.spyOn(apiClient, "post").mockResolvedValue({ data: { url: "/api/documentos/example" } });
+        try {
+            const file = new File(["x"], "identidad.png", { type: "image/png" });
+            await expect(uploadDocument(file)).resolves.toBe("http://localhost/api/documentos/example");
+        } finally {
+            post.mockRestore();
+            apiClient.defaults.baseURL = originalBase;
+        }
+    });
+
     it("sube el archivo a S3 mediante la API", async () => {
         apiClient.defaults.baseURL = 'http://localhost:3000/';
         const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { url: '/api/documentos/example' } });

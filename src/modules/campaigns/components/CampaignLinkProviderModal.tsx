@@ -27,12 +27,10 @@ interface CampaignLinkProviderModalProps {
     campaniaId?: number | null;
     onOpenChange: (open: boolean) => void;
     /** Se llama solo cuando el backend confirmó el vínculo */
-    onSave?: () => void;
+    onSave?: (tipo?: TipoProveedorCampania) => void;
     /** Se llama cuando el resultado quedó incierto y conviene recargar la lista de la página */
     onRefresh?: () => void;
     mode?: "create" | "edit";
-    /** Tipo fijo del proveedor: no se pregunta (en una campaña en ejecución solo se vinculan acopiadores) */
-    lockedType?: TipoProveedorCampania;
     initialData?: import("@/modules/campaigns/api/campania-proveedor.mapper").CampaniaProveedor | null;
 }
 
@@ -85,7 +83,7 @@ const PROVIDER_TYPES = [
 const VARIEDAD_OPTIONS = ["Kent", "Edward", "Keitt", "Hass", "Ataulfo"] as const;
 
 /** Vincula un proveedor por vez: se valida, se guarda y el backend confirma antes de mostrar éxito. */
-export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChange, onSave, onRefresh, mode = "create", lockedType, initialData }: CampaignLinkProviderModalProps) {
+export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChange, onSave, onRefresh, mode = "create", initialData }: CampaignLinkProviderModalProps) {
     const [providerType, setProviderType] = useState<TipoProveedorCampania>("productor");
     const [selectedProvider, setSelectedProvider] = useState("");
     const [draft, setDraft] = useState<DraftValues>(EMPTY_DRAFT);
@@ -139,7 +137,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
             setSelectedVariedades(["Kent"]);
             setSelectedFincas((allFincas[initialData.proveedorId] ?? []).map((f) => f.nombre));
         } else {
-            setProviderType(lockedType ?? "productor");
+            setProviderType("productor");
             setSelectedProvider("");
             setDraft(EMPTY_DRAFT);
             setSelectedVariedades(["Kent"]);
@@ -188,7 +186,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
         void Promise.all(requests).finally(() => { if (active) setIsLoadingProviders(false); });
         return () => { active = false; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, campaniaId, controller, lockedType]);
+    }, [open, campaniaId, controller]);
 
     const isLocked = isSaving || unresolvedProviderId !== null;
     const activeProviderId = selectedProvider ? Number(selectedProvider) : (mode === "edit" && initialData ? initialData.proveedorId : 0);
@@ -234,13 +232,13 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
         try {
             if (mode === "edit" && initialData) {
                 await updateCampaniaProveedor(initialData.cxpId, toUpdateCampaniaProveedorInput(candidate));
-                await onSave?.();
+                await onSave?.(providerType);
                 return;
             }
 
             const result = await controller.submit(campaniaId, [candidate]);
             if (result.status === "complete") {
-                await onSave?.();
+                await onSave?.(providerType);
                 return;
             }
             if (result.status === "unresolved") {
@@ -301,8 +299,8 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
             onOpenChange={onOpenChange}
             busy={isSaving}
             icon={<Link2 size={22} strokeWidth={2} />}
-            title={mode === "edit" ? "Editar Vínculo de Proveedor" : lockedType === "acopio" ? "Vincular Acopiador" : "Vincular Proveedor"}
-            description={mode === "edit" ? "Modifica los datos del proveedor vinculado a esta campaña." : (lockedType === "acopio" ? "Asocia un acopiador a esta campaña. Los campos con * son obligatorios." : "Asocia un productor o acopiador a esta campaña. Los campos con * son obligatorios.")}
+            title={mode === "edit" ? "Editar Vínculo de Proveedor" : "Vincular Proveedor"}
+            description={mode === "edit" ? "Modifica los datos del proveedor vinculado a esta campaña." : "Asocia un productor o acopiador a esta campaña. Los campos con * son obligatorios."}
             size="xl"
             footer={
                 <>
@@ -310,7 +308,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                         <X size={20} strokeWidth={2.5} /> Cancelar
                     </Button>
                     <Button size="xl" onClick={handleSubmit} disabled={isLocked || isLoadingProviders || !campaniaId} aria-busy={isSaving}>
-                        <Link2 size={20} strokeWidth={2.5} /> {isSaving ? "Guardando..." : mode === "edit" ? "Guardar cambios" : lockedType === "acopio" ? "Vincular acopiador" : "Vincular proveedor"}
+                        <Link2 size={20} strokeWidth={2.5} /> {isSaving ? "Guardando..." : mode === "edit" ? "Guardar cambios" : "Vincular proveedor"}
                     </Button>
                 </>
             }
@@ -333,22 +331,18 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                 </FormField>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                    {!lockedType && (
-                        <FormField label="Tipo de Proveedor:">
-                            <SegmentedControl
-                                options={PROVIDER_TYPES}
-                                value={providerType}
-                                onChange={(value) => {
-                                    setProviderType(value as TipoProveedorCampania);
-                                    setErrors({});
-                                    setFormError(null);
-                                }}
-                            />
-                        </FormField>
-                    )}
-                    <div className={lockedType ? "sm:col-span-2" : undefined}>
-                        {renderField({ field: "cantidadProveedor", label: "Cantidad de kilos estimados", step: "0.001", placeholder: "Ej. 2500", suffix: "KG" })}
-                    </div>
+                    <FormField label="Tipo de Proveedor:">
+                        <SegmentedControl
+                            options={PROVIDER_TYPES}
+                            value={providerType}
+                            onChange={(value) => {
+                                setProviderType(value as TipoProveedorCampania);
+                                setErrors({});
+                                setFormError(null);
+                            }}
+                        />
+                    </FormField>
+                    {renderField({ field: "cantidadProveedor", label: "Cantidad de kilos estimados", step: "0.001", placeholder: "Ej. 2500", suffix: "KG" })}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">

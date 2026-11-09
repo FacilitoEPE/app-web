@@ -10,6 +10,7 @@ import { formatDisplayDate, formatKg } from "@/shared/utils/format";
 export interface WeeklySlotDeliveryItem {
     id: string;
     loadId?: string;
+    deliveryId?: number;
     fecha: string;
     variedad: string;
     cliente: string;
@@ -28,7 +29,7 @@ interface CampaignWeeklySlotModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     campaniaId: number;
-    variedad: string;
+    contextLabel: string;
     dayLabel: string;
     dateIso: string;
     items: WeeklySlotDeliveryItem[];
@@ -38,7 +39,7 @@ export default function CampaignWeeklySlotModal({
     open,
     onOpenChange,
     campaniaId,
-    variedad,
+    contextLabel,
     dayLabel,
     dateIso,
     items,
@@ -46,16 +47,17 @@ export default function CampaignWeeklySlotModal({
     const navigate = useNavigate();
 
     const totalKilosVariedad = items.reduce((sum, item) => sum + item.kilosVariedad, 0);
-    const totalKilosGeneral = [...new Map(items.map(item => [item.loadId ?? item.id, item.kilosTotalesEntrega])).values()].reduce((sum, kg) => sum + kg, 0);
-    const coordinadasCount = items.filter((item) => item.coordinada).length;
+    const deliveries = new Map(items.map(item => [item.deliveryId ?? item.id, item]));
+    const totalKilosGeneral = [...deliveries.values()].reduce((sum, item) => sum + item.kilosTotalesEntrega, 0);
+    const coordinadasCount = [...deliveries.values()].filter(item => item.coordinada).length;
 
     return (
         <AppModal
             open={open}
             onOpenChange={onOpenChange}
             icon={<CalendarRange size={22} strokeWidth={2.2} />}
-            title={`Cargas del programa semanal · ${variedad}`}
-            description={`${dayLabel} (${formatDisplayDate(dateIso)}) · ${items.length} ${items.length === 1 ? "carga registrada" : "cargas registradas"}`}
+            title={`Entregas del programa semanal · ${contextLabel}`}
+            description={`${dayLabel} (${formatDisplayDate(dateIso)}) · ${deliveries.size} ${deliveries.size === 1 ? "entrega programada" : "entregas programadas"}`}
             size="lg"
             footer={
                 <>
@@ -78,18 +80,18 @@ export default function CampaignWeeklySlotModal({
                 <SummaryBar
                     items={[
                         {
-                            label: `Kilos de ${variedad}`,
+                            label: "Kilos seleccionados",
                             value: `${formatKg(totalKilosVariedad)} kg`,
                             tone: "brand",
                         },
                         {
-                            label: "Kilos totales en cargas",
+                            label: "Kilos totales de las entregas",
                             value: `${formatKg(totalKilosGeneral)} kg`,
                         },
                         {
                             label: "Coordinación logística",
-                            value: `${coordinadasCount} de ${items.length} completas`,
-                            tone: coordinadasCount === items.length ? "brand" : "highlight",
+                            value: `${coordinadasCount} de ${deliveries.size} completas`,
+                            tone: coordinadasCount === deliveries.size ? "brand" : "highlight",
                         },
                     ]}
                 />
@@ -122,7 +124,7 @@ export default function CampaignWeeklySlotModal({
                                         value={`${formatKg(item.kilosVariedad)} kg`}
                                     />
                                     <InfoField
-                                        label="Total de la carga"
+                                        label="Total de la entrega"
                                         value={`${formatKg(item.kilosTotalesEntrega)} kg`}
                                     />
                                     <InfoField

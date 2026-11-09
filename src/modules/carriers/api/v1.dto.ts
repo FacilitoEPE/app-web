@@ -73,6 +73,8 @@ export interface ChoferTransporteExternoV1 {
   activo: boolean
   usuarioId: number | null
   numeroLicencia: string | null
+  tipoDocumento: string | null
+  numeroDocumento: string | null
 }
 
 export interface CreateChoferTransporteExternoV1 {
@@ -83,6 +85,8 @@ export interface CreateChoferTransporteExternoV1 {
   activo?: boolean
   usuarioId?: number | null
   numeroLicencia?: string | null
+  tipoDocumento?: string | null
+  numeroDocumento?: string | null
 }
 
 export interface SolicitudTransporteV1 {

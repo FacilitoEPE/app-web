@@ -152,6 +152,8 @@ CREATE TABLE "chofer_transporte_externo" (
   "activo" boolean NOT NULL DEFAULT true,
   "usuario_id" integer,
   "numero_licencia" varchar(40),
+  "tipo_documento" varchar(20),
+  "numero_documento" varchar(30),
   CONSTRAINT "PK_chofer_transporte_externo" PRIMARY KEY (id_chofer_transporte_externo),
   UNIQUE (id_chofer_transporte_externo, id_empresa_transporte_externo)
 );

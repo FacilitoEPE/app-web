@@ -26,7 +26,9 @@ En Industria, elija primero **Sí cumple** o **No cumple**. La segunda opción g
 1. En **Mis campañas**, abra la campaña que corresponde a su viaje.
 2. En **Mis cargas**, elija la carga asignada.
 3. Revise código, cliente/destino, fecha, placa, kilos y bultos.
-4. Use **Ubicación y ruta** para confirmar origen y destino; revise **Datos de carga** antes de iniciar.
+4. Use **Ubicación y ruta** para elegir la finca. Pulse **Usar mi ubicación** o **Marcar salida en el mapa**, luego **Ver ruta**. Revise **Datos de carga** antes de iniciar.
+
+El mapa puede dibujar el recorrido y estimar tiempo y distancia cuando la instalación configura un servicio OSRM. **Abrir ruta de recojo en Google Maps** permite consultar el mismo tramo desde el punto de salida elegido.
 
 **Dirección:** `/chofer > Mis campañas / Mis cargas > seleccionar carga`.  
 **Opción:** continúe solo con la carga, placa, origen y destino que le asignaron.

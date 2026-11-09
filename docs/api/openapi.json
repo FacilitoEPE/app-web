@@ -13,7 +13,7 @@
   ],
   "x-source": {
     "path": "api/contract-schema.sql",
-    "sha256": "2199c3bff3d4d947b97d64d2f21aa114dd29bf02acce13f70bace0f54933a134",
+    "sha256": "7d6158b677150150f1123cd10df5c31d5e1f1fd93f09a4783aee377c1d978dbe",
     "date": "2026-10-29"
   },
   "x-database": {
@@ -38746,6 +38746,22 @@
             ],
             "x-column": "numero_licencia",
             "maxLength": 40
+          },
+          "tipoDocumento": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "x-column": "tipo_documento",
+            "maxLength": 20
+          },
+          "numeroDocumento": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "x-column": "numero_documento",
+            "maxLength": 30
           }
         },
         "required": [
@@ -38759,7 +38775,9 @@
           "personaId",
           "activo",
           "usuarioId",
-          "numeroLicencia"
+          "numeroLicencia",
+          "tipoDocumento",
+          "numeroDocumento"
         ],
         "x-table": "chofer_transporte_externo"
       },
@@ -48554,6 +48572,22 @@
             ],
             "x-column": "numero_licencia",
             "maxLength": 40
+          },
+          "tipoDocumento": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "x-column": "tipo_documento",
+            "maxLength": 20
+          },
+          "numeroDocumento": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "x-column": "numero_documento",
+            "maxLength": 30
           }
         },
         "required": [
@@ -48613,6 +48647,22 @@
             ],
             "x-column": "numero_licencia",
             "maxLength": 40
+          },
+          "tipoDocumento": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "x-column": "tipo_documento",
+            "maxLength": 20
+          },
+          "numeroDocumento": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "x-column": "numero_documento",
+            "maxLength": 30
           }
         },
         "required": [],

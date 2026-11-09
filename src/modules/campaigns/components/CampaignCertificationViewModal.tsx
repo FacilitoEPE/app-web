@@ -1,4 +1,5 @@
 import { ShieldCheck, X } from "lucide-react";
+import type { ReactNode } from "react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
 import { InfoField } from "@/shared/components/InfoField";
@@ -92,6 +93,7 @@ export default function CampaignCertificationViewModal({ open, onOpenChange, cer
                                     id: item.id,
                                     main: `${symbol} ${formatMoney(item.monto)}`,
                                     meta: [displayCertDate(item.fecha), item.referencia].filter(Boolean).join(" · "),
+                                    attachment: item.evidencia && <FileDropzone label="Evidencia del pago" variant="horizontal" hasColon={false} file={item.evidencia} readOnly onChange={() => undefined} />,
                                 }))}
                             />
                         </div>
@@ -114,7 +116,7 @@ export default function CampaignCertificationViewModal({ open, onOpenChange, cer
     );
 }
 
-function MovementList({ title, items, empty }: { title: string; items: { id: number; main: string; meta: string }[]; empty: string }) {
+function MovementList({ title, items, empty }: { title: string; items: { id: number; main: string; meta: string; attachment?: ReactNode }[]; empty: string }) {
     return (
         <InfoField
             label={title}
@@ -124,9 +126,12 @@ function MovementList({ title, items, empty }: { title: string; items: { id: num
             ) : (
                 <ul className="flex max-h-32 flex-col gap-1.5 overflow-y-auto">
                     {items.map((item) => (
-                        <li key={item.id} className="flex items-baseline justify-between gap-3 rounded-lg border border-border/60 bg-card px-3 py-2">
-                            <span className="font-bold tabular-nums">{item.main}</span>
-                            <span className="truncate text-[11.5px] text-ink-muted">{item.meta}</span>
+                        <li key={item.id} className="rounded-lg border border-border/60 bg-card px-3 py-2">
+                            <div className="flex items-baseline justify-between gap-3">
+                                <span className="font-bold tabular-nums">{item.main}</span>
+                                <span className="truncate text-[11.5px] text-ink-muted">{item.meta}</span>
+                            </div>
+                            {item.attachment && <div className="mt-2">{item.attachment}</div>}
                         </li>
                     ))}
                 </ul>

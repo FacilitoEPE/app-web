@@ -14,6 +14,10 @@ Genera y verifica desde `epe-web/` con `pnpm contract:generate` y `pnpm contract
 
 El SQL de esta carpeta es distinto del [modelo objetivo compartido](../../../docs/target-model/README.md). No los copies ni sincronices automáticamente: el primero alimenta el generador V1 y el segundo documenta una propuesta de modelo.
 
+## Documento del chofer
+
+`POST /api/transportistas/{id}/choferes` y su `PATCH` aceptan `tipoDocumento` y `numeroDocumento` como texto opcional. La API devuelve ambos campos y `numeroLicencia` al consultar el chofer. Los registros anteriores recuperan el documento de su persona vinculada si existe. [Migración](../../../epe-backend/docs/database.md#documento-del-chofer).
+
 ## Responsable libre de campaña
 
 `POST /api/campanas` acepta `responsableNombre` como texto opcional. La API recorta los espacios de los extremos, admite hasta 150 caracteres después del recorte y devuelve `422 VALIDATION_FAILED` si excede el límite. Un texto vacío o `null` se guarda como `null`. El nombre se guarda aunque la persona no tenga cuenta y es independiente de `responsableUsuarioId`.

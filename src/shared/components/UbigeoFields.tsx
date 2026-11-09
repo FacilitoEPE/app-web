@@ -13,13 +13,14 @@ interface UbigeoFieldsProps {
     departamento: UbigeoFieldBinding;
     provincia: UbigeoFieldBinding;
     distrito?: UbigeoFieldBinding;
+    distritoLabel?: string;
     className?: string;
     distritoClassName?: string;
     disabled?: boolean;
 }
 
 export default function UbigeoFields({
-    departamento, provincia, distrito, className, distritoClassName = className, disabled,
+    departamento, provincia, distrito, distritoLabel = "Distrito", className, distritoClassName = className, disabled,
 }: UbigeoFieldsProps) {
     const options = getUbigeoOptions(departamento.value, provincia.value, distrito?.value);
 
@@ -60,7 +61,7 @@ export default function UbigeoFields({
                 />
             </FormField>
             {distrito && (
-                <FormField id={distrito.id} label="Distrito" required error={distrito.error} className={distritoClassName}>
+                <FormField id={distrito.id} label={distritoLabel} required error={distrito.error} className={distritoClassName}>
                     <Combobox
                         key={`${departamento.value}/${provincia.value}`}
                         id={distrito.id}
@@ -69,7 +70,7 @@ export default function UbigeoFields({
                         disabled={disabled || options.distrito.length === 0}
                         options={options.distrito}
                         value={distrito.value}
-                        placeholder={provincia.value ? "Selecciona un distrito" : "Primero elige una provincia"}
+                        placeholder={provincia.value ? `Selecciona ${distritoLabel.toLowerCase()}` : "Primero elige una provincia"}
                         onChange={distrito.onChange}
                     />
                 </FormField>

@@ -88,7 +88,7 @@ export const getLocalDocumentLinks = getS3DocumentLinks;
 
 export async function uploadDocument(file: File): Promise<string> {
     const data = await uploadS3Document(file);
-    return new URL(data.url, apiClient.defaults.baseURL || window.location.origin).href;
+    return data.url;
 }
 
 /** Mensaje para mostrar en un formulario cuando falló la subida de un archivo */

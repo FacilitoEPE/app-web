@@ -18,7 +18,7 @@ Antes de crear una campaña, registre o verifique estos datos:
 
 - **Gestión de Proveedores** (`/proveedores`): **Nuevo Proveedor**. Complete identidad, documento, contacto y zona. En el detalle asigne fruta y variedad. En **Fincas**, seleccione departamento, provincia y distrito en ese orden, y registre coordenadas, hectáreas, cultivo y variedad.
 - **Gestión Comercial** (`/planificacion-comercial`): **Nuevo Cliente**. Complete empresa, RUC, tipo de cliente, contacto y ubicación.
-- **Gestión de Transporte** (`/transportistas`): **Registrar transportista**. Seleccione departamento y provincia, y escriba la ciudad. En el detalle agregue sus vehículos y choferes y revise placa, capacidad, documento y licencia.
+- **Gestión de Transporte** (`/transportistas`): **Registrar transportista**. Seleccione departamento, provincia y ciudad en el catálogo de ubigeo. En el detalle agregue sus vehículos y choferes y revise placa, capacidad, documento y licencia.
 
 En **Empresas**, el selector **Tipo de transporte** permite filtrar por **Todos**, **Público** o **Privado**. En **Solicitudes y cotizaciones**, cada solicitud de flete aparece en una sola fila, con el total de transportistas invitados y respuestas recibidas. Abra **Ver detalle** para consultar los destinatarios y registrar o editar la cotización de cada uno.
 
@@ -34,9 +34,11 @@ Frutas, variedades, normas, roles y parámetros UIT son catálogos de referencia
 En **Lineamientos**, elegir un archivo solo lo deja pendiente; se envía al crear/guardar la campaña. Al consultar un adjunto guardado, verde indica documento verificado, rojo indica que falta o no coincide con sus metadatos: quítelo y vuelva a adjuntarlo. Si aparece «No se pudo verificar», revise la conexión o solicite revisar los permisos del almacenamiento y pulse **Volver a verificar**. La vista previa se deshabilita para documentos confirmados como faltantes o inconsistentes.
 
 2. Ingrese nombre, fruta, meta en kilogramos y fechas. Si lo desea, escriba un **Responsable**. Elija **Crear Campaña** y verifique que figure como **Planificado**. El nombre guardado aparece en el detalle al volver a abrir la campaña.
-3. Abra el detalle de campaña, sección **Proveedores**, y elija **Vincular proveedor**.
+3. Abra el detalle de campaña, sección **Proveedores**, y elija **Vincular proveedor**. Puede elegir productor o acopiador en planificación y en ejecución.
 4. Seleccione al proveedor, indique si participa como **Productor** o **Acopiador**, ingrese kilos estimados y guarde.
 5. Para un productor, abra **Ver detalles > Entrevistas > Vincular finca**. Seleccione una finca existente o registre una nueva eligiendo su departamento, provincia y distrito. Complete los datos agronómicos de esta campaña.
+
+En el registro de finca, **Ver ubicación en el mapa** muestra un marcador con la latitud y longitud ingresadas.
 
 **Dirección:** `/campaigns > Nueva Campaña`; luego `/campaigns/:id/providers`.  
 **Opción:** **Productor** cuando el abastecimiento proviene de fincas; **Acopiador** para una relación de acopio. Vincule una finca de la fruta de la campaña.
@@ -64,6 +66,10 @@ En cada variedad de la entrega verá **Disponible de la variedad**, **En esta en
 2. Registre o confirme el acuerdo de transporte y su importe. Si el acuerdo es **Con adelanto** en soles, abra **Ver acuerdo de pago → Registrar desembolso del adelanto** después de entregar el dinero. Ingrese fecha, importe y referencia. Puede registrar varios desembolsos hasta completar el monto acordado.
 3. Abra **Entregas > Coordinar entrega**. Seleccione la entrega programada, el acuerdo, el proveedor/finca de origen, el vehículo y el chofer compatibles.
 4. Complete fechas, horarios y observaciones, y guarde la coordinación.
+
+En **Programa semanal de entregas**, consulte los kilos programados por cliente y filtre por fecha, variedad o placa. Al abrir una celda verá el desglose y la unidad asignada.
+
+Use **Ver detalles** en el transportista vinculado para abrir la cotización adjunta. En **Certificaciones**, abra **Ver detalles** y busque la evidencia en el historial del pago correspondiente.
 
 **Dirección:** `/campaigns/:id/carriers` y `/campaigns/:id/deliveries`.  
 **Opción:** use el vehículo y chofer pertenecientes al transportista vinculado y asigne una entrega real de la campaña.

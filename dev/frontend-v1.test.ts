@@ -32,6 +32,8 @@ import { qualityCommands } from '@/modules/quality/api/quality-commands.api'
 import { requestPasswordRecovery, getUserById } from '@/modules/auth/api/auth.api'
 import { quotationCommands, projectCarrierData } from '@/modules/carriers/api/quotation-commands.api'
 import { empresaTransporteExternoV1 } from '@/modules/carriers/api/v1.api'
+import { createDriver, getCarrier, updateDriver } from '@/modules/carriers/api/carrier.api'
+import { projectCampaignData } from '@/modules/campaigns/api/campaign-screen-data'
 import { groupCarrierQuotations } from '@/modules/carriers/carrierQuotations.utils'
 
 let server: Server
@@ -49,7 +51,7 @@ beforeEach(async () => {
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
   originalBase = apiClient.defaults.baseURL
   apiClient.defaults.baseURL = `http://127.0.0.1:${(server.address() as AddressInfo).port}/mock-api/`
-  await refreshFrontendData()
+  await refreshFrontendData('*')
 })
 afterEach(async () => {
   apiClient.defaults.baseURL = originalBase
@@ -58,6 +60,59 @@ afterEach(async () => {
 })
 
 describe('existing frontend with the V1 HTTP contract', () => {
+  it('recupera el documento y la licencia después de registrar y editar un chofer', async () => {
+    const driver = await createDriver(1, {
+      nombre: 'Chofer QA', telefono: '900000011', correo: 'chofer-qa@example.com',
+      tipoDocumento: 'DNI', numeroDocumento: '00123456', numeroLicencia: 'Q000123456',
+    })
+    await updateDriver(driver.id, { numeroDocumento: '00123457' })
+    expect((await getCarrier(1)).choferes.find(row => row.id === driver.id)).toMatchObject({
+      tipoDocumento: 'DNI', numeroDocumento: '00123457', numeroLicencia: 'Q000123456',
+    })
+  })
+
+  it('recupera la evidencia del pago y el adjunto de un transportista en borrador', async () => {
+    const certificate = operationsContext().certificates[0]
+    const evidence = new File(['%PDF-pago'], 'pago.pdf', { type: 'application/pdf' })
+    const quote = new File(['%PDF-cotizacion'], 'cotizacion.pdf', { type: 'application/pdf' })
+    await campaignCommands.certificatePayment(certificate.campaniaId, certificate.certificadoId, { fecha: '2026-11-08', monto: '1', referencia: 'QA' }, evidence)
+    const carrier = await campaignCommands.linkCarrier(2, 1, quote)
+    await refreshFrontendData()
+    const projected = projectCampaignData(operationsContext())
+    expect(projected.certificates[certificate.campaniaId].find(row => row.id === certificate.certificadoId)?.pagos)
+      .toContainEqual(expect.objectContaining({ evidencia: expect.objectContaining({ name: 'pago.pdf' }) }))
+    expect(projected.carriers[2].find(row => row.id === carrier.acuerdoTransporteId))
+      .toMatchObject({ acuerdo: null, cotizacion: { name: 'cotizacion.pdf' } })
+  })
+
+  it('vincula un cliente con su ficha y recupera la variedad solicitada', async () => {
+    await refreshFrontendData('/campaigns/1/clients')
+    const ficha = new File(['%PDF-ficha'], 'ficha.pdf', { type: 'application/pdf' })
+    await campaignCommands.linkClient(1, {
+      clienteNegocioId: '2', cantidadKg: '500', fechaRegistro: '2026-10-20',
+      variedades: ['1'], destinoSolicitado: 'Planta QA',
+      entregaDesde: '2026-10-25', entregaHasta: '2026-10-27', observaciones: '',
+    }, ficha)
+    await refreshFrontendData('/campaigns/1/clients')
+    const graph = operationsContext()
+    const saved = graph.requirements.find(row => row.destinoSolicitado === 'Planta QA')
+    expect(saved?.fichaTecnicaUrl).toMatch(/^data:application\/pdf/)
+    expect(graph.requirementVarieties).toContainEqual(expect.objectContaining({
+      clienteNegocioCampanaId: saved?.clienteNegocioCampanaId, frutaDerivadaId: 1,
+    }))
+  })
+
+  it('carga las entregas, variedades y placas en la ruta del programa semanal', async () => {
+    await refreshFrontendData('/campaigns/1/weekly-delivery-program')
+    const rows = weeklyCampaignItems(1)
+    const graph = operationsContext()
+    expect(rows.map(row => row.kilosVariedad)).toEqual([1000, 500, 600, 900])
+    expect(rows).toContainEqual(expect.objectContaining({
+      cliente: graph.clients[0].nombreEmpresa, placa: graph.vehicles[0].placa,
+    }))
+    expect(graph.loads).toHaveLength(0)
+  })
+
   it('shows assigned deliveries before the driver registers their loads', () => {
     const g = structuredClone(operationsContext())
     g.loads = []

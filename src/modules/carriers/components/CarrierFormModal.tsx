@@ -197,12 +197,9 @@ export default function CarrierFormModal({
                         <UbigeoFields
                             departamento={bind("departamento", true)}
                             provincia={bind("provincia", true)}
+                            distrito={bind("ciudad", true)}
+                            distritoLabel="Ciudad"
                             disabled={saving}
-                        />
-                        <InputField
-                            {...bind("ciudad", true)}
-                            label="Ciudad"
-                            placeholder="Ej. Sullana"
                         />
                     </div>
                 </ModalSection>
