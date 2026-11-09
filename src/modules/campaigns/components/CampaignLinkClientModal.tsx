@@ -12,7 +12,7 @@ import { Combobox } from "@/shared/components/ui/combobox";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { getClientesNegocio } from "@/modules/clients/api/cliente-negocio.api";
 import { getCampanas, getFrutaDerivadas } from "@/modules/campaigns/api/campaign.api";
-import { getClientesNegocioCampana } from "@/modules/campaigns/api/cliente-negocio-campana.api";
+import { getClientesNegocioCampana, getLinkedCampaignIds } from "@/modules/campaigns/api/cliente-negocio-campana.api";
 import type { ClienteNegocio } from "@/modules/clients/api/cliente-negocio.mapper";
 import type { Campana } from "@/modules/campaigns/api/campaign.mapper";
 import type { FrutaDerivadaDto } from "@/modules/campaigns/api/campaign.dto";
@@ -22,8 +22,7 @@ import { campaignCommands } from '@/modules/campaigns/api/campaign-commands.api'
 interface CampaignLinkClientModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    /** Finaliza únicamente el borrador visual; la conexión de guardado queda pendiente del nuevo contrato. */
-    onSave?: () => void;
+    onSave?: () => void | Promise<void>;
     campaniaId?: number | null;
     campaign?: Campana | null;
     cliente?: ClienteNegocio | null;
@@ -59,10 +58,6 @@ const CAMPAIGN_STATUS_LABEL: Record<string, string> = {
     terminado: "Terminada",
 };
 
-/**
- * Borrador visual de la futura participación comercial cliente-campaña.
- * TODO(api): conectar el guardado cuando el backend incorpore variedades, destino y ventana de entrega.
- */
 export default function CampaignLinkClientModal({ open, onOpenChange, onSave, campaniaId = null, campaign = null, cliente = null }: CampaignLinkClientModalProps) {
     const isClientContext = cliente !== null;
     const [draft, setDraft] = useState<ClientParticipationDraft>(emptyDraft);
@@ -88,10 +83,16 @@ export default function CampaignLinkClientModal({ open, onOpenChange, onSave, ca
         setFormError(undefined);
         setSelectedCampaignId(campaniaId ? String(campaniaId) : "");
         setVariedades([]);
+        setClientes([]);
+        setCampanas([]);
         setIsLoading(true);
 
-        const request = isClientContext
-            ? getCampanas().then((items) => { if (active) setCampanas(items.filter((item) => item.estado !== "terminado")); })
+        const request = cliente
+            ? getCampanas().then(async (items) => {
+                const eligible = items.filter(item => item.estado !== "terminado");
+                const linked = await getLinkedCampaignIds(cliente.clienteNegocioId, eligible.map(item => item.campaniaId));
+                if (active) setCampanas(eligible.filter(item => !linked.has(item.campaniaId)));
+            })
             : Promise.all([
                 getClientesNegocio(),
                 campaniaId ? getClientesNegocioCampana(campaniaId) : Promise.resolve([]),
@@ -105,7 +106,7 @@ export default function CampaignLinkClientModal({ open, onOpenChange, onSave, ca
             .catch(() => { if (active) setFormError("No se pudieron cargar los selectores del formulario."); })
             .finally(() => { if (active) setIsLoading(false); });
         return () => { active = false; };
-    }, [open, campaniaId, cliente, isClientContext]);
+    }, [open, campaniaId, cliente]);
 
     useEffect(() => {
         if (!open || !selectedCampaign) return;
@@ -117,7 +118,7 @@ export default function CampaignLinkClientModal({ open, onOpenChange, onSave, ca
     }, [open, selectedCampaign]);
 
     const clientOptions = useMemo(() => clientes
-        .filter((item) => usesV1() || !linkedClientIds.has(item.clienteNegocioId))
+        .filter((item) => !linkedClientIds.has(item.clienteNegocioId))
         .map((item) => ({ value: String(item.clienteNegocioId), label: item.nombreEmpresa })), [clientes, linkedClientIds]);
 
     const campaignOptions = useMemo(() => campanas.map((item) => ({

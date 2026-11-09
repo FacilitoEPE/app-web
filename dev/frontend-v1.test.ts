@@ -34,6 +34,7 @@ import { quotationCommands, projectCarrierData } from '@/modules/carriers/api/qu
 import { empresaTransporteExternoV1 } from '@/modules/carriers/api/v1.api'
 import { createDriver, getCarrier, updateDriver } from '@/modules/carriers/api/carrier.api'
 import { projectCampaignData } from '@/modules/campaigns/api/campaign-screen-data'
+import { getLinkedCampaignIds } from '@/modules/campaigns/api/cliente-negocio-campana.api'
 import { groupCarrierQuotations } from '@/modules/carriers/carrierQuotations.utils'
 
 let server: Server
@@ -89,7 +90,7 @@ describe('existing frontend with the V1 HTTP contract', () => {
     await refreshFrontendData('/campaigns/1/clients')
     const ficha = new File(['%PDF-ficha'], 'ficha.pdf', { type: 'application/pdf' })
     await campaignCommands.linkClient(1, {
-      clienteNegocioId: '2', cantidadKg: '500', fechaRegistro: '2026-10-20',
+      clienteNegocioId: '3', cantidadKg: '500', fechaRegistro: '2026-10-20',
       variedades: ['1'], destinoSolicitado: 'Planta QA',
       entregaDesde: '2026-10-25', entregaHasta: '2026-10-27', observaciones: '',
     }, ficha)
@@ -100,6 +101,8 @@ describe('existing frontend with the V1 HTTP contract', () => {
     expect(graph.requirementVarieties).toContainEqual(expect.objectContaining({
       clienteNegocioCampanaId: saved?.clienteNegocioCampanaId, frutaDerivadaId: 1,
     }))
+    await refreshFrontendData('/planificacion-comercial')
+    await expect(getLinkedCampaignIds(3, [1, 2])).resolves.toEqual(new Set([1, 2]))
   })
 
   it('carga las entregas, variedades y placas en la ruta del programa semanal', async () => {

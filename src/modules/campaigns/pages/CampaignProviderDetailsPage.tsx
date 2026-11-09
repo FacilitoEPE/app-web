@@ -9,6 +9,7 @@ import PageHeader from "@/shared/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
 import CampaignLinkProviderModal from "@/modules/campaigns/components/CampaignLinkProviderModal";
 import CampaignSuccessModal from "@/modules/campaigns/components/CampaignSuccessModal";
+import { useCampaign } from "@/modules/campaigns/useCampaign";
 import ProviderOverviewCard from "@/modules/providers/components/ProviderOverviewCard";
 import { getCampaignParticipation } from "@/modules/campaigns/api/campania-proveedor.api";
 import type { CampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.mapper";
@@ -59,6 +60,7 @@ const fromApi = (exam: ExamenProveedorDto): ExamSummary => ({
 export default function CampaignProviderDetailsPage() {
     const { id, cxpId: relationParam } = useParams<{ id: string; cxpId: string }>();
     const campaniaId = Number(id);
+    const campaign = useCampaign(campaniaId);
     const cxpId = Number(relationParam);
     const navigate = useNavigate();
     const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
@@ -257,6 +259,7 @@ export default function CampaignProviderDetailsPage() {
             </div>
 
             <CampaignLinkProviderModal
+                onlyCollectors={campaign?.estado === "en proceso"}
                 mode="edit"
                 open={editing}
                 initialData={relation}

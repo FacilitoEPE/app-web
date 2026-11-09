@@ -34,8 +34,8 @@ Frutas, variedades, normas, roles y parámetros UIT son catálogos de referencia
 En **Lineamientos**, elegir un archivo solo lo deja pendiente; se envía al crear/guardar la campaña. Al consultar un adjunto guardado, verde indica documento verificado, rojo indica que falta o no coincide con sus metadatos: quítelo y vuelva a adjuntarlo. Si aparece «No se pudo verificar», revise la conexión o solicite revisar los permisos del almacenamiento y pulse **Volver a verificar**. La vista previa se deshabilita para documentos confirmados como faltantes o inconsistentes.
 
 2. Ingrese nombre, fruta, meta en kilogramos y fechas. Si lo desea, escriba un **Responsable**. Elija **Crear Campaña** y verifique que figure como **Planificado**. El nombre guardado aparece en el detalle al volver a abrir la campaña.
-3. Abra el detalle de campaña, sección **Proveedores**, y elija **Vincular proveedor**. Puede elegir productor o acopiador en planificación y en ejecución.
-4. Seleccione al proveedor, indique si participa como **Productor** o **Acopiador**, ingrese kilos estimados y guarde.
+3. Abra el detalle de campaña, sección **Proveedores**. En planificación elija **Vincular proveedor**. En ejecución elija **Vincular acopiador**.
+4. Seleccione al proveedor, ingrese kilos estimados y guarde. En planificación elija el rol **Productor** o **Acopiador**. En ejecución, la ficha de un productor ya vinculado sigue disponible en su pestaña.
 5. Para un productor, abra **Ver detalles > Entrevistas > Vincular finca**. Seleccione una finca existente o registre una nueva eligiendo su departamento, provincia y distrito. Complete los datos agronómicos de esta campaña.
 
 En el registro de finca, **Ver ubicación en el mapa** muestra un marcador con la latitud y longitud ingresadas.
@@ -46,6 +46,7 @@ En el registro de finca, **Ver ubicación en el mapa** muestra un marcador con l
 ## 4. Vincular el cliente y su entrega
 
 1. En el detalle de campaña, abra **Clientes** y elija **Vincular cliente**.
+   El selector muestra los clientes disponibles. Si ya existe un vínculo, abra sus detalles para gestionar los contratos.
 2. Seleccione el cliente y complete kilos, variedades solicitadas, destino y fechas de entrega.
 3. Abra **Ver detalles** para revisar cantidades, precios, moneda y entregas programadas.
 

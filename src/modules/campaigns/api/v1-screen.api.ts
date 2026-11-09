@@ -54,6 +54,9 @@ export const campaignScreenV1 = {
         return commitRemote(() => campaniaXProveedoresV1(row.campaniaId).remove(id));
     },
     clients: async (id: number, clienteNegocioId?: number) => (await readAllV1<ClienteNegocioCampanaV1>(`/campanas/${id}/requerimientos`, clienteNegocioId === undefined ? {} : { clienteNegocioId })).map(mapRequirementV1),
+    linkedCampaignIds: (clienteNegocioId: number) => new Set(operationsContext().requirements
+        .filter(row => row.clienteNegocioId === clienteNegocioId)
+        .map(row => row.campaniaId)),
     client: async (parent: number, id: number) => mapRequirementV1(await clienteNegocioCampanaV1(parent).get(id)),
     createClient: async (id: number, input: CreateClienteNegocioCampanaDto) => mapRequirementV1(await commitRemote(() => clienteNegocioCampanaV1(id).create(input))),
     updateClient: async (parent: number, id: number, input: UpdateClienteNegocioCampanaDto) => mapRequirementV1(await commitRemote(() => clienteNegocioCampanaV1(parent).update(id, input))),

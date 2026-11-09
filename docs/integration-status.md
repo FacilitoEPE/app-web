@@ -2,13 +2,21 @@
 
 > **Fuente vigente del estado por vista.** Actualiza las entradas superiores al cambiar el estado y sincroniza los documentos afectados según las [reglas de epe-web](../AGENTS.md). Las entradas inferiores son evidencia histórica, no estado vigente; vencen 90 días después de su fecha salvo excepción documentada. Elimina las entradas vencidas al revisar el registro.
 
+## Vínculo único por cliente y campaña — 2026-11-08
+
+Los selectores de Campañas y Planificación Comercial muestran solo vínculos disponibles. La API V1 serializa las altas y cambios por campaña y devuelve `409 CAMPAIGN_CLIENT_ALREADY_LINKED` ante un duplicado. El mock aplica la misma regla y conserva sus ejemplos históricos para verificar que siguen disponibles. El cambio conserva los contratos y entregas de los vínculos anteriores y no requiere una migración.
+
 ## Registro de choferes, entregas y adjuntos — 2026-11-08 · Completo en desarrollo
 
 - El documento y la licencia del chofer se recuperan al volver a abrir su ficha. La API y el mock conservan el número como texto. La [migración](../../epe-backend/docs/database.md#documento-del-chofer) incorpora los campos y copia el documento de la persona vinculada cuando existe.
 - Las fotos de identidad y las fichas técnicas pueden subirse con una URL base relativa. El detalle de certificación abre la evidencia por pago. El detalle del transportista permite consultar la cotización vinculada incluso si el acuerdo está en borrador.
-- El programa semanal agrupa entregas programadas por cliente y día, con filtros de fecha, variedad y placa. Esta vista usa kilos programados, por lo que sustituye el comportamiento histórico que mostraba cargas realizadas. En campañas en ejecución se puede vincular a productores y acopiadores.
+- El programa semanal agrupa entregas programadas por cliente y día, con filtros de fecha, variedad y placa. Esta vista usa kilos programados, por lo que sustituye el comportamiento histórico que mostraba cargas realizadas.
 - El registro de transportista selecciona ciudad con el catálogo de ubigeo y el de finca permite ver un marcador con sus coordenadas. En el portal del chofer se puede usar la ubicación actual o marcar una salida para trazar la ruta a una finca. El mapa estima kilómetros y minutos con `VITE_PICKUP_ROUTE_URL`, que apunta a un endpoint OSRM. Si el endpoint no se configura en producción, el recorrido se abre en Google Maps.
 - La migración y los flujos con almacenamiento real quedan por verificar en el entorno de destino.
+
+## Vinculación de proveedores en ejecución — 2026-11-08
+
+El formulario de alta fija el rol de acopiador en campañas en ejecución. La API V1 y el mock rechazan nuevas participaciones como productor y conservan las participaciones de productores ya vinculados.
 
 ## Optimización de peticiones por vista — 2026-11-05 · Implementada en desarrollo y revisada
 

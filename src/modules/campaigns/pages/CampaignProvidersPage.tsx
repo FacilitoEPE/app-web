@@ -60,10 +60,11 @@ export default function CampaignProvidersPage() {
     const isValidCampaign = Number.isInteger(campaniaId) && campaniaId > 0;
 
     const campaign = useCampaign(campaniaId);
+    const onlyCollectors = campaign?.estado === "en proceso";
     const { fincas: providerFincas } = useProviderLocalData();
     const [pickedTab, setPickedTab] = useState<TipoProveedorCampania | null>(null);
     const [firstTabWithData, setFirstTabWithData] = useState<TipoProveedorCampania>("productor");
-    const activeTab = pickedTab ?? firstTabWithData;
+    const activeTab = pickedTab ?? (onlyCollectors ? "acopio" : firstTabWithData);
     const [relations, setRelations] = useState<CampaniaProveedor[]>([]);
     const [isLoading, setIsLoading] = useState(isValidCampaign);
     const [loadError, setLoadError] = useState<string | null>(isValidCampaign ? null : "La campaña no es válida.");
@@ -203,10 +204,10 @@ export default function CampaignProvidersPage() {
             <PageHeader
                 icon={<Users size={24} strokeWidth={2.5} />}
                 title="Proveedores de la Campaña"
-                description="Gestiona los productores y acopiadores vinculados a esta campaña."
+                description={onlyCollectors ? "En ejecución solo se pueden vincular acopiadores." : "Gestiona los productores y acopiadores vinculados a esta campaña."}
                 action={
-                    <Button size="xl" onClick={() => setIsLinkModalOpen(true)} disabled={!isValidCampaign}>
-                        <Link size={20} strokeWidth={2.5} /> Vincular proveedor
+                    <Button size="xl" onClick={() => setIsLinkModalOpen(true)} disabled={!isValidCampaign || !campaign}>
+                        <Link size={20} strokeWidth={2.5} /> {onlyCollectors ? "Vincular acopiador" : "Vincular proveedor"}
                     </Button>
                 }
             />
@@ -310,6 +311,7 @@ export default function CampaignProvidersPage() {
 
             <CampaignLinkProviderModal
                 mode="create"
+                onlyCollectors={onlyCollectors}
                 open={isLinkModalOpen}
                 campaniaId={isValidCampaign ? campaniaId : null}
                 onOpenChange={setIsLinkModalOpen}
@@ -325,6 +327,7 @@ export default function CampaignProvidersPage() {
 
             <CampaignLinkProviderModal
                 mode="edit"
+                onlyCollectors={onlyCollectors}
                 open={editModal.open}
                 initialData={editModal.relation}
                 campaniaId={isValidCampaign ? campaniaId : null}

@@ -162,7 +162,7 @@ export default function CampaignClientsPage() {
                 </div>
             </TableCard>
 
-            <CampaignLinkClientModal open={linkOpen} onOpenChange={setLinkOpen} campaniaId={campaniaId} campaign={campaign ?? null} onSave={() => setLinkOpen(false)} />
+            <CampaignLinkClientModal open={linkOpen} onOpenChange={setLinkOpen} campaniaId={campaniaId} campaign={campaign ?? null} onSave={load} />
             <CampaignClientRecordModal open={recordModal.open} mode={recordModal.mode} client={recordModal.client} campaniaId={campaniaId}
                 onOpenChange={(open) => setRecordModal((current) => ({ ...current, open }))}
                 onSaved={(updated) => {

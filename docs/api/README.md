@@ -18,6 +18,10 @@ El SQL de esta carpeta es distinto del [modelo objetivo compartido](../../../doc
 
 `POST /api/transportistas/{id}/choferes` y su `PATCH` aceptan `tipoDocumento` y `numeroDocumento` como texto opcional. La API devuelve ambos campos y `numeroLicencia` al consultar el chofer. Los registros anteriores recuperan el documento de su persona vinculada si existe. [Migración](../../../epe-backend/docs/database.md#documento-del-chofer).
 
+## Vínculo entre cliente y campaña
+
+`POST /api/campanas/{id}/requerimientos` devuelve `409 CAMPAIGN_CLIENT_ALREADY_LINKED` si el cliente ya está vinculado. La misma regla se aplica al cambiar el cliente mediante `PATCH`. Cada vínculo admite varios contratos. Los vínculos históricos siguen disponibles para consulta y edición.
+
 ## Responsable libre de campaña
 
 `POST /api/campanas` acepta `responsableNombre` como texto opcional. La API recorta los espacios de los extremos, admite hasta 150 caracteres después del recorte y devuelve `422 VALIDATION_FAILED` si excede el límite. Un texto vacío o `null` se guarda como `null`. El nombre se guarda aunque la persona no tenga cuenta y es independiente de `responsableUsuarioId`.

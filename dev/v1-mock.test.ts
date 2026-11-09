@@ -84,12 +84,31 @@ describe('V1 API contract', () => {
     await expect(campanaV1.update(1,{ fechaFin:'2026-02-30' })).rejects.toMatchObject({ statusCode:422 })
   })
 
-  it('supports multiple requirements for the same client and campaign, but one provider participation', async () => {
+  it('blocks new duplicate client links and keeps existing requirements editable', async () => {
     expect((await clienteNegocioCampanaV1(1).list({ clienteNegocioId:1 })).total).toBe(2)
-    const created = await clienteNegocioCampanaV1(1).create({ clienteNegocioId:1,fechaRegistro:'2026-10-29',kilosAcordados:200 })
-    expect(created.clienteNegocioCampanaId).toBeGreaterThan(2)
-    await expect(campaniaXProveedoresV1(1).create({ proveedorId:1,cantidadProveedor:100,tipoProveedor:'productor' })).rejects.toMatchObject({ code:'DUPLICATE' })
+    const duplicate = { statusCode:409, code:'CAMPAIGN_CLIENT_ALREADY_LINKED' }
+    const body = { clienteNegocioId:1,fechaRegistro:'2026-10-29',kilosAcordados:200 }
+    await expect(clienteNegocioCampanaV1(1).create(body)).rejects.toMatchObject(duplicate)
+    await expect(clienteNegocioCampanaV1(1).update(1,{ observaciones:'Edición histórica' })).resolves.toMatchObject({ clienteNegocioId:1 })
+    await expect(clienteNegocioCampanaV1(1).update(3,{ clienteNegocioId:1 })).rejects.toMatchObject(duplicate)
+    const create = () => clienteNegocioCampanaV1(1).create({ ...body, clienteNegocioId:3 })
+    const results = await Promise.allSettled([create(), create()])
+    expect(results).toContainEqual(expect.objectContaining({ status:'fulfilled', value:expect.objectContaining({ clienteNegocioId:3 }) }))
+    expect(results).toContainEqual(expect.objectContaining({ status:'rejected', reason:expect.objectContaining(duplicate) }))
+    expect((await clienteNegocioCampanaV1(1).list({ clienteNegocioId:3 })).total).toBe(1)
+  })
+
+  it('keeps one provider participation per campaign', async () => {
+    await expect(campaniaXProveedoresV1(1).create({ proveedorId:1,cantidadProveedor:100,tipoProveedor:'acopio' })).rejects.toMatchObject({ code:'DUPLICATE' })
     await expect(apiClient.patch('/api/campanas/1/proveedores/1',{ fincaId:1 })).rejects.toMatchObject({ statusCode:422 })
+  })
+
+  it('allows linking producers during planning and preserves existing producers during execution', async () => {
+    const producer = { proveedorId:4, cantidadProveedor:100, tipoProveedor:'productor' as const }
+    await expect(campaniaXProveedoresV1(1).create(producer)).rejects.toMatchObject({ statusCode:409, code:'CAMPAIGN_COLLECTORS_ONLY' })
+    await expect(campaniaXProveedoresV1(1).update(3,{ tipoProveedor:'productor' })).rejects.toMatchObject({ code:'CAMPAIGN_COLLECTORS_ONLY' })
+    await expect(campaniaXProveedoresV1(1).update(4,{ cantidadProveedor:120 })).resolves.toMatchObject({ tipoProveedor:'productor', cantidadProveedor:120 })
+    await expect(campaniaXProveedoresV1(2).create(producer)).resolves.toMatchObject({ tipoProveedor:'productor', proveedorId:4 })
   })
 
   it('returns scoped 404 and rejects invalid references without corrupting the existing record', async () => {

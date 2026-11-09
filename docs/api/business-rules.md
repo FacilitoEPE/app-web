@@ -46,7 +46,7 @@ El campo compartido `FileDropzone` verifica cada referencia guardada al montarse
 | Entrevista | Une participación y finca del mismo proveedor; solo para productor. Código servidor `FVV-…`, acorde con el SQL. |
 | Análisis | Puede existir sin cosecha; participación y finca son obligatorias. |
 | Destinos | Texto en entrega y snapshots en guía. No se crea catálogo/CRUD de destinos. |
-| Requerimientos | Varios requerimientos del mismo cliente en una campaña; cada uno puede tener contratos. |
+| Requerimientos | Un vínculo por cliente y campaña, con varios contratos por vínculo. Los requerimientos duplicados históricos siguen disponibles. |
 | Viaje | Una entrega → una coordinación → una carga. La coordinación es la fuente del viaje. |
 | Reservas | Instantes con zona y rangos `[inicio, fin)`; viajes consecutivos permitidos. |
 | Compra | Liquidación sobre kilos reconocidos en planta por proveedor. Sin repartir automáticamente pérdidas ni compensar diferencias. |
@@ -181,7 +181,7 @@ Proveedor y cliente permiten opcionales del objetivo; no repetir validaciones le
 
 Una campaña habilitada incluye `planificacion` y `en proceso`. Solo una habilitada por fruta. La fecha de fin no cierra la campaña. Crear/editar permite esos dos estados; `terminado` se obtiene con `POST /campanas/{id}/cerrar`.
 
-Participación con precio simple `precioCompraKg`, PEN y disponibilidad. Se puede vincular a productores y acopiadores en planificación y en ejecución. El padre se toma de la URL y las fincas se vinculan en entrevistas y orígenes. Se conserva `entrevistaAplica`. El acopiador puede participar sin entrevista ni perfil agronómico de productor.
+Participación con precio simple `precioCompraKg`, PEN y disponibilidad. En planificación se puede vincular a productores o acopiadores. En ejecución solo se pueden vincular acopiadores. La API devuelve `409 CAMPAIGN_COLLECTORS_ONLY` al crear o cambiar un vínculo a productor durante la ejecución. Los productores ya vinculados conservan su participación. El padre se toma de la URL y las fincas se vinculan en entrevistas y orígenes. Se conserva `entrevistaAplica`. El acopiador puede participar sin entrevista ni perfil agronómico de productor.
 
 ### Exámenes y certificaciones
 
@@ -279,7 +279,7 @@ Resúmenes, KPIs, programa semanal y vistas del chofer se derivan de esas entida
 `json/v1-demo/` contiene un archivo por tabla fuente; algunas tablas legacy internas tienen `[]`. Son un escenario separado de las fixtures anteriores de `json/`. Incluye:
 
 - Proveedores con documentos/teléfonos textuales y ceros iniciales, fincas y variedades.
-- Dos requerimientos del mismo cliente/campaña, contrato con precio pendiente y entregas coordinadas.
+- Dos requerimientos históricos del mismo cliente y campaña para comprobar que el historial sigue disponible. También hay un contrato con precio pendiente y entregas coordinadas.
 - Transportista empresa e independiente; acuerdo confirmado y vínculo borrador.
 - Análisis sin cosecha, examen pendiente, cosecha y carga multiproveedor.
 - 1.000 kg cargados, 960 kg reconocidos: 580/380 por proveedor; compra 580 × 2 = 1.160 para el primero.

@@ -13,6 +13,12 @@ export async function getClientesNegocioCampana(campaniaId: number, clienteNegoc
   const { data } = await apiClient.get<ClienteNegocioCampanaDto[]>(`/campanas/${campaniaId}/clientes-negocio`);
   return data.map(toClienteNegocioCampana).filter(row => clienteNegocioId === undefined || row.clienteNegocioId === clienteNegocioId);
 }
+
+export async function getLinkedCampaignIds(clienteNegocioId: number, campaignIds: number[]): Promise<Set<number>> {
+  if (usesV1()) return campaignScreenV1.linkedCampaignIds(clienteNegocioId);
+  const links = await Promise.all(campaignIds.map(id => getClientesNegocioCampana(id, clienteNegocioId)));
+  return new Set(links.flatMap(rows => rows.map(row => row.campaniaId)));
+}
 export async function getCampaignRequirement(campaniaId: number, id: number): Promise<ClienteNegocioCampana> {
   if (usesV1()) return campaignScreenV1.client(campaniaId, id);
   const relation = (await getClientesNegocioCampana(campaniaId)).find(row => row.clienteNegocioCampanaId === id);

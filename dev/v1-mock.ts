@@ -116,6 +116,10 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
     const campaign = campaignFor(table, row)
     const originalCampaign = current ? campaignFor(table, current) : undefined
     if (campaign?.estado === 'terminado' || campaign?.cerradaAt || originalCampaign?.estado === 'terminado' || originalCampaign?.cerradaAt) fail('CAMPAIGN_CLOSED', 'La campaña está cerrada.')
+    if (table === 'campania_x_proveedores' && campaign?.estado === 'en proceso' &&
+      row.tipoProveedor === 'productor' && current?.tipoProveedor !== 'productor') {
+      fail('CAMPAIGN_COLLECTORS_ONLY', 'En una campaña en ejecución solo se pueden vincular acopiadores.', 'tipoProveedor')
+    }
     const guide = table === 'guia_remision' ? current : row.guiaRemisionId ? find('guia_remision', row.guiaRemisionId) : undefined
     if (guide?.emitidaAt) fail('GUIDE_IMMUTABLE', 'La guía emitida y sus proveedores/normas son inmutables.')
     if (!current) return
@@ -182,6 +186,10 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
   }
 
   function business(table: string, row: Row, current?: Row) {
+    if (table === 'cliente_negocio_campana' && row.clienteNegocioId !== current?.clienteNegocioId
+      && db.cliente_negocio_campana.some(item => item.campaniaId === row.campaniaId && item.clienteNegocioId === row.clienteNegocioId)) {
+      fail('CAMPAIGN_CLIENT_ALREADY_LINKED', 'El cliente ya está vinculado a esta campaña.', 'clienteNegocioId')
+    }
     const positive: Record<string,string[]> = {
       campana:['requerimientoComercial'], campania_x_proveedores:['cantidadProveedor'], contrato_venta:['kilosAcordados'], entrega_programada:['kilosProgramados'], proveedor_carga:['kilosCargados'], proveedor_guia:['kilosAsignados'], factura_venta:['kilosFacturados','importeVenta'],
       pago_proveedor:['monto'],pago_transporte:['monto'],cobro_venta:['monto'],pago_certificado_campana:['monto'],adelanto_transporte:['monto'],aplicacion_adelanto:['monto'],ampliacion_certificado_campana:['kilosAdicionales'],
