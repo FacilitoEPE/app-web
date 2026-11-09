@@ -976,6 +976,12 @@ Validación: pruebas HTTP del router y de los adaptadores/almacenes del frontend
 - **2026-09-20 a 2026-09-27 (FE01–FE07):** Conexión y pruebas Vitest de CRUD de clientes (`FE02`), CRUD de proveedores (`FE03`), subrecursos de proveedor con `validator@13.15.35` (`FE04`), edición de relación cliente-campaña y certificados (`FE05`), y lectura de contratos de cliente (`FE06`).
 - **2026-09-08:** Primera auditoría general de vistas (`Campana`, `Fruta`, `CampaniaProveedor`, `Proveedor`, `ClienteNegocio`, `CertificadoCampana`) y acuerdo de mantener `/login` simulado hasta que el backend implemente autenticación.
 
+## Correcciones tras la auditoría de flujos · 2026-11-09 · Verificación local
+
+- Calidad conserva el ID del proveedor de carga al cambiar de variedad. En el alta administrativa, los recursos nuevos se revierten si falla el detalle y la API permite completar desde Calidad una cabecera que haya quedado sin kilos. Una cabecera vacía no se proyecta como carga operativa en Chofer, Logística, Liquidación o Facturación. La reversión usa el contrato V1 existente. Una garantía transaccional para el alta administrativa requeriría un comando del servidor que cubra todo el guardado.
+- El chofer ve las variedades de las fincas coordinadas para cada proveedor. Facturación agrupa por cliente y campaña, conserva las URLs de los requerimientos históricos y respeta el contrato de cada carga. Campañas indica que las fincas se vinculan desde Entrevistas.
+- Se comprueba contra el mock V1 con recargas en frío, fallos simulados del detalle y datos con varios requerimientos del mismo cliente. Los registros históricos con filas duplicadas requieren contraste con sus datos de origen antes de corregir cantidades.
+
 ## Portal compartido del chofer · 2026-11-09 · Parcial
 
 Frontend, API y simulación incluyen el listado de entregas coordinadas para el rol Chofer. El alta de carga usa una transacción y conserva los vínculos de la coordinación. Queda pendiente verificar el flujo completo con una sesión Chofer contra PostgreSQL y desplegar ambos proyectos.

@@ -4,10 +4,14 @@ import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 import { createV1MockMiddleware } from './v1-mock.ts'
 import { apiClient } from '@/shared/api/client'
-import { refreshFrontendData } from '@/frontend-data'
+import { refreshFrontendData, resetFrontendData } from '@/frontend-data'
 import { operationsContext, type OperationsContext } from '@/modules/operations/api/operations-context.api'
 import { projectQualityData } from '@/modules/quality/api/quality-screen-data'
 import { projectDriverData } from '@/modules/driver-portal/api/driver-screen-data'
+import { projectBillingData } from '@/modules/billing/api/billing-screen-data'
+import { billingLoadReady } from '@/modules/billing/billing.utils'
+import { projectLogisticsData } from '@/modules/logistics/api/logistics-screen-data'
+import { projectSettlementData } from '@/modules/purchase-settlement/api/settlement-screen-data'
 import { driverCommands } from '@/modules/driver-portal/api/driver-commands.api'
 import { campaignAnalysisOrigins, qualityCommands } from '@/modules/quality/api/quality-commands.api'
 import { createGuideDraft } from '@/modules/quality/remissionGuide.utils'
@@ -23,7 +27,7 @@ beforeEach(async () => {
     await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
     previousBase = apiClient.defaults.baseURL
     apiClient.defaults.baseURL = `http://127.0.0.1:${(server.address() as AddressInfo).port}/mock-api/`
-    await refreshFrontendData()
+    await refreshFrontendData('*')
 })
 afterEach(async () => {
     apiClient.defaults.baseURL = previousBase
@@ -121,6 +125,83 @@ describe('Flujo de calidad con datos sintéticos de desarrollo', () => {
         })
         expect(data.loads.filter(load => load.coordinacionEntregaId === saved!.coordinacionEntregaId)).toHaveLength(1)
     })
+    it('cambia la variedad de la fila guardada sin sumar una segunda vez los kilos o los bultos', async () => {
+        const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'exportador' && l.puedeRegistrarCarga)!
+        const saved = await qualityCommands.saveLoad(pending.id, { ...pending, fechaCargaReal: '2026-11-07', anotador: 'Calidad',
+            proveedoresCarga: pending.proveedoresCarga.map(p => ({ ...p, kilosCargados: 100, jabasCargadas: 4 })) })
+        const id = String(saved!.cargaId)
+        const before = projectQualityData(operationsContext()).loads.find(row => row.id === id)!
+        const provider = before.proveedoresCarga[0]
+        const variety = operationsContext().varieties.find(v => v.frutaId === 1 && v.name !== provider.variedad)!
+        await qualityCommands.saveLoad(id, { ...before, proveedoresCarga: before.proveedoresCarga.map(p => p === provider ? { ...p, variedad: variety.name } : p) })
+        resetFrontendData()
+        await refreshFrontendData('/calidad/exportador/1/carga')
+        const updated = projectQualityData(operationsContext()).loads.find(row => row.id === id)!
+        expect(updated.proveedoresCarga).toEqual(before.proveedoresCarga.map(p => p === provider ? { ...p, variedad: variety.name } : p))
+    })
+    it.each(['/proveedores', '/origenes'])('revierte el alta si falla %s y permite reintentar después de recargar', async suffix => {
+        const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'exportador' && l.puedeRegistrarCarga)!
+        const coordination = operationsContext().coordinations.find(c => `entrega-${c.entregaProgramadaId}` === pending.id)!
+        const values = { ...pending, fechaCargaReal: '2026-11-07', anotador: 'Calidad',
+            proveedoresCarga: pending.proveedoresCarga.map(p => ({ ...p, kilosCargados: 100, jabasCargadas: 4 })) }
+        const hook = apiClient.interceptors.request.use(request => {
+            if (request.method === 'post' && request.url?.endsWith(suffix)) throw new Error('Detalle interrumpido')
+            return request
+        })
+        try {
+            await expect(qualityCommands.saveLoad(pending.id, values)).rejects.toThrow('Detalle interrumpido')
+        } finally {
+            apiClient.interceptors.request.eject(hook)
+        }
+        resetFrontendData()
+        await refreshFrontendData('/calidad/exportador/1/carga')
+        expect(operationsContext().loads.some(row => row.coordinacionEntregaId === coordination.coordinacionEntregaId)).toBe(false)
+        expect(projectQualityData(operationsContext()).loads.find(row => row.id === pending.id)?.puedeRegistrarCarga).toBe(true)
+        const saved = await qualityCommands.saveLoad(pending.id, values)
+        expect(projectQualityData(operationsContext()).loads.find(row => row.cargaId === saved!.cargaId)?.proveedoresCarga[0].kilosCargados).toBe(100)
+    })
+    it('permite completar una cabecera histórica de 0 kg sin enviarla al despacho o la facturación', async () => {
+        const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'exportador' && l.puedeRegistrarCarga)!
+        const coordination = operationsContext().coordinations.find(c => `entrega-${c.entregaProgramadaId}` === pending.id)!
+        const { data: orphan } = await apiClient.post<{ cargaId: number }>(`/api/coordinaciones/${coordination.coordinacionEntregaId}/cargas`, {
+            codigo: 'CARGA-INCOMPLETA', fechaCarga: '2026-11-07', anotadorNombre: 'Calidad',
+        })
+        resetFrontendData()
+        await refreshFrontendData('*')
+        const g = operationsContext(), id = String(orphan.cargaId)
+        expect(projectQualityData(g).loads.find(row => row.id === pending.id)).toMatchObject({ cargaIncompleta: true, puedeRegistrarCarga: true })
+        expect(projectDriverData(g).loads.find(row => row.id === pending.id)).toMatchObject({ cargaIncompleta: true, pendienteRegistro: true, permiteEditarCarga: false })
+        expect(projectLogisticsData(g).some(row => row.id === id)).toBe(false)
+        expect(projectSettlementData(g).some(row => row.id === id)).toBe(false)
+        expect(projectBillingData(g).some(client => client.cargas.some(row => row.id === id))).toBe(false)
+        const withHistoricalInvoice = structuredClone(g)
+        withHistoricalInvoice.invoices.push({ ...g.invoices[0], facturaVentaId: 999, cargaId: orphan.cargaId })
+        const invoiceHistory = projectBillingData(withHistoricalInvoice).flatMap(client => client.cargas).find(row => row.id === id)!
+        expect(invoiceHistory.facturas.map(invoice => invoice.id)).toEqual(['999'])
+        expect(billingLoadReady(invoiceHistory)).toBe(false)
+        const saved = await qualityCommands.saveLoad(pending.id, { ...pending, fechaCargaReal: '2026-11-07', anotador: 'Calidad',
+            proveedoresCarga: pending.proveedoresCarga.map(p => ({ ...p, kilosCargados: 100, jabasCargadas: 4 })) })
+        expect(saved?.cargaId).toBe(orphan.cargaId)
+        resetFrontendData()
+        await refreshFrontendData('*')
+        expect(projectDriverData(operationsContext()).loads.find(row => row.id === id)).toMatchObject({ permiteEditarCarga: true })
+    })
+    it('ofrece al chofer las variedades de la finca coordinada y conserva una carga válida al recargar', async () => {
+        const g = operationsContext()
+        const pending = projectDriverData(g).loads.find(row => row.pendienteRegistro && row.canal === 'Exportación')!
+        const providers = pending.proveedores.map(p => ({ ...p, kilosCargados: 100, jabasCargadas: 4 }))
+        const [provider] = providers
+        expect(pending.variedadesCoordinadas?.[provider.proveedorId]).toEqual(['Mango Kent'])
+        const values = { fechaCarga: '2026-11-07', anotador: 'Chofer', viaticosMovilidad: 0, viaticosInsumos: 0,
+            gastoCuadrilla: 0, gastoAnotadores: 0, observacionesCarga: '', proveedores: providers }
+        await expect(driverCommands.load(pending.id, { ...values, proveedores: [{ ...provider, variedad: 'Mango Edward' }, ...providers.slice(1)] }))
+            .rejects.toThrow(/variedad de las fincas coordinadas/)
+        await driverCommands.load(pending.id, values)
+        const { data } = await apiClient.get<OperationsContext>('/api/chofer/contexto')
+        const coordination = data.coordinations.find(c => `entrega-${c.entregaProgramadaId}` === pending.id)!
+        const saved = data.loads.find(row => row.coordinacionEntregaId === coordination.coordinacionEntregaId)!
+        expect(projectDriverData(data).loads.find(row => row.id === String(saved.cargaId))?.proveedores[0]).toMatchObject({ variedad: 'Mango Kent', kilosCargados: 100 })
+    })
     it('guarda el rechazo industrial sin crear carga y lo comparte con el chofer', async () => {
         const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'industria' && l.puedeRegistrarCarga)!
         await qualityCommands.saveLoad(pending.id, { ...pending, cumpleRequisitosIndustria: false, motivoRechazoIndustria: 'Fermentación' })
@@ -155,7 +236,7 @@ describe('Flujo de calidad con datos sintéticos de desarrollo', () => {
     })
     it('reparte un proveedor entre varias guías y permite eliminar solo un borrador de la misma carga', async () => {
         const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'exportador' && l.puedeRegistrarCarga)!
-        await qualityCommands.saveLoad(pending.id, { ...pending, fechaCargaReal: '2026-11-07', anotador: 'Anotador de prueba', proveedoresCarga: pending.proveedoresCarga.map(p => ({ ...p, kilosCargados: 1000, jabasCargadas: 50 })) })
+        await qualityCommands.saveLoad(pending.id, { ...pending, fechaCargaReal: '2026-11-07', anotador: 'Anotador de prueba', proveedoresCarga: pending.proveedoresCarga.map(p => ({ ...p, kilosCargados: 200, jabasCargadas: 10 })) })
         await refreshFrontendData()
         const load = projectQualityData(operationsContext()).loads.find(l => l.scope === 'exportador' && l.fechaProgramada === pending.fechaProgramada && l.cargaId)!
         const provider = load.proveedoresCarga[0]

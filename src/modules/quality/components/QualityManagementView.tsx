@@ -132,6 +132,7 @@ export default function QualityManagementView({ campaign, scope, section }: Prop
                             {pending.map(load => <SelectItem key={load.id} value={load.id}>
                                 <span className="min-w-0 whitespace-normal break-words">
                                     {formatDisplayDate(load.fechaProgramada)} · {load.cliente} · {load.contratoRef} · {load.placa} · {formatKg(load.kilosProgramados)} kg
+                                    {load.cargaIncompleta && " · Completar registro"}
                                 </span>
                             </SelectItem>)}
                         </SelectContent>

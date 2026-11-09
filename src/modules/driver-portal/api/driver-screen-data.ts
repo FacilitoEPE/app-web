@@ -1,15 +1,9 @@
 import type { OperationsContext } from '@/modules/operations/api/operations-context.api';
-import { loadContext, providerName } from '@/modules/operations/api/operation-links';
+import { hasLoadedWeight, loadContext, providerName } from '@/modules/operations/api/operation-links';
 import { projectQualityData } from '@/modules/quality/api/quality-screen-data';
 import { projectLogisticsData, stageLabels } from '@/modules/logistics/api/logistics-screen-data';
 import { jsonObject, jsonText } from '@/modules/quality/api/quality-screen-data';
 import type { DriverLoad, DriverProfile } from '@/modules/driver-portal/driverPortal.models';
-import { operationsContext } from '@/modules/operations/api/operations-context.api';
-export function driverVarietyOptions(fruitName: string) {
-    const g = operationsContext();
-    const fruit = g.fruits.find(item => item.name === fruitName);
-    return g.varieties.filter(item => item.frutaId === fruit?.frutaId).map(item => ({ value: item.name, label: item.name }));
-}
 function storedFile(value: unknown) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
     const file = value as Record<string, unknown>;
@@ -26,7 +20,7 @@ function farmLoadKg(g: OperationsContext, loadId: number, coordinationId: number
 export function projectDriverData(g: OperationsContext) {
     const drivers: DriverProfile[] = g.drivers.map(d => ({ personaId: d.personaId, id: String(d.idChoferTransporteExterno), nombre: d.nombre, documento: g.people.find(p => p.personaId === d.personaId)?.numeroDocumento ?? '', licencia: d.numeroLicencia ?? '', telefono: d.telefono, transportista: g.carriers.find(c => c.idEmpresaTransporteExterno === d.idEmpresaTransporteExterno)?.nombreCompleto ?? '', placaAsignada: g.vehicles.find(v => v.idEmpresaTransporteExterno === d.idEmpresaTransporteExterno)?.placa ?? '' }));
     const logistics = projectLogisticsData(g);
-    const loads: DriverLoad[] = g.loads.map(load => {
+    const loads: DriverLoad[] = g.loads.filter(load => hasLoadedWeight(load.cargaId, g)).map(load => {
         const c = loadContext(load.cargaId, g), l = logistics.find(l => l.id === String(load.cargaId))!, receipt = g.receipts.find(r => r.cargaId === load.cargaId), check = receipt?.checklist ?? {}, arrival = jsonObject(check.llegada), exit = jsonObject(check.guiaSalida);
         const history = g.histories.filter(h => h.coordinacionEntregaId === c.coordination.coordinacionEntregaId)
             .sort((a, b) => a.fechaHora.localeCompare(b.fechaHora));
@@ -37,7 +31,7 @@ export function projectDriverData(g: OperationsContext) {
     const pending: DriverLoad[] = projectQualityData(g).loads.filter(row => !row.cargaId).map(row => {
         const coordination = g.coordinations.find(item => item.entregaProgramadaId === Number(row.id.slice('entrega-'.length)))!;
         return {
-            id: row.id, pendienteRegistro: true, codigo: `Entrega · ${row.contratoRef}`, campaniaId: row.campaniaId,
+            id: row.id, pendienteRegistro: true, cargaIncompleta: row.cargaIncompleta, codigo: `Entrega · ${row.contratoRef}`, campaniaId: row.campaniaId,
             campaniaNombre: row.campaniaNombre, fruta: row.fruta, canal: row.scope === 'industria' ? 'Industria' : 'Exportación',
             driverId: String(coordination.idChoferTransporteExterno), transportista: row.transportista, placa: row.placa,
             cliente: row.cliente, contratoRef: row.contratoRef, origen: coordination.origenDescripcion ?? '', destino: row.destino,
@@ -60,7 +54,23 @@ export function projectDriverData(g: OperationsContext) {
         const coordination = g.coordinations.find(item => row.pendienteRegistro ? item.entregaProgramadaId === Number(row.id.slice('entrega-'.length)) : g.loads.some(load => String(load.cargaId) === row.id && load.coordinacionEntregaId === item.coordinacionEntregaId));
         const harvest = g.harvests.find(item => item.entregaProgramadaId === coordination?.entregaProgramadaId);
         const rejected = harvest?.industria.inspectionResult === 'No cumple';
-        return { ...row, estadoCampania: campaign?.estado, rechazada: rejected, cumpleRequisitosIndustria: harvest?.industria.inspectionResult === 'Cumple', permiteEditarCarga: campaign?.estado === 'en proceso' && row.etapa === 'En carga' && !issuedGuide && !rejected };
+        const varieties = new Map<string, Set<string>>();
+        for (const origin of g.deliveryOrigins.filter(item => item.coordinacionEntregaId === coordination?.coordinacionEntregaId)) {
+            const party = g.participations.find(item => item.cxpId === origin.cxpId);
+            const farm = g.farms.find(item => item.fincaId === origin.fincaId);
+            const variety = g.varieties.find(item => item.frutaDerivadaId === farm?.frutaDerivadaId && item.frutaId === campaign?.frutaId);
+            if (!party || !variety) continue;
+            const id = String(party.proveedorId);
+            const names = varieties.get(id) ?? new Set<string>();
+            names.add(variety.name);
+            varieties.set(id, names);
+        }
+        const variedadesCoordinadas = Object.fromEntries(row.proveedores.map(provider => {
+            const names = new Set(varieties.get(provider.proveedorId));
+            if (!row.pendienteRegistro && provider.variedad) names.add(provider.variedad);
+            return [provider.proveedorId, [...names]];
+        }));
+        return { ...row, variedadesCoordinadas, estadoCampania: campaign?.estado, rechazada: rejected, cumpleRequisitosIndustria: harvest?.industria.inspectionResult === 'Cumple', permiteEditarCarga: campaign?.estado === 'en proceso' && row.etapa === 'En carga' && !issuedGuide && !rejected && !row.cargaIncompleta };
     });
     return { drivers, loads: allLoads };
 }

@@ -31,6 +31,7 @@ export interface BillingInvoice {
 }
 export interface BillingLoad {
     id: string;
+    requirementId: string;
     codigo: string;
     fechaRecepcion: string;
     kilosCargados: number;
@@ -43,6 +44,7 @@ export interface BillingLoad {
 }
 export interface BillingClient {
     id: string;
+    requirementIds: string[];
     campaniaId: number;
     campaniaNombre: string;
     fruta: string;

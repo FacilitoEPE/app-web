@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import type { OperationsContext } from '@/modules/operations/api/operations-context.api';
-import { loadContext } from '@/modules/operations/api/operation-links';
+import { hasLoadedWeight, loadContext } from '@/modules/operations/api/operation-links';
 import { projectQualityData, jsonText, jsonNumber, jsonObject } from '@/modules/quality/api/quality-screen-data';
 import type { LogisticsLoad } from '@/modules/logistics/logistics.models';
 import type { DispatchStage } from '@/shared/components/DispatchStepProgress';
@@ -8,7 +8,7 @@ export const stageLabels: Record<string, DispatchStage> = { EN_CARGA: 'En carga'
 export function projectLogisticsData(g: OperationsContext): LogisticsLoad[] {
     const fileFrom = (value: unknown) => { if (!value || typeof value !== 'object' || Array.isArray(value)) return null; const file = value as Record<string, unknown>; return typeof file.url === 'string' && typeof file.name === 'string' ? { url: file.url, name: file.name, ...(typeof file.type === 'string' ? { type: file.type } : {}), ...(typeof file.size === 'number' ? { size: file.size } : {}) } : null; };
     const quality = projectQualityData(g).loads;
-    return g.loads.map(load => {
+    return g.loads.filter(load => hasLoadedWeight(load.cargaId, g)).map(load => {
         const c = loadContext(load.cargaId, g), q = quality.find(q => q.id === String(load.cargaId))!, r = g.receipts.find(r => r.cargaId === load.cargaId), log = r?.logistica ?? {}, docs = r?.documentos ?? {}, check = r?.checklist ?? {}, history = g.histories.filter(h => h.coordinacionEntregaId === c.coordination.coordinacionEntregaId), purchases = (r?.compras ?? []).map(jsonObject);
         const localReport = r ? g.localDocuments?.find(file => file.tipo === 'recepcion_planta' && file.entidadId === r.recepcionPlantaId) : undefined;
         const receptionReport = fileFrom(log.reporteRecepcionArchivo) ?? fileFrom(docs.reporteRecepcionPlanta)

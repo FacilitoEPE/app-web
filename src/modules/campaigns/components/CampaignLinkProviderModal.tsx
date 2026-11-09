@@ -1,6 +1,6 @@
 import { usesV1 } from '@/shared/api/data-contract';
 import { useEffect, useRef, useState } from "react";
-import { X, Link2, LandPlot, Sprout } from "lucide-react";
+import { X, Link2, Sprout } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import InputField from "@/shared/components/InputField";
 import SegmentedControl from "@/shared/components/SegmentedControl";
@@ -9,7 +9,6 @@ import { Button } from "@/shared/components/ui/button";
 import { Combobox } from "@/shared/components/ui/combobox";
 import { Textarea } from "@/shared/components/ui/textarea";
 import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
-import { useProviderLocalData } from "@/modules/providers/providerLocalData.store";
 import { createCampaniaProveedor, getCampaniaProveedoresByCampania, updateCampaniaProveedor } from "@/modules/campaigns/api/campania-proveedor.api";
 import type { TipoProveedorCampania } from "@/modules/campaigns/api/campania-proveedor.dto";
 import {
@@ -90,7 +89,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
     const [selectedProvider, setSelectedProvider] = useState("");
     const [draft, setDraft] = useState<DraftValues>(EMPTY_DRAFT);
     const [selectedVariedades, setSelectedVariedades] = useState<string[]>(["Kent"]);
-    const [selectedFincas, setSelectedFincas] = useState<string[]>([]);
     const [errors, setErrors] = useState<Partial<Record<keyof DraftValues, string>> & { proveedorId?: string }>({});
     const [formError, setFormError] = useState<string | null>(null);
     const [proveedores, setProveedores] = useState<Proveedor[]>([]);
@@ -102,7 +100,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
     const unresolvedRef = useRef<number | null>(null);
     const onSaveRef = useRef(onSave);
     const onRefreshRef = useRef(onRefresh);
-    const { fincas: allFincas } = useProviderLocalData();
 
     useEffect(() => {
         onSaveRef.current = onSave;
@@ -137,13 +134,11 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                 frutaConvencionalEstimado: initialData.frutaConvencionalEstimado ?? null,
             });
             setSelectedVariedades(["Kent"]);
-            setSelectedFincas((allFincas[initialData.proveedorId] ?? []).map((f) => f.nombre));
         } else {
             setProviderType("productor");
             setSelectedProvider("");
             setDraft(EMPTY_DRAFT);
             setSelectedVariedades(["Kent"]);
-            setSelectedFincas([]);
         }
 
         setErrors({});
@@ -191,8 +186,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
     }, [open, campaniaId, controller]);
 
     const isLocked = isSaving || unresolvedProviderId !== null;
-    const activeProviderId = selectedProvider ? Number(selectedProvider) : (mode === "edit" && initialData ? initialData.proveedorId : 0);
-    const providerFincas = activeProviderId ? (allFincas[activeProviderId] ?? []) : [];
 
     const toggleVariedad = (variedad: string) => {
         setSelectedVariedades((current) =>
@@ -202,13 +195,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
         );
     };
 
-    const toggleFinca = (fincaNombre: string) => {
-        setSelectedFincas((current) =>
-            current.includes(fincaNombre)
-                ? current.filter((item) => item !== fincaNombre)
-                : [...current, fincaNombre],
-        );
-    };
 
     const updateDraft = <K extends keyof DraftValues>(field: K, value: DraftValues[K]) => {
         setDraft((current) => ({ ...current, [field]: value }));
@@ -323,8 +309,6 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                         onChange={(value) => {
                             setSelectedProvider(value);
                             setErrors((current) => ({ ...current, proveedorId: undefined }));
-                            const fList = allFincas[Number(value)] ?? [];
-                            setSelectedFincas(fList.map((f) => f.nombre));
                         }}
                         placeholder={isLoadingProviders ? "Cargando proveedores..." : "Buscar proveedor, fruta o variedad..."}
                         emptyMessage="No hay proveedores disponibles para vincular"
@@ -386,39 +370,10 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
                     </div>
                 </FormField>}
 
-                {!usesV1() && linkType === "productor" && activeProviderId > 0 && (
-                    <FormField
-                        label="Fincas participantes del productor"
-                        hint={providerFincas.length === 0 ? "Este productor aún no tiene fincas en su padrón; podrás vincularlas desde Entrevistas." : "Marca las fincas que participarán en esta campaña."}
-                    >
-                        {providerFincas.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                                {providerFincas.map((finca) => {
-                                    const active = selectedFincas.includes(finca.nombre);
-                                    return (
-                                        <button
-                                            key={finca.nombre}
-                                            type="button"
-                                            disabled={isLocked}
-                                            onClick={() => toggleFinca(finca.nombre)}
-                                            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${
-                                                active
-                                                    ? "border-brand bg-brand/10 text-brand"
-                                                    : "border-border bg-surface-page/50 text-ink-muted hover:text-ink"
-                                            }`}
-                                        >
-                                            <LandPlot size={14} strokeWidth={2.2} />
-                                            {finca.nombre} ({finca.haCultivo} ha)
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <div className="rounded-xl border border-dashed border-border bg-surface-page/40 px-3.5 py-2.5 text-[12.5px] text-ink-muted">
-                                Sin fincas registradas en el padrón del productor.
-                            </div>
-                        )}
-                    </FormField>
+                {linkType === "productor" && (
+                    <p className="text-sm text-ink-muted">
+                        Para vincular una finca, abre el detalle del productor y elige Entrevistas → Vincular finca.
+                    </p>
                 )}
 
                 <FormField label="Observaciones de Participación">

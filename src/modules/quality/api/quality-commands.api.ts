@@ -1,4 +1,4 @@
-import { operationsContext } from '@/modules/operations/api/operations-context.api';
+import { operationsContext, readAllV1 } from '@/modules/operations/api/operations-context.api';
 import { loadContext, coordinationContext, providerName } from '@/modules/operations/api/operation-links';
 import { commitRemote, refreshRemoteData, requireId } from '@/shared/api/data-contract';
 import { jsonData } from '@/shared/api/document-state';
@@ -12,6 +12,8 @@ import { canRegisterQualityLoad, projectQualityData } from '@/modules/quality/ap
 import type { QualityAnalysisRecord } from '@/modules/quality/qualityAnalysis.utils';
 import type { QualityDeliveryLoadItem, QualityHarvestOrganization, QualityHarvestAdvance, QualityHarvestClosure, QualityProviderLoadDetail, QualitySunatRemissionGuide } from '@/modules/quality/qualityOperations.models';
 import type { AddQualityCampaignInput } from '@/modules/quality/quality.store';
+import type { CargaV1, GastoCargaV1, OrigenCargaV1, ProveedorCargaV1 } from '@/modules/quality/api/v1.dto';
+import { getAuthToken } from '@/shared/offline/session';
 export const hasChanges = (row: object, body: object) => Object.entries(body).some(([key, value]) => value !== undefined && JSON.stringify((row as Record<string, unknown>)[key]) !== JSON.stringify(value));
 function context(id: string) {
     const g = operationsContext();
@@ -104,11 +106,17 @@ export const qualityCommands = {
         if (!id.startsWith('entrega-')) return writeLoad(id, payload);
         const g = operationsContext(), c = context(id);
         const alreadyRegistered = new Error('Esta entrega ya tiene una carga. Abre el registro desde Cargas registradas.');
-        if (c.load) throw alreadyRegistered;
-        if (!canRegisterQualityLoad(c, g))
+        if (!canRegisterQualityLoad(c, g)) {
+            if (c.load) throw alreadyRegistered;
             throw new Error('Esta entrega ya no está disponible para registrar su carga.');
+        }
         const loads = cargaV1(c.coordination.coordinacionEntregaId);
-        if ((await loads.list({ pageSize: 1 })).total > 0) {
+        const [remoteLoad] = (await loads.list({ pageSize: 1 })).items;
+        if (remoteLoad?.cargaId !== c.load?.cargaId) {
+            await refreshRemoteData(true);
+            throw new Error('Cambió el registro de esta entrega. Vuelve a abrir el formulario desde la lista actualizada.');
+        }
+        if (remoteLoad && (await proveedorCargaV1(remoteLoad.cargaId).list({ pageSize: 1 })).total > 0) {
             await refreshRemoteData(true);
             throw alreadyRegistered;
         }
@@ -201,8 +209,21 @@ export const qualityCommands = {
         await guiaRemisionV1(c.load.cargaId).remove(guide.guiaRemisionId);
     }),
 };
-/** Also used by Logistics and Driver screens; persisted changes are reconciled by their command. */
-export async function writeLoad(id: string, payload: {
+async function rollbackNewLoad(load: CargaV1) {
+    const { cargaId, coordinacionEntregaId } = load;
+    const providers = await readAllV1<ProveedorCargaV1>(`/cargas/${cargaId}/proveedores`, {}, true);
+    for (const provider of providers) {
+        const id = provider.proveedorCargaId;
+        const origins = await readAllV1<OrigenCargaV1>(`/proveedores-carga/${id}/origenes`, {}, true);
+        for (const origin of origins) await origenCargaV1(id).remove(origin.origenCargaId);
+        await proveedorCargaV1(cargaId).remove(id);
+    }
+    const expenses = await readAllV1<GastoCargaV1>(`/cargas/${cargaId}/gastos`, {}, true);
+    for (const expense of expenses) await gastoCargaV1(cargaId).remove(expense.gastoCargaId);
+    await cargaV1(coordinacionEntregaId).remove(cargaId);
+}
+
+async function writeLoad(id: string, payload: {
     fechaCargaReal: string;
     anotador: string;
     viaticosMovilidad: number;
@@ -215,42 +236,73 @@ export async function writeLoad(id: string, payload: {
     motivoRechazoIndustria?: string;
 }) {
     const g = operationsContext(), c = context(id), body = { codigo: c.load?.codigo ?? `CAR-${c.campaign.campaniaId}-${c.delivery.entregaProgramadaId}`, fechaCarga: payload.fechaCargaReal, anotadorNombre: payload.anotador, viaticosMovilidad: payload.viaticosMovilidad, viaticosInsumos: payload.viaticosInsumos, observaciones: payload.observacionesCarga };
-    if (id.startsWith('entrega-') && c.load)
-        throw new Error('Esta entrega ya tiene una carga. Abre el registro existente.');
+    if (!payload.proveedoresCarga.length || payload.proveedoresCarga.some(row => !Number.isFinite(row.kilosCargados) || row.kilosCargados <= 0))
+        throw new Error('Registra kilos mayores que cero para cada proveedor de la entrega.');
+    if (payload.proveedoresCarga.reduce((sum, row) => sum + row.kilosCargados, 0) > c.delivery.kilosProgramados)
+        throw new Error('Los kilos cargados no pueden superar los programados.');
+    const previousRows = g.loadProviders.filter(row => row.cargaId === c.load?.cargaId);
     const selections = payload.proveedoresCarga.map(p => {
         const party = g.participations.find(r => r.campaniaId === c.campaign.campaniaId && r.proveedorId === Number(p.proveedorId)), variety = g.varieties.find(v => v.frutaId === c.campaign.frutaId && (v.name === p.variedad || v.name === `${c.fruit} ${p.variedad}`));
         if (!party || !variety)
             throw new Error('Completa el proveedor y la variedad usando los datos de la entrega.');
-        return { p, party, variety };
+        const previous = p.registroId === undefined
+            ? previousRows.find(row => row.cxpId === party.cxpId && row.frutaDerivadaId === variety.frutaDerivadaId)
+            : previousRows.find(row => row.proveedorCargaId === p.registroId && row.cxpId === party.cxpId);
+        if (p.registroId !== undefined && !previous)
+            throw new Error('Cambió el detalle de la carga. Recarga antes de editarla.');
+        return { p, party, variety, previous };
     });
+    const keys = selections.map(({ party, variety }) => `${party.cxpId}:${variety.frutaDerivadaId}`);
+    if (new Set(keys).size !== keys.length)
+        throw new Error('Un proveedor no puede tener dos filas con la misma variedad.');
+    const originalIds = selections.flatMap(({ previous }) => previous ? [previous.proveedorCargaId] : []);
+    if (new Set(originalIds).size !== originalIds.length || previousRows.some(row => !originalIds.includes(row.proveedorCargaId)))
+        throw new Error('Cambió el detalle de la carga. Recarga antes de editarla.');
+    if (id.startsWith('entrega-')) {
+        const coordinated = new Set(g.deliveryOrigins.filter(origin => origin.coordinacionEntregaId === c.coordination.coordinacionEntregaId).map(origin => origin.cxpId));
+        const selected = new Set(selections.map(({ party }) => party.cxpId));
+        if (selected.size !== coordinated.size || [...selected].some(party => !coordinated.has(party)))
+            throw new Error('Registra el peso de todos los proveedores coordinados.');
+    }
+    const token = getAuthToken();
     const load = c.load ? (hasChanges(c.load, body) ? await cargaV1(c.coordination.coordinacionEntregaId).update(c.load.cargaId, body) : c.load) : await cargaV1(c.coordination.coordinacionEntregaId).create(body);
-    for (const { p, party, variety } of selections) {
-        const previous = g.loadProviders.find(r => r.cargaId === load.cargaId && r.cxpId === party.cxpId && r.frutaDerivadaId === variety.frutaDerivadaId), detail = { cxpId: party.cxpId, frutaDerivadaId: variety.frutaDerivadaId, kilosCargados: p.kilosCargados, precioCompraKgAplicado: previous?.precioCompraKgAplicado ?? party.precioCompraKg, jabasCargadas: p.jabasCargadas, jabasVacias: p.jabasVacias, binesCargados: p.binesCargados, binesVacios: p.binesVacios, mallasCargadas: p.mallasCargadas, mallasVacias: p.mallasVacias };
-        const saved = previous ? (hasChanges(previous, detail) ? await proveedorCargaV1(load.cargaId).update(previous.proveedorCargaId, detail) : previous) : await proveedorCargaV1(load.cargaId).create(detail);
-        const coordinatedOrigins = g.deliveryOrigins.filter(o => o.coordinacionEntregaId === c.coordination.coordinacionEntregaId && o.cxpId === party.cxpId);
-        const matchingVarietyOrigins = coordinatedOrigins.filter(o => {
-            const farm = g.farms.find(f => f.fincaId === o.fincaId);
-            return farm?.frutaDerivadaId === variety.frutaDerivadaId;
-        });
-        const targetOrigins = matchingVarietyOrigins.length > 0 ? matchingVarietyOrigins : coordinatedOrigins;
-        for (const o of targetOrigins)
-            if (!g.loadOrigins.some(n => n.proveedorCargaId === saved.proveedorCargaId && n.fincaId === o.fincaId))
-                await origenCargaV1(saved.proveedorCargaId).create({ cxpId: party.cxpId, fincaId: o.fincaId, kilosOrigen: null });
-    }
-    for (const [concepto, monto] of [['Cuadrilla', payload.gastoCuadrilla], ['Anotadores', payload.gastoAnotadores]] as const) {
-        const previous = g.loadExpenses.find(e => e.cargaId === load.cargaId && e.concepto === concepto);
-        if (previous) {
-            if (previous.monto !== monto)
-                await gastoCargaV1(load.cargaId).update(previous.gastoCargaId, { monto });
+    try {
+        for (const { p, party, variety, previous } of selections) {
+            const detail = { cxpId: party.cxpId, frutaDerivadaId: variety.frutaDerivadaId, kilosCargados: p.kilosCargados, precioCompraKgAplicado: previous?.precioCompraKgAplicado ?? party.precioCompraKg, jabasCargadas: p.jabasCargadas, jabasVacias: p.jabasVacias, binesCargados: p.binesCargados, binesVacios: p.binesVacios, mallasCargadas: p.mallasCargadas, mallasVacias: p.mallasVacias };
+            const saved = previous ? (hasChanges(previous, detail) ? await proveedorCargaV1(load.cargaId).update(previous.proveedorCargaId, detail) : previous) : await proveedorCargaV1(load.cargaId).create(detail);
+            const coordinatedOrigins = g.deliveryOrigins.filter(o => o.coordinacionEntregaId === c.coordination.coordinacionEntregaId && o.cxpId === party.cxpId);
+            const matchingVarietyOrigins = coordinatedOrigins.filter(o => {
+                const farm = g.farms.find(f => f.fincaId === o.fincaId);
+                return farm?.frutaDerivadaId === variety.frutaDerivadaId;
+            });
+            const targetOrigins = matchingVarietyOrigins.length > 0 ? matchingVarietyOrigins : coordinatedOrigins;
+            for (const o of targetOrigins)
+                if (!g.loadOrigins.some(n => n.proveedorCargaId === saved.proveedorCargaId && n.fincaId === o.fincaId))
+                    await origenCargaV1(saved.proveedorCargaId).create({ cxpId: party.cxpId, fincaId: o.fincaId, kilosOrigen: null });
         }
-        else if (monto > 0)
-            await gastoCargaV1(load.cargaId).create({ concepto, monto });
+        for (const [concepto, monto] of [['Cuadrilla', payload.gastoCuadrilla], ['Anotadores', payload.gastoAnotadores]] as const) {
+            const previous = g.loadExpenses.find(e => e.cargaId === load.cargaId && e.concepto === concepto);
+            if (previous) {
+                if (previous.monto !== monto)
+                    await gastoCargaV1(load.cargaId).update(previous.gastoCargaId, { monto });
+            }
+            else if (monto > 0)
+                await gastoCargaV1(load.cargaId).create({ concepto, monto });
+        }
+        if (c.contract.canal === 'INDUSTRIA' && payload.cumpleRequisitosIndustria !== undefined) {
+            const harvest = await ensureHarvest(id);
+            await cosechaV1(c.delivery.entregaProgramadaId).update(harvest.cosechaId, { industria: { ...harvest.industria, inspectionResult: payload.cumpleRequisitosIndustria ? 'Cumple' : 'No cumple', rejectionReason: payload.motivoRechazoIndustria ?? '' } });
+        }
+        return load;
+    } catch (error) {
+        if (!c.load && getAuthToken() === token) {
+            try { await rollbackNewLoad(load); }
+            catch (cleanupError) {
+                throw new Error('Se interrumpió el registro. Recarga Calidad y revisa la carga de esta entrega antes de volver a guardar.', { cause: cleanupError });
+            }
+        }
+        throw error;
     }
-    if (c.contract.canal === 'INDUSTRIA' && payload.cumpleRequisitosIndustria !== undefined) {
-        const harvest = await ensureHarvest(id);
-        await cosechaV1(c.delivery.entregaProgramadaId).update(harvest.cosechaId, { industria: { ...harvest.industria, inspectionResult: payload.cumpleRequisitosIndustria ? 'Cumple' : 'No cumple', rejectionReason: payload.motivoRechazoIndustria ?? '' } });
-    }
-    return load;
 }
 export function analysisOriginOptions(loadId: string) {
     const g = operationsContext(), c = context(loadId);

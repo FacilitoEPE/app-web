@@ -1,7 +1,6 @@
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from '@/shared/hooks/useFormSubmit';
 import SegmentedControl from '@/shared/components/SegmentedControl';
-import { driverVarietyOptions } from '@/modules/driver-portal/api/driver-screen-data';
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { useState } from "react";
@@ -185,7 +184,10 @@ export default function DriverLoadDataModal({ open, onOpenChange, load, onSave }
                     aside={`${proveedores.length} proveedor(es)`}
                 >
                     <div className="flex flex-col gap-4">
-                        {proveedores.map((prov, index) => (
+                        {proveedores.map((prov, index) => {
+                            const options = (load.variedadesCoordinadas?.[prov.proveedorId] ?? [prov.variedad].filter(Boolean))
+                                .map(name => ({ value: name, label: name }));
+                            return (
                             <div
                                 key={`${prov.proveedorId}-${index}`}
                                 className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-page/40 p-4"
@@ -208,10 +210,10 @@ export default function DriverLoadDataModal({ open, onOpenChange, load, onSave }
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
-                                    <FormField label="Variedad" required className="col-span-2">
-                                        <Select items={driverVarietyOptions(load.fruta)} value={prov.variedad} onValueChange={value => value && updateProvider(index, { variedad: value as string })}>
+                                    <FormField label="Variedad" required className="col-span-2" hint={options.length ? undefined : "Revisa la variedad de la finca en la coordinación."}>
+                                        <Select items={options} disabled={!options.length} value={prov.variedad || null} onValueChange={value => value && updateProvider(index, { variedad: value })}>
                                             <SelectTrigger aria-label={`Variedad de ${prov.proveedorNombre}`}><SelectValue placeholder="Selecciona una variedad" /></SelectTrigger>
-                                            <SelectContent>{driverVarietyOptions(load.fruta).map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
+                                            <SelectContent>{options.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
                                         </Select>
                                     </FormField>
                                     <InputField id={`prov-kg-${index}`} label="Kilos cargados" required step="0.01" min={0} unit="kg" value={String(prov.kilosCargados || '')} onChange={value => updateProvider(index, { kilosCargados: Number(value) })} className="col-span-2" />
@@ -231,7 +233,8 @@ export default function DriverLoadDataModal({ open, onOpenChange, load, onSave }
                                     })}
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </ModalSection>
 

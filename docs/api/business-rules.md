@@ -207,6 +207,8 @@ Cosecha pertenece a entrega y conserva organización, avances, cierre e industri
 
 En Calidad, el Administrador registra la carga desde una entrega coordinada con orígenes, de una campaña en ejecución y del canal seleccionado. Cada coordinación admite una sola carga compartida con el Chofer. En Industria, un rechazo se guarda en la cosecha y deja la entrega fuera del alta de carga.
 
+Una cabecera sin kilos queda pendiente en Calidad y no habilita el despacho, la liquidación ni nuevas facturas. Las facturas y los cobros que ya existan se mantienen accesibles. El administrador puede completarla desde la entrega coordinada. Al cambiar la variedad de un proveedor se conserva la identidad de su fila. El portal del chofer limita el alta a las variedades de las fincas coordinadas de cada proveedor.
+
 La guía tiene contenido íntegro y snapshots de salida/llegada/conductor; `proveedor_guia` distribuye kilos y fincas. `guia_x_norma` es la selección persistida. `contenido.standardCodes` se sincroniza con ella; `standardText` conserva la frase histórica. Emisión con `POST /guias/{id}/emitir` congela cabecera, proveedores, fincas y normas. No es emisión electrónica ante un servicio tributario ni subida de PDF.
 
 ### Recepción y chofer
@@ -227,6 +229,7 @@ Validar descarte, jabas y horas de descarga. Separar cierre físico y administra
 - Adelantos: desembolso <= acordado; aplicación <= disponible y saldo de liquidación. Misma empresa/campaña/acuerdo. Disponible = desembolsado − aplicado. Un mismo adelanto/liquidación tiene una aplicación según la unicidad SQL.
 - En la web, el Administrador registra fecha, monto y referencia del desembolso desde un acuerdo confirmado con adelanto en soles. El desembolso crea crédito del acuerdo, mientras que la aplicación reduce el saldo de la liquidación. Si un desembolso ya se aplicó a esa liquidación, el saldo sobrante se ofrece en otras liquidaciones del mismo acuerdo.
 - Venta: kilos de factura dentro de recepción; precio/moneda del contrato. `importeVenta = round(kilosFacturados × precioKgAplicado − descuento + cargos, 2)`. Varias facturas de una carga no pueden duplicar sus kilos.
+- Facturación agrupa por cliente y campaña. Los requerimientos históricos conservan su identidad y sus enlaces, y cada carga conserva el contrato, la moneda y el precio que le corresponden.
 - Preparación no es emisión. `POST /facturas/{id}/emitir` completa número y fechas; cobro solo sobre factura emitida. No agregar un flujo de anulación fiscal/rectificación no definido.
 - Pagos/cobros/aplicaciones son históricos append-only en V1. No PATCH/DELETE de movimientos. Un documento con movimientos no se borra ni cambia de origen/importes. La referencia única evita repetir un movimiento.
 

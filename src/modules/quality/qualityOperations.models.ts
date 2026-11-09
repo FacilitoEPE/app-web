@@ -61,6 +61,7 @@ export interface QualityHarvestClosure {
     registroCompraFruta: FileSource | null;
 }
 export interface QualityProviderLoadDetail {
+    registroId?: number;
     proveedorId: string;
     proveedorNombre: string;
     fincaNombre: string;
@@ -109,6 +110,7 @@ export interface QualitySunatRemissionGuide {
 }
 export interface QualityDeliveryLoadItem {
     cargaId?: number;
+    cargaIncompleta?: boolean;
     puedeRegistrarCarga?: boolean;
     guideDefaults?: Partial<QualitySunatRemissionGuide>;
     id: string;

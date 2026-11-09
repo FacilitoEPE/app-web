@@ -36,7 +36,7 @@ En **Lineamientos**, elegir un archivo solo lo deja pendiente; se envía al crea
 2. Ingrese nombre, fruta, meta en kilogramos y fechas. Si lo desea, escriba un **Responsable**. Elija **Crear Campaña** y verifique que figure como **Planificado**. El nombre guardado aparece en el detalle al volver a abrir la campaña.
 3. Abra el detalle de campaña, sección **Proveedores**. En planificación elija **Vincular proveedor**. En ejecución elija **Vincular acopiador**.
 4. Seleccione al proveedor, ingrese kilos estimados y guarde. En planificación elija el rol **Productor** o **Acopiador**. En ejecución, la ficha de un productor ya vinculado sigue disponible en su pestaña.
-5. Para un productor, abra **Ver detalles > Entrevistas > Vincular finca**. Seleccione una finca existente o registre una nueva eligiendo su departamento, provincia y distrito. Complete los datos agronómicos de esta campaña.
+5. Después de guardar la participación de un productor, abra **Ver detalles > Entrevistas > Vincular finca**. Seleccione una finca existente o registre una nueva eligiendo su departamento, provincia y distrito. Complete los datos agronómicos de esta campaña y guarde la entrevista.
 
 En el registro de finca, **Ver ubicación en el mapa** muestra un marcador con la latitud y longitud ingresadas.
 
@@ -103,6 +103,8 @@ En el listado de **Choferes** de una empresa transportista, abra **Ver detalles*
 
 **Opción:** la carga debe existir y contener sus proveedores antes de preparar la guía. Los dos códigos de establecimiento son obligatorios.
 
+Si un registro anterior quedó sin kilos, vuelva a **Registrar carga** y seleccione la entrega marcada **Completar registro**.
+
 ## 8. Recepción en planta y despacho del chofer
 
 1. Abra **Logística y Despacho** (`/logistica-despacho`) y seleccione la carga.
@@ -118,7 +120,7 @@ El **Detalle de carga** muestra el responsable, las observaciones y la evidencia
 
 ## 9. Facturación, cobranza y liquidaciones
 
-- **Facturación y Cobros** (`/facturacion-cobros`): prepare la facturación de la campaña, revise cliente, kilos, precio y moneda, emita el registro de factura y registre la cobranza con referencia, fecha e importe.
+- **Facturación y Cobros** (`/facturacion-cobros`): elija **Ver clientes** y luego **Facturar**. Ahí se muestran las cargas del cliente para toda la campaña, con su contrato y moneda correspondientes. Prepare la factura, registre el documento emitido y registre el cobro con referencia, fecha e importe.
 - **Liquidación de Compra** (`/liquidacion-compra`): liquide al proveedor según kilos aceptados y precio pactado; revise retenciones/alertas del límite UIT y registre el pago con referencia bancaria.
 - **Liquidaciones de Transporte**: revise flete y costos de ruta. En **Registrar pago / Aplicar adelanto**, seleccione un desembolso disponible del mismo acuerdo para descontarlo del saldo. Registre cualquier pago en caja por separado.
 

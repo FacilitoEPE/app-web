@@ -1,5 +1,5 @@
 import type { OperationsContext } from '@/modules/operations/api/operations-context.api';
-import { loadContext, providerName, farmNames } from '@/modules/operations/api/operation-links';
+import { loadContext, providerName, farmNames, hasLoadedWeight } from '@/modules/operations/api/operation-links';
 import type { SettlementLoad, SettlementPaymentItem, SettlementLinkedPerson } from '@/modules/purchase-settlement/purchaseSettlement.models';
 import { jsonNumber, jsonObject } from '@/modules/quality/api/quality-screen-data';
 import { importeParaUit } from '@/modules/purchase-settlement/settlementUit.utils';
@@ -14,7 +14,7 @@ export function projectSettlementData(g: OperationsContext): SettlementLoad[] {
         for (const row of g.providerSettlements.filter(s => s.personaLiquidacionId === id)) { const year = row.fecha.slice(0, 4); acumuladosPorAnio[year] = (acumuladosPorAnio[year] ?? 0) + importeParaUit(row.importeCompra, row.moneda); }
         return { acumuladosPorAnio, id: String(id), nombres: p.nombres, apellidos: p.apellidos, tipoDocumento: p.tipoDocumento, numeroDocumento: p.numeroDocumento, vinculo, acumuladoAnualPen: acumuladosPorAnio[String(new Date().getFullYear())] ?? 0 };
     };
-    return g.loads.map(load => {
+    return g.loads.filter(load => hasLoadedWeight(load.cargaId, g)).map(load => {
         const c = loadContext(load.cargaId, g), receipt = g.receipts.find(r => r.cargaId === load.cargaId), purchases = (receipt?.compras ?? []).map(jsonObject), rows = g.loadProviders.filter(p => p.cargaId === load.cargaId);
         const providers = [...new Set(rows.map(p => g.participations.find(r => r.cxpId === p.cxpId)!.proveedorId))];
         const transport = g.transportSettlements.find(s => s.cargaId === load.cargaId), agreement = g.agreements.find(a => a.acuerdoTransporteId === c.coordination.acuerdoTransporteId)!;

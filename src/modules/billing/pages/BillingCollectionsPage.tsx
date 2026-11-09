@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Banknote, Receipt } from "lucide-react";
 import BillingRegisterCollectionModal from "@/modules/billing/components/BillingRegisterCollectionModal";
-import { billingCampaignClosed, collectedAmount, invoiceBalance, invoiceIsIssued } from "@/modules/billing/billing.utils";
+import { billingCampaignClosed, billingClientMatchesRoute, collectedAmount, invoiceBalance, invoiceIsIssued } from "@/modules/billing/billing.utils";
 import { registerBillingCollection, useBillingClients } from "@/modules/billing/billing.store";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
 import FilterBar, { FilterSearch } from "@/shared/components/FilterBar";
@@ -23,7 +23,7 @@ const money = (value: number, currency: string) => `${currency === "USD" ? "US$"
 
 export default function BillingCollectionsPage() {
     const { campaignId, clientId, invoiceId } = useParams<{ campaignId: string; clientId: string; invoiceId: string }>();
-    const client = useBillingClients().find(item => item.id === clientId && item.campaniaId === Number(campaignId));
+    const client = useBillingClients().find(item => billingClientMatchesRoute(item, clientId) && item.campaniaId === Number(campaignId));
     const load = client?.cargas.find(item => item.facturas.some(invoice => invoice.id === invoiceId));
     const invoice = load?.facturas.find(item => item.id === invoiceId);
     const [search, setSearch] = useState("");
