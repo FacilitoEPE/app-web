@@ -7,7 +7,7 @@ import BillingIssueInvoiceModal from "@/modules/billing/components/BillingIssueI
 import BillingPrepareInvoiceModal from "@/modules/billing/components/BillingPrepareInvoiceModal";
 import BillingRegisterCollectionModal from "@/modules/billing/components/BillingRegisterCollectionModal";
 import type { BillingInvoice, BillingLoad } from "@/modules/billing/billing.models";
-import { billingAvailableKg, billingCampaignClosed, billingLoadReady, collectedAmount, invoiceBalance, invoiceIsIssued } from "@/modules/billing/billing.utils";
+import { billingAvailableKg, billingCampaignClosed, billingClientMatchesRoute, billingLoadReady, collectedAmount, invoiceBalance, invoiceIsIssued } from "@/modules/billing/billing.utils";
 import { issueBillingElectronicInvoice, registerBillingCollection, saveBillingInvoicePreparation, useBillingClients } from "@/modules/billing/billing.store";
 import EntityOverviewCard from "@/shared/components/EntityOverviewCard";
 import { InfoField, SummaryBar } from "@/shared/components/InfoField";
@@ -25,7 +25,7 @@ export default function BillingClientWorkspacePage() {
     const navigate = useNavigate();
     const { campaignId, clientId } = useParams<{ campaignId: string; clientId: string }>();
     const clients = useBillingClients();
-    const client = clients.find(item => item.id === clientId && item.campaniaId === Number(campaignId));
+    const client = clients.find(item => billingClientMatchesRoute(item, clientId) && item.campaniaId === Number(campaignId));
     const [prepare, setPrepare] = useState<{ load: BillingLoad; invoice: BillingInvoice | null } | null>(null);
     const [issue, setIssue] = useState<Target | null>(null);
     const [collection, setCollection] = useState<Target | null>(null);
@@ -61,13 +61,15 @@ export default function BillingClientWorkspacePage() {
                     <h3 className="text-lg font-bold text-ink">{load.codigo}</h3>
                     <p className="text-sm text-ink-muted">Recepción: {formatDisplayDate(load.fechaRecepcion)} · {formatKg(load.kilosCargados)} kg cargados</p>
                 </div><div className="flex flex-wrap items-center gap-2"><StatusBadge status={ready ? "Completa" : "Por completar"} />
-                    {canEdit && !load.respaldoLogisticoCompleto && <Button variant="outline" onClick={() => navigate(`/logistica-despacho/${campaignId}/cargas/${load.id}/recepcion`)}>Completar recepción</Button>}
-                    {canEdit && load.precioVentaKg <= 0 && <Button variant="outline" onClick={() => navigate(`/campaigns/${campaignId}/clients/${clientId}/contracts`)}>Revisar contrato</Button>}
+                    {canEdit && load.kilosCargados > 0 && !load.respaldoLogisticoCompleto && <Button variant="outline" onClick={() => navigate(`/logistica-despacho/${campaignId}/cargas/${load.id}/recepcion`)}>Completar recepción</Button>}
+                    {canEdit && load.precioVentaKg <= 0 && <Button variant="outline" onClick={() => navigate(`/campaigns/${campaignId}/clients/${load.requirementId}/contracts`)}>Revisar contrato</Button>}
                     {canEdit && ready && available > 0 && <Button onClick={() => setPrepare({ load, invoice: null })}><Plus size={17} />Preparar factura</Button>}
                 </div></div>
                 <SummaryBar items={[{ label: "Kilos cargados", value: `${formatKg(load.kilosCargados)} kg` }, { label: "Kilos recibidos", value: load.kilosRecibidos ? `${formatKg(load.kilosRecibidos)} kg` : "Pendiente", tone: "brand" },
                     { label: "Kilos disponibles", value: `${formatKg(available)} kg` }, { label: "Precio de venta", value: `${money(load.precioVentaKg, load.moneda)} / kg` }]} />
-                {!ready && <p className="rounded-xl border border-status-highlight-border bg-status-highlight-surface p-3 text-sm text-ink-body">Para preparar la factura se requieren peso, resultado y reporte de recepción en Logística, además del precio contractual.</p>}
+                {!ready && <p className="rounded-xl border border-status-highlight-border bg-status-highlight-surface p-3 text-sm text-ink-body">
+                    {load.kilosCargados <= 0 ? "Completa los kilos de la carga en Calidad antes de preparar o registrar otra factura." : "Para preparar la factura se requieren peso, resultado y reporte de recepción en Logística, además del precio contractual."}
+                </p>}
                 {load.reporteRecepcion && <InfoField label="Reporte de recepción" value={load.reporteRecepcion.name} />}
                 <div className="grid gap-3">{load.facturas.map(invoice => {
                     const issued = invoiceIsIssued(invoice);
@@ -80,7 +82,7 @@ export default function BillingClientWorkspacePage() {
                         <div className="my-4 grid gap-2 sm:grid-cols-3"><InfoField label={issued ? "Total facturado" : "Importe por facturar"} value={money(invoice.total, invoice.moneda)} />
                             <InfoField label="Cobrado" value={money(paid, invoice.moneda)} /><InfoField label={issued ? "Saldo" : "Por facturar"} value={money(balance, invoice.moneda)} /></div>
                         <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => navigate(invoiceRoute(invoice.id))}><Eye size={16} />Ver detalle</Button>
-                            {!issued && canEdit && <><Button variant="outline" size="sm" onClick={() => setPrepare({ load, invoice })}><FileSpreadsheet size={16} />Editar preparación</Button>
+                            {!issued && canEdit && load.kilosCargados > 0 && <><Button variant="outline" size="sm" onClick={() => setPrepare({ load, invoice })}><FileSpreadsheet size={16} />Editar preparación</Button>
                                 <Button size="sm" onClick={() => setIssue({ load, invoice })}><FileCheck2 size={16} />Registrar factura emitida</Button></>}
                             {issued && <><Button variant="outline" size="sm" onClick={() => navigate(`${invoiceRoute(invoice.id)}/cobros`)}><History size={16} />Historial de cobros</Button>
                                 {balance > 0 && canEdit && <Button size="sm" onClick={() => setCollection({ load, invoice })}><Banknote size={16} />Registrar cobro</Button>}</>}

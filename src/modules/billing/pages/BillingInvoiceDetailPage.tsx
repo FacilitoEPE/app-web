@@ -4,7 +4,7 @@ import { Banknote, Building2, CalendarDays, FileCheck2, FileSpreadsheet, History
 import BillingIssueInvoiceModal from "@/modules/billing/components/BillingIssueInvoiceModal";
 import BillingPrepareInvoiceModal from "@/modules/billing/components/BillingPrepareInvoiceModal";
 import BillingRegisterCollectionModal from "@/modules/billing/components/BillingRegisterCollectionModal";
-import { billingCampaignClosed, collectedAmount, invoiceBalance, invoiceIsIssued } from "@/modules/billing/billing.utils";
+import { billingCampaignClosed, billingClientMatchesRoute, collectedAmount, invoiceBalance, invoiceIsIssued } from "@/modules/billing/billing.utils";
 import { issueBillingElectronicInvoice, registerBillingCollection, saveBillingInvoicePreparation, useBillingClients } from "@/modules/billing/billing.store";
 import EntityOverviewCard from "@/shared/components/EntityOverviewCard";
 import FileDropzone from '@/shared/components/FileDropzone';
@@ -23,7 +23,7 @@ export default function BillingInvoiceDetailPage() {
     const navigate = useNavigate();
     const { campaignId, clientId, invoiceId } = useParams<{ campaignId: string; clientId: string; invoiceId: string }>();
     const clients = useBillingClients();
-    const client = clients.find(item => item.id === clientId && item.campaniaId === Number(campaignId));
+    const client = clients.find(item => billingClientMatchesRoute(item, clientId) && item.campaniaId === Number(campaignId));
     const load = client?.cargas.find(item => item.facturas.some(invoice => invoice.id === invoiceId));
     const invoice = load?.facturas.find(item => item.id === invoiceId);
     const [editOpen, setEditOpen] = useState(false);
@@ -39,7 +39,7 @@ export default function BillingInvoiceDetailPage() {
     return <div className="px-4 py-5 sm:px-8 lg:px-14">
         <PageHeader icon={<Receipt size={24} />} title={issued ? "Detalle de la factura" : "Detalle de la preparación"}
             description={`${client.nombreEmpresa} · ${load.codigo} · ${client.campaniaNombre}`}
-            action={canEdit && !issued ? <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil size={18} />Editar preparación</Button> : undefined} />
+            action={canEdit && !issued && load.kilosCargados > 0 ? <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil size={18} />Editar preparación</Button> : undefined} />
         <div className="mb-6 grid gap-4 lg:grid-cols-[1.95fr_1fr]">
             <EntityOverviewCard avatar={<FileSpreadsheet />} eyebrow={issued ? "Factura emitida" : "Preparación de factura"}
                 title={invoice.numeroFacturaElectronica || invoice.referenciaPreparacion} watermark={FileSpreadsheet}
@@ -73,7 +73,7 @@ export default function BillingInvoiceDetailPage() {
                     <InfoField label="Factura adjunta" value={invoice.archivoFacturaEmitida?.name || "Sin documento"} />
                     <InfoField label="Cobros registrados" value={invoice.cobros.length} /><InfoField label={issued ? "Saldo pendiente" : "Por facturar"} value={money(balance, invoice.moneda)} />
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">{!issued && canEdit && <Button onClick={() => setIssueOpen(true)}><FileCheck2 size={18} />Registrar factura emitida</Button>}
+                <div className="mt-2 flex flex-wrap gap-2">{!issued && canEdit && load.kilosCargados > 0 && <Button onClick={() => setIssueOpen(true)}><FileCheck2 size={18} />Registrar factura emitida</Button>}
                     {issued && <Button variant="outline" onClick={() => navigate(`${back}/facturas/${invoice.id}/cobros`)}><History size={18} />Ver historial de cobros</Button>}
                     {issued && balance > 0 && canEdit && <Button onClick={() => setCollectOpen(true)}><Banknote size={18} />Registrar cobro</Button>}
                 </div>

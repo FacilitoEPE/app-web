@@ -17,7 +17,7 @@ El portal muestra todas las entregas coordinadas. La cuenta puede consultarlas y
 
 ## 2. Revisar el viaje
 
-Las entregas coordinadas que aún no tienen carga aparecen como **Por completar**. Abra **Registrar carga**, compruebe los proveedores y fincas asignados, seleccione la variedad, ingrese los kilos y marque cada tipo de bulto utilizado para completar cargados y vacíos. Registre fecha, responsable, viáticos, gastos y observaciones; guarde antes de abrir el despacho. El registro usa la misma carga que consulta Cosecha y Control de Calidad.
+Las entregas coordinadas que aún no tienen carga aparecen como **Por completar**. Abra **Registrar carga**, compruebe los proveedores y fincas asignados y elija una variedad de esas fincas para cada proveedor. Ingrese los kilos y marque cada tipo de bulto utilizado para completar cargados y vacíos. Registre fecha, responsable, viáticos, gastos y observaciones; guarde antes de abrir el despacho. El registro usa la misma carga que consulta Cosecha y Control de Calidad. Si ve **Pendiente en Calidad**, el administrador debe completar ese registro antes de habilitar el despacho.
 
 El chofer no puede cambiar de conductor desde el portal. La edición de datos de carga se habilita durante **En carga**, en una campaña en ejecución y antes de emitir una guía.
 

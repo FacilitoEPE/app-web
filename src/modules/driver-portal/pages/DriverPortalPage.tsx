@@ -459,7 +459,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                                 size="default"
                                                 disabled={!load.permiteEditarCarga} onClick={() => setLoadDataModalLoad(load)}
                                             >
-                                                <PackageCheck size={16} strokeWidth={2.3} /> {load.pendienteRegistro ? 'Registrar carga' : 'Datos de carga'}
+                                                <PackageCheck size={16} strokeWidth={2.3} /> {load.cargaIncompleta ? 'Pendiente en Calidad' : load.pendienteRegistro ? 'Registrar carga' : 'Datos de carga'}
                                             </Button>
                                             <Button
                                                 size="default"

@@ -8,7 +8,7 @@ import { refreshFrontendData, resetFrontendData } from '@/frontend-data'
 import { operationsContext } from '@/modules/operations/api/operations-context.api'
 import { projectBillingData } from '@/modules/billing/api/billing-screen-data'
 import { billingCommands } from '@/modules/billing/api/billing-commands.api'
-import { billingAvailableKg, billingCampaignClosed, billingCampaigns, billingLoadReady, billingTotalsByCurrency, invoiceBalance } from '@/modules/billing/billing.utils'
+import { billingAvailableKg, billingCampaignClosed, billingCampaigns, billingClientMatchesRoute, billingLoadReady, billingTotalsByCurrency, invoiceBalance } from '@/modules/billing/billing.utils'
 import { demoPdf } from '@/shared/utils/demoData'
 
 let server: Server
@@ -29,6 +29,23 @@ afterEach(async () => {
 })
 
 describe('Facturación y cobros con datos relacionados de desarrollo', () => {
+    it('agrupa requerimientos históricos de un cliente y conserva sus rutas y el contrato de cada carga', async () => {
+        await refreshFrontendData('/facturacion-cobros/1/clientes/2')
+        const g = structuredClone(operationsContext())
+        const alternateLoad = g.loads.find(load => load.codigo === 'CAR-EXP-002')!
+        const coordination = g.coordinations.find(row => row.coordinacionEntregaId === alternateLoad.coordinacionEntregaId)!
+        const delivery = g.deliveries.find(row => row.entregaProgramadaId === coordination.entregaProgramadaId)!
+        delivery.contratoVentaId = 2
+        const clients = projectBillingData(g)
+        const rows = clients.filter(client => client.campaniaId === 1 && client.nombreEmpresa === 'Frutas del Mundo SAC')
+        expect(rows).toHaveLength(1)
+        expect(rows[0]).toMatchObject({ id: '1', requirementIds: ['1', '2'], contratosCount: 2, kilosContratados: 3000 })
+        expect(rows[0].cargas.map(load => [load.codigo, load.requirementId])).toEqual(expect.arrayContaining([
+            ['CAR-DEMO-1', '1'], ['CAR-EXP-002', '2'],
+        ]))
+        expect(billingClientMatchesRoute(rows[0], '2')).toBe(true)
+        expect(rows[0].cargas.find(load => load.codigo === 'CAR-DEMO-1')?.facturas.some(invoice => invoice.cobros.length)).toBe(true)
+    })
     it('relaciona campañas, clientes y cargas, y exige respaldo antes de preparar', async () => {
         const clients = projectBillingData(operationsContext())
         expect(billingCampaigns(clients).find(c => c.name === 'Mango 2026')?.clients).toHaveLength(2)
@@ -40,7 +57,7 @@ describe('Facturación y cobros con datos relacionados de desarrollo', () => {
         expect(load.reporteRecepcion?.name).toBe('recepcion-carga-3.pdf')
         const exporter = clients.find(client => client.nombreEmpresa === 'Frutas del Mundo SAC')!
         expect(billingLoadReady(exporter.cargas.find(item => item.codigo === 'CAR-DEMO-1')!)).toBe(false)
-        await expect(billingCommands.prepare(exporter.id, exporter.cargas[0].id, {
+        await expect(billingCommands.prepare('2', exporter.cargas[0].id, {
             referenciaPreparacion: 'LV-999999', numeroFacturaElectronica: '', estado: 'Preparación pendiente',
             fechaPreparacion: '2026-11-07', fechaEmision: '', fechaVencimiento: '', kilosFacturados: 1,
             precioUnitario: exporter.precioPorKg, descuento: 0, cargos: 0, total: exporter.precioPorKg,

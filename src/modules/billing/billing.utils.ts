@@ -8,6 +8,8 @@ export const collectedAmount = (invoice: BillingInvoice) => invoice.cobros.reduc
 export const invoiceBalance = (invoice: BillingInvoice) => Math.max(0, invoice.total - collectedAmount(invoice));
 export const invoiceIsIssued = (invoice: BillingInvoice) => Boolean(invoice.numeroFacturaElectronica);
 export const billingCampaignClosed = (client: BillingClient) => client.estadoCampania === "terminado";
+export const billingClientMatchesRoute = (client: BillingClient, id: string | undefined) =>
+    id !== undefined && client.requirementIds.includes(id);
 
 export function billingTotalsByCurrency(clients: BillingClient[]) {
     const totals = new Map<BillingClient["moneda"], { currency: BillingClient["moneda"]; billed: number; collected: number }>();
@@ -42,7 +44,7 @@ export function billingCampaigns(clients: BillingClient[]) {
 }
 
 export function billingLoadReady(load: BillingLoad) {
-    return load.kilosRecibidos > 0 && load.precioVentaKg > 0 && load.respaldoLogisticoCompleto;
+    return load.kilosCargados > 0 && load.kilosRecibidos > 0 && load.precioVentaKg > 0 && load.respaldoLogisticoCompleto;
 }
 
 export function billingAvailableKg(load: BillingLoad) {

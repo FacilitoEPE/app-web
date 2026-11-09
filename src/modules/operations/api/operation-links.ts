@@ -1,4 +1,8 @@
 import { operationsContext, type OperationsContext } from '@/modules/operations/api/operations-context.api';
+export function hasLoadedWeight(loadId: number, g: OperationsContext) {
+    return g.loadProviders.some(row => row.cargaId === loadId && row.kilosCargados > 0);
+}
+
 export function coordinationContext(id: number, g: OperationsContext = operationsContext()) {
     const coordination = g.coordinations.find(row => row.coordinacionEntregaId === id);
     const delivery = g.deliveries.find(row => row.entregaProgramadaId === coordination?.entregaProgramadaId);

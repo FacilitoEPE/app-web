@@ -93,6 +93,8 @@ export const driverCommands = {
             const receivedProviders = new Set(value.proveedores.map(provider => provider.proveedorId));
             if (!expectedProviders.size || value.proveedores.length !== expectedProviders.size || receivedProviders.size !== expectedProviders.size || [...receivedProviders].some(id => !expectedProviders.has(id)))
                 throw new Error('La carga debe conservar los proveedores de la entrega coordinada.');
+            if (row.variedadesCoordinadas && value.proveedores.some(provider => !row.variedadesCoordinadas?.[provider.proveedorId]?.includes(provider.variedad)))
+                throw new Error('Selecciona una variedad de las fincas coordinadas para cada proveedor.');
             if (value.proveedores.some(provider => !provider.variedad.trim() || !Number.isFinite(provider.kilosCargados) || provider.kilosCargados <= 0 || [provider.jabasCargadas, provider.jabasVacias, provider.binesCargados, provider.binesVacios, provider.mallasCargadas, provider.mallasVacias].some(amount => !Number.isInteger(amount) || amount < 0)))
                 throw new Error('Revisa las variedades, kilos y cantidades de bultos de cada proveedor.');
             if ([value.viaticosMovilidad, value.viaticosInsumos, value.gastoCuadrilla, value.gastoAnotadores].some(amount => !Number.isFinite(amount) || amount < 0))

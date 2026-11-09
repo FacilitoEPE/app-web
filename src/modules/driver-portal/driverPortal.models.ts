@@ -61,6 +61,8 @@ export interface DriverVehicleExitGuide {
 }
 export interface DriverLoad {
     pendienteRegistro?: boolean;
+    cargaIncompleta?: boolean;
+    variedadesCoordinadas?: Record<string, string[]>;
     permiteEditarCarga?: boolean;
     rechazada?: boolean;
     cumpleRequisitosIndustria?: boolean;

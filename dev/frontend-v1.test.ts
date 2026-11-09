@@ -1,5 +1,6 @@
 import { campaignCarrierAssignments } from "@/modules/campaigns/api/carrier-assignments";
 import { campaignCommands } from '@/modules/campaigns/api/campaign-commands.api';
+import { EMPTY_INTERVIEW } from '@/modules/campaigns/campaignInterview';
 import { harvestedWeeklyItems } from "@/modules/campaigns/weeklyHarvest.utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createServer, type Server } from 'node:http'
@@ -7,7 +8,7 @@ import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 import { createV1MockMiddleware } from './v1-mock.ts'
 import { apiClient } from '@/shared/api/client'
-import { refreshFrontendData, getFrontendDataStatus } from '@/frontend-data'
+import { refreshFrontendData, getFrontendDataStatus, resetFrontendData } from '@/frontend-data'
 import { operationsContext } from '@/modules/operations/api/operations-context.api'
 import { projectQualityData } from '@/modules/quality/api/quality-screen-data'
 import { projectBillingData } from '@/modules/billing/api/billing-screen-data'
@@ -271,6 +272,19 @@ describe('existing frontend with the V1 HTTP contract', () => {
     await refreshFrontendData()
     expect(getProviderLocalData().fincas[1].find(f => f.fincaId === added.fincaId)?.haCultivo).toBe(1.5)
     expect(requested.some(url => url.startsWith('/mock-api/api/proveedores/1/fincas'))).toBe(true)
+  })
+
+  it('vincula una finca a la participación desde Entrevistas y conserva la relación al recargar', async () => {
+    const name = 'Finca vinculada desde Entrevistas'
+    const source = getProviderLocalData().fincas[1][0]
+    await addFinca(1, { ...source, nombre: name, fincaId: undefined })
+    const farm = operationsContext().farms.find(row => row.nombreFinca === name)!
+    const saved = await campaignCommands.interview(1, { ...EMPTY_INTERVIEW, fincaNombre: name })
+    resetFrontendData()
+    await refreshFrontendData('/campaigns/1/providers/1/interviews')
+    expect(operationsContext().interviews.find(row => row.entrevistaId === saved.entrevistaId)).toMatchObject({
+      camXProvId: 1, fincaId: farm.fincaId,
+    })
   })
 
   it('persists multiple farms with different varieties for a provider and restores them after refresh', async () => {
