@@ -71,11 +71,11 @@ export default function CampaignCarrierDetailsModal({
         });
         if (acuerdo.tipo === "adelanto" && acuerdo.adelanto !== null) {
             summaryItems.push({
-                label: "Adelanto",
+                label: "Adelanto acordado",
                 value: `${symbol} ${formatMoney(acuerdo.adelanto)}`,
             });
             summaryItems.push({
-                label: "Saldo",
+                label: "Saldo pactado al final",
                 value: `${symbol} ${formatMoney(balance)}`,
                 tone: acuerdo.saldoPagado ? ("brand" as const) : ("highlight" as const),
             });
@@ -170,10 +170,10 @@ export default function CampaignCarrierDetailsModal({
 
                                 {acuerdo.tipo === "adelanto" && acuerdo.adelanto !== null && (
                                     <>
-                                        <InfoField label="Monto del adelanto" value={`${symbol} ${formatMoney(acuerdo.adelanto)}`} />
-                                        <InfoField label="Fecha del adelanto" value={formatDisplayDate(acuerdo.fechaAdelanto)} />
+                                        <InfoField label="Monto del adelanto acordado" value={`${symbol} ${formatMoney(acuerdo.adelanto)}`} />
+                                        <InfoField label="Último desembolso" value={formatDisplayDate(acuerdo.fechaAdelanto)} />
                                         <InfoField
-                                            label="Saldo pendiente"
+                                            label="Saldo pactado al final"
                                             value={`${symbol} ${formatMoney(balance)}`}
                                         />
                                     </>
@@ -188,7 +188,7 @@ export default function CampaignCarrierDetailsModal({
 
                             {acuerdo.boleta && (
                                 <FileDropzone
-                                    label="Boleta o recibo del adelanto"
+                                    label="Documento del acuerdo"
                                     variant="horizontal"
                                     hasColon={false}
                                     file={acuerdo.boleta}

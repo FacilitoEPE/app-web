@@ -31,7 +31,6 @@ import type { Campaign } from "@/modules/campaigns/campaigns.data";
 import type { CampaignGrower, CampaignClient, CampaignCertification } from "@/modules/campaigns/campaignDetails.data";
 
 import CampaignOverviewCard from "@/modules/campaigns/components/CampaignOverviewCard";
-import { useTemporaryCampaignResponsible } from "@/modules/campaigns/campaignResponsible.store";
 import CampaignMetricCards from "@/modules/campaigns/components/CampaignMetricCards";
 import CampaignHarvestCard from "@/modules/campaigns/components/CampaignHarvestCard";
 import CampaignProvidersSummary from "@/modules/campaigns/components/CampaignProvidersSummary";
@@ -123,7 +122,6 @@ export default function CampaignDetailsPage() {
 const BACK_TO_CAMPAIGNS = { to: "/campaigns", label: "Volver a campañas" };
 
 function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
-    const temporaryResponsible = useTemporaryCampaignResponsible(campaniaId);
     const [state, setState] = useState<LoadState>({ status: "loading" });
     const [openModal, setOpenModal] = useState<"providers" | "edit" | null>(null);
     const [successOpen, setSuccessOpen] = useState(false);
@@ -147,8 +145,9 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
                 const derivadas = campana.frutaId ? await getFrutaDerivadas(campana.frutaId) : [];
 
                 const sessionUser = getSession()?.user;
-                let responsableNombre = "Sin asignar";
-                if (campana.responsableUsuarioId != null) {
+                const savedResponsible = campana.responsableNombre?.trim();
+                let responsableNombre = savedResponsible || "Sin asignar";
+                if (!savedResponsible && campana.responsableUsuarioId != null) {
                     if (campana.responsableUsuarioId === sessionUser?.usuarioId) {
                         responsableNombre = `${sessionUser.nombres} ${sessionUser.apellidos}`.trim() || sessionUser.usuario;
                     } else {
@@ -207,7 +206,7 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
         ...toOverviewCampaign(campana),
         variedades: derivadas.map((derivada) => derivada.name),
         temporada: campana.temporada,
-        responsable: temporaryResponsible ? `${temporaryResponsible} (temporal)` : responsableNombre,
+        responsable: responsableNombre,
         observaciones: campana.observaciones,
         lineamientos,
     };

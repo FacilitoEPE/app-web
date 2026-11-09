@@ -28,6 +28,7 @@ import { useCarrierQuotations } from "@/modules/carriers/carrierQuotations.store
 import { CARRIER_TIPOS, carrierIdentification, toCarrierProfile, type CarrierProfile } from "@/modules/carriers/carrierProfile.utils";
 import type { Carrier } from "@/modules/carriers/carriers.data";
 import CampaignCarrierAgreementModal, { type AgreementModalMode } from "@/modules/campaigns/components/CampaignCarrierAgreementModal";
+import CampaignCarrierAdvanceModal from "@/modules/campaigns/components/CampaignCarrierAdvanceModal";
 import CampaignCarrierDetailsModal from "@/modules/campaigns/components/CampaignCarrierDetailsModal";
 import CampaignContextBanner from "@/modules/campaigns/components/CampaignContextBanner";
 import CampaignLinkCarrierModal from "@/modules/campaigns/components/CampaignLinkCarrierModal";
@@ -47,6 +48,7 @@ import {
     useCampaignCarriers,
 } from "@/modules/campaigns/campaignCarriers.store";
 import { useCampaign } from "@/modules/campaigns/useCampaign";
+import { campaignCommands } from "@/modules/campaigns/api/campaign-commands.api";
 
 type SuccessMode = "carrier" | "carrierAgreement";
 interface Row {
@@ -54,7 +56,7 @@ interface Row {
     /** Ficha de Gestión de Transporte; `null` si el transportista ya no existe allí */
     carrier: CarrierProfile | null;
 }
-type AgreementState = { open: boolean; mode: AgreementModalMode; row: Row | null };
+type AgreementState = { open: boolean; mode: AgreementModalMode | "advance"; row: Row | null };
 
 const rowName = (row: Row) => row.carrier?.nombre ?? "Transportista no disponible";
 
@@ -63,7 +65,7 @@ function agreementCaption(link: CampaignCarrierLink): string | null {
     if (!agreement) return null;
     const symbol = getMonedaSymbol(agreement.moneda);
     if (agreement.tipo === "adelanto" && !agreement.saldoPagado) {
-        return `Saldo pendiente: ${symbol} ${formatMoney(getAgreementBalance(agreement.total, agreement.adelanto))}`;
+        return `Saldo pactado al final: ${symbol} ${formatMoney(getAgreementBalance(agreement.total, agreement.adelanto))}`;
     }
     return `Total: ${symbol} ${formatMoney(agreement.total)}`;
 }
@@ -237,7 +239,9 @@ export default function CampaignCarriersPage() {
         );
     };
 
-    const selectedAgreementRow = agreement.row;
+    const selectedAgreementRow = rows.find(row => row.link.id === agreement.row?.link.id) ?? null;
+    const selectedAgreement = selectedAgreementRow?.link.acuerdo;
+    const returnToAgreement = () => setAgreement(current => ({ ...current, mode: "view" }));
 
     return (
         <div className="px-4 py-5 sm:px-8 lg:px-14">
@@ -378,20 +382,33 @@ export default function CampaignCarriersPage() {
                 quotation={details.row ? (quotations.find((q) => q.carrierId === details.row?.link.carrierId && q.campaniaId === campaniaId) ?? quotations.find((q) => q.carrierId === details.row?.link.carrierId) ?? null) : null}
             />
 
-            <CampaignCarrierAgreementModal
+            {agreement.mode === "advance" && agreement.open && selectedAgreementRow && selectedAgreement ? (
+                <CampaignCarrierAdvanceModal
+                    description={`${rowName(selectedAgreementRow)} · ${campaign?.nombre ?? "Campaña"}`}
+                    remaining={getAgreementBalance(selectedAgreement.adelanto ?? 0, selectedAgreement.adelantoDesembolsado ?? 0)}
+                    onBack={returnToAgreement}
+                    onSave={async values => {
+                        await campaignCommands.carrierAdvance(campaniaId, selectedAgreementRow.link.id, values);
+                        returnToAgreement();
+                    }}
+                />
+            ) : agreement.mode !== "advance" && <CampaignCarrierAgreementModal
                 open={agreement.open}
                 onOpenChange={(open) => setAgreement((current) => ({ ...current, open }))}
                 mode={agreement.mode}
                 carrierName={selectedAgreementRow ? rowName(selectedAgreementRow) : ""}
                 campaignName={campaign?.nombre ?? "Campaña"}
                 agreement={selectedAgreementRow?.link.acuerdo ?? null}
+                onRegisterAdvance={campaign && campaign.estado !== "terminado"
+                    ? () => setAgreement(current => ({ ...current, mode: "advance" }))
+                    : undefined}
                 onSave={async (values: AgreementFormValues, boleta) => {
                     if (!selectedAgreementRow) return;
                     await saveCampaignCarrierAgreement(campaniaId, selectedAgreementRow.link.id, values, boleta);
                     setAgreement((current) => ({ ...current, open: false }));
                     showSuccess("carrierAgreement");
                 }}
-            />
+            />}
 
             <ConfirmModal
                 open={unlinking.open}

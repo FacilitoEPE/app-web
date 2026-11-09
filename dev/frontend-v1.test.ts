@@ -14,8 +14,7 @@ import { projectBillingData } from '@/modules/billing/api/billing-screen-data'
 import { projectSettlementData } from '@/modules/purchase-settlement/api/settlement-screen-data'
 import { projectDriverData } from '@/modules/driver-portal/api/driver-screen-data'
 import { getProviderLocalData, addFinca, updateFinca } from '@/modules/providers/providerLocalData.store'
-import { getCampanas } from '@/modules/campaigns/api/campaign.api'
-import { updateCampana, getCampana } from '@/modules/campaigns/api/campaign.api'
+import { createCampana, getCampana, getCampanas, updateCampana } from '@/modules/campaigns/api/campaign.api'
 import { registerBillingCollection } from '@/modules/billing/billing.store'
 import { registerProviderPayment } from '@/modules/purchase-settlement/purchaseSettlement.store'
 import { addQualityCampaign, getQualityCampaigns } from '@/modules/quality/quality.store'
@@ -32,6 +31,8 @@ import { projectLogisticsData } from '@/modules/logistics/api/logistics-screen-d
 import { qualityCommands } from '@/modules/quality/api/quality-commands.api'
 import { requestPasswordRecovery, getUserById } from '@/modules/auth/api/auth.api'
 import { quotationCommands, projectCarrierData } from '@/modules/carriers/api/quotation-commands.api'
+import { empresaTransporteExternoV1 } from '@/modules/carriers/api/v1.api'
+import { groupCarrierQuotations } from '@/modules/carriers/carrierQuotations.utils'
 
 let server: Server
 let originalBase: string | undefined
@@ -268,6 +269,26 @@ describe('existing frontend with the V1 HTTP contract', () => {
     expect(await getCampana(2)).toMatchObject({ temporada: '2026–2027', observaciones: 'Contrato V1' })
   })
 
+  it('saves the free-text responsible name and returns it when reopening the campaign', async () => {
+    const saved = await createCampana({
+      nombre: 'Campaña de prueba',
+      frutaId: 4,
+      fechaInicio: new Date(2027, 0, 1),
+      fechaFin: new Date(2027, 5, 30),
+      estado: 'planificacion',
+      requerimientoComercial: '100',
+      responsableUsuarioId: 1,
+      responsableNombre: '  Lucía Torres  ',
+    })
+    expect(await getCampana(saved.campaniaId)).toMatchObject({
+      responsableNombre: 'Lucía Torres',
+      responsableUsuarioId: 1,
+    })
+
+    await updateCampana(saved.campaniaId, { observaciones: 'Datos actualizados' })
+    expect(await getCampana(saved.campaniaId)).toMatchObject({ responsableNombre: 'Lucía Torres' })
+  })
+
   it('surfaces failed loading and campaign closure without inventing success', async () => {
     await expect(cerrarCampanaV1(1, 'Prueba con pendientes')).rejects.toMatchObject({ code: 'CAMPAIGN_PENDING' })
     const valid = apiClient.defaults.baseURL
@@ -288,8 +309,10 @@ describe('existing frontend with the V1 HTTP contract', () => {
     expect(user).toMatchObject({ usuarioId: 1, usuario: 'admin-demo', nombres: 'Administrador', apellidos: 'Demo' })
   })
 
-  it('sends transport requirement with local file attachment and registers quotation in USD', async () => {
-    const carrier = operationsContext().carriers[0]
+  it('groups two recipients under one transport request and records each quotation separately', async () => {
+    const [carrier, otherCarrier] = operationsContext().carriers
+    await empresaTransporteExternoV1.update(otherCarrier.idEmpresaTransporteExterno, { correo: 'segundo@example.com' })
+    await refreshFrontendData()
     const file = new File(['requerimiento pdf'], 'req-transporte.pdf', { type: 'application/pdf' })
     await quotationCommands.send({
       campaniaId: 1,
@@ -297,20 +320,30 @@ describe('existing frontend with the V1 HTTP contract', () => {
       origen: 'Piura',
       destino: 'Lima',
       mensaje: 'Necesitamos 2 unidades refrigeradas',
-      carrierIds: [carrier.idEmpresaTransporteExterno],
+      carrierIds: [carrier.idEmpresaTransporteExterno, otherCarrier.idEmpresaTransporteExterno],
       documento: file,
     })
-    const createdReq = projectCarrierData(operationsContext()).quotations.find(q => q.codigo === 'SOL-QA-1')!
-    expect(createdReq).toBeDefined()
-    expect(createdReq.documentoRequerimiento?.name).toBeTruthy()
-    await quotationCommands.respond(createdReq.id, {
+    const requestGroups = () => groupCarrierQuotations(projectCarrierData(operationsContext()).quotations)
+      .filter(group => group.request.codigo === 'SOL-QA-1')
+    expect(requestGroups()).toHaveLength(1)
+    const [group] = requestGroups()
+    expect(group.request.documentoRequerimiento?.name).toBe('req-transporte.pdf')
+    expect(group.recipients.map(recipient => recipient.carrierId)).toEqual([
+      carrier.idEmpresaTransporteExterno, otherCarrier.idEmpresaTransporteExterno,
+    ])
+    await quotationCommands.respond(group.recipients[0].id, {
       estado: 'Recibida',
       montoCotizadoPen: 2850,
       moneda: 'USD',
       documentoCotizacion: null,
       observaciones: 'Incluye seguro de carga',
     })
-    const updatedReq = projectCarrierData(operationsContext()).quotations.find(q => q.id === createdReq.id)!
-    expect(updatedReq).toMatchObject({ montoCotizadoPen: 2850, moneda: 'USD', estado: 'Recibida' })
+    expect(requestGroups()).toMatchObject([{
+      receivedCount: 1,
+      recipients: [
+        { carrierId: carrier.idEmpresaTransporteExterno, montoCotizadoPen: 2850, moneda: 'USD', estado: 'Recibida' },
+        { carrierId: otherCarrier.idEmpresaTransporteExterno, montoCotizadoPen: null, estado: 'En espera' },
+      ],
+    }])
   })
 })

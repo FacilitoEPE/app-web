@@ -78,8 +78,8 @@ export function saveQualityLoadRealData(
     payload: {
         fechaCargaReal: string;
         anotador: string;
-        cumpleRequisitosIndustria: boolean;
-        motivoRechazoIndustria: string;
+        cumpleRequisitosIndustria?: boolean;
+        motivoRechazoIndustria?: string;
         viaticosMovilidad: number;
         viaticosInsumos: number;
         gastoCuadrilla: number;

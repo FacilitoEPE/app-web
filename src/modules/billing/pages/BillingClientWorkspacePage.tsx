@@ -36,7 +36,7 @@ export default function BillingClientWorkspacePage() {
     const invoiceRoute = (invoiceId: string) => `/facturacion-cobros/${campaignId}/clientes/${clientId}/facturas/${invoiceId}`;
     return <div className="px-4 py-5 sm:px-8 lg:px-14">
         <BillingCampaignContextBanner campaign={client} clientCount={campaignClients.length} caption={`Facturación de ${client.nombreEmpresa}`} />
-        <PageHeader icon={<Receipt size={24} />} title="Facturación del cliente"
+        <PageHeader icon={<Receipt size={24} />} title="Cargas y facturación del cliente"
             description={`${client.nombreEmpresa} · ${client.campaniaNombre}. Prepara cada factura desde el peso recibido y registra después su emisión y cobros.`} />
         <div className="mb-7 grid gap-4 lg:grid-cols-[1.95fr_1fr]">
             <EntityOverviewCard avatar={<Building2 />} eyebrow={`Cliente · ${client.canal}`} title={client.nombreEmpresa} watermark={Building2}
@@ -61,7 +61,8 @@ export default function BillingClientWorkspacePage() {
                     <h3 className="text-lg font-bold text-ink">{load.codigo}</h3>
                     <p className="text-sm text-ink-muted">Recepción: {formatDisplayDate(load.fechaRecepcion)} · {formatKg(load.kilosCargados)} kg cargados</p>
                 </div><div className="flex flex-wrap items-center gap-2"><StatusBadge status={ready ? "Completa" : "Por completar"} />
-                    {!ready && <Button variant="outline" onClick={() => navigate(`/logistica-despacho/${campaignId}/cargas/${load.id}/recepcion`)}>Completar recepción</Button>}
+                    {canEdit && !load.respaldoLogisticoCompleto && <Button variant="outline" onClick={() => navigate(`/logistica-despacho/${campaignId}/cargas/${load.id}/recepcion`)}>Completar recepción</Button>}
+                    {canEdit && load.precioVentaKg <= 0 && <Button variant="outline" onClick={() => navigate(`/campaigns/${campaignId}/clients/${clientId}/contracts`)}>Revisar contrato</Button>}
                     {canEdit && ready && available > 0 && <Button onClick={() => setPrepare({ load, invoice: null })}><Plus size={17} />Preparar factura</Button>}
                 </div></div>
                 <SummaryBar items={[{ label: "Kilos cargados", value: `${formatKg(load.kilosCargados)} kg` }, { label: "Kilos recibidos", value: load.kilosRecibidos ? `${formatKg(load.kilosRecibidos)} kg` : "Pendiente", tone: "brand" },

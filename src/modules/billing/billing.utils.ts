@@ -9,6 +9,26 @@ export const invoiceBalance = (invoice: BillingInvoice) => Math.max(0, invoice.t
 export const invoiceIsIssued = (invoice: BillingInvoice) => Boolean(invoice.numeroFacturaElectronica);
 export const billingCampaignClosed = (client: BillingClient) => client.estadoCampania === "terminado";
 
+export function billingTotalsByCurrency(clients: BillingClient[]) {
+    const totals = new Map<BillingClient["moneda"], { currency: BillingClient["moneda"]; billed: number; collected: number }>();
+    const forCurrency = (currency: BillingClient["moneda"]) => {
+        const total = totals.get(currency) ?? { currency, billed: 0, collected: 0 };
+        totals.set(currency, total);
+        return total;
+    };
+    for (const client of clients) {
+        for (const load of client.cargas) {
+            forCurrency(load.moneda);
+            for (const invoice of load.facturas.filter(invoiceIsIssued)) {
+                const total = forCurrency(invoice.moneda);
+                total.billed += billedAmount(invoice);
+                total.collected += collectedAmount(invoice);
+            }
+        }
+    }
+    return [...totals.values()];
+}
+
 export function billingCampaigns(clients: BillingClient[]) {
     const campaigns = new Map<number, { id: number; name: string; fruit: string; status: string; clients: BillingClient[] }>();
     for (const client of clients) {

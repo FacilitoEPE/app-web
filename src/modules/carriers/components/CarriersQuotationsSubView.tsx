@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { usesV1 } from '@/shared/api/data-contract';
 import { useMemo, useState } from "react";
 import {
-    Building2,
     CheckCircle2,
     Eye,
     FileCheck2,
@@ -20,7 +19,7 @@ import FormField from "@/shared/components/FormField";
 import { InfoField, SummaryBar } from "@/shared/components/InfoField";
 import InputField from "@/shared/components/InputField";
 import ModalSection from "@/shared/components/ModalSection";
-import RowActions, { type RowAction } from "@/shared/components/RowActions";
+import RowActions from "@/shared/components/RowActions";
 import StatusBadge from "@/shared/components/StatusBadge";
 import TableCard from "@/shared/components/TableCard";
 import TableGridCard, { TableGridCardField, TableGridCardFields } from "@/shared/components/TableGridCard";
@@ -44,35 +43,34 @@ import {
 import { Textarea } from "@/shared/components/ui/textarea";
 import type { TableExport } from "@/shared/utils/exportTable";
 import type { FileSource } from "@/shared/utils/fileSource";
-import { formatDisplayDate, formatKg, formatMoney } from "@/shared/utils/format";
+import { formatDisplayDate, formatMoney } from "@/shared/utils/format";
 import { paginate } from "@/shared/utils/paginate";
 import type { Carrier } from "@/modules/carriers/carriers.data";
 import {
     assignQuotationUnit,
     registerQuotationResponse,
-    useCarrierQuotations,
     type CarrierQuotationStatus,
     type CarrierRequirementQuotation,
 } from "@/modules/carriers/carrierQuotations.store";
+import type { CarrierQuotationGroup } from "@/modules/carriers/carrierQuotations.utils";
 
 interface CarriersQuotationsSubViewProps {
     carriers: Carrier[];
+    groups: CarrierQuotationGroup[];
 }
 
 const currencySymbol = (moneda?: "PEN" | "USD") => (moneda === "USD" ? "US$" : "S/");
 
-export default function CarriersQuotationsSubView({ carriers }: CarriersQuotationsSubViewProps) {
+export default function CarriersQuotationsSubView({ carriers, groups }: CarriersQuotationsSubViewProps) {
     const navigate = useNavigate();
-    const quotations = useCarrierQuotations();
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [viewMode, setViewMode] = useState<TableViewMode>("table");
     const [page, setPage] = useState(1);
 
-    const [detailModal, setDetailModal] = useState<{
-        open: boolean;
-        item: CarrierRequirementQuotation | null;
-    }>({ open: false, item: null });
+    const [detailRequestId, setDetailRequestId] = useState<number | null>(null);
+    const detailGroup = groups.find(({ request }) => request.requestId === detailRequestId);
+    const detailRequest = detailGroup?.request;
 
     const [responseModal, setResponseModal] = useState<{
         open: boolean;
@@ -108,15 +106,12 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
 
     const filteredRows = useMemo(() => {
         const q = search.trim().toLowerCase();
-        return quotations.filter((item) => {
-            if (statusFilter !== "all" && item.estado !== statusFilter) return false;
-            if (q) {
-                const hay = `${item.codigo} ${item.transportistaNombre} ${item.campaniaNombre} ${item.descripcion}`.toLowerCase();
-                if (!hay.includes(q)) return false;
-            }
-            return true;
+        return groups.filter(({ request, recipients }) => {
+            if (statusFilter !== "all" && !recipients.some((recipient) => recipient.estado === statusFilter)) return false;
+            const searchFields = [request.codigo, request.campaniaNombre, request.descripcion, ...recipients.map((recipient) => recipient.transportistaNombre)];
+            return !q || searchFields.some((field) => field.toLowerCase().includes(q));
         });
-    }, [quotations, search, statusFilter]);
+    }, [groups, search, statusFilter]);
 
     const { pageCount, currentPage, visible } = paginate(filteredRows, page);
 
@@ -149,50 +144,32 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
         });
     };
 
-    const getRowActions = (item: CarrierRequirementQuotation): { primary: RowAction[]; secondary: RowAction[] } => ({
-        primary: [
-            {
-                label: "Ver detalle",
-                icon: <Eye size={18} strokeWidth={2.4} />,
-                onClick: () => setDetailModal({ open: true, item }),
-            },
-            {
-                label: "Registrar cotización",
-                icon: <FileCheck2 size={18} strokeWidth={2.4} />,
-                onClick: () => openResponseModalFor(item),
-            },
-        ],
-        secondary: [
-            {
-                label: usesV1() ? "Coordinar entregas" : "Asignar camión y chofer",
-                icon: <UserCheck size={16} strokeWidth={2.4} />,
-                onClick: () => openAssignModalFor(item),
-            },
-        ],
-    });
+    const requestDetailAction = (requestId: number) => (
+        <RowActions primary={[{
+            label: "Ver detalle",
+            icon: <Eye size={18} strokeWidth={2.4} />,
+            onClick: () => setDetailRequestId(requestId),
+        }]} />
+    );
 
     const getExportData = (): TableExport => ({
         filename: "requerimientos_cotizaciones_transporte",
         title: "Requerimientos y Cotizaciones de Transporte",
         header: [
             "Código",
-            "Transportista",
             "Campaña",
-            "Cantidad est. (kg)",
+            "Cantidad estimada",
             "Fecha límite",
-            "Cotización",
-            "Unidad / Chofer",
-            "Estado",
+            "Transportistas invitados",
+            "Cotizaciones recibidas",
         ],
-        rows: filteredRows.map((r) => [
-            r.codigo,
-            r.transportistaNombre,
-            r.campaniaNombre,
-            String(r.cantidadEstimadaKg),
-            formatDisplayDate(r.fechaLimiteCotizacion),
-            r.montoCotizadoPen != null ? `${currencySymbol(r.moneda)} ${formatMoney(r.montoCotizadoPen)}` : "En espera",
-            r.vehiculoAsignadoPlaca ? `${r.vehiculoAsignadoPlaca} · ${r.choferAsignadoNombre}` : "Sin asignar",
-            r.estado,
+        rows: filteredRows.map(({ request, recipients, receivedCount }) => [
+            request.codigo,
+            request.campaniaNombre,
+            request.cantidadEstimada || "—",
+            formatDisplayDate(request.fechaLimiteCotizacion),
+            String(recipients.length),
+            String(receivedCount),
         ]),
     });
 
@@ -215,12 +192,12 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                 <div className="w-full sm:w-60">
                     <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
                         <SelectTrigger aria-label="Filtrar por estado de cotización">
-                            <SelectValue>{statusFilter === "all" ? "Todos los estados" : statusFilter}</SelectValue>
+                            <SelectValue>{statusFilter === "all" ? "Todos los estados" : statusFilter === "Recibida" ? "Con cotizaciones recibidas" : "Con respuestas pendientes"}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Todos los estados</SelectItem>
-                            <SelectItem value="En espera">En espera</SelectItem>
-                            <SelectItem value="Recibida">Recibida</SelectItem>
+                            <SelectItem value="En espera">Con respuestas pendientes</SelectItem>
+                            <SelectItem value="Recibida">Con cotizaciones recibidas</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -229,14 +206,14 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
             <TableCard
                 icon={<FileSpreadsheet size={24} strokeWidth={2.2} />}
                 title="Requerimientos y cotizaciones"
-                description="Solicitudes de flete enviadas a transportistas, respuestas de cotización y asignación de unidades."
+                description="Cada fila reúne una solicitud de flete. Abre el detalle para consultar sus destinatarios y cotizaciones."
                 headerRight={
                     <TableToolbar>
                         <TableCountPill
                             icon={<FileSpreadsheet size={16} strokeWidth={2.5} className="text-brand" />}
                             count={filteredRows.length}
-                            singular="requerimiento"
-                            plural="requerimientos"
+                            singular="solicitud"
+                            plural="solicitudes"
                         />
                         <TableExportMenu getData={getExportData} />
                         <TableViewToggle value={viewMode} onChange={setViewMode} />
@@ -249,261 +226,165 @@ export default function CarriersQuotationsSubView({ carriers }: CarriersQuotatio
                 pageCount={pageCount}
                 onPageChange={setPage}
             >
-                {viewMode === "grid" ? (
-                    <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {visible.map((item) => {
-                            const actions = getRowActions(item);
-                            return (
-                                <TableGridCard
-                                    key={item.id}
-                                    accentColor={
-                                        item.estado === "Recibida" ? "border-l-brand" : "border-l-status-warning"
-                                    }
-                                    icon={<FileSpreadsheet size={18} strokeWidth={2.2} />}
-                                    title={item.transportistaNombre}
-                                    subtitle={`${item.codigo} · ${item.campaniaNombre}`}
-                                    badge={<StatusBadge status={item.estado} />}
-                                    actions={<RowActions primary={actions.primary} secondary={actions.secondary} />}
-                                >
-                                    <TableGridCardFields>
-                                        <TableGridCardField
-                                            label="Cantidad estimada"
-                                            value={`${formatKg(item.cantidadEstimadaKg)} kg`}
-                                        />
-                                        <TableGridCardField
-                                            label="Fecha límite"
-                                            value={formatDisplayDate(item.fechaLimiteCotizacion)}
-                                        />
-                                        <TableGridCardField
-                                            label="Cotización"
-                                            value={
-                                                item.montoCotizadoPen != null
-                                                    ? `${currencySymbol(item.moneda)} ${formatMoney(item.montoCotizadoPen)}`
-                                                    : "Pendiente"
-                                            }
-                                        />
-                                        <TableGridCardField
-                                            label="Camión / Chofer"
-                                            value={
-                                                item.vehiculoAsignadoPlaca
-                                                    ? `${item.vehiculoAsignadoPlaca} · ${item.choferAsignadoNombre}`
-                                                    : "Sin asignar"
-                                            }
-                                        />
-                                    </TableGridCardFields>
-                                </TableGridCard>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <Table>
-                        <TableHeader>
-                            <TableRow className={`${TABLE_HEAD_BG} hover:bg-brand-surface`}>
-                                <TableHead className="py-3.5 pl-6 pr-3 font-bold text-ink">Transportista</TableHead>
-                                <TableHead className="px-3 py-3.5 font-bold text-ink">Campaña</TableHead>
-                                <TableHead className="px-3 py-3.5 font-bold text-ink">Descripción</TableHead>
-                                <TableHead className="px-3 py-3.5 text-right font-bold text-ink">
-                                    Cantidad est.
-                                </TableHead>
-                                <TableHead className="px-3 py-3.5 font-bold text-ink">Fecha límite</TableHead>
-                                <TableHead className="px-3 py-3.5 font-bold text-ink">Cotización</TableHead>
-                                <TableHead className="px-3 py-3.5 text-center font-bold text-ink">Estado</TableHead>
-                                <TableHead className="py-3.5 pl-3 pr-6 text-right font-bold text-ink">
-                                    Acciones
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody className="divide-y divide-border/60">
-                            {visible.map((item) => {
-                                const actions = getRowActions(item);
-                                return (
-                                    <TableRow key={item.id} className="transition-colors hover:bg-muted/30">
-                                        <TableCell className="relative py-3.5 pl-6 pr-3">
-                                            <TableRowAccent
-                                                color={item.estado === "Recibida" ? "bg-brand" : "bg-status-warning"}
-                                            />
+                <div className={viewMode === "grid"
+                    ? "grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3"
+                    : "flex flex-col gap-3 sm:hidden"}
+                >
+                    {visible.map(({ request, recipients, receivedCount }) => (
+                        <TableGridCard
+                            key={request.requestId}
+                            accentColor={receivedCount > 0 ? "border-l-brand" : "border-l-status-warning"}
+                            icon={<FileSpreadsheet size={18} />}
+                            title={request.codigo}
+                            subtitle={request.campaniaNombre}
+                            actions={requestDetailAction(request.requestId)}
+                        >
+                            <TableGridCardFields>
+                                <TableGridCardField label="Transportistas invitados" value={recipients.length} />
+                                <TableGridCardField label="Cotizaciones recibidas" value={receivedCount} />
+                                <TableGridCardField label="Cantidad estimada" value={request.cantidadEstimada || "—"} />
+                                <TableGridCardField label="Fecha límite" value={formatDisplayDate(request.fechaLimiteCotizacion)} />
+                            </TableGridCardFields>
+                        </TableGridCard>
+                    ))}
+                </div>
+                {viewMode === "table" && (
+                    <div className="hidden sm:block">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className={TABLE_HEAD_BG}>
+                                    <TableHead className="py-3.5 pl-6">Solicitud</TableHead>
+                                    <TableHead>Campaña</TableHead>
+                                    <TableHead>Cantidad estimada</TableHead>
+                                    <TableHead>Fecha límite</TableHead>
+                                    <TableHead>Transportistas invitados</TableHead>
+                                    <TableHead>Cotizaciones recibidas</TableHead>
+                                    <TableHead className="pr-6 text-right">Acciones</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-y divide-border/60">
+                                {visible.map(({ request, recipients, receivedCount }) => (
+                                    <TableRow key={request.requestId}>
+                                        <TableCell className="relative py-3.5 pl-6">
+                                            <TableRowAccent color={receivedCount > 0 ? "bg-brand" : "bg-status-warning"} />
                                             <TableRowLead
-                                                icon={<Building2 size={18} strokeWidth={2.2} />}
-                                                title={item.transportistaNombre}
-                                                subtitle={item.codigo}
+                                                icon={<FileSpreadsheet size={18} />}
+                                                title={request.codigo}
+                                                subtitle={request.descripcion}
                                             />
                                         </TableCell>
-                                        <TableCell className="px-3 py-3.5">
-                                            <div className="flex flex-col">
-                                                <span className="text-[13px] font-bold text-ink">
-                                                    {item.campaniaNombre}
-                                                </span>
-                                                <span className="text-[11.5px] text-ink-muted">{item.fruta}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="max-w-64 px-3 py-3.5">
-                                            <p className="line-clamp-2 text-[12.5px] text-ink-muted">
-                                                {item.descripcion}
-                                            </p>
-                                        </TableCell>
-                                        <TableCell className="px-3 py-3.5 text-right font-bold tabular-nums text-ink">
-                                            {formatKg(item.cantidadEstimadaKg)} kg
-                                        </TableCell>
-                                        <TableCell className="px-3 py-3.5 text-[13px] font-medium text-ink">
-                                            {formatDisplayDate(item.fechaLimiteCotizacion)}
-                                        </TableCell>
-                                        <TableCell className="px-3 py-3.5">
-                                            {item.montoCotizadoPen != null ? (
-                                                <div className="flex flex-col">
-                                                    <span className="text-[13.5px] font-extrabold text-brand">
-                                                        {currencySymbol(item.moneda)} {formatMoney(item.montoCotizadoPen)}
-                                                    </span>
-                                                    <span className="text-[11px] text-ink-muted">
-                                                        {item.vehiculoAsignadoPlaca
-                                                            ? `Unidad: ${item.vehiculoAsignadoPlaca}`
-                                                            : "Sin unidad asignada"}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-[12.5px] text-ink-muted">Sin respuesta</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="px-3 py-3.5 text-center">
-                                            <StatusBadge status={item.estado} />
-                                        </TableCell>
-                                        <TableCell className="py-3.5 pl-3 pr-6 text-right">
-                                            <RowActions primary={actions.primary} secondary={actions.secondary} />
-                                        </TableCell>
+                                        <TableCell>{request.campaniaNombre}</TableCell>
+                                        <TableCell>{request.cantidadEstimada || "—"}</TableCell>
+                                        <TableCell>{formatDisplayDate(request.fechaLimiteCotizacion)}</TableCell>
+                                        <TableCell className="tabular-nums">{recipients.length}</TableCell>
+                                        <TableCell className="tabular-nums">{receivedCount}</TableCell>
+                                        <TableCell className="pr-6">{requestDetailAction(request.requestId)}</TableCell>
                                     </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 )}
             </TableCard>
 
-            {/* Modal 1: Detalle completo de requerimiento y cotización */}
             <AppModal
-                open={detailModal.open}
-                onOpenChange={(open) => setDetailModal((current) => ({ ...current, open }))}
+                open={Boolean(detailGroup) && !responseModal.open && !assignModal.open}
+                onOpenChange={(open) => { if (!open) setDetailRequestId(null); }}
                 icon={<FileSpreadsheet size={22} />}
-                title={`Detalle de requerimiento · ${detailModal.item?.codigo ?? ""}`}
-                description={detailModal.item?.transportistaNombre}
+                title={detailRequest ? "Detalle de solicitud · " + detailRequest.codigo : "Detalle de solicitud"}
+                description={detailRequest?.campaniaNombre}
                 size="xl"
                 footer={
                     <>
-                        <Button
-                            variant="outline"
-                            size="xl"
-                            onClick={() => setDetailModal({ open: false, item: null })}
-                        >
+                        <Button variant="outline" size="xl" onClick={() => setDetailRequestId(null)}>
                             <X size={18} /> Cerrar
                         </Button>
-                        {detailModal.item && (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    size="xl"
-                                    onClick={() => {
-                                        const current = detailModal.item!;
-                                        setDetailModal({ open: false, item: null });
-                                        openAssignModalFor(current);
-                                    }}
-                                >
-                                    <UserCheck size={18} /> {usesV1() ? "Coordinar entregas" : "Asignar camión y chofer"}
-                                </Button>
-                                <Button
-                                    size="xl"
-                                    onClick={() => {
-                                        const current = detailModal.item!;
-                                        setDetailModal({ open: false, item: null });
-                                        openResponseModalFor(current);
-                                    }}
-                                >
-                                    <FileCheck2 size={18} /> Registrar respuesta de cotización
-                                </Button>
-                            </>
+                        {detailRequest && usesV1() && (
+                            <Button variant="outline" size="xl" onClick={() => openAssignModalFor(detailRequest)}>
+                                <UserCheck size={18} /> Coordinar entregas
+                            </Button>
                         )}
                     </>
                 }
             >
-                {detailModal.item && (
+                {detailGroup && detailRequest && (
                     <div className="flex flex-col gap-6">
-                        <SummaryBar
-                            items={[
-                                {
-                                    label: "Estado de solicitud",
-                                    value: detailModal.item.estado,
-                                    tone: detailModal.item.estado === "Recibida" ? "brand" : "highlight",
-                                },
-                                {
-                                    label: "Cantidad estimada",
-                                    value: `${formatKg(detailModal.item.cantidadEstimadaKg)} kg`,
-                                },
-                                {
-                                    label: "Tarifa cotizada",
-                                    value:
-                                        detailModal.item.montoCotizadoPen != null
-                                            ? `${currencySymbol(detailModal.item.moneda)} ${formatMoney(detailModal.item.montoCotizadoPen)}`
-                                            : "En espera",
-                                    tone: "brand",
-                                },
-                                {
-                                    label: "Camión y chofer",
-                                    value: detailModal.item.vehiculoAsignadoPlaca
-                                        ? `${detailModal.item.vehiculoAsignadoPlaca} · ${detailModal.item.choferAsignadoNombre}`
-                                        : "Por asignar",
-                                },
-                            ]}
-                        />
+                        <SummaryBar items={[
+                            { label: "Transportistas invitados", value: detailGroup.recipients.length },
+                            { label: "Cotizaciones recibidas", value: detailGroup.receivedCount, tone: "brand" },
+                            { label: "Cantidad estimada", value: detailRequest.cantidadEstimada || "—" },
+                        ]} />
 
-                        <ModalSection title="Información del requerimiento logístico">
+                        <ModalSection title="Información de la solicitud">
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <InfoField
-                                    label="Transportista destinatario"
-                                    value={`${detailModal.item.transportistaNombre} (RUC ${detailModal.item.transportistaRuc})`}
-                                />
-                                <InfoField
-                                    label="Campaña y fruta"
-                                    value={`${detailModal.item.campaniaNombre} · ${detailModal.item.fruta}`}
-                                />
-                                <InfoField
-                                    label="Lugar de recojo (Origen)"
-                                    value={detailModal.item.lugarRecojo}
-                                />
-                                <InfoField
-                                    label="Destino de entrega"
-                                    value={detailModal.item.destino}
-                                />
-                                <InfoField
-                                    label="Fecha programada de recojo"
-                                    value={formatDisplayDate(detailModal.item.fechaRecojo)}
-                                />
-                                <InfoField
-                                    label="Fecha límite de cotización"
-                                    value={formatDisplayDate(detailModal.item.fechaLimiteCotizacion)}
-                                />
+                                <InfoField label="Campaña y fruta" value={detailRequest.campaniaNombre + " · " + detailRequest.fruta} />
+                                <InfoField label="Fecha límite de cotización" value={formatDisplayDate(detailRequest.fechaLimiteCotizacion)} />
+                                <InfoField label="Lugar de recojo" value={detailRequest.lugarRecojo} />
+                                <InfoField label="Destino de entrega" value={detailRequest.destino} />
+                                <InfoField label="Ventana de recojo" value={detailRequest.fechaRecojo || "—"} multiline />
                             </div>
-                            <InfoField
-                                label="Descripción del servicio solicitado"
-                                value={detailModal.item.descripcion}
-                            />
-                            <InfoField
-                                label="Observaciones e instrucciones"
-                                value={detailModal.item.observaciones || "Sin observaciones"}
+                            <InfoField label="Descripción del servicio" value={detailRequest.descripcion || "—"} multiline />
+                            <FileDropzone
+                                label="Documento de la solicitud"
+                                file={detailRequest.documentoRequerimiento}
+                                onChange={() => {}}
+                                readOnly
+                                variant="horizontal"
                             />
                         </ModalSection>
 
-                        <ModalSection title="Documentos de requerimiento y cotización recibida">
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <FileDropzone
-                                    label="Documento del requerimiento enviado"
-                                    file={detailModal.item.documentoRequerimiento}
-                                    onChange={() => {}}
-                                    readOnly
-                                />
-                                <FileDropzone
-                                    label="Cotización adjunta del transportista"
-                                    file={detailModal.item.documentoCotizacion}
-                                    onChange={() => {}}
-                                    readOnly
-                                />
-                            </div>
+                        <ModalSection title="Transportistas destinatarios">
+                            <ul className="space-y-3">
+                                {detailGroup.recipients.map((recipient) => (
+                                    <li key={recipient.id} className="space-y-3 rounded-xl border border-border p-4">
+                                        <div className="flex flex-wrap items-start justify-between gap-2">
+                                            <div>
+                                                <p className="font-semibold text-ink">{recipient.transportistaNombre}</p>
+                                                {recipient.transportistaRuc && (
+                                                    <p className="text-xs text-ink-muted">{recipient.transportistaRuc}</p>
+                                                )}
+                                            </div>
+                                            <StatusBadge status={recipient.estado} />
+                                        </div>
+                                        {recipient.montoCotizadoPen != null && (
+                                            <InfoField
+                                                label="Tarifa cotizada"
+                                                value={currencySymbol(recipient.moneda) + " " + formatMoney(recipient.montoCotizadoPen)}
+                                                variant="plain"
+                                            />
+                                        )}
+                                        {recipient.observaciones && (
+                                            <InfoField label="Observaciones de la cotización" value={recipient.observaciones} multiline />
+                                        )}
+                                        {recipient.documentoCotizacion && (
+                                            <FileDropzone
+                                                label="Cotización adjunta"
+                                                file={recipient.documentoCotizacion}
+                                                onChange={() => {}}
+                                                readOnly
+                                                variant="horizontal"
+                                            />
+                                        )}
+                                        {!usesV1() && recipient.vehiculoAsignadoPlaca && (
+                                            <InfoField
+                                                label="Camión y chofer"
+                                                value={recipient.vehiculoAsignadoPlaca + " · " + recipient.choferAsignadoNombre}
+                                            />
+                                        )}
+                                        <div className="flex flex-wrap gap-2">
+                                            <Button variant="outline" size="sm" onClick={() => openResponseModalFor(recipient)}>
+                                                <FileCheck2 size={16} />
+                                                {recipient.estado === "Recibida" ? "Editar cotización" : "Registrar cotización"}
+                                            </Button>
+                                            {!usesV1() && (
+                                                <Button variant="outline" size="sm" onClick={() => openAssignModalFor(recipient)}>
+                                                    <UserCheck size={16} /> Asignar camión y chofer
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
                         </ModalSection>
                     </div>
                 )}

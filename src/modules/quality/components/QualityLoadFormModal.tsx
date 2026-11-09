@@ -28,8 +28,8 @@ interface QualityLoadFormModalProps {
         payload: {
             fechaCargaReal: string;
             anotador: string;
-            cumpleRequisitosIndustria: boolean;
-            motivoRechazoIndustria: string;
+            cumpleRequisitosIndustria?: boolean;
+            motivoRechazoIndustria?: string;
             viaticosMovilidad: number;
             viaticosInsumos: number;
             gastoCuadrilla: number;
@@ -37,7 +37,7 @@ interface QualityLoadFormModalProps {
             observacionesCarga: string;
             proveedoresCarga: QualityProviderLoadDetail[];
         },
-    ) => void;
+    ) => void | Promise<unknown>;
 }
 
 const BULTO_TYPES = [
@@ -83,6 +83,8 @@ export default function QualityLoadFormModal({
     const [observacionesCarga, setObservacionesCarga] = useState("");
     const [proveedores, setProveedores] = useState<QualityProviderLoadDetail[]>([]);
     const [bultosActivos, setBultosActivos] = useState<BultoType[][]>([]);
+    const isRegistration = load?.id.startsWith("entrega-") === true;
+    const isRejecting = isRegistration && load?.scope === "industria" && !cumpleRequisitos;
 
     useResetOnToggle(open, () => {
         if (!load) return;
@@ -103,6 +105,9 @@ export default function QualityLoadFormModal({
         open, backendFields: {},
         validate: () => {
             const errors: Record<string, string> = {};
+            if (load?.scope === "industria" && !cumpleRequisitos && !motivoRechazo.trim())
+                errors.motivoRechazo = "Indica el motivo de rechazo industrial.";
+            if (isRejecting) return errors;
             if (!fechaCargaReal) errors.fechaCargaReal = "Indica la fecha de carga.";
             if (!anotador.trim()) errors.anotador = "Indica el anotador responsable.";
             if (!proveedores.length) errors._form = "Esta entrega no tiene proveedores coordinados. Completa primero sus proveedores y fincas en la campaña.";
@@ -118,13 +123,13 @@ export default function QualityLoadFormModal({
             }))) errors._form = "Registra al menos un bulto cargado o vacío por cada tipo marcado para conservar la selección al guardar.";
             if (proveedores.some(p => BULTO_TYPES.some(type => !Number.isInteger(p[type.loaded]) || !Number.isInteger(p[type.empty])))) errors._form = "Los bultos deben ser cantidades enteras.";
             if ([viaticosMovilidad, viaticosInsumos, gastoCuadrilla, gastoAnotadores].some(n => !Number.isFinite(Number(n)) || Number(n) < 0)) errors._form = "Los gastos deben ser cantidades mayores o iguales a cero.";
-            if (load?.scope === "industria" && !cumpleRequisitos && !motivoRechazo.trim()) errors._form = "Indica el motivo de rechazo industrial.";
             return errors;
         },
         onSubmit: async () => {
             if (!load) return;
-            await onSave(load.id, { fechaCargaReal, anotador: anotador.trim(), cumpleRequisitosIndustria: cumpleRequisitos,
-                motivoRechazoIndustria: motivoRechazo.trim(), viaticosMovilidad: Number(viaticosMovilidad), viaticosInsumos: Number(viaticosInsumos),
+            await onSave(load.id, { fechaCargaReal, anotador: anotador.trim(),
+                ...(load.scope === "industria" ? { cumpleRequisitosIndustria: cumpleRequisitos, motivoRechazoIndustria: motivoRechazo.trim() } : {}),
+                viaticosMovilidad: Number(viaticosMovilidad), viaticosInsumos: Number(viaticosInsumos),
                 gastoCuadrilla: Number(gastoCuadrilla), gastoAnotadores: Number(gastoAnotadores), observacionesCarga: observacionesCarga.trim(), proveedoresCarga: proveedores });
             onOpenChange(false);
         },
@@ -163,12 +168,12 @@ export default function QualityLoadFormModal({
             open={open}
             onOpenChange={onOpenChange}
             icon={<PackageCheck size={22} strokeWidth={2.2} />}
-            title={`${load.id.startsWith("entrega-") ? "Registrar" : "Editar"} carga`}
+            title={`${isRegistration ? "Registrar" : "Editar"} carga`}
             description={`${load.cliente} · ${load.transportista} (${load.placa})`}
             size="xl"
             footer={
                 <>
-                    <Button variant="outline" size="xl" onClick={() => onOpenChange(false)}>
+                    <Button variant="outline" size="xl" disabled={saving} onClick={() => onOpenChange(false)}>
                         <X size={18} /> Cancelar
                     </Button>
                     <Button
@@ -176,7 +181,7 @@ export default function QualityLoadFormModal({
                         disabled={saving}
                         onClick={() => submit(undefined)}
                     >
-                        <Save size={18} /> Guardar datos de carga
+                        <Save size={18} /> {isRejecting ? "Guardar rechazo" : "Guardar datos de carga"}
                     </Button>
                 </>
             }
@@ -213,6 +218,7 @@ export default function QualityLoadFormModal({
                             <InputField
                                 id="lf-motivo-rechazo"
                                 label="Motivo del rechazo de lote industrial"
+                                error={errors.motivoRechazo}
                                 required
                                 value={motivoRechazo}
                                 onChange={setMotivoRechazo}
@@ -222,6 +228,7 @@ export default function QualityLoadFormModal({
                     </ModalSection>
                 )}
 
+                <div className={isRejecting ? "hidden" : "contents"}>
                 <ModalSection
                     title="1. Datos de la carga real"
                     aside="Fecha efectiva y responsable"
@@ -312,6 +319,7 @@ export default function QualityLoadFormModal({
                     </div>
                 </ModalSection>
                 <FormField label="Observaciones de carga"><Textarea value={observacionesCarga} onChange={event => setObservacionesCarga(event.target.value)} placeholder="Condiciones de estiba, precintos o notas de campo…" /></FormField>
+                </div>
             </div>
         </AppModal>
     );

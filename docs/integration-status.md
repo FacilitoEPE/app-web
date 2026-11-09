@@ -379,6 +379,18 @@ Validación prevista para los cambios: pruebas HTTP con las funciones reales y f
 - El backend verifica el binario después de subirlo y antes de vincularlo. Un error leyendo el índice deja de simular una lista vacía, evitando sobrescribir vínculos ante fallos de permisos o conectividad. No usa almacenamiento local. Contrato en [API](api/README.md), implementación en el [flujo backend](../../epe-backend/docs/backend-flow.md#41-servicio-general-de-documentos-y-vínculos-en-s3-apidocumentos). Esto no confirma el estado de archivos ni el despliegue de un servidor productivo.
 - Validación: 107 pruebas backend y 377 frontend aprobadas; contrato generado y copia runtime sincronizados. Las pruebas cubren metadatos presentes con documento faltante, inconsistencias de tamaño/tipo, errores de permisos/red y rechazo de vínculos inválidos. No se hizo una comprobación contra el bucket productivo.
 
+## Desembolso de adelantos de transporte — 2026-11-08 · Completo en desarrollo
+
+- El acuerdo confirmado con adelanto en soles permite registrar desembolsos por fecha, importe y referencia y consultar cuánto se desembolsó y cuánto falta. El documento del acuerdo es opcional y guardar las condiciones pactadas no registra dinero.
+- Reutiliza `POST /acuerdos-transporte/{parentId}/adelantos`. Gestión de Compra muestra el saldo aplicable de cada desembolso para la liquidación, omite los ya aplicados a ese documento y sigue guardando pagos de caja y aplicaciones por separado. La fixture del primer acuerdo deja un importe pendiente de desembolso para probar el flujo.
+- Pasaron 464 pruebas, incluido el recorrido desde el desembolso hasta la aplicación y el pago en caja, además del rechazo de desembolsos simultáneos que superarían el monto pactado.
+
+## Alta de carga desde Calidad — 2026-11-08 · Completo en desarrollo
+
+- El Administrador puede registrar la carga de una entrega coordinada desde **Cosecha y Control de Calidad → Carga**. El selector muestra pendientes de la campaña y canal, con orígenes coordinados y sin rechazo industrial.
+- El alta reutiliza `POST /coordinaciones/{parentId}/cargas` y sus subrecursos, ya publicados para Administrador. La restricción única de la coordinación evita crear otra carga. El portal consulta esa misma carga y conserva sus acciones de despacho. En Industria el rechazo se guarda en la cosecha sin crear carga.
+- El mock conserva la unicidad de la coordinación y rechaza el alta sobre una entrega con rechazo industrial. Pasaron 462 pruebas, incluida la consulta desde el portal, el rechazo industrial y un intento simultáneo de alta por Administrador y Chofer. La autorización productiva de alta desde una sesión Chofer conserva la brecha descrita en el apartado de registro móvil.
+
 ## Registro móvil de cargas por chofer — 2026-11-05 · Frontend implementado / autorización backend pendiente
 
 - Revisión previa al push: 373 pruebas aprobadas en 65 archivos, ESLint completo y compilación aprobados; contrato generado verificado. El cierre exige guía de salida firmada; los campos y botones respetan la etapa de llegada y la campaña activa. El comando de carga vuelve a validar proveedores asignados, kilos, bultos y gastos antes de enviar. El generador normaliza CRLF para evitar diferencias falsas de contrato en Windows. Los metadatos locales `.vercel/` quedan ignorados. Permisos productivos de alta por Chofer siguen pendientes.
@@ -624,10 +636,11 @@ Validación prevista para los cambios: pruebas HTTP con las funciones reales y f
 - En el contrato actual, el alta envía `responsableUsuarioId` con el administrador de la sesión; la edición conserva el responsable guardado y consulta `GET /api/auth/usuarios/:id` cuando difiere del usuario en sesión para mostrar su nombre completo.
 - Verificación: pruebas unitarias, integración V1 (`dev/frontend-v1.test.ts`) y E2E (`test/v1-api.e2e-spec.ts`) aprobadas.
 
-## Responsable libre de campaña — 2026-11-08 · Parcial
+## Responsable libre de campaña — 2026-11-08 · Integrado en frontend
 
-- **Interfaz:** el alta acepta un nombre opcional y lo muestra como temporal en el detalle de la campaña creada. El valor se guarda en memoria y se pierde al recargar o cerrar sesión. La demo usa el mismo comportamiento.
-- **API:** el backend admite `responsableNombre` en el alta y lo devuelve al consultar. El contrato y los DTO generados incluyen el campo. La conexión del formulario y del mock queda pendiente. [Contrato y ejemplo](api/README.md#responsable-libre-de-campaña).
+- **Interfaz:** el alta envía el nombre opcional a la API. El detalle y la consulta dentro de Editar campaña muestran el nombre guardado. Si está vacío, muestran el usuario asociado o «Sin asignar».
+- **Demo:** el servidor ficticio aplica el mismo recorte y admite `null`. Los datos de ejemplo existentes incluyen el campo con valor `null`.
+- **Verificación:** la prueba de integración con la API local simulada cubre el alta, una lectura posterior y una edición de otro campo. La escritura en un despliegue real queda por verificar. [Contrato y ejemplo](api/README.md#responsable-libre-de-campaña).
 
 ## Carga de datos por vista — 2026-10-30 · Parcial
 

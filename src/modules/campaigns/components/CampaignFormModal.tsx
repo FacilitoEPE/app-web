@@ -6,8 +6,7 @@ import RemovableChip from "@/shared/components/RemovableChip";
 import FormField from "@/shared/components/FormField";
 import InputField from "@/shared/components/InputField";
 import { InfoField } from "@/shared/components/InfoField";
-import { getAuthToken, getSession } from "@/shared/offline/session";
-import { setTemporaryCampaignResponsible, useTemporaryCampaignResponsible } from "@/modules/campaigns/campaignResponsible.store";
+import { getSession } from "@/shared/offline/session";
 import { getUserById } from "@/modules/auth/api/auth.api";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
@@ -46,6 +45,7 @@ const BACKEND_FIELDS = {
     fechaInicio: "fechaInicio",
     fechaFin: "fechaFin",
     requerimientoComercial: "requerimientoComercial",
+    responsableNombre: "responsable",
 };
 
 interface CampaignFormModalProps {
@@ -67,7 +67,6 @@ export default function CampaignFormModal({
 }: CampaignFormModalProps) {
     const isEdit = mode === "edit";
     const user = getSession()?.user;
-    const temporaryResponsible = useTemporaryCampaignResponsible(campaniaId);
     const [values, setValues] = useState<CampaignFormValues>(EMPTY_CAMPAIGN);
     const [frutas, setFrutas] = useState<FrutaDto[]>([]);
     const [derivadas, setDerivadas] = useState<FrutaDerivadaDto[]>([]);
@@ -96,6 +95,7 @@ export default function CampaignFormModal({
                 .then(async (campana) => {
                     const file = usesV1() ? await getCampaignDocument(campana.campaniaId) : null;
                     if (!active) return;
+                    const savedResponsible = campana.responsableNombre?.trim();
                     setHadDocument(Boolean(file));
                     setValues({
                         ...EMPTY_CAMPAIGN,
@@ -103,14 +103,18 @@ export default function CampaignFormModal({
                         añoTemporada: campana.temporada ?? "",
                         observaciones: campana.observaciones ?? "",
                         lineamientos: file ? { url: file.url, name: file.name, type: file.type, size: file.size } : null,
-                        responsable: campana.responsableUsuarioId == null ? "Sin asignar" : campana.responsableUsuarioId === user?.usuarioId ? `${user.nombres} ${user.apellidos}`.trim() : `Usuario #${campana.responsableUsuarioId}`,
+                        responsable: savedResponsible || (
+                            campana.responsableUsuarioId == null ? "Sin asignar"
+                                : campana.responsableUsuarioId === user?.usuarioId ? `${user.nombres} ${user.apellidos}`.trim() || user.usuario
+                                : `Usuario #${campana.responsableUsuarioId}`
+                        ),
                         frutaId: campana.frutaId,
                         fechaInicio: formatFecha(campana.fechaInicio),
                         fechaFin: formatFecha(campana.fechaFin),
                         requerimientoComercial: String(campana.requerimientoComercial),
                         estado: campana.estado,
                     });
-                    if (campana.responsableUsuarioId != null && campana.responsableUsuarioId !== user?.usuarioId) {
+                    if (!savedResponsible && campana.responsableUsuarioId != null && campana.responsableUsuarioId !== user?.usuarioId) {
                         getUserById(campana.responsableUsuarioId)
                             .then((u) => {
                                 if (!active) return;
@@ -124,7 +128,7 @@ export default function CampaignFormModal({
                 .finally(() => { if (active) setIsLoading(false); });
         }
         return () => { active = false; };
-    }, [open, isEdit, campaniaId, user?.usuarioId, user?.nombres, user?.apellidos]);
+    }, [open, isEdit, campaniaId, user?.usuarioId, user?.nombres, user?.apellidos, user?.usuario]);
 
     // Las frutas derivadas salen del catálogo de la fruta elegida; son informativas
     useEffect(() => {
@@ -158,20 +162,20 @@ export default function CampaignFormModal({
         }
         setSaving(true);
         setErrors({});
-        const sessionToken = getAuthToken();
         try {
             if (usesV1() && !isEdit && !user?.usuarioId) throw new Error("No se pudo identificar al administrador de la sesión.");
             const input = {
                 ...validation.data,
-                ...(usesV1() ? {temporada:values.añoTemporada.trim()||null,observaciones:values.observaciones.trim()||null, ...(!isEdit ? { responsableUsuarioId: user?.usuarioId } : {})} : {}),
+                ...(usesV1() ? {
+                    temporada: values.añoTemporada.trim() || null,
+                    observaciones: values.observaciones.trim() || null,
+                    ...(!isEdit ? { responsableUsuarioId: user?.usuarioId, responsableNombre: values.responsable } : {}),
+                } : {}),
                 fechaInicio: parseFecha(validation.data.fechaInicio),
                 fechaFin: parseFecha(validation.data.fechaFin),
             };
             const uploaded = usesV1() && values.lineamientos instanceof File ? await uploadLocalDocument(values.lineamientos) : undefined;
             const saved = isEdit && campaniaId !== null ? await updateCampana(campaniaId, input) : await createCampana(input);
-            if (!isEdit && sessionToken && sessionToken === getAuthToken()) {
-                setTemporaryCampaignResponsible(saved.campaniaId, values.responsable);
-            }
             try {
                 if (uploaded) { await linkLocalDocument('campana', saved.campaniaId, uploaded.id); await refreshRemoteData(); }
                 else if (usesV1() && isEdit && hadDocument && !values.lineamientos) { await unlinkLocalDocument('campana', saved.campaniaId); await refreshRemoteData(); }
@@ -225,11 +229,11 @@ export default function CampaignFormModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InputField id="campaign-nombre" label="Nombre de Campaña:" placeholder="Ej: Campaña Mango 2026" value={values.nombre} onChange={(value) => set("nombre", value)} error={errors.nombre} />
                     {isEdit ? (
-                        <InfoField label="Responsable" value={temporaryResponsible ? `${temporaryResponsible} (temporal)` : values.responsable} multiline />
+                        <InfoField label="Responsable" value={values.responsable} multiline />
                     ) : (
                         <InputField id="campaign-responsable" label="Responsable" optional maxLength={150}
                             placeholder="Nombre del responsable" value={values.responsable}
-                            hint="El nombre es temporal y se pierde al recargar la página."
+                            error={errors.responsable}
                             onChange={(value) => set("responsable", value)} />
                     )}
                 </div>

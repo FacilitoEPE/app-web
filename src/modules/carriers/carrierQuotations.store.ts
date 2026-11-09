@@ -7,6 +7,7 @@ export type CarrierQuotationStatus = "En espera" | "Recibida";
 
 export interface CarrierRequirementQuotation {
     id: string;
+    requestId: number;
     codigo: string;
     carrierId: number;
     transportistaNombre: string;
@@ -15,7 +16,7 @@ export interface CarrierRequirementQuotation {
     campaniaNombre: string;
     fruta: string;
     descripcion: string;
-    cantidadEstimadaKg: number;
+    cantidadEstimada: string;
     fechaRecojo: string;
     fechaLimiteCotizacion: string;
     lugarRecojo: string;

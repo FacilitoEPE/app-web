@@ -16,13 +16,14 @@ export const PAYMENT_TYPES: { value: PaymentType; label: string; hint: string }[
     { value: "adelanto", label: "Con adelanto", hint: "Se paga una parte ahora y el saldo después." },
 ];
 
-/** Lo que se acordó con el transportista para esta campaña; el pago efectivo se registra en Liquidación de compra */
+/** Condiciones pactadas y total de desembolsos guardados para el acuerdo. */
 export interface CarrierPaymentAgreement {
     tipo: PaymentType;
     moneda: string;
     total: number;
     /** Solo en "Con adelanto" */
     adelanto: number | null;
+    adelantoDesembolsado?: number;
     /** Solo en "Con adelanto": cuándo se entrega el adelanto (yyyy-MM-dd) */
     fechaAdelanto: string;
     /** Fecha de pago (final) (yyyy-MM-dd) */
@@ -77,6 +78,25 @@ export const isAgreementClosed = (agreement: CarrierPaymentAgreement | null) =>
 /** Lo que falta por pagar: el total menos el adelanto, nunca negativo */
 export function getAgreementBalance(total: number, adelanto: number | null): number {
     return Math.max(0, Math.round((total - (adelanto ?? 0)) * 100) / 100);
+}
+
+export interface CarrierAdvanceValues {
+    fecha: string;
+    monto: string;
+    referencia: string;
+}
+
+export function validateCarrierAdvance(values: CarrierAdvanceValues, remaining: number) {
+    const errors: Partial<Record<keyof CarrierAdvanceValues, string>> = {};
+    if (!values.fecha) errors.fecha = "Indica la fecha del desembolso.";
+    if (!/^\d+(\.\d{1,2})?$/.test(values.monto.trim()) || Number(values.monto) <= 0)
+        errors.monto = "Ingresa un importe mayor que cero con hasta dos decimales.";
+    else if (Number(values.monto) > remaining)
+        errors.monto = "El importe supera el adelanto pendiente de desembolso.";
+    const reference = values.referencia.trim();
+    if (!reference || reference.length > 100)
+        errors.referencia = "Ingresa una referencia de hasta 100 caracteres.";
+    return errors;
 }
 
 const toPositive = (value: string) => {

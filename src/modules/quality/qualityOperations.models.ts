@@ -109,6 +109,7 @@ export interface QualitySunatRemissionGuide {
 }
 export interface QualityDeliveryLoadItem {
     cargaId?: number;
+    puedeRegistrarCarga?: boolean;
     guideDefaults?: Partial<QualitySunatRemissionGuide>;
     id: string;
     codigoCarga: string;

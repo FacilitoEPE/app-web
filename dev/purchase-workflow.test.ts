@@ -4,18 +4,20 @@ import type { AddressInfo } from 'node:net';
 import path from 'node:path';
 import { createV1MockMiddleware } from './v1-mock.ts';
 import { apiClient } from '@/shared/api/client';
-import { refreshFrontendData } from '@/frontend-data';
+import { refreshFrontendData, resetFrontendData } from '@/frontend-data';
 import { operationsContext } from '@/modules/operations/api/operations-context.api';
 import { projectSettlementData } from '@/modules/purchase-settlement/api/settlement-screen-data';
-import { saveCarrierSettlement } from '@/modules/purchase-settlement/purchaseSettlement.store';
+import { registerCarrierPayment, saveCarrierSettlement } from '@/modules/purchase-settlement/purchaseSettlement.store';
 import { carrierTotal } from '@/modules/purchase-settlement/settlementOverview.utils';
+import { campaignCommands } from '@/modules/campaigns/api/campaign-commands.api';
+import { projectCampaignData } from '@/modules/campaigns/api/campaign-screen-data';
 
 let server: Server;
 let previousBase: string | undefined;
 
 beforeEach(async () => {
     vi.stubEnv('VITE_API_CONTRACT', 'v1');
-    const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'), undefined, true);
+    const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'), () => new Date('2026-11-08T15:00:00Z'), true);
     server = createServer((request, response) => middleware(request, response, () => {
         response.statusCode = 418;
         response.end('Unversioned request rejected');
@@ -33,6 +35,50 @@ afterEach(async () => {
 });
 
 describe('liquidación de transporte con datos relacionados de desarrollo', () => {
+    it('desembolsa desde el acuerdo y permite aplicar el crédito sin duplicar pagos en caja', async () => {
+        await refreshFrontendData('/campaigns/1/carriers');
+        const values = { fecha: '2026-11-05', monto: '60', referencia: 'ADEL-NUEVO' };
+        await expect(campaignCommands.carrierAdvance(1, 2, values)).rejects.toThrow(/no habilita adelantos/);
+        await expect(campaignCommands.carrierAdvance(1, 1, { ...values, monto: '100.01' })).rejects.toThrow(/supera el adelanto/);
+        const advance = await campaignCommands.carrierAdvance(1, 1, values);
+        await expect(campaignCommands.carrierAdvance(1, 1, { ...values, monto: '10' })).rejects.toMatchObject({ code: 'DUPLICATE' });
+        await refreshFrontendData('/campaigns/1/carriers');
+        expect(projectCampaignData(operationsContext()).carriers[1].find(row => row.id === 1)?.acuerdo)
+            .toMatchObject({ adelanto: 300, adelantoDesembolsado: 260, fechaAdelanto: values.fecha });
+
+        resetFrontendData();
+        await refreshFrontendData('/liquidacion-compra/1/cargas/1/transportista');
+        const transport = () => projectSettlementData(operationsContext()).find(row => row.id === '1')!.transporte;
+        const advanceId = String(advance.adelantoTransporteId);
+        expect(transport().pagos.reduce((sum, payment) => sum + payment.importe, 0)).toBe(150);
+        expect(transport().adelantosDisponibles).toEqual([
+            expect.objectContaining({ id: advanceId, referencia: values.referencia, saldoDisponible: 60 }),
+        ]);
+        const payment = { fecha: '2026-11-06', importe: 40, referencia: values.referencia, evidencia: null, observaciones: '' };
+        await registerCarrierPayment('1', { ...payment, modo: 'Adelanto', medio: 'Aplicación de adelanto' }, advanceId);
+        expect(transport().adelantosDisponibles).toEqual([]);
+        expect(operationsContext().transportPayments.filter(row => row.liquidacionTransporteId === 1)).toHaveLength(1);
+        const anotherLoad = projectSettlementData(operationsContext()).find(row => row.id === '3')!;
+        expect(anotherLoad.transporte.adelantosDisponibles.find(row => row.id === advanceId)?.saldoDisponible).toBe(20);
+
+        await registerCarrierPayment('1', { ...payment, modo: 'Caja', medio: 'Efectivo', importe: 25, referencia: 'CAJA-NUEVA' });
+        await refreshFrontendData('/liquidacion-compra/1/cargas/1/transportista');
+        const paid = transport().pagos.reduce((sum, row) => sum + row.importe, 0);
+        expect(carrierTotal(transport()) - paid).toBe(295);
+    }, 15000);
+
+    it('conserva el tope acordado cuando se registran desembolsos simultáneos', async () => {
+        const values = { fecha: '2026-11-05', monto: '60' };
+        const attempts = await Promise.allSettled([
+            campaignCommands.carrierAdvance(1, 1, { ...values, referencia: 'ADEL-SIM-1' }),
+            campaignCommands.carrierAdvance(1, 1, { ...values, referencia: 'ADEL-SIM-2' }),
+        ]);
+        expect(attempts.filter(result => result.status === 'fulfilled')).toHaveLength(1);
+        expect(attempts.find(result => result.status === 'rejected')).toMatchObject({ reason: { code: 'ADVANCE_EXCEEDED' } });
+        const total = operationsContext().advances.filter(row => row.acuerdoTransporteId === 1).reduce((sum, row) => sum + row.monto, 0);
+        expect(total).toBe(260);
+    });
+
     it('rechaza acuerdos en USD antes de escribir flete o gastos', async () => {
         const context = operationsContext();
         const load = context.loads.find(item => item.cargaId === 3)!;

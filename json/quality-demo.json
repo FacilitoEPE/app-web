@@ -195,6 +195,7 @@
         "frutaId": 1,
         "temporada": "2026/2027",
         "responsableUsuarioId": null,
+        "responsableNombre": null,
         "lineamientosArchivoId": null,
         "observaciones": null,
         "cerradaAt": null,

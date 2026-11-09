@@ -3,6 +3,7 @@ import { parseFecha, formatFecha } from "@/modules/campaigns/api/fecha.util";
 
 export interface Campana {
   responsableUsuarioId?: number | null;
+  responsableNombre?: string | null;
   temporada?: string | null;
   observaciones?: string | null;
   lineamientosArchivoId?: number | null;
@@ -20,6 +21,7 @@ export interface Campana {
 
 export interface CampaignFormInput {
   responsableUsuarioId?: number | null;
+  responsableNombre?: string | null;
   temporada?: string | null;
   observaciones?: string | null;
   nombre: string;

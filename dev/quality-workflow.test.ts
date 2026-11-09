@@ -5,8 +5,10 @@ import path from 'node:path'
 import { createV1MockMiddleware } from './v1-mock.ts'
 import { apiClient } from '@/shared/api/client'
 import { refreshFrontendData } from '@/frontend-data'
-import { operationsContext } from '@/modules/operations/api/operations-context.api'
+import { operationsContext, type OperationsContext } from '@/modules/operations/api/operations-context.api'
 import { projectQualityData } from '@/modules/quality/api/quality-screen-data'
+import { projectDriverData } from '@/modules/driver-portal/api/driver-screen-data'
+import { driverCommands } from '@/modules/driver-portal/api/driver-commands.api'
 import { campaignAnalysisOrigins, qualityCommands } from '@/modules/quality/api/quality-commands.api'
 import { createGuideDraft } from '@/modules/quality/remissionGuide.utils'
 import { qualityGuideStandardText } from '@/modules/quality/qualityGuideNorms.utils'
@@ -16,7 +18,7 @@ let server: Server
 let previousBase: string | undefined
 beforeEach(async () => {
     vi.stubEnv('VITE_API_CONTRACT', 'v1')
-    const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'), undefined, true)
+    const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'), () => new Date('2026-11-08T15:00:00Z'), true)
     server = createServer((req, res) => middleware(req, res, () => { res.statusCode = 404; res.end() }))
     await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
     previousBase = apiClient.defaults.baseURL
@@ -67,8 +69,8 @@ describe('Flujo de calidad con datos sintéticos de desarrollo', () => {
         expect(updated.documento && 'url' in updated.documento && updated.documento.url).toMatch(/^data:application\/pdf;base64,/)
     })
     it('registra carga de entrega coordinada y crea su guía con proveedores de esa carga', async () => {
-        const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'industria' && l.id.startsWith('entrega-'))!
-        await qualityCommands.saveLoad(pending.id, { ...pending, fechaCargaReal: '2026-11-07', anotador: 'Anotador de prueba', proveedoresCarga: pending.proveedoresCarga.map(p => ({ ...p, kilosCargados: 1000, jabasCargadas: 50 })) })
+        const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'industria' && l.puedeRegistrarCarga)!
+        await qualityCommands.saveLoad(pending.id, { ...pending, cumpleRequisitosIndustria: true, fechaCargaReal: '2026-11-07', anotador: 'Anotador de prueba', proveedoresCarga: pending.proveedoresCarga.map(p => ({ ...p, kilosCargados: 1000, jabasCargadas: 50 })) })
         await refreshFrontendData()
         const load = projectQualityData(operationsContext()).loads.find(l => l.scope === 'industria' && l.fechaProgramada === pending.fechaProgramada && l.cargaId)!
         const guide = { ...createGuideDraft(load), proveedoresIncluidos: load.proveedoresCarga.map(p => p.proveedorId), kilosPorProveedor: Object.fromEntries(load.proveedoresCarga.map(p => [p.proveedorId, p.kilosCargados])), numeroGuia: 'T001-00000003', pesoBrutoTotalKg: 1000, numeroBultos: 50, codEstablecimientoPartida: '0001', codEstablecimientoLlegada: '0001', ubigeoPartida: '200114', ubigeoLlegada: '200101', direccionPartida: 'Camino rural km 2', direccionLlegada: 'Planta Piura', conductorTipoDoc: 'CE' as const, conductorNombres: 'Miguel', conductorApellidos: 'Torres', observacionesSunat: 'Precinto 12' }
@@ -104,8 +106,55 @@ describe('Flujo de calidad con datos sintéticos de desarrollo', () => {
             ubigeoLlegada: '200501', direccionLlegada: 'Planta Paita', codEstablecimientoLlegada: '0009',
             normasSeleccionadas: ['NOP', 'EU'], kilosPorProveedor: guide.kilosPorProveedor })
     })
+    it('comparte una sola carga administrativa con el chofer y bloquea otra alta de la misma entrega', async () => {
+        const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'exportador' && l.puedeRegistrarCarga)!
+        const values = { ...pending, fechaCargaReal: '2026-11-07', anotador: 'Anotador de prueba',
+            proveedoresCarga: pending.proveedoresCarga.map(p => ({ ...p, kilosCargados: 200, jabasCargadas: 10 })) }
+        const saved = await qualityCommands.saveLoad(pending.id, values)
+        await expect(qualityCommands.saveLoad(pending.id, { ...values, anotador: 'Otro registro' })).rejects.toThrow(/ya tiene una carga/i)
+        const { data } = await apiClient.get<OperationsContext>('/api/chofer/contexto')
+        const portal = projectDriverData(data).loads
+        expect(portal.some(load => load.id === pending.id)).toBe(false)
+        expect(portal.find(load => load.id === String(saved!.cargaId))).toMatchObject({
+            anotador: values.anotador, etapa: 'En carga', rechazada: false, permiteEditarCarga: true,
+            proveedores: values.proveedoresCarga.map(p => expect.objectContaining({ kilosCargados: p.kilosCargados, jabasCargadas: p.jabasCargadas })),
+        })
+        expect(data.loads.filter(load => load.coordinacionEntregaId === saved!.coordinacionEntregaId)).toHaveLength(1)
+    })
+    it('guarda el rechazo industrial sin crear carga y lo comparte con el chofer', async () => {
+        const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'industria' && l.puedeRegistrarCarga)!
+        await qualityCommands.saveLoad(pending.id, { ...pending, cumpleRequisitosIndustria: false, motivoRechazoIndustria: 'Fermentación' })
+        expect(projectQualityData(operationsContext()).loads.find(l => l.id === pending.id)).toMatchObject({
+            cargaId: undefined, puedeRegistrarCarga: false, motivoRechazoIndustria: 'Fermentación',
+        })
+        await expect(qualityCommands.saveLoad(pending.id, { ...pending, cumpleRequisitosIndustria: true })).rejects.toThrow(/no está disponible/i)
+        const { data } = await apiClient.get<OperationsContext>('/api/chofer/contexto')
+        expect(projectDriverData(data).loads.find(load => load.id === pending.id)).toMatchObject({
+            pendienteRegistro: true, rechazada: true, permiteEditarCarga: false,
+        })
+    })
+    it('conserva los datos del primer guardado si administrador y chofer registran a la vez', async () => {
+        const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'exportador' && l.puedeRegistrarCarga)!
+        const admin = { ...pending, fechaCargaReal: '2026-11-07', anotador: 'Administrador',
+            proveedoresCarga: pending.proveedoresCarga.map(p => ({ ...p, kilosCargados: 200, jabasCargadas: 10 })) }
+        const driver = { ...admin, fechaCarga: admin.fechaCargaReal, anotador: 'Chofer',
+            proveedores: admin.proveedoresCarga.map(p => ({ ...p, tipo: p.rol, kilosCargados: 250 })) }
+        const attempts = await Promise.allSettled([
+            qualityCommands.saveLoad(pending.id, admin),
+            driverCommands.load(pending.id, driver),
+        ])
+        expect(attempts.filter(attempt => attempt.status === 'fulfilled')).toHaveLength(1)
+        const { data } = await apiClient.get<OperationsContext>('/api/chofer/contexto')
+        const coordination = data.coordinations.find(c => `entrega-${c.entregaProgramadaId}` === pending.id)!
+        const loads = data.loads.filter(load => load.coordinacionEntregaId === coordination.coordinacionEntregaId)
+        expect(loads).toHaveLength(1)
+        const winner = attempts[0].status === 'fulfilled' ? admin : driver
+        expect(loads[0].anotadorNombre).toBe(winner.anotador)
+        const providerKg = data.loadProviders.filter(p => p.cargaId === loads[0].cargaId).map(p => p.kilosCargados)
+        expect(providerKg).toEqual(winner === admin ? admin.proveedoresCarga.map(p => p.kilosCargados) : driver.proveedores.map(p => p.kilosCargados))
+    })
     it('reparte un proveedor entre varias guías y permite eliminar solo un borrador de la misma carga', async () => {
-        const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'exportador' && l.id.startsWith('entrega-'))!
+        const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'exportador' && l.puedeRegistrarCarga)!
         await qualityCommands.saveLoad(pending.id, { ...pending, fechaCargaReal: '2026-11-07', anotador: 'Anotador de prueba', proveedoresCarga: pending.proveedoresCarga.map(p => ({ ...p, kilosCargados: 1000, jabasCargadas: 50 })) })
         await refreshFrontendData()
         const load = projectQualityData(operationsContext()).loads.find(l => l.scope === 'exportador' && l.fechaProgramada === pending.fechaProgramada && l.cargaId)!

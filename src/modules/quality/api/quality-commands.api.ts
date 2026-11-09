@@ -1,6 +1,6 @@
 import { operationsContext } from '@/modules/operations/api/operations-context.api';
 import { loadContext, coordinationContext, providerName } from '@/modules/operations/api/operation-links';
-import { commitRemote, requireId } from '@/shared/api/data-contract';
+import { commitRemote, refreshRemoteData, requireId } from '@/shared/api/data-contract';
 import { jsonData } from '@/shared/api/document-state';
 import { linkLocalDocument, persistFile, uploadLocalDocument } from '@/shared/api/uploadDocument';
 import { campanaV1 } from '@/modules/campaigns/api/v1.api';
@@ -8,7 +8,7 @@ import { analisisCalidadV1, medicionMtdV1, cosechaV1, cargaV1, proveedorCargaV1,
 import { emitirGuiaV1 } from '@/modules/quality/api/v1-actions.api';
 import { isQualityGuidePrepared } from '@/modules/quality/api/quality-guide-status';
 import { qualityGuideStandardText } from '@/modules/quality/qualityGuideNorms.utils';
-import { projectQualityData } from '@/modules/quality/api/quality-screen-data';
+import { canRegisterQualityLoad, projectQualityData } from '@/modules/quality/api/quality-screen-data';
 import type { QualityAnalysisRecord } from '@/modules/quality/qualityAnalysis.utils';
 import type { QualityDeliveryLoadItem, QualityHarvestOrganization, QualityHarvestAdvance, QualityHarvestClosure, QualityProviderLoadDetail, QualitySunatRemissionGuide } from '@/modules/quality/qualityOperations.models';
 import type { AddQualityCampaignInput } from '@/modules/quality/quality.store';
@@ -100,7 +100,33 @@ export const qualityCommands = {
         proveedoresCarga: QualityProviderLoadDetail[];
         cumpleRequisitosIndustria?: boolean;
         motivoRechazoIndustria?: string;
-    }) => commitRemote(() => writeLoad(id, payload)),
+    }) => commitRemote(async () => {
+        if (!id.startsWith('entrega-')) return writeLoad(id, payload);
+        const g = operationsContext(), c = context(id);
+        const alreadyRegistered = new Error('Esta entrega ya tiene una carga. Abre el registro desde Cargas registradas.');
+        if (c.load) throw alreadyRegistered;
+        if (!canRegisterQualityLoad(c, g))
+            throw new Error('Esta entrega ya no está disponible para registrar su carga.');
+        const loads = cargaV1(c.coordination.coordinacionEntregaId);
+        if ((await loads.list({ pageSize: 1 })).total > 0) {
+            await refreshRemoteData(true);
+            throw alreadyRegistered;
+        }
+        if (c.contract.canal === 'INDUSTRIA') {
+            if (payload.cumpleRequisitosIndustria === undefined)
+                throw new Error('Indica si la fruta cumple los requisitos de Industria.');
+            if (!payload.cumpleRequisitosIndustria) {
+                const reason = payload.motivoRechazoIndustria?.trim();
+                if (!reason) throw new Error('Indica el motivo de rechazo industrial.');
+                const harvest = await ensureHarvest(id);
+                await cosechaV1(c.delivery.entregaProgramadaId).update(harvest.cosechaId, {
+                    industria: { ...harvest.industria, inspectionResult: 'No cumple', rejectionReason: reason },
+                });
+                return;
+            }
+        }
+        return writeLoad(id, payload);
+    }),
     createLoad: (value: QualityDeliveryLoadItem) => {
         const g = operationsContext(), matches = g.coordinations.filter(co => { const c = coordinationContext(co.coordinacionEntregaId, g); return c.campaign.campaniaId === value.campaniaId && c.contract.numero === value.contratoRef && c.delivery.fecha === value.fechaProgramada; });
         if (matches.length !== 1)
@@ -189,8 +215,10 @@ export async function writeLoad(id: string, payload: {
     motivoRechazoIndustria?: string;
 }) {
     const g = operationsContext(), c = context(id), body = { codigo: c.load?.codigo ?? `CAR-${c.campaign.campaniaId}-${c.delivery.entregaProgramadaId}`, fechaCarga: payload.fechaCargaReal, anotadorNombre: payload.anotador, viaticosMovilidad: payload.viaticosMovilidad, viaticosInsumos: payload.viaticosInsumos, observaciones: payload.observacionesCarga };
+    if (id.startsWith('entrega-') && c.load)
+        throw new Error('Esta entrega ya tiene una carga. Abre el registro existente.');
     const selections = payload.proveedoresCarga.map(p => {
-        const party = g.participations.find(r => r.campaniaId === c.campaign.campaniaId && r.proveedorId === Number(p.proveedorId)), variety = g.varieties.find(v => v.name === p.variedad || v.name === `${c.fruit} ${p.variedad}`);
+        const party = g.participations.find(r => r.campaniaId === c.campaign.campaniaId && r.proveedorId === Number(p.proveedorId)), variety = g.varieties.find(v => v.frutaId === c.campaign.frutaId && (v.name === p.variedad || v.name === `${c.fruit} ${p.variedad}`));
         if (!party || !variety)
             throw new Error('Completa el proveedor y la variedad usando los datos de la entrega.');
         return { p, party, variety };
@@ -218,7 +246,7 @@ export async function writeLoad(id: string, payload: {
         else if (monto > 0)
             await gastoCargaV1(load.cargaId).create({ concepto, monto });
     }
-    if (payload.cumpleRequisitosIndustria !== undefined) {
+    if (c.contract.canal === 'INDUSTRIA' && payload.cumpleRequisitosIndustria !== undefined) {
         const harvest = await ensureHarvest(id);
         await cosechaV1(c.delivery.entregaProgramadaId).update(harvest.cosechaId, { industria: { ...harvest.industria, inspectionResult: payload.cumpleRequisitosIndustria ? 'Cumple' : 'No cumple', rejectionReason: payload.motivoRechazoIndustria ?? '' } });
     }

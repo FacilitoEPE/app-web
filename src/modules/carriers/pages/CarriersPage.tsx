@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertCircle, Building2, FileSpreadsheet, Send, Truck, UserRound } from "lucide-react";
+import { AlertCircle, Building2, FileSpreadsheet, Send, Truck } from "lucide-react";
 import CarriersFilters from "@/modules/carriers/components/CarriersFilters";
 import CarriersTable from "@/modules/carriers/components/CarriersTable";
 import CarriersQuotationsSubView from "@/modules/carriers/components/CarriersQuotationsSubView";
@@ -24,6 +24,7 @@ import {
     useCarrierExtras,
 } from "@/modules/carriers/carrierExtras.store";
 import { useCarrierQuotations } from "@/modules/carriers/carrierQuotations.store";
+import { groupCarrierQuotations } from "@/modules/carriers/carrierQuotations.utils";
 import { loadCarrierQuotations } from '@/modules/carriers/api/quotation-commands.api';
 import { usesV1 } from '@/shared/api/data-contract';
 import {
@@ -47,9 +48,10 @@ export default function CarriersPage() {
         mode: "carrier-created",
     });
     const [search, setSearch] = useState("");
-    const [typeFilter, setTypeFilter] = useState("all");
+    const [typeFilter, setTypeFilter] = useState("");
     const extras = useCarrierExtras();
     const quotations = useCarrierQuotations();
+    const quotationGroups = useMemo(() => groupCarrierQuotations(quotations), [quotations]);
     useEffect(() => {
         if (activeTab !== 'cotizaciones' || !usesV1()) return;
         let active = true;
@@ -78,16 +80,16 @@ export default function CarriersPage() {
         void loadCarriers();
     }, [loadCarriers]);
 
-    const hasActiveFilters = search !== "" || typeFilter !== "all";
+    const hasActiveFilters = search !== "" || typeFilter !== "";
     const clearFilters = () => {
         setSearch("");
-        setTypeFilter("all");
+        setTypeFilter("");
     };
 
     const filteredData = useMemo(() => {
         const searchLower = search.trim().toLowerCase();
         return profiles.filter((item) => {
-            if (typeFilter !== "all" && item.tipo !== typeFilter) return false;
+            if (typeFilter && item.tipo !== typeFilter) return false;
             return [item.nombre, item.ruc, item.mtc, item.documento].some((field) =>
                 field.toLowerCase().includes(searchLower),
             );
@@ -181,7 +183,7 @@ export default function CarriersPage() {
                             id: "cotizaciones",
                             label: "Solicitudes y cotizaciones",
                             icon: FileSpreadsheet,
-                            count: quotations.length,
+                            count: quotationGroups.length,
                         },
                     ]}
                 />
@@ -196,21 +198,11 @@ export default function CarriersPage() {
 
             {activeTab === "empresas" ? (
                 <>
-                    <SegmentedTabs
-                        tabs={[
-                            { id: "all", label: "Todos", icon: Truck, count: profiles.length },
-                            { id: "publico", label: "Público", icon: Building2, count: profiles.filter((carrier) => carrier.tipo === "publico").length },
-                            { id: "privado", label: "Privado", icon: UserRound, count: profiles.filter((carrier) => carrier.tipo === "privado").length },
-                        ]}
-                        value={typeFilter}
-                        onChange={setTypeFilter}
-                        showLabelsOnMobile
-                        className="mt-4 mb-6"
-                    />
-
                     <CarriersFilters
                         search={search}
                         onSearchChange={setSearch}
+                        typeFilter={typeFilter}
+                        onTypeFilterChange={setTypeFilter}
                         hasActiveFilters={hasActiveFilters}
                         onClear={clearFilters}
                     />
@@ -228,7 +220,7 @@ export default function CarriersPage() {
                     />
                 </>
             ) : (
-                <CarriersQuotationsSubView carriers={carriers} />
+                <CarriersQuotationsSubView carriers={carriers} groups={quotationGroups} />
             )}
 
             <CarrierSendRequirementModal

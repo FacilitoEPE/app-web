@@ -44,7 +44,7 @@ La respuesta `201 Created` y la lectura posterior del detalle incluyen estos cam
 }
 ```
 
-El frontend puede usar `responsableNombre` de la respuesta para reemplazar el valor temporal tras guardar y para mostrar el nombre al recargar la campaña.
+El formulario envía el nombre en el alta. Al consultar la campaña, el frontend muestra `responsableNombre` y usa el nombre del usuario asociado si el campo está vacío.
 
 ## Desglose de contratos y entregas
 

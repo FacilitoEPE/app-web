@@ -20,6 +20,8 @@ Antes de crear una campaña, registre o verifique estos datos:
 - **Gestión Comercial** (`/planificacion-comercial`): **Nuevo Cliente**. Complete empresa, RUC, tipo de cliente, contacto y ubicación.
 - **Gestión de Transporte** (`/transportistas`): **Registrar transportista**. En el detalle agregue sus vehículos y choferes; revise placa, capacidad, documento y licencia.
 
+En **Empresas**, el selector **Tipo de transporte** permite filtrar por **Todos**, **Público** o **Privado**. En **Solicitudes y cotizaciones**, cada solicitud de flete aparece en una sola fila, con el total de transportistas invitados y respuestas recibidas. Abra **Ver detalle** para consultar los destinatarios y registrar o editar la cotización de cada uno.
+
 Frutas, variedades, normas, roles y parámetros UIT son catálogos de referencia; se seleccionan, no se crean desde estos formularios. Use datos reales y verificados en operaciones productivas.
 
 **Dirección:** `Módulos > Gestión de Proveedores / Gestión Comercial / Gestión de Transporte`.  
@@ -31,7 +33,7 @@ Frutas, variedades, normas, roles y parámetros UIT son catálogos de referencia
 
 En **Lineamientos**, elegir un archivo solo lo deja pendiente; se envía al crear/guardar la campaña. Al consultar un adjunto guardado, verde indica documento verificado, rojo indica que falta o no coincide con sus metadatos: quítelo y vuelva a adjuntarlo. Si aparece «No se pudo verificar», revise la conexión o solicite revisar los permisos del almacenamiento y pulse **Volver a verificar**. La vista previa se deshabilita para documentos confirmados como faltantes o inconsistentes.
 
-2. Ingrese nombre, fruta, meta en kilogramos y fechas. Si lo desea, escriba un **Responsable**. El nombre se muestra como temporal en el detalle y se pierde al recargar o cerrar sesión. Elija **Crear Campaña** y verifique que figure como **Planificado**.
+2. Ingrese nombre, fruta, meta en kilogramos y fechas. Si lo desea, escriba un **Responsable**. Elija **Crear Campaña** y verifique que figure como **Planificado**. El nombre guardado aparece en el detalle al volver a abrir la campaña.
 3. Abra el detalle de campaña, sección **Proveedores**, y elija **Vincular proveedor**.
 4. Seleccione al proveedor, indique si participa como **Productor** o **Acopiador**, ingrese kilos estimados y guarde.
 5. Para un productor, abra **Ver detalles > Entrevistas > Vincular finca**. Seleccione la finca y complete los datos agronómicos de esta campaña.
@@ -59,7 +61,7 @@ En cada variedad de la entrega verá **Disponible de la variedad**, **En esta en
 ## 5. Vincular transporte y coordinar la entrega
 
 1. En el detalle de campaña, abra **Transportistas** y vincule al transportista.
-2. Registre o confirme el acuerdo de transporte y su importe.
+2. Registre o confirme el acuerdo de transporte y su importe. Si el acuerdo es **Con adelanto** en soles, abra **Ver acuerdo de pago → Registrar desembolso del adelanto** después de entregar el dinero. Ingrese fecha, importe y referencia. Puede registrar varios desembolsos hasta completar el monto acordado.
 3. Abra **Entregas > Coordinar entrega**. Seleccione la entrega programada, el acuerdo, el proveedor/finca de origen, el vehículo y el chofer compatibles.
 4. Complete fechas, horarios y observaciones, y guarde la coordinación.
 
@@ -84,10 +86,14 @@ En el listado de **Choferes** de una empresa transportista, abra **Ver detalles*
 1. Abra el asistente de cosecha de la campaña autorizada y confirme la organización.
 2. Registre la cuadrilla, la fecha, las herramientas, los envases y los materiales utilizados.
 3. Ingrese los kilos cosechados y los bultos verificados; revise el resumen y elija **Cerrar cosecha**.
-4. En **Más opciones > Datos de carga (Anotador)**, cree y guarde la carga real. Registre los kilos por proveedor/finca, cajas y costos operativos.
-5. Vuelva a la fila de carga y abra **Más opciones > Preparar guía SUNAT**. Complete fechas, transportista, vehículo, chofer, origen/destino y los códigos reales de establecimiento de cuatro dígitos. Guarde o emita la guía desde el formulario.
 
-**Dirección:** `/calidad > cosecha > cerrar`; luego `Cargas > Más opciones > Datos de carga (Anotador)` y `Preparar guía SUNAT`.  
+### Registrar la carga de una entrega coordinada
+
+1. En **Cosecha y Control de Calidad → Carga**, elija **Registrar carga** y seleccione una entrega coordinada de la campaña y del canal que está viendo. Registre la fecha, el responsable, los kilos y envases por proveedor, y los gastos. Si el chofer ya registró la carga, búsquela en **Cargas registradas**. En Industria, si la fruta no cumple los requisitos, guarde el motivo del rechazo.
+2. En **Guías de remisión**, ubique la carga y elija **Preparar guía**. Complete fechas, transportista, vehículo, chofer, origen/destino y los códigos reales de establecimiento de cuatro dígitos. Guarde o emita la guía desde el formulario.
+
+**Dirección:** `/calidad > campaña y canal > Carga > Registrar carga`.
+
 **Opción:** la carga debe existir y contener sus proveedores antes de preparar la guía. Los dos códigos de establecimiento son obligatorios.
 
 ## 8. Recepción en planta y despacho del chofer
@@ -107,7 +113,7 @@ El **Detalle de carga** muestra el responsable, las observaciones y la evidencia
 
 - **Facturación y Cobros** (`/facturacion-cobros`): prepare la facturación de la campaña, revise cliente, kilos, precio y moneda, emita el registro de factura y registre la cobranza con referencia, fecha e importe.
 - **Liquidación de Compra** (`/liquidacion-compra`): liquide al proveedor según kilos aceptados y precio pactado; revise retenciones/alertas del límite UIT y registre el pago con referencia bancaria.
-- **Liquidaciones de Transporte** (desde la sección operativa correspondiente): revise flete y costos de ruta y registre el pago con referencia.
+- **Liquidaciones de Transporte**: revise flete y costos de ruta. En **Registrar pago / Aplicar adelanto**, seleccione un desembolso disponible del mismo acuerdo para descontarlo del saldo. Registre cualquier pago en caja por separado.
 
 En el historial de cobros puede buscar por la fecha visible y abrir un voucher desde escritorio o celular. El historial del detalle de liquidación también permite abrir el comprobante de cada pago cuando está registrado.
 

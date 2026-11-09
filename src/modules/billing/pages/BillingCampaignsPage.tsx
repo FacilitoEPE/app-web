@@ -4,13 +4,13 @@ import { Eye, Receipt, Sprout } from "lucide-react";
 import { billingCampaigns } from "@/modules/billing/billing.utils";
 import { useBillingClients } from "@/modules/billing/billing.store";
 import FilterBar, { FilterSearch } from "@/shared/components/FilterBar";
-import RowActions from "@/shared/components/RowActions";
 import StatusBadge from "@/shared/components/StatusBadge";
 import TableCard from "@/shared/components/TableCard";
 import { TableCountPill } from "@/shared/components/TableToolbar";
 import { TABLE_HEAD_BG, TableRowAccent, TableRowLead } from "@/shared/components/DataTableRow";
 import TableGridCard, { TableGridCardField, TableGridCardFields } from "@/shared/components/TableGridCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
+import { Button } from "@/shared/components/ui/button";
 import PageHeader from "@/shared/layout/PageHeader";
 
 export default function BillingCampaignsPage() {
@@ -21,6 +21,9 @@ export default function BillingCampaignsPage() {
     const filtered = campaigns.filter(campaign => `${campaign.name} ${campaign.fruit}`.toLocaleLowerCase("es")
         .includes(search.trim().toLocaleLowerCase("es")));
     const open = (id: number) => navigate(`/facturacion-cobros/${id}`);
+    const viewClients = (id: number) => (
+        <Button variant="outline" size="sm" onClick={() => open(id)}><Eye size={16} />Ver clientes</Button>
+    );
     return <div className="px-4 py-5 sm:px-8 lg:px-14">
         <PageHeader icon={<Receipt size={24} />} title="Facturación y Cobros"
             description="Consulta las campañas con cargas registradas y continúa con la facturación de sus clientes." />
@@ -37,7 +40,7 @@ export default function BillingCampaignsPage() {
             <div className="flex flex-col gap-3 sm:hidden">{filtered.map(campaign => <TableGridCard key={campaign.id}
                 accentColor="border-l-brand" icon={<Sprout size={18} />} title={campaign.name} subtitle={campaign.fruit}
                 badge={<StatusBadge status={campaign.status} />}
-                actions={<RowActions primary={[{ label: "Ver clientes", icon: <Eye size={18} />, onClick: () => open(campaign.id) }]} />}>
+                actions={viewClients(campaign.id)}>
                 <TableGridCardFields><TableGridCardField label="Clientes con carga" value={campaign.clients.length} />
                     <TableGridCardField label="Cargas" value={campaign.clients.reduce((sum, client) => sum + client.cargas.length, 0)} />
                     <TableGridCardField label="Documentos" value={campaign.clients.reduce((sum, client) => sum + client.cargas.reduce((count, load) => count + load.facturas.length, 0), 0)} />
@@ -50,7 +53,7 @@ export default function BillingCampaignsPage() {
                 <TableCell>{campaign.fruit}</TableCell><TableCell><StatusBadge status={campaign.status} /></TableCell>
                 <TableCell>{campaign.clients.length}</TableCell><TableCell>{campaign.clients.reduce((sum, client) => sum + client.cargas.length, 0)}</TableCell>
                 <TableCell>{campaign.clients.reduce((sum, client) => sum + client.cargas.reduce((count, load) => count + load.facturas.length, 0), 0)}</TableCell>
-                <TableCell><RowActions primary={[{ label: "Ver clientes", icon: <Eye size={18} />, onClick: () => open(campaign.id) }]} /></TableCell>
+                <TableCell>{viewClients(campaign.id)}</TableCell>
             </TableRow>)}</TableBody></Table></div>
         </TableCard>
     </div>;

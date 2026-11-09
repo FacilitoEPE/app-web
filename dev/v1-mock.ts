@@ -219,6 +219,11 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
       else if (row.estadoExamen === 'Enviado') row.resultado = null
     }
     if (table === 'entrega_programada' && !String(row.destino).trim()) fail('DESTINATION_REQUIRED','Ingresa el destino como texto.','destino')
+    if (table === 'carga' && !current) {
+      const coordination = find('coordinacion_entrega', row.coordinacionEntregaId)
+      const harvest = related('cosecha', 'entregaProgramadaId', coordination.entregaProgramadaId)[0]
+      if (harvest && (harvest.industria as Row)?.inspectionResult === 'No cumple') fail('INDUSTRY_REJECTED', 'La entrega tiene un rechazo industrial registrado.')
+    }
     if (table === 'historial_chofer') {
       const stages = ['EN_CARGA','SALIDA','EN_CAMINO','LLEGADA','CIERRE']
       const history = related(table,'coordinacionEntregaId',row.coordinacionEntregaId)
@@ -570,6 +575,10 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
       status = 204
     } else {
       const input = await readJson(request)
+      if (table === 'campana' && input && typeof input === 'object'
+        && 'responsableNombre' in input && typeof input.responsableNombre === 'string') {
+        input.responsableNombre = input.responsableNombre.trim() || null
+      }
       const errors = validateV1Schema(contract,operation.requestBody!.content['application/json'].schema,input)
       if (Object.keys(errors).length) throw new ApiV1Error(422,'VALIDATION_FAILED','Revisa los campos enviados.',errors)
       let row: Row

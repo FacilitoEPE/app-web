@@ -11,7 +11,8 @@ import type { CampaignContractDeliveryValues, DeliveryCoordination } from '@/mod
 import type { InterviewValues } from '@/modules/campaigns/campaignInterview';
 import type { ExamValues } from '@/modules/campaigns/campaignExam';
 import type { CertificadoCampanaFormValues, ProductorCubierto, AmpliacionFormValues, PagoFormValues } from '@/modules/campaigns/campaignCertificate.utils';
-import type { AgreementFormValues } from '@/modules/campaigns/campaignCarrier.utils';
+import { getAgreementBalance, validateCarrierAdvance, type AgreementFormValues, type CarrierAdvanceValues } from '@/modules/campaigns/campaignCarrier.utils';
+import { adelantoTransporteV1 } from '@/modules/purchase-settlement/api/v1.api';
 import type { CreateContratoVentaV1 } from '@/modules/commercial-planning/api/v1.dto';
 import type { CreateExamenProveedorV1 } from '@/modules/providers/api/v1.dto';
 import type { CreateCertificadoCampanaV1 } from '@/modules/campaigns/api/v1.dto';
@@ -99,6 +100,24 @@ export const campaignCommands = {
     unlinkCarrier: (campaignId: number, id: number) => commitRemote(() => acuerdoTransporteV1(campaignId).remove(id)),
     agreement: (campaignId: number, id: number, value: AgreementFormValues, file: unknown) => commitRemote(async () => { if (value.moneda !== 'PEN' && value.moneda !== 'USD')
         throw new Error('Selecciona soles o dólares.'); const uploaded = file instanceof File ? await uploadLocalDocument(file) : undefined; const saved = await acuerdoTransporteV1(campaignId).update(id, { estado: 'CONFIRMADO', tipoPago: value.tipo === 'adelanto' ? 'CON_ADELANTO' : 'AL_FINAL', montoAcordado: Number(value.total), adelantoAcordado: value.tipo === 'adelanto' ? Number(value.adelanto) : 0, fechaAcuerdo: formatFecha(new Date()), fechaPagoFinal: value.fechaPago, moneda: value.moneda }); if (uploaded) await linkLocalDocument('boleta_acuerdo', saved.acuerdoTransporteId, uploaded.id); return saved; }),
+    carrierAdvance: (campaignId: number, agreementId: number, value: CarrierAdvanceValues) => commitRemote(async () => {
+        const g = operationsContext();
+        const agreement = g.agreements.find(row => row.campaniaId === campaignId && row.acuerdoTransporteId === agreementId);
+        if (agreement?.estado !== 'CONFIRMADO' || agreement.tipoPago !== 'CON_ADELANTO')
+            throw new Error('El acuerdo no habilita adelantos.');
+        const campaign = g.campaigns.find(row => row.campaniaId === campaignId);
+        if (!campaign || campaign.estado === 'terminado' || campaign.cerradaAt)
+            throw new Error('La campaña no admite nuevos desembolsos.');
+        if (agreement.moneda !== 'PEN')
+            throw new Error('La liquidación de transporte admite acuerdos en soles.');
+        const disbursed = g.advances.filter(row => row.acuerdoTransporteId === agreementId)
+            .reduce((sum, row) => sum + row.monto, 0);
+        const errors = validateCarrierAdvance(value, getAgreementBalance(agreement.adelantoAcordado, disbursed));
+        if (Object.keys(errors).length) throw new Error(Object.values(errors).join(' '));
+        return adelantoTransporteV1(agreementId).create({
+            fecha: value.fecha, monto: Number(value.monto), referencia: value.referencia.trim(),
+        });
+    }),
     settleAgreement: async () => { throw new Error('Registra los pagos reales de las cargas desde Liquidación de compra. El acuerdo no genera un pago por sí mismo.'); },
     linkClient: (campaignId: number, value: {
         clienteNegocioId: string;
