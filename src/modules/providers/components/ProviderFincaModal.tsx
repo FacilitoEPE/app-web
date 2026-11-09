@@ -4,6 +4,7 @@ import AppModal from "@/shared/components/AppModal";
 import FormField from "@/shared/components/FormField";
 import InputField from "@/shared/components/InputField";
 import ModalSection from "@/shared/components/ModalSection";
+import UbigeoFields from "@/shared/components/UbigeoFields";
 import { Button } from "@/shared/components/ui/button";
 import { useModalForm } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
@@ -96,9 +97,13 @@ export default function ProviderFincaModal({ open, onOpenChange, providerName, r
 
                 <ModalSection title="Ubicación">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
-                        <InputField {...bind("departamento", true)} label="Departamento" placeholder="Ej. Piura" className="sm:col-span-2" />
-                        <InputField {...bind("provincia", true)} label="Provincia" placeholder="Ej. Sullana" className="sm:col-span-2" />
-                        <InputField {...bind("distrito", true)} label="Distrito" placeholder="Ej. Marcavelica" className="sm:col-span-2" />
+                        <UbigeoFields
+                            departamento={bind("departamento", true)}
+                            provincia={bind("provincia", true)}
+                            distrito={bind("distrito", true)}
+                            className="sm:col-span-2"
+                            disabled={saving}
+                        />
                         <InputField {...bind("latitud", usesV1())} label="Latitud" optional={!usesV1()} placeholder="-5.1945" step="0.0000001" className="sm:col-span-3" />
                         <InputField {...bind("longitud", usesV1())} label="Longitud" optional={!usesV1()} placeholder="-80.6328" step="0.0000001" className="sm:col-span-3" />
                     </div>

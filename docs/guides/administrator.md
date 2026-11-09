@@ -16,9 +16,9 @@ La sesión V1 utiliza el mecanismo de acceso disponible en este despliegue. No a
 
 Antes de crear una campaña, registre o verifique estos datos:
 
-- **Gestión de Proveedores** (`/proveedores`): **Nuevo Proveedor**. Complete identidad, documento, contacto y zona. En el detalle asigne fruta y variedad; en **Fincas**, registre ubicación, hectáreas, cultivo y variedad.
+- **Gestión de Proveedores** (`/proveedores`): **Nuevo Proveedor**. Complete identidad, documento, contacto y zona. En el detalle asigne fruta y variedad. En **Fincas**, seleccione departamento, provincia y distrito en ese orden, y registre coordenadas, hectáreas, cultivo y variedad.
 - **Gestión Comercial** (`/planificacion-comercial`): **Nuevo Cliente**. Complete empresa, RUC, tipo de cliente, contacto y ubicación.
-- **Gestión de Transporte** (`/transportistas`): **Registrar transportista**. En el detalle agregue sus vehículos y choferes; revise placa, capacidad, documento y licencia.
+- **Gestión de Transporte** (`/transportistas`): **Registrar transportista**. Seleccione departamento y provincia, y escriba la ciudad. En el detalle agregue sus vehículos y choferes y revise placa, capacidad, documento y licencia.
 
 En **Empresas**, el selector **Tipo de transporte** permite filtrar por **Todos**, **Público** o **Privado**. En **Solicitudes y cotizaciones**, cada solicitud de flete aparece en una sola fila, con el total de transportistas invitados y respuestas recibidas. Abra **Ver detalle** para consultar los destinatarios y registrar o editar la cotización de cada uno.
 
@@ -36,7 +36,7 @@ En **Lineamientos**, elegir un archivo solo lo deja pendiente; se envía al crea
 2. Ingrese nombre, fruta, meta en kilogramos y fechas. Si lo desea, escriba un **Responsable**. Elija **Crear Campaña** y verifique que figure como **Planificado**. El nombre guardado aparece en el detalle al volver a abrir la campaña.
 3. Abra el detalle de campaña, sección **Proveedores**, y elija **Vincular proveedor**.
 4. Seleccione al proveedor, indique si participa como **Productor** o **Acopiador**, ingrese kilos estimados y guarde.
-5. Para un productor, abra **Ver detalles > Entrevistas > Vincular finca**. Seleccione la finca y complete los datos agronómicos de esta campaña.
+5. Para un productor, abra **Ver detalles > Entrevistas > Vincular finca**. Seleccione una finca existente o registre una nueva eligiendo su departamento, provincia y distrito. Complete los datos agronómicos de esta campaña.
 
 **Dirección:** `/campaigns > Nueva Campaña`; luego `/campaigns/:id/providers`.  
 **Opción:** **Productor** cuando el abastecimiento proviene de fincas; **Acopiador** para una relación de acopio. Vincule una finca de la fruta de la campaña.

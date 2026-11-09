@@ -10,6 +10,7 @@ import { InfoField } from "@/shared/components/InfoField";
 import ModalSection from "@/shared/components/ModalSection";
 import SegmentedControl from "@/shared/components/SegmentedControl";
 import SegmentedTabs, { type SegmentedTabItem } from "@/shared/components/SegmentedTabs";
+import UbigeoFields from "@/shared/components/UbigeoFields";
 import { Button } from "@/shared/components/ui/button";
 import { Combobox } from "@/shared/components/ui/combobox";
 import { useModalForm, useResetOnToggle } from "@/shared/hooks/useModalForm";
@@ -218,9 +219,12 @@ export default function CampaignInterviewModal({
                                 <InputField {...bindFinca("nombre")} label="Nombre de la finca" placeholder="Ej. Fundo Tambogrande" className="sm:col-span-2" />
                                 <InputField {...bindFinca("haTotal")} label="Hectáreas totales" placeholder="0.00" step="0.01" unit="ha" />
                                 <InputField {...bindFinca("haCultivo")} label="Hectáreas de cultivo" placeholder="0.00" step="0.01" unit="ha" />
-                                <InputField {...bindFinca("departamento")} label="Departamento" placeholder="Piura" />
-                                <InputField {...bindFinca("provincia")} label="Provincia" placeholder="Sullana" />
-                                <InputField {...bindFinca("distrito")} label="Distrito" placeholder="Marcavelica" className="sm:col-span-2" />
+                                <UbigeoFields
+                                    departamento={bindFinca("departamento")}
+                                    provincia={bindFinca("provincia")}
+                                    distrito={bindFinca("distrito")}
+                                    distritoClassName="sm:col-span-2"
+                                />
                                 <InputField {...bindFinca("latitud")} label="Latitud" placeholder="-5.1945" step="0.0000001" optional />
                                 <InputField {...bindFinca("longitud")} label="Longitud" placeholder="-80.6328" step="0.0000001" optional />
                             </div>

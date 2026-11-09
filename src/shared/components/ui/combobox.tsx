@@ -19,6 +19,7 @@ export interface ComboboxOption {
 }
 
 export interface ComboboxProps {
+    id?: string;
     options: ComboboxOption[];
     value: string;
     onChange: (value: string) => void;
@@ -26,16 +27,21 @@ export interface ComboboxProps {
     emptyMessage?: string;
     className?: string;
     disabled?: boolean;
+    invalid?: boolean;
+    required?: boolean;
 }
 
 function Combobox({
+    id,
     options,
     value,
     onChange,
     placeholder = "Seleccionar...",
     emptyMessage = "No se encontraron resultados.",
     className = "",
-    disabled = false
+    disabled = false,
+    invalid,
+    required,
 }: ComboboxProps) {
     // El texto del campo se deriva en vez de sincronizarse con un efecto: si el usuario está escribiendo se muestra
     // lo escrito (solo mientras el valor seleccionado sea el mismo con el que escribió); si no, la etiqueta del valor.
@@ -52,13 +58,6 @@ function Combobox({
         return options.filter(opt => opt.label.toLowerCase().includes(lowerQuery));
     }, [options, searchQuery, isTyping]);
 
-    const handleInputValueChange = (newVal: string) => {
-        // Al elegir una opción el primitivo intenta poner su ID en el campo (no sabe cuál es el texto).
-        // Se ignora: la etiqueta sale de la opción seleccionada.
-        if (options.some(opt => opt.value === newVal)) return;
-        setTyped({ text: newVal, forValue: value });
-    };
-
     return (
         <ComboboxRoot
             value={value}
@@ -69,10 +68,19 @@ function Combobox({
                 setTyped(null);
             }}
             inputValue={searchQuery}
-            onInputValueChange={handleInputValueChange}
+            onInputValueChange={(text, details) => {
+                if (details.reason === "input-change") setTyped({ text, forValue: value });
+            }}
+            onOpenChange={open => {
+                if (!open) setTyped(null);
+            }}
             disabled={disabled}
         >
             <ComboboxInput 
+                id={id}
+                aria-required={required}
+                aria-invalid={invalid}
+                aria-describedby={id && invalid ? `${id}-error` : undefined}
                 placeholder={placeholder} 
                 disabled={disabled}
                 className={cn("w-full rounded-lg !h-11 border-border shadow-none focus:ring-1 focus:ring-brand/30 focus:border-brand", className)}

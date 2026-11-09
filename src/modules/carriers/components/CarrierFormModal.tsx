@@ -6,6 +6,7 @@ import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import FormField from "@/shared/components/FormField";
 import InputField from "@/shared/components/InputField";
 import SegmentedControl from "@/shared/components/SegmentedControl";
+import UbigeoFields from "@/shared/components/UbigeoFields";
 import { Button } from "@/shared/components/ui/button";
 import {
     CARRIER_TIPOS,
@@ -193,15 +194,10 @@ export default function CarrierFormModal({
 
                 <ModalSection title="Ubicación">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <InputField
-                            {...bind("departamento", true)}
-                            label="Departamento"
-                            placeholder="Ej. Piura"
-                        />
-                        <InputField
-                            {...bind("provincia", true)}
-                            label="Provincia"
-                            placeholder="Ej. Sullana"
+                        <UbigeoFields
+                            departamento={bind("departamento", true)}
+                            provincia={bind("provincia", true)}
+                            disabled={saving}
                         />
                         <InputField
                             {...bind("ciudad", true)}
