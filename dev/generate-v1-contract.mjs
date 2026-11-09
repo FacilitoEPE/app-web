@@ -278,7 +278,27 @@ schemas.DocumentAvailability = {
   type: 'object', required: ['estado'], additionalProperties: false,
   properties: { estado: { type: 'string', enum: ['DISPONIBLE', 'FALTANTE', 'INVALIDO', 'NO_VERIFICABLE'] } },
 }
+schemas.UploadedDocument = {
+  type: 'object', required: ['id', 'url', 'name', 'type', 'size'],
+  properties: {
+    id: { type: 'string', format: 'uuid' }, url: { type: 'string' },
+    name: { type: 'string' }, type: { type: 'string' }, size: { type: 'integer', minimum: 1 },
+  },
+}
 for (const resource of ['documentos', 'archivos-locales']) {
+  paths[`/${resource}`] = { post: {
+    operationId: resource === 'documentos' ? 'uploadDocument' : 'uploadLegacyDocument',
+    tags: ['documentos'], summary: 'Subir un adjunto a S3 por módulo y tipo',
+    'x-roles': ['Administrador', 'Chofer'],
+    requestBody: { required: true, content: { 'multipart/form-data': { schema: {
+      type: 'object', required: ['archivo'], properties: {
+        archivo: { type: 'string', format: 'binary' },
+        carpeta: { type: 'string', default: 'general/adjuntos', maxLength: 100,
+          pattern: '^(campanas|proveedores|transportistas|logistica|facturacion|calidad|chofer|liquidaciones|general)/[a-z0-9]+(?:-[a-z0-9]+)*$' },
+      },
+    } } } },
+    responses: { 201: response(ref('UploadedDocument')), ...errorResponses },
+  } }
   paths[`/${resource}/{id}/estado`] = { get: {
     operationId: resource === 'documentos' ? 'getDocumentAvailability' : 'getLegacyDocumentAvailability',
     tags: ['documentos'], summary: 'Verificar metadatos y objeto real en S3 sin descargar el documento',

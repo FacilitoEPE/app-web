@@ -43,7 +43,7 @@ export const providerCommands = {
     removeFarm: (providerId: number, index: number) => commitRemote(async () => { const row = operationsContext().farms.filter(r => r.proveedorId === providerId)[index]; if (!row)
         throw new Error('Finca no encontrada.'); await fincaV1(providerId).remove(row.fincaId); }),
     saveCertificate: (providerId: number, values: CertificadoFormValues, documento: File | null | undefined, id?: number) => commitRemote(async () => {
-        const uploaded = documento ? await uploadLocalDocument(documento) : undefined;
+        const uploaded = documento ? await uploadLocalDocument(documento, 'proveedores/certificados') : undefined;
         const body = { nombre: values.nombre, fechaRevisionSenasa: values.fechaRevisionSenasa };
         const saved = await (id ? certificadoProveedorV1(providerId).update(id, body) : certificadoProveedorV1(providerId).create(body));
         if (uploaded) await linkLocalDocument('certificado_proveedor', saved.certificadoProveedorId, uploaded.id);

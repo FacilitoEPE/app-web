@@ -46,21 +46,22 @@ export async function getDocumentAvailability(documentUrl: string, signal?: Abor
 /** Tamaño máximo de archivo permitido: 10 MB (alineado con FILE_UPLOAD_MAX_BYTES del backend) */
 export const MAX_DOCUMENT_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
-export async function uploadS3Document(file: File): Promise<S3Document> {
+export async function uploadS3Document(file: File, carpeta?: string): Promise<S3Document> {
     if (file.size > MAX_DOCUMENT_FILE_SIZE_BYTES) {
         throw new Error('El archivo supera el tamaño máximo permitido de 10 MB.');
     }
     const form = new FormData();
     form.append('archivo', file);
+    if (carpeta) form.append('carpeta', carpeta);
     const { data } = await apiClient.post<S3Document>('/api/documentos', form);
     const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
     return { ...data, url: new URL(data.url, new URL(apiClient.defaults.baseURL || origin, origin)).href };
 }
 export const uploadLocalDocument = uploadS3Document;
 
-export async function persistFile(file: FileSource | null): Promise<StoredFile | null> {
+export async function persistFile(file: FileSource | null, carpeta?: string): Promise<StoredFile | null> {
     if (!file) return null;
-    return file instanceof File ? uploadS3Document(file) : file;
+    return file instanceof File ? uploadS3Document(file, carpeta) : file;
 }
 
 export async function linkS3Document(tipo: string, entidadId: number, archivoId: string): Promise<void> {
@@ -86,8 +87,8 @@ export async function getS3DocumentLinks(): Promise<S3DocumentLink[]> {
 }
 export const getLocalDocumentLinks = getS3DocumentLinks;
 
-export async function uploadDocument(file: File): Promise<string> {
-    const data = await uploadS3Document(file);
+export async function uploadDocument(file: File, carpeta?: string): Promise<string> {
+    const data = await uploadS3Document(file, carpeta);
     return data.url;
 }
 

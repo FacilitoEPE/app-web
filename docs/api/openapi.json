@@ -38154,6 +38154,146 @@
         }
       }
     },
+    "/documentos": {
+      "post": {
+        "operationId": "uploadDocument",
+        "tags": [
+          "documentos"
+        ],
+        "summary": "Subir un adjunto a S3 por módulo y tipo",
+        "x-roles": [
+          "Administrador",
+          "Chofer"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "archivo"
+                ],
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "carpeta": {
+                    "type": "string",
+                    "default": "general/adjuntos",
+                    "maxLength": 100,
+                    "pattern": "^(campanas|proveedores|transportistas|logistica|facturacion|calidad|chofer|liquidaciones|general)/[a-z0-9]+(?:-[a-z0-9]+)*$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Operación correcta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadedDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/documentos/{id}/estado": {
       "get": {
         "operationId": "getDocumentAvailability",
@@ -38183,6 +38323,146 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DocumentAvailability"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/archivos-locales": {
+      "post": {
+        "operationId": "uploadLegacyDocument",
+        "tags": [
+          "documentos"
+        ],
+        "summary": "Subir un adjunto a S3 por módulo y tipo",
+        "x-roles": [
+          "Administrador",
+          "Chofer"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "archivo"
+                ],
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "carpeta": {
+                    "type": "string",
+                    "default": "general/adjuntos",
+                    "maxLength": 100,
+                    "pattern": "^(campanas|proveedores|transportistas|logistica|facturacion|calidad|chofer|liquidaciones|general)/[a-z0-9]+(?:-[a-z0-9]+)*$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Operación correcta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadedDocument"
                 }
               }
             }
@@ -53797,6 +54077,35 @@
               "INVALIDO",
               "NO_VERIFICABLE"
             ]
+          }
+        }
+      },
+      "UploadedDocument": {
+        "type": "object",
+        "required": [
+          "id",
+          "url",
+          "name",
+          "type",
+          "size"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1
           }
         }
       }

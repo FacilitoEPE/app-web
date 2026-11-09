@@ -88,8 +88,8 @@ export default function CampaignClientRecordModal({ open, mode, client, campania
         try {
             const next = { ...values };
             try {
-                if (files.documentoUrl) next.documentoUrl = await uploadDocument(files.documentoUrl);
-                if (files.fichaTecnicaUrl) next.fichaTecnicaUrl = await uploadDocument(files.fichaTecnicaUrl);
+                if (files.documentoUrl) next.documentoUrl = await uploadDocument(files.documentoUrl, 'campanas/documentos-cliente');
+                if (files.fichaTecnicaUrl) next.fichaTecnicaUrl = await uploadDocument(files.fichaTecnicaUrl, 'campanas/fichas-tecnicas-cliente');
             } catch (error) {
                 setFormMessage(getUploadErrorMessage(error));
                 return;

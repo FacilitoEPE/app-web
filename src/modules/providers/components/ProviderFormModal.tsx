@@ -76,7 +76,7 @@ export default function ProviderFormModal({ open, onOpenChange, mode = "create",
                 async (input) => {
                     let urlToSave = input.identidadDocUrl;
                     if (values.identidadDocArchivo) {
-                        urlToSave = await uploadDocument(values.identidadDocArchivo);
+                        urlToSave = await uploadDocument(values.identidadDocArchivo, 'proveedores/identidad');
                     }
                     const saved = await onSave(provider?.proveedorId ?? null, { ...input, identidadDocUrl: urlToSave });
                     // TODO(api): las frutas y el estado de sanidad pasan al backend cuando el proveedor los modele

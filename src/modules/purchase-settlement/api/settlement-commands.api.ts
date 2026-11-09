@@ -29,7 +29,7 @@ export const settlementCommands = {
         observaciones: string;
     }) => commitRemote(async () => {
         editableLoad(loadId);
-        const uploaded = payload.archivoLiquidacion instanceof File ? await uploadLocalDocument(payload.archivoLiquidacion) : undefined;
+        const uploaded = payload.archivoLiquidacion instanceof File ? await uploadLocalDocument(payload.archivoLiquidacion, 'liquidaciones/proveedores') : undefined;
         const c = loadContext(loadId), g = operationsContext(), id = requireId(providerId), source = g.loadProviders.find(p => p.cargaId === c.load.cargaId && g.participations.some(r => r.cxpId === p.cxpId && r.proveedorId === id));
         const price = source?.precioCompraKgAplicado ?? g.participations.find(p => p.cxpId === source?.cxpId)?.precioCompraKg;
         if (price !== payload.precioKg)
@@ -63,7 +63,7 @@ export const settlementCommands = {
             throw new Error('El flete supera el saldo pendiente del acuerdo de transporte.');
         if (old && c.coordination.fleteAsignado !== payload.fleteCarga)
             throw new Error('El flete ya fue liquidado. Corrígelo en la coordinación antes de emitir la liquidación.');
-        const uploaded = payload.archivoLiquidacion instanceof File ? await uploadLocalDocument(payload.archivoLiquidacion) : undefined;
+        const uploaded = payload.archivoLiquidacion instanceof File ? await uploadLocalDocument(payload.archivoLiquidacion, 'liquidaciones/transporte') : undefined;
         if (c.coordination.fleteAsignado !== payload.fleteCarga)
             await coordinacionEntregaV1(c.delivery.entregaProgramadaId).update(c.coordination.coordinacionEntregaId, { fleteAsignado: payload.fleteCarga });
         const selectedIds = new Set(payload.gastosReales.map(expense => Number(expense.id)));
@@ -103,7 +103,7 @@ export const settlementCommands = {
     }),
     providerPayment: (loadId: string, providerId: string, payment: Omit<SettlementPaymentItem, 'id'>) => commitRemote(async () => {
         editableLoad(loadId);
-        const uploaded = payment.evidencia instanceof File ? await uploadLocalDocument(payment.evidencia) : undefined;
+        const uploaded = payment.evidencia instanceof File ? await uploadLocalDocument(payment.evidencia, 'liquidaciones/pagos-proveedor') : undefined;
         const row = operationsContext().providerSettlements.find(s => s.cargaId === requireId(loadId) && s.proveedorId === requireId(providerId));
         if (!row)
             throw new Error('Registra la liquidación del proveedor antes de pagar.');
@@ -113,7 +113,7 @@ export const settlementCommands = {
     }),
     carrierPayment: (loadId: string, payment: Omit<SettlementPaymentItem, 'id'>, advanceId?: string) => commitRemote(async () => {
         editableLoad(loadId);
-        const uploaded = payment.evidencia instanceof File ? await uploadLocalDocument(payment.evidencia) : undefined;
+        const uploaded = payment.evidencia instanceof File ? await uploadLocalDocument(payment.evidencia, 'liquidaciones/pagos-transporte') : undefined;
         const row = operationsContext().transportSettlements.find(s => s.cargaId === requireId(loadId));
         if (!row)
             throw new Error('Registra la liquidación de transporte antes de pagar.');

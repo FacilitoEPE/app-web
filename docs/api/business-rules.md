@@ -34,6 +34,8 @@ El nombre libre del responsable de campaña puede corresponder a cualquier perso
 
 ### Disponibilidad de adjuntos
 
+`POST /api/documentos` recibe el archivo y el campo multipart opcional `carpeta` con formato `modulo/tipo`. El frontend indica el destino según el formulario, por ejemplo `campanas/lineamientos`. La URL protegida conserva su UUID y el backend resuelve la ruta a partir de los metadatos. Los metadatos anteriores sin carpeta resuelven a la ruta plana.
+
 `GET /api/documentos/{id}/estado` (también `/api/archivos-locales/{id}/estado`) requiere sesión de Administrador o Chofer propietario. Responde `{ estado }`: `DISPONIBLE` si existen metadatos y objeto real con tamaño y tipo coincidentes; `FALTANTE` ante ausencia confirmada; `INVALIDO` por metadatos corruptos o tamaño/tipo distintos; `NO_VERIFICABLE` por errores de permisos, configuración o conectividad. No se clasifica un 403 de S3 como ausencia. El 403 de la API impide consultar documentos de otro chofer. La respuesta no expone bucket, claves ni credenciales.
 
 El campo compartido `FileDropzone` verifica cada referencia guardada al montarse o cambiar de URL, cancela consultas anteriores y permite volver a verificar. Verde significa verificado, rojo faltante/inválido; un fallo de verificación se muestra con aviso y los archivos recién elegidos permanecen pendientes de guardar. Los enlaces externos no se validan ni reciben credenciales. La API valida el objeto después de subirlo y antes de guardar un vínculo; la disponibilidad se confirma en ese instante, sin garantizar permanencia futura ni validar el contenido interno del documento.

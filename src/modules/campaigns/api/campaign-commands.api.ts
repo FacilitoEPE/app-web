@@ -28,7 +28,7 @@ export const campaignCommands = {
         if (!req || !client)
             throw new Error('No se encontró el requerimiento del cliente.');
         const body: CreateContratoVentaV1 = { fecha: formatFecha(new Date()), canal: client.tipoCliente === 'industria' ? 'INDUSTRIA' : 'EXPORTACION', precioKg: values.precioKg.trim() ? Number(values.precioKg) : null, moneda: currency(values.moneda), variedades: values.variedades ?? [], condicionesPago: values.condicionesPago, condicionesEntrega: values.condicionesEntrega, observaciones: values.observaciones };
-        const uploaded = file ? await uploadLocalDocument(file) : undefined;
+        const uploaded = file ? await uploadLocalDocument(file, 'campanas/contratos') : undefined;
         const saved = await (id ? contratoVentaV1(parent).update(id, body) : contratoVentaV1(parent).create(body));
         if (uploaded) await linkLocalDocument('contrato_venta', saved.contratoVentaId, uploaded.id);
         return saved;
@@ -75,7 +75,7 @@ export const campaignCommands = {
         return id ? entrevistaExtencionV1(cxpId).update(requireId(id), body) : entrevistaExtencionV1(cxpId).create(body);
     }),
     exam: (providerId: number, value: ExamValues, id?: string) => commitRemote(async () => {
-        const documentoUrl = value.archivo instanceof File ? await uploadDocument(value.archivo) : value.archivo?.url;
+        const documentoUrl = value.archivo instanceof File ? await uploadDocument(value.archivo, 'campanas/documentos-entrega') : value.archivo?.url;
         const body: CreateExamenProveedorV1 = { fecha: value.fecha, tipoExamen: value.tipoExamen, codigoMuestra: value.identificacionMuestra, estadoExamen: value.estado === 'resultado' ? 'Con resultado' : value.estado === 'enviado' ? 'Enviado' : 'Pendiente', fechaEnvio: value.estado === 'pendiente' ? null : value.fechaEnvioMuestra, resultado: value.estado === 'resultado' && value.resultado ? value.resultado : null, observacion: value.observacion, ...(documentoUrl ? { documentoUrl } : {}) };
         return id ? examenProveedorV1(providerId).update(requireId(id), body) : examenProveedorV1(providerId).create(body);
     }),
@@ -83,8 +83,8 @@ export const campaignCommands = {
     certificate: (campaignId: number, value: CertificadoCampanaFormValues, producers: ProductorCubierto[], files: CertificadoArchivos, id?: number) => commitRemote(async () => {
         const g = operationsContext(), parties = producers.map(p => { const row = g.participations.find(r => r.cxpId === Number(p.id) && r.campaniaId === campaignId); if (!row)
             throw new Error('Productor no disponible en la campaña.'); return row; });
-        const documentUrl = files.documento ? await uploadDocument(files.documento) : undefined;
-        const receiptUrl = files.cotizacion ? await uploadDocument(files.cotizacion) : undefined;
+        const documentUrl = files.documento ? await uploadDocument(files.documento, 'campanas/documentos-entrega') : undefined;
+        const receiptUrl = files.cotizacion ? await uploadDocument(files.cotizacion, 'campanas/cotizaciones-entrega') : undefined;
         const body: CreateCertificadoCampanaV1 = { nombre: value.nombre, tipoCertificacion: value.tipo as CreateCertificadoCampanaV1['tipoCertificacion'], organismo: value.organismoEmisor, vigenciaDesde: value.validoDesde || null, fechaVencimiento: value.validoHasta || null, costo: Number(value.costo), kilosIniciales: Number(value.kilosIniciales), moneda: currency(value.moneda), observaciones: value.observaciones, ...(documentUrl ? { documentUrl } : {}), ...(receiptUrl ? { reciboUrl: receiptUrl } : {}) };
         const api = certificadoCampanaV1(campaignId), saved = id ? await api.update(id, body) : await api.create(body), coverage = g.coverage.filter(c => c.certificadoId === saved.certificadoId);
         for (const p of coverage)
@@ -95,11 +95,11 @@ export const campaignCommands = {
                 await certificadoCampanaXProveedorV1(saved.certificadoId).create({ campaniaId: campaignId, cxpId: p.cxpId, proveedorId: p.proveedorId, kilosAutorizados: p.cantidadProveedor });
     }),
     expand: (_campaignId: number, id: number, value: AmpliacionFormValues) => commitRemote(() => ampliacionCertificadoCampanaV1(id).create({ fecha: value.fecha, kilosAdicionales: Number(value.kilos), referencia: value.referencia })),
-    certificatePayment: (_campaignId: number, id: number, value: PagoFormValues, file: unknown) => commitRemote(async () => { const uploaded = file instanceof File ? await uploadLocalDocument(file) : undefined; const saved = await pagoCertificadoCampanaV1(id).create({ fecha: value.fecha, monto: Number(value.monto), referencia: value.referencia }); if (uploaded) await linkLocalDocument('pago_certificado', saved.pagoCertificadoCampanaId, uploaded.id); }),
-    linkCarrier: (campaignId: number, carrierId: number, file: unknown) => commitRemote(async () => { const uploaded = file instanceof File ? await uploadLocalDocument(file) : undefined; const saved = await acuerdoTransporteV1(campaignId).create({ idEmpresaTransporteExterno: carrierId, estado: 'BORRADOR' }); if (uploaded) await linkLocalDocument('cotizacion_campana', saved.acuerdoTransporteId, uploaded.id); return saved; }),
+    certificatePayment: (_campaignId: number, id: number, value: PagoFormValues, file: unknown) => commitRemote(async () => { const uploaded = file instanceof File ? await uploadLocalDocument(file, 'campanas/pagos-certificados') : undefined; const saved = await pagoCertificadoCampanaV1(id).create({ fecha: value.fecha, monto: Number(value.monto), referencia: value.referencia }); if (uploaded) await linkLocalDocument('pago_certificado', saved.pagoCertificadoCampanaId, uploaded.id); }),
+    linkCarrier: (campaignId: number, carrierId: number, file: unknown) => commitRemote(async () => { const uploaded = file instanceof File ? await uploadLocalDocument(file, 'campanas/cotizaciones-transporte') : undefined; const saved = await acuerdoTransporteV1(campaignId).create({ idEmpresaTransporteExterno: carrierId, estado: 'BORRADOR' }); if (uploaded) await linkLocalDocument('cotizacion_campana', saved.acuerdoTransporteId, uploaded.id); return saved; }),
     unlinkCarrier: (campaignId: number, id: number) => commitRemote(() => acuerdoTransporteV1(campaignId).remove(id)),
     agreement: (campaignId: number, id: number, value: AgreementFormValues, file: unknown) => commitRemote(async () => { if (value.moneda !== 'PEN' && value.moneda !== 'USD')
-        throw new Error('Selecciona soles o dólares.'); const uploaded = file instanceof File ? await uploadLocalDocument(file) : undefined; const saved = await acuerdoTransporteV1(campaignId).update(id, { estado: 'CONFIRMADO', tipoPago: value.tipo === 'adelanto' ? 'CON_ADELANTO' : 'AL_FINAL', montoAcordado: Number(value.total), adelantoAcordado: value.tipo === 'adelanto' ? Number(value.adelanto) : 0, fechaAcuerdo: formatFecha(new Date()), fechaPagoFinal: value.fechaPago, moneda: value.moneda }); if (uploaded) await linkLocalDocument('boleta_acuerdo', saved.acuerdoTransporteId, uploaded.id); return saved; }),
+        throw new Error('Selecciona soles o dólares.'); const uploaded = file instanceof File ? await uploadLocalDocument(file, 'campanas/boletas-acuerdo') : undefined; const saved = await acuerdoTransporteV1(campaignId).update(id, { estado: 'CONFIRMADO', tipoPago: value.tipo === 'adelanto' ? 'CON_ADELANTO' : 'AL_FINAL', montoAcordado: Number(value.total), adelantoAcordado: value.tipo === 'adelanto' ? Number(value.adelanto) : 0, fechaAcuerdo: formatFecha(new Date()), fechaPagoFinal: value.fechaPago, moneda: value.moneda }); if (uploaded) await linkLocalDocument('boleta_acuerdo', saved.acuerdoTransporteId, uploaded.id); return saved; }),
     carrierAdvance: (campaignId: number, agreementId: number, value: CarrierAdvanceValues) => commitRemote(async () => {
         const g = operationsContext();
         const agreement = g.agreements.find(row => row.campaniaId === campaignId && row.acuerdoTransporteId === agreementId);
@@ -129,7 +129,7 @@ export const campaignCommands = {
         entregaHasta: string;
         observaciones: string;
     }, fichaTecnica?: File | null) => commitRemote(async () => {
-        const fichaTecnicaUrl = fichaTecnica ? await uploadDocument(fichaTecnica) : undefined;
+        const fichaTecnicaUrl = fichaTecnica ? await uploadDocument(fichaTecnica, 'campanas/fichas-tecnicas') : undefined;
         const body = { clienteNegocioId: requireId(value.clienteNegocioId), cantidadKg: Number(value.cantidadKg), kilosAcordados: Number(value.cantidadKg), fechaRegistro: value.fechaRegistro, destinoSolicitado: value.destinoSolicitado, entregaDesde: value.entregaDesde || null, entregaHasta: value.entregaHasta || null, observaciones: value.observaciones, ...(fichaTecnicaUrl ? { fichaTecnicaUrl } : {}) };
         const req = await clienteNegocioCampanaV1(campaignId).create(body);
         for (const id of value.variedades)

@@ -22,7 +22,7 @@ export const billingCommands = {
             throw new Error('El precio de venta se obtiene del contrato. Actualízalo en Contratos antes de preparar la factura.');
         if (c.contract.moneda !== invoice.moneda)
             throw new Error('La moneda de la factura debe coincidir con la del contrato de esta carga.');
-        const uploaded = invoice.archivoPreparacion instanceof File ? await uploadLocalDocument(invoice.archivoPreparacion) : undefined;
+        const uploaded = invoice.archivoPreparacion instanceof File ? await uploadLocalDocument(invoice.archivoPreparacion, 'facturacion/preparacion') : undefined;
         const body = { referenciaPreparacion: invoice.referenciaPreparacion, fechaPreparacion: invoice.fechaPreparacion, fechaVencimiento: invoice.fechaVencimiento || null, kilosFacturados: invoice.kilosFacturados, moneda: invoice.moneda, descuento: invoice.descuento, cargos: invoice.cargos, observaciones: invoice.observaciones };
         const saved = await (invoice.id ? facturaVentaV1(c.load.cargaId).update(requireId(invoice.id), body) : facturaVentaV1(c.load.cargaId).create(body));
         if (uploaded) await linkLocalDocument('factura_preparacion', saved.facturaVentaId, uploaded.id);
@@ -39,7 +39,7 @@ export const billingCommands = {
         if (g.invoices.some(item => item.facturaVentaId !== Number(id) && item.numeroFactura?.toLocaleLowerCase('es') === payload.numeroFacturaElectronica.trim().toLocaleLowerCase('es')))
             throw new Error('Ya existe una factura emitida con ese número.');
         if (!payload.archivoFacturaEmitida) throw new Error('Adjunta el comprobante emitido.');
-        const uploaded = payload.archivoFacturaEmitida instanceof File ? await uploadLocalDocument(payload.archivoFacturaEmitida) : undefined;
+        const uploaded = payload.archivoFacturaEmitida instanceof File ? await uploadLocalDocument(payload.archivoFacturaEmitida, 'facturacion/facturas') : undefined;
         const saved = await emitirFacturaV1(requireId(id), { numeroFactura: payload.numeroFacturaElectronica, fechaEmision: payload.fechaEmision, fechaVencimiento: payload.fechaVencimiento || null });
         if (uploaded) await linkLocalDocument('factura_emitida', requireId(id), uploaded.id);
         return saved;
@@ -49,7 +49,7 @@ export const billingCommands = {
         const invoice = g.invoices.find(item => item.facturaVentaId === Number(id));
         if (!invoice?.numeroFactura) throw new Error('Registra primero la factura emitida.');
         if (value.fecha < (invoice.fechaEmision ?? invoice.fechaPreparacion)) throw new Error('El cobro no puede ser anterior a la emisión.');
-        const uploaded = value.evidencia instanceof File ? await uploadLocalDocument(value.evidencia) : undefined;
+        const uploaded = value.evidencia instanceof File ? await uploadLocalDocument(value.evidencia, 'facturacion/cobros') : undefined;
         const saved = await cobroVentaV1(requireId(id)).create({ fecha: value.fecha, monto: value.importe, medio: value.medio, referencia: value.referencia });
         if (uploaded) await linkLocalDocument('cobro_venta', saved.cobroVentaId, uploaded.id);
         return saved;

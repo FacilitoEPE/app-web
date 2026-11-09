@@ -40,12 +40,12 @@ export const qualityCommands = {
     analysis: (entry: Omit<QualityAnalysisRecord, 'id'> & {
         id?: number;
     }) => commitRemote(async () => {
-        const uploaded = entry.documento instanceof File ? await uploadLocalDocument(entry.documento) : undefined;
+        const uploaded = entry.documento instanceof File ? await uploadLocalDocument(entry.documento, 'calidad/analisis') : undefined;
         const origin = fieldOrigin(entry.campaniaId, entry.productorNombre, entry.fincaNombre), body = { fincaId: origin.fincaId, tipo: entry.tipo, fechaMuestreo: entry.fechaMuestreo, resultadoTexto: entry.resultado, unidad: entry.unidad || null, observaciones: entry.observaciones || null, estado: entry.estadoResultado === 'conforme' ? 'APTO' : entry.estadoResultado === 'no_conforme' ? 'NO_APTO' : 'PENDIENTE' };
         const saved = entry.id ? await analisisCalidadV1(origin.cxpId).update(entry.id, body) : await analisisCalidadV1(origin.cxpId).create(body);
         if (uploaded) await linkLocalDocument('analisis_calidad', saved.analisisCalidadId, uploaded.id);
         const previous = operationsContext().measurements.filter(m => m.cxpId === origin.cxpId && m.fincaId === origin.fincaId).at(-1);
-        const evidence = entry.mtdEvidencia instanceof File ? await uploadLocalDocument(entry.mtdEvidencia) : undefined;
+        const evidence = entry.mtdEvidencia instanceof File ? await uploadLocalDocument(entry.mtdEvidencia, 'calidad/mediciones-mtd') : undefined;
         const measurement = !previous || previous.valor !== entry.mtd || previous.trampaReferencia !== entry.mtdTrampa || evidence
             ? await medicionMtdV1(origin.cxpId).create({ fincaId: origin.fincaId, medidoAt: new Date().toISOString(), valor: entry.mtd, limiteAplicado: previous?.limiteAplicado ?? 0.5, trampaReferencia: entry.mtdTrampa || null }) : previous;
         if (evidence) await linkLocalDocument('medicion_mtd', measurement.medicionMtdId, evidence.id);
@@ -59,13 +59,13 @@ export const qualityCommands = {
             throw new Error('Selecciona el proveedor y la finca de cada análisis.'); return { existing, origin, archivo: a.archivo, body: { fincaId: origin.fincaId, tipo: a.tipoAnalisis, fechaMuestreo: a.fechaMuestreo, estado: a.resultado === 'Apto' ? 'APTO' : a.resultado === 'No apto' ? 'NO_APTO' : 'PENDIENTE', resultadoTexto: a.resultado, observaciones: a.observaciones } }; });
         const mtd = payload.mtdRegistros.map(m => ({ origin: fieldOrigin(c.campaign.campaniaId, m.productor, m.finca), m }));
         for (const a of lab) {
-            const uploaded = a.archivo instanceof File ? await uploadLocalDocument(a.archivo) : undefined;
+            const uploaded = a.archivo instanceof File ? await uploadLocalDocument(a.archivo, 'calidad/analisis') : undefined;
             const saved = !a.existing ? await analisisCalidadV1(a.origin.cxpId).create(a.body) : hasChanges(a.existing, a.body) ? await analisisCalidadV1(a.origin.cxpId).update(a.existing.analisisCalidadId, a.body) : a.existing;
             if (uploaded) await linkLocalDocument('analisis_calidad', saved.analisisCalidadId, uploaded.id);
         }
         for (const { origin, m } of mtd) {
             const previous = g.measurements.find(r => r.medicionMtdId === Number(m.id));
-            const uploaded = m.evidenciaConteo instanceof File ? await uploadLocalDocument(m.evidenciaConteo) : undefined;
+            const uploaded = m.evidenciaConteo instanceof File ? await uploadLocalDocument(m.evidenciaConteo, 'calidad/mediciones-mtd') : undefined;
             const saved = !previous || previous.valor !== m.mtdCalculado || previous.capturas !== m.capturas || previous.trampas !== m.trampas || previous.diasExposicion !== m.diasExposicion
                 ? await medicionMtdV1(origin.cxpId).create({ fincaId: origin.fincaId, valor: m.mtdCalculado, limiteAplicado: previous?.limiteAplicado ?? m.limiteAplicado ?? 0.5, medidoAt: new Date().toISOString(), capturas: m.capturas ?? undefined, trampas: m.trampas ?? undefined, diasExposicion: m.diasExposicion ?? undefined }) : previous;
             if (uploaded) await linkLocalDocument('medicion_mtd', saved.medicionMtdId, uploaded.id);
@@ -84,8 +84,8 @@ export const qualityCommands = {
         cierreCosecha: QualityHarvestClosure;
     }) => commitRemote(async () => {
         const g = operationsContext(), c = context(id), org = payload.organizacionCosecha, closure = payload.cierreCosecha;
-        const advances = await Promise.all(payload.avancesCosecha.map(async (a, index) => { const origin = fieldOrigin(c.campaign.campaniaId, a.productor, a.finca), party = g.participations.find(p => p.cxpId === origin.cxpId)!; return jsonData({ id: Number(a.id) || index + 1, providerId: party.proveedorId, fincaId: origin.fincaId, date: a.fechaReal, kilos: a.kilosCosechados, crates: a.jabas, responsible: a.responsable, observations: '', evidence: await persistFile(a.evidencia) }); }));
-        const documents = { informeFinalCosecha: await persistFile(closure.informeFinalCosecha), solicitudPagoPersonal: await persistFile(closure.solicitudPagoPersonal), solicitudPagoMovilidad: await persistFile(closure.solicitudPagoMovilidad), reciboPagoPersonal: await persistFile(closure.reciboPagoPersonal), reciboPagoMovilidad: await persistFile(closure.reciboPagoMovilidad), registroCompraFruta: await persistFile(closure.registroCompraFruta) };
+        const advances = await Promise.all(payload.avancesCosecha.map(async (a, index) => { const origin = fieldOrigin(c.campaign.campaniaId, a.productor, a.finca), party = g.participations.find(p => p.cxpId === origin.cxpId)!; return jsonData({ id: Number(a.id) || index + 1, providerId: party.proveedorId, fincaId: origin.fincaId, date: a.fechaReal, kilos: a.kilosCosechados, crates: a.jabas, responsible: a.responsable, observations: '', evidence: await persistFile(a.evidencia, 'calidad/avances-cosecha') }); }));
+        const documents = { informeFinalCosecha: await persistFile(closure.informeFinalCosecha, 'calidad/informes-finales'), solicitudPagoPersonal: await persistFile(closure.solicitudPagoPersonal, 'calidad/solicitudes-pago-personal'), solicitudPagoMovilidad: await persistFile(closure.solicitudPagoMovilidad, 'calidad/solicitudes-pago-movilidad'), reciboPagoPersonal: await persistFile(closure.reciboPagoPersonal, 'calidad/recibos-pago-personal'), reciboPagoMovilidad: await persistFile(closure.reciboPagoMovilidad, 'calidad/recibos-pago-movilidad'), registroCompraFruta: await persistFile(closure.registroCompraFruta, 'calidad/registros-compra') };
         const row = await ensureHarvest(id);
         return cosechaV1(c.delivery.entregaProgramadaId).update(row.cosechaId, { organizacion: { ...row.organizacion, harvestDate: org.fechaProgramadaInicio, serviceId: c.coordination.coordinacionEntregaId, crewLead: org.jefeCuadrilla, transportConfirmed: org.confirmada, crewConfirmed: org.confirmada, arrivalConfirmed: org.confirmada, personalAsignado: org.personalAsignado, jabas: org.jabas, tijeras: org.tijeras, bines: org.bines, mallas: org.mallas, supplies: org.otrosMateriales, mobility: org.movilidadTraslado, observaciones: org.observaciones }, avances: advances, kilosCosechados: payload.avancesCosecha.reduce((n, a) => n + a.kilosCosechados, 0), cierre: { ...row.cierre, endDate: closure.fechaTermino, completed: closure.cosechaCompletada, ...jsonData(documents) } });
     }),

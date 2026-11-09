@@ -20,12 +20,12 @@ export const logisticsCommands = {
         if (!old) throw new Error('Registra la recepción de esta carga antes de guardar su expediente.');
         if (value.guiaRemisionFruta && !isPdf(value.guiaRemisionFruta))
             throw new Error('La guía de remisión de fruta debe adjuntarse en PDF.');
-        const documents = { guiaRemisionFruta: await persistFile(value.guiaRemisionFruta),
-            detalleCompras: await persistFile(value.detalleCompras ?? null),
-            reporteRecepcionPlanta: await persistFile(value.reporteRecepcionPlanta),
-            actaDescarte: await persistFile(value.actaDescarte),
-            constanciaDevolucionJabas: await persistFile(value.constanciaDevolucionJabas ?? null),
-            guiaSalidaFirmada: await persistFile(value.guiaSalidaFirmada) };
+        const documents = { guiaRemisionFruta: await persistFile(value.guiaRemisionFruta, 'logistica/guias-remision-fruta'),
+            detalleCompras: await persistFile(value.detalleCompras ?? null, 'logistica/detalle-compras'),
+            reporteRecepcionPlanta: await persistFile(value.reporteRecepcionPlanta, 'logistica/reportes-recepcion'),
+            actaDescarte: await persistFile(value.actaDescarte, 'logistica/actas-descarte'),
+            constanciaDevolucionJabas: await persistFile(value.constanciaDevolucionJabas ?? null, 'logistica/constancias-devolucion'),
+            guiaSalidaFirmada: await persistFile(value.guiaSalidaFirmada, 'logistica/guias-salida') };
         return writeReceipt(id, { documentos: { ...old.documentos, ...jsonData(documents), observacionesCierre: value.observacionesCierre } });
     }),
     physicalClose: (id: string) => commitRemote(async () => {
@@ -60,7 +60,7 @@ export const logisticsCommands = {
         if (outside && (!value.motivoEspera.trim() || !value.atencionReprogramada))
             throw new Error('Registra el motivo de espera y la nueva atención para una llegada fuera de la ventana.');
         const c = loadContext(id), old = operationsContext().receipts.find(receipt => receipt.cargaId === c.load.cargaId);
-        const evidence = await persistFile(value.evidencia);
+        const evidence = await persistFile(value.evidencia, 'logistica/evidencias-llegada');
         return writeReceipt(id, { logistica: { ...old?.logistica, estimatedArrival: value.llegadaEstimada,
             windowStart: value.ventanaInicio, windowEnd: value.ventanaFin, actualArrival: value.llegadaReal,
             arrivalObservations: value.observaciones, coordinationEvidence: jsonData({ evidence }).evidence,
@@ -71,7 +71,7 @@ export const logisticsCommands = {
             || !value.responsableRecepcion.trim())
             throw new Error('Registra horarios válidos y el responsable de la descarga.');
         const c = loadContext(id), old = operationsContext().receipts.find(receipt => receipt.cargaId === c.load.cargaId);
-        const evidence = await persistFile(value.evidenciaDescarga ?? null);
+        const evidence = await persistFile(value.evidenciaDescarga ?? null, 'logistica/evidencias-descarga');
         return writeReceipt(id, { descargaInicioAt: value.inicioDescarga ? new Date(value.inicioDescarga).toISOString() : null,
             descargaFinAt: value.terminoDescarga ? new Date(value.terminoDescarga).toISOString() : null,
             logistica: { ...old?.logistica, responsableRecepcion: value.responsableRecepcion,
@@ -92,7 +92,7 @@ export const logisticsCommands = {
         });
         if (changed && g.providerSettlements.some(settlement => settlement.cargaId === c.load.cargaId))
             throw new Error('Los kilos reconocidos ya fueron aplicados a liquidaciones y no se pueden modificar.');
-        const report = await persistFile(value.reporteRecepcionArchivo);
+        const report = await persistFile(value.reporteRecepcionArchivo, 'logistica/reportes-recepcion');
         return writeReceipt(id, { pesoPlantaKg: value.pesoRecibidoPlanta, resultado: value.resultadoRecepcion,
             observaciones: value.observacionesEvaluacion, fechaRecepcion: old?.fechaRecepcion ?? new Date().toISOString(),
             recepcionConfirmadaAt: old?.recepcionConfirmadaAt ?? new Date().toISOString(),
@@ -109,7 +109,7 @@ export const logisticsCommands = {
         if (!old?.pesoPlantaKg || !old.resultado) throw new Error('Registra primero la evaluación de la carga.');
         if (value.huboDescarte && (value.kilosDescarte <= 0 || value.kilosDescarte > old.pesoPlantaKg || !value.motivoDescarte.trim()))
             throw new Error('Ingresa una cantidad válida y el motivo del descarte.');
-        const evidence = await persistFile(value.actaDescarteArchivo);
+        const evidence = await persistFile(value.actaDescarteArchivo, 'logistica/actas-descarte');
         return writeReceipt(id, { huboDescarte: value.huboDescarte, descarteKg: value.huboDescarte ? value.kilosDescarte : 0,
             descarteConfirmadoAt: value.huboDescarte ? new Date().toISOString() : null,
             logistica: { ...old.logistica, motivoDescarte: value.motivoDescarte,
@@ -124,7 +124,7 @@ export const logisticsCommands = {
             throw new Error('Revisa la cantidad de jabas que llegaron y las devueltas.');
         if (value.jabasDevueltas > 0 && !value.fechaDevolucion)
             throw new Error('Registra la fecha de devolución de las jabas.');
-        const evidence = await persistFile(value.evidencia);
+        const evidence = await persistFile(value.evidencia, 'logistica/evidencias-devolucion');
         return writeReceipt(id, { jabasIniciales: value.jabasIniciales, jabasDevueltas: value.jabasDevueltas,
             jabasDevolucionAt: value.fechaDevolucion ? new Date(value.fechaDevolucion).toISOString() : null,
             checklist: { ...old.checklist, crateCoordination: value.coordinacion, vehicleExit: value.salidaVehiculo,

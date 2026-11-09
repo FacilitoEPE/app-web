@@ -174,7 +174,7 @@ export default function CampaignFormModal({
                 fechaInicio: parseFecha(validation.data.fechaInicio),
                 fechaFin: parseFecha(validation.data.fechaFin),
             };
-            const uploaded = usesV1() && values.lineamientos instanceof File ? await uploadLocalDocument(values.lineamientos) : undefined;
+            const uploaded = usesV1() && values.lineamientos instanceof File ? await uploadLocalDocument(values.lineamientos, 'campanas/lineamientos') : undefined;
             const saved = isEdit && campaniaId !== null ? await updateCampana(campaniaId, input) : await createCampana(input);
             try {
                 if (uploaded) { await linkLocalDocument('campana', saved.campaniaId, uploaded.id); await refreshRemoteData(); }

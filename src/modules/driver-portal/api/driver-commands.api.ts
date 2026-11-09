@@ -63,14 +63,14 @@ export const driverCommands = {
                 throw new Error('Indica una cantidad y un motivo válidos para el descarte.');
             if (!value.evidenciaDescarte) throw new Error('Adjunta la evidencia del descarte.');
         }
-        const evidence = value.huboDescarte ? await persistFile(value.evidenciaDescarte ?? null) : null;
+        const evidence = value.huboDescarte ? await persistFile(value.evidenciaDescarte ?? null, 'chofer/evidencias-descarte') : null;
         return writeReceipt(id, { checklist: { llegada: jsonData({ ...value, evidenciaDescarte: evidence, registrado: true }) }, ...(evidence ? { documentos: { actaDescarte: jsonData(evidence) } } : {}) });
     }),
     exit: (id: string, value: DriverVehicleExitGuide) => commitRemote(async () => {
         const row = activeDispatch(id);
         if (!row || !['Llegada', 'Cierre'].includes(row.etapa)) throw new Error('Confirma tu llegada antes de adjuntar la guía de salida.');
         if (!value.archivo) throw new Error('Adjunta la guía de salida del vehículo.');
-        const archivo = await persistFile(value.archivo);
+        const archivo = await persistFile(value.archivo, 'chofer/documentos-entrega');
         return writeReceipt(id, { checklist: { guiaSalida: jsonData({ ...value, archivo }) } });
     }),
     load: (id: string, value: {

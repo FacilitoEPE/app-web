@@ -20,8 +20,10 @@ describe("uploadDocument", () => {
         apiClient.defaults.baseURL = 'http://localhost:3000/';
         const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { url: '/api/documentos/example' } });
         const file = new File(['x'], 'contrato.pdf', { type: 'application/pdf' });
-        await expect(uploadDocument(file)).resolves.toBe('http://localhost:3000/api/documentos/example');
-        expect((post.mock.calls[0][1] as FormData).get('archivo')).toBe(file);
+        await expect(uploadDocument(file, 'campanas/contratos')).resolves.toBe('http://localhost:3000/api/documentos/example');
+        const form = post.mock.calls[0][1] as FormData;
+        expect(form.get('archivo')).toBe(file);
+        expect(form.get('carpeta')).toBe('campanas/contratos');
         post.mockRestore();
     });
 

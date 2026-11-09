@@ -38,7 +38,7 @@ export const quotationCommands = {
         const selectedCarriers = input.carrierIds.map(id => operationsContext().carriers.find(c => c.idEmpresaTransporteExterno === id));
         if (selectedCarriers.some(c => !c?.correo?.trim()))
             throw new Error('Todos los transportistas seleccionados deben tener un correo electrónico registrado para enviar el requerimiento.');
-        const uploaded = await uploadLocalDocument(input.documento);
+        const uploaded = await uploadLocalDocument(input.documento, 'transportistas/solicitudes');
         const request = await solicitudTransporteV1(input.campaniaId).create({ referencia: input.referencia, origen: input.origen, destino: input.destino, mensaje: input.mensaje });
         await linkLocalDocument('solicitud_transporte', request.solicitudTransporteId, uploaded.id);
         for (const id of input.carrierIds)
@@ -60,7 +60,7 @@ export const quotationCommands = {
             throw new Error('Ingresa el monto de la cotización.');
         const moneda: 'PEN' | 'USD' = value.moneda === 'USD' ? 'USD' : 'PEN';
         const old = operationsContext().quotations.filter(q => q.invitacionTransporteId === inv.invitacionTransporteId).at(-1), body = { fecha: formatFecha(new Date()), monto: value.montoCotizadoPen, moneda, condiciones: value.observaciones };
-        const uploaded = value.documentoCotizacion instanceof File ? await uploadLocalDocument(value.documentoCotizacion) : undefined;
+        const uploaded = value.documentoCotizacion instanceof File ? await uploadLocalDocument(value.documentoCotizacion, 'transportistas/cotizaciones') : undefined;
         const saved = old ? await cotizacionTransporteV1(inv.invitacionTransporteId).update(old.cotizacionTransporteId, body) : await cotizacionTransporteV1(inv.invitacionTransporteId).create(body);
         if (uploaded) await linkLocalDocument('cotizacion_transporte', saved.cotizacionTransporteId, uploaded.id);
         return saved;
