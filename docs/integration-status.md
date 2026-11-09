@@ -11,7 +11,7 @@ Los selectores de Campañas y Planificación Comercial muestran solo vínculos d
 - El documento y la licencia del chofer se recuperan al volver a abrir su ficha. La API y el mock conservan el número como texto. La [migración](../../epe-backend/docs/database.md#documento-del-chofer) incorpora los campos y copia el documento de la persona vinculada cuando existe.
 - Las fotos de identidad y las fichas técnicas pueden subirse con una URL base relativa. El detalle de certificación abre la evidencia por pago. El detalle del transportista permite consultar la cotización vinculada incluso si el acuerdo está en borrador.
 - El programa semanal agrupa entregas programadas por cliente y día, con filtros de fecha, variedad y placa. Esta vista usa kilos programados, por lo que sustituye el comportamiento histórico que mostraba cargas realizadas.
-- El registro de transportista selecciona ciudad con el catálogo de ubigeo y el de finca permite ver un marcador con sus coordenadas. En el portal del chofer se puede usar la ubicación actual o marcar una salida para trazar la ruta a una finca. El mapa estima kilómetros y minutos con `VITE_PICKUP_ROUTE_URL`, que apunta a un endpoint OSRM. Si el endpoint no se configura en producción, el recorrido se abre en Google Maps.
+- El registro de transportista selecciona ciudad con el catálogo de ubigeo y el de finca permite ver un marcador con sus coordenadas. En el portal del chofer se puede usar la ubicación actual en un contexto seguro con permiso del navegador o marcar una salida. El mapa dibuja la ruta por carretera y estima kilómetros y minutos con `VITE_PICKUP_ROUTE_URL`, que apunta a un endpoint OSRM. Sin servicio operativo, muestra una línea recta de referencia y ofrece el trayecto por carretera en Google Maps.
 - La migración y los flujos con almacenamiento real quedan por verificar en el entorno de destino.
 
 ## Vinculación de proveedores en ejecución — 2026-11-08
@@ -285,7 +285,7 @@ La proyección actual de Logística invoca todo `projectQualityData`, lo que cre
 |---|---|---|
 | V01 `/login` | Enviar login solo al confirmar; recuperación solo al solicitarla. Restaurar sesión existente mediante `/api/auth/me` una vez por intento. | Sin carga operativa antes de autenticación. Un cambio de rol/sesión cancela o descarta respuestas anteriores. |
 | V02 `/modules` | Datos de sesión e imágenes/estructura locales. | Cero peticiones operativas de negocio. Abrir el lanzador o precargar código de rutas no debe cargar sus datos. |
-| V03 `/chofer` | `/api/chofer/contexto`, ya implementado y limitado al usuario/chofer activo, para las cargas y relaciones que usa su portal. Recursos de escritura propios y documentos permitidos según acción. | Mantener el ámbito del backend; no reemplazarlo por el contexto global del administrador. Medir sus consultas SQL por separado si se optimiza ese endpoint: una petición HTTP no equivale a una consulta de base de datos. |
+| V03 `/chofer` | `/api/chofer/contexto` devuelve todas las entregas coordinadas, incluidas las pendientes de carga. El rol Chofer puede registrar cargas y operar el despacho. | El contexto se limita a los datos operativos del portal. |
 
 Las gestiones independientes de vehículos y choferes deben cargar su colección correspondiente; compartir un componente de orquestación no justifica descargar ambas. `StrictMode` puede repetir efectos durante desarrollo: cancelar solicitudes y deduplicar las que estén en curso, sin desactivarlo para ocultar problemas. Este reporte no define polling, sincronización entre pestañas ni WebSockets; eso sería una decisión adicional de actualización en tiempo real.
 
@@ -973,3 +973,9 @@ Validación: pruebas HTTP del router y de los adaptadores/almacenes del frontend
 - **2026-10-03:** Restauración del diseño con `FileDropzone` pasando por `uploadDocument.ts`. Unificación del gestor de paquetes en `pnpm`. Conexión de CRUD de transporte (`carrier.api.ts`).
 - **2026-09-20 a 2026-09-27 (FE01–FE07):** Conexión y pruebas Vitest de CRUD de clientes (`FE02`), CRUD de proveedores (`FE03`), subrecursos de proveedor con `validator@13.15.35` (`FE04`), edición de relación cliente-campaña y certificados (`FE05`), y lectura de contratos de cliente (`FE06`).
 - **2026-09-08:** Primera auditoría general de vistas (`Campana`, `Fruta`, `CampaniaProveedor`, `Proveedor`, `ClienteNegocio`, `CertificadoCampana`) y acuerdo de mantener `/login` simulado hasta que el backend implemente autenticación.
+
+## Portal compartido del chofer · 2026-11-09 · Parcial
+
+Frontend, API y simulación incluyen el listado de entregas coordinadas para el rol Chofer. El alta de carga usa una transacción y conserva los vínculos de la coordinación. Queda pendiente verificar el flujo completo con una sesión Chofer contra PostgreSQL y desplegar ambos proyectos.
+
+El visor de recojo se sirve desde el mismo origen que el portal y envía ese origen al solicitar las imágenes de OpenStreetMap. En una prueba local con Chrome se comprobó el encabezado y el aviso cuando el servidor de imágenes responde con HTTP 403. La corrección del mapa se distribuye con el frontend.

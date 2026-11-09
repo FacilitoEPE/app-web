@@ -202,6 +202,29 @@ describe('V1 API contract', () => {
     await expect(apiClient.post('/api/coordinaciones/1/historial-chofer',{ estado:'LLEGADA' })).rejects.toMatchObject({ code:'INVALID_DRIVER_STAGE' })
   })
 
+  it('lists and registers a pending delivery for a driver without a linked account', async () => {
+    const { data: driver } = await apiClient.post('/api/transportistas/1/choferes', {
+      nombre: 'Chofer de prueba', telefono: '900000003',
+    })
+    await apiClient.patch('/api/entregas/2/coordinaciones/2', { idChoferTransporteExterno: driver.idChoferTransporteExterno })
+    const { data: context } = await apiClient.get('/api/chofer/contexto')
+    expect(context.coordinations).toContainEqual(expect.objectContaining({
+      coordinacionEntregaId: 2, idChoferTransporteExterno: driver.idChoferTransporteExterno,
+    }))
+    const route = '/api/chofer/coordinaciones/2/carga'
+    const input = {
+      fechaCarga: '2026-11-01', anotador: 'Ana', cumpleRequisitosIndustria: true, observacionesCarga: '',
+      viaticosMovilidad: 0, viaticosInsumos: 0, gastoCuadrilla: 0, gastoAnotadores: 0,
+      proveedores: [{
+        proveedorId: '1', variedad: 'Kent', kilosCargados: 100, jabasCargadas: 1, jabasVacias: 0,
+        binesCargados: 0, binesVacios: 0, mallasCargadas: 0, mallasVacias: 0,
+      }],
+    }
+    expect((await apiClient.post(route, input)).status).toBe(201)
+    expect((await cargasAsignadasV1.list()).items).toContainEqual(expect.objectContaining({ coordinacionEntregaId: 2 }))
+    await expect(apiClient.post(route, input)).rejects.toMatchObject({ code: 'RESOURCE_IN_USE' })
+  })
+
   it('supports authentication, driver context and file preview/unlink without undocumented V1 errors', async () => {
     // 1. Login endpoint
     const loginRes = await apiClient.post('/api/auth/login', { usuario: 'admin-demo', password: 'AnyPassword' })

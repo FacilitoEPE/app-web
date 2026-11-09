@@ -49,9 +49,9 @@ import {
 type DriverView = "campanias" | "cargas" | "despacho";
 
 const TABS: readonly SegmentedTabItem[] = [
-    { id: "campanias", label: "Mis campañas", icon: Sprout, tone: "brand" },
-    { id: "cargas", label: "Mis cargas", icon: Truck, tone: "brand" },
-    { id: "despacho", label: "Mi despacho", icon: Navigation, tone: "brand" },
+    { id: "campanias", label: "Campañas", icon: Sprout, tone: "brand" },
+    { id: "cargas", label: "Cargas", icon: Truck, tone: "brand" },
+    { id: "despacho", label: "Despacho", icon: Navigation, tone: "brand" },
 ];
 
 const NEXT_STAGE_LABELS: Partial<Record<DispatchStage, string>> = {
@@ -66,14 +66,9 @@ interface DriverPortalPageProps {
 }
 
 export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
-    const { activeDriverId, loads } = useDriverPortalState();
+    const { loads } = useDriverPortalState();
     const drivers = getRegisteredDrivers();
     const identity = getSession()?.user;
-    const currentDriver = identity?.rol.nombre === 'Chofer' ? drivers.find(driver => driver.personaId === identity.personaId) : drivers.find((d) => d.id === activeDriverId) ?? drivers[0];
-    const currentDriverId = currentDriver?.id ?? "";
-
-    const driverLoads = loads.filter((item) => item.driverId === currentDriverId);
-
     const campaigns = useMemo(() => {
         const byId = new Map<
             number,
@@ -84,7 +79,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                 cargas: DriverLoad[];
             }
         >();
-        for (const load of driverLoads) {
+        for (const load of loads) {
             const existing = byId.get(load.campaniaId);
             if (existing) {
                 existing.cargas.push(load);
@@ -98,11 +93,11 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
             }
         }
         return [...byId.values()];
-    }, [driverLoads]);
+    }, [loads]);
 
     const [view, setView] = useState<DriverView>("campanias");
     const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
-    const [selectedLoadId, setSelectedLoadId] = useState<string | null>(driverLoads[0]?.id ?? null);
+    const [selectedLoadId, setSelectedLoadId] = useState<string | null>(loads[0]?.id ?? null);
 
     const [routeModalLoad, setRouteModalLoad] = useState<DriverLoad | null>(null);
     const [loadDataModalLoad, setLoadDataModalLoad] = useState<DriverLoad | null>(null);
@@ -113,8 +108,8 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
     const [actionBusy, setActionBusy] = useState(false);
 
     const activeLoad = useMemo(
-        () => driverLoads.find((l) => l.id === selectedLoadId) ?? driverLoads[0] ?? null,
-        [driverLoads, selectedLoadId],
+        () => loads.find((l) => l.id === selectedLoadId) ?? loads[0] ?? null,
+        [loads, selectedLoadId],
     );
 
     // Estado editable para Checklist de llegada y Guía de salida de la carga activa
@@ -158,9 +153,9 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
     };
 
     const filteredLoads = useMemo(() => {
-        if (!selectedCampaignId) return driverLoads;
-        return driverLoads.filter((l) => l.campaniaId === selectedCampaignId);
-    }, [driverLoads, selectedCampaignId]);
+        if (!selectedCampaignId) return loads;
+        return loads.filter((l) => l.campaniaId === selectedCampaignId);
+    }, [loads, selectedCampaignId]);
 
 
     const handleAdvanceStage = async () => {
@@ -221,15 +216,13 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
         finally { actionGuard.release(); setActionBusy(false); }
     };
 
-    if (!currentDriver) return <div className="p-8 text-ink-muted">Registra un chofer y coordina una entrega para utilizar el portal.</div>;
-
     return (
         <div className="mx-auto w-full max-w-xl px-4 py-5 pb-24 sm:px-6">
             {/* Cabecera del Portal Móvil del Chofer */}
             <PageHeader
                 icon={<Truck size={24} strokeWidth={2.5} />}
                 title="Portal Móvil del Chofer"
-                description="Consulta tus campañas activas, ubicación de fincas, avance de ruta, checklist de llegada y guía de salida."
+                description="Consulta y gestiona las entregas coordinadas de todos los choferes."
                 action={
                     <div className="flex flex-wrap items-center gap-2.5">
                         {onLogout && (
@@ -241,7 +234,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                 }
             />
 
-            {/* Tarjeta de perfil activo del conductor */}
+            {/* Resumen del portal */}
             <Card className="mb-6 rounded-2xl border-brand-border bg-linear-to-r from-brand-surface/70 via-card to-card shadow-xs">
                 <CardContent className="flex flex-col justify-between gap-4 p-4 sm:flex-row sm:items-center sm:px-6">
                     <div className="flex items-center gap-3.5">
@@ -253,22 +246,16 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                         </span>
                         <div>
                             <div className="flex flex-wrap items-center gap-2">
-                                <h2 className="text-[16px] font-bold text-ink">{currentDriver.nombre}</h2>
-                                <span className="rounded-full bg-brand-surface px-2.5 py-0.5 text-[11.5px] font-bold text-brand">
-                                    Placa {currentDriver.placaAsignada}
-                                </span>
+                                <h2 className="text-[16px] font-bold text-ink">{identity?.usuario ?? "Cuenta de chofer"}</h2>
                             </div>
-                            <p className="text-[12.5px] font-medium text-ink-muted">
-                                {currentDriver.transportista} · Licencia {currentDriver.licencia} · DNI {currentDriver.documento}
-                            </p>
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <span className="rounded-xl border border-brand-border/70 bg-card px-3.5 py-1.5 text-[12px] font-bold text-ink">
-                            {campaigns.length} campaña(s) activa(s)
+                            {campaigns.length} campaña(s)
                         </span>
                         <span className="rounded-xl border border-brand-border/70 bg-card px-3.5 py-1.5 text-[12px] font-bold text-brand">
-                            {driverLoads.length} carga(s) asignada(s)
+                            {loads.length} entrega(s)
                         </span>
                     </div>
                 </CardContent>
@@ -288,7 +275,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                 value={view}
                 onChange={(next) => {
                     if (next === "despacho") {
-                        const target = activeLoad && !activeLoad.pendienteRegistro ? activeLoad : driverLoads.find(load => !load.pendienteRegistro);
+                        const target = activeLoad && !activeLoad.pendienteRegistro ? activeLoad : loads.find(load => !load.pendienteRegistro);
                         if (!target) return;
                         setSelectedLoadId(target.id);
                         syncActiveLoadForms(target);
@@ -302,7 +289,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
             {/* VISTA 1: MIS CAMPAÑAS (CHOFER) */}
             {view === "campanias" && (
                 <div className="grid grid-cols-1 gap-4 ">
-                    {campaigns.length === 0 && <p role="status" className="rounded-2xl border border-dashed border-border p-6 text-sm text-ink-muted">Aún no tienes entregas asignadas. El administrador debe vincularte a una entrega de campaña.</p>}
+                    {campaigns.length === 0 && <p role="status" className="rounded-2xl border border-dashed border-border p-6 text-sm text-ink-muted">Aún no hay entregas coordinadas.</p>}
                     {campaigns.map((camp) => {
                         const FruitIcon = getCampaignFruitIcon(camp.nombre, camp.fruta) || Sprout;
                         const totalKg = camp.cargas.reduce(
@@ -319,7 +306,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                             </span>
                                             <div>
                                                 <span className="text-[11px] font-bold uppercase tracking-wider text-brand">
-                                                    Campaña Asignada
+                                                    Campaña
                                                 </span>
                                                 <h3 className="text-[17px] font-bold text-ink">{camp.nombre}</h3>
                                                 <p className="text-[12.5px] font-medium text-ink-muted">
@@ -332,9 +319,8 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
 
                                     <SummaryBar
                                         items={[
-                                            { label: "Mis cargas", value: `${camp.cargas.length} viaje(s)`, tone: "brand" },
+                                            { label: "Cargas", value: `${camp.cargas.length} viaje(s)`, tone: "brand" },
                                             { label: "Kilos cargados", value: `${formatKg(totalKg)} kg` },
-                                            { label: "Unidad", value: currentDriver.placaAsignada },
                                         ]}
                                     />
 
@@ -362,7 +348,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                                 setView("cargas");
                                             }}
                                         >
-                                            <Truck size={18} strokeWidth={2.4} /> Ver mis cargas ({camp.cargas.length})
+                                            <Truck size={18} strokeWidth={2.4} /> Ver cargas ({camp.cargas.length})
                                         </Button>
                                     </div>
                                 </CardContent>
@@ -407,6 +393,9 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                                 </div>
                                                 <p className="text-[13px] font-semibold text-ink-body mt-0.5">
                                                     {load.cliente} · <span className="text-ink-muted">{load.campaniaNombre}</span>
+                                                </p>
+                                                <p className="text-[12.5px] text-ink-muted">
+                                                    {drivers.find(driver => driver.id === load.driverId)?.nombre ?? "Chofer"} · {load.placa}
                                                 </p>
                                             </div>
                                             <StatusBadge status={load.rechazada ? "Rechazada" : load.pendienteRegistro ? "Por completar" : load.etapa} />
@@ -493,7 +482,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                 <div className="flex flex-col gap-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <Button variant="outline" onClick={() => setView("cargas")}>
-                            <ArrowLeft size={17} strokeWidth={2.4} /> Volver a mis cargas
+                            <ArrowLeft size={17} strokeWidth={2.4} /> Volver a cargas
                         </Button>
                         <div className="flex flex-wrap items-center gap-2">
                             <Button variant="outline" onClick={() => setRouteModalLoad(activeLoad)}>
@@ -763,10 +752,10 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                         <button
                             key={tab.id}
                             type="button"
-                            disabled={tab.id === 'despacho' && !driverLoads.some(load => !load.pendienteRegistro)}
+                            disabled={tab.id === 'despacho' && !loads.some(load => !load.pendienteRegistro)}
                             onClick={() => {
                                 if (tab.id === "despacho") {
-                                    const target = activeLoad && !activeLoad.pendienteRegistro ? activeLoad : driverLoads.find(load => !load.pendienteRegistro);
+                                    const target = activeLoad && !activeLoad.pendienteRegistro ? activeLoad : loads.find(load => !load.pendienteRegistro);
                                     if (!target) return;
                                     setSelectedLoadId(target.id);
                                     syncActiveLoadForms(target);

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+    <style>
+        html, body, #map { height: 100%; margin: 0; }
+        .picking { cursor: crosshair; }
+        #status { position: absolute; z-index: 1000; bottom: 1.5rem; left: .75rem; right: .75rem; padding: .75rem; background: Canvas; color: CanvasText; font: .875rem system-ui; }
+    </style>
+</head>
+<body>
+    <div id="map" aria-label="Mapa para seleccionar el punto de salida"></div>
+    <p id="status" role="status" hidden></p>
+    <script>
+        const container = document.getElementById('map');
+        const status = document.getElementById('status');
+        const coordinates = location.hash.slice(1).split(',');
+        const farm = coordinates.map(Number);
+        const validFarm = coordinates.length === 2 && coordinates.every(value => value.trim()) &&
+            Math.abs(farm[0]) <= 90 && Math.abs(farm[1]) <= 180;
+        if (!window.L || !validFarm) {
+            status.textContent = 'No se pudo cargar el mapa interactivo. Puedes abrir la ubicación en Google Maps.';
+            status.hidden = false;
+        } else {
+            const map = L.map(container, { scrollWheelZoom: false }).setView(farm, 13);
+            let tilesLoaded = false;
+            status.textContent = 'No se pudo cargar el mapa base. Puedes abrir la ubicación en Google Maps.';
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+            })
+                .on('loading', () => { tilesLoaded = false; })
+                .on('tileload', () => { tilesLoaded = true; status.hidden = true; })
+                .on('load', () => { status.hidden = tilesLoaded; })
+                .addTo(map);
+            L.circleMarker(farm, { radius: 8, color: '#145b37', fillOpacity: 1 }).addTo(map).bindTooltip('Finca');
+            const layers = L.layerGroup().addTo(map);
+            let picking = false;
+            let lastOrigin = '';
+            map.on('click', ({ latlng }) => {
+                if (picking) parent.postMessage({ type: 'pickup-origin', point: [latlng.lat, latlng.wrap().lng] }, location.origin);
+            });
+            window.addEventListener('message', ({ source, origin, data }) => {
+                if (source !== parent || origin !== location.origin || data?.type !== 'pickup-map') return;
+                picking = data.picking;
+                container.classList.toggle('picking', picking);
+                layers.clearLayers();
+                if (!data.origin) return;
+                L.circleMarker(data.origin, { radius: 8, color: '#1262a8', fillOpacity: 1 }).addTo(layers).bindTooltip('Salida');
+                if (data.path?.length || data.showDirectLine) {
+                    const line = data.path?.length
+                        ? L.polyline(data.path, { color: '#145b37', weight: 5 })
+                        : L.polyline([data.origin, farm], { color: '#1262a8', weight: 3, dashArray: '7 8' });
+                    line.addTo(layers);
+                    map.fitBounds(line.getBounds(), { padding: [20, 20], maxZoom: 15 });
+                } else if (lastOrigin !== String(data.origin)) {
+                    map.fitBounds([data.origin, farm], { padding: [20, 20], maxZoom: 15 });
+                }
+                lastOrigin = String(data.origin);
+            });
+        }
+    </script>
+</body>
+</html>

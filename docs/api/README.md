@@ -63,3 +63,7 @@ Las respuestas de creación, edición, detalle y colección incluyen `variedades
 `GET /api/entregas/{parentId}/variedades[/{id}]` sigue disponible. Sus escrituras individuales pasan a solo lectura (405): modificar una entrega exige el PATCH de cabecera con el desglose completo para asegurar atomicidad. Clientes externos que antes enviaban totales o escribían líneas por separado deben adaptarse junto con este despliegue.
 
 Ejemplo de escritura: `{"fecha":"2026-11-05","destino":"Paita","variedades":[{"frutaDerivadaId":1,"kilos":1000},{"frutaDerivadaId":2,"kilos":200}]}`. El total confirmado es 1,200 kg.
+
+## Portal compartido del chofer
+
+La sesión con rol Chofer obtiene las entregas coordinadas en `GET /api/chofer/contexto`. `POST /api/chofer/coordinaciones/{id}/carga` registra la carga inicial en una transacción y `PATCH /api/chofer/cargas/{id}/datos` actualiza los datos operativos de una carga existente. En Industria, el registro del rechazo deja la entrega visible y bloquea el despacho. Consulte la [regla del portal](business-rules.md).

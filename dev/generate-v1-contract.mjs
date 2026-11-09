@@ -230,15 +230,32 @@ schemas.ContratoVenta.properties.saldosVariedades = {type:'array',items:{type:'o
 schemas.ContratoVenta.required.push('saldosVariedades')
 paths['/requerimientos/{parentId}/contratos/{id}'].get.parameters.push({name:'excluirEntregaId',in:'query',schema:id,description:'Excluye todas las líneas de esta entrega. Debe pertenecer al contrato.'})
 
-// The driver's entry point derives ownership from authenticated identity in the real backend.
+// The shared driver portal lists all coordinated loads.
 const loadCollection = paths['/coordinaciones/{parentId}/cargas']
 const loadDetail = paths['/coordinaciones/{parentId}/cargas/{id}']
 paths['/chofer/cargas'] = {
-  'x-resource': { ...loadCollection['x-resource'], parentTable:null, scope:null, mode:'r', actorScope:'authenticated-driver' },
+  'x-resource': { ...loadCollection['x-resource'], parentTable:null, scope:null, mode:'r' },
   get: { ...loadCollection.get, operationId:'getChoferCargas', tags:['driver-portal'], 'x-roles':['Administrador','Chofer'], parameters:loadCollection.get.parameters.filter(parameter=>parameter.in !== 'path') },
 }
 paths['/chofer/cargas/{id}'] = {
   get: { ...loadDetail.get, operationId:'getChoferCarga', tags:['driver-portal'], 'x-roles':['Administrador','Chofer'], parameters:loadDetail.get.parameters.filter(parameter=>parameter.name !== 'parentId') },
+}
+
+schemas.DriverLoadData = { type: 'object', additionalProperties: true, required: ['observacionesCarga'], properties: {
+  cumpleRequisitosIndustria: { type: 'boolean' }, fechaCarga: { type: 'string', format: 'date' }, anotador: text,
+  viaticosMovilidad: decimal, viaticosInsumos: decimal, gastoCuadrilla: decimal, gastoAnotadores: decimal, observacionesCarga: text,
+  proveedores: { type: 'array', items: { type: 'object', properties: { proveedorId: text, variedad: text, kilosCargados: decimal,
+    ...Object.fromEntries(['jabasCargadas','jabasVacias','binesCargados','binesVacios','mallasCargadas','mallasVacias'].map(key => [key, { type: 'integer', minimum: 0 }])) } } },
+} }
+for (const [url, method, operationId, status] of [
+  ['/chofer/coordinaciones/{id}/carga', 'post', 'registerDriverLoad', 201],
+  ['/chofer/cargas/{id}/datos', 'patch', 'saveDriverLoad', 200],
+]) {
+  paths[url] = { [method]: { operationId, tags: ['driver-portal'], 'x-roles': ['Chofer'],
+    parameters: [{ name: 'id', in: 'path', required: true, schema: id }],
+    requestBody: { required: true, content: { 'application/json': { schema: ref('DriverLoadData') } } },
+    responses: { [status]: response({ type: 'object', properties: { ok: { type: 'boolean' } }, required: ['ok'] }), ...errorResponses },
+  } }
 }
 
 const actions = [

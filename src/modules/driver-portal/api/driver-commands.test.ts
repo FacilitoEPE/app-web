@@ -1,8 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { apiClient } from '@/shared/api/client';
 import { driverCommands } from '@/modules/driver-portal/api/driver-commands.api';
-vi.mock('@/modules/driver-portal/api/driver-screen-data', () => ({ projectDriverData: () => ({ loads: [{ id: '7', permiteEditarCarga: true, kilosProgramados: 100, proveedores: [{ proveedorId: '1' }] }] }) }));
-vi.mock('@/modules/operations/api/operations-context.api', () => ({ operationsContext: () => ({}) }));
+vi.mock('@/modules/driver-portal/api/driver-screen-data', () => ({ projectDriverData: () => {
+  const load = { id: '7', permiteEditarCarga: true, kilosProgramados: 100, proveedores: [{ proveedorId: '1' }] };
+  return { loads: [load, { ...load, id: 'entrega-5', pendienteRegistro: true }] };
+} }));
+vi.mock('@/modules/operations/api/operations-context.api', () => ({ operationsContext: () => ({
+  coordinations: [{ entregaProgramadaId: 5, coordinacionEntregaId: 6 }],
+}) }));
 
 describe('registro de carga del chofer', () => {
   const provider = { proveedorId: '1', proveedorNombre: 'Productor', tipo: 'Productor' as const, fincaNombre: 'Finca', variedad: 'Kent', kilosCargados: 50, jabasCargadas: 2, jabasVacias: 0, binesCargados: 0, binesVacios: 0, mallasCargadas: 0, mallasVacias: 0 };
@@ -12,6 +17,12 @@ describe('registro de carga del chofer', () => {
     await driverCommands.load('7', value);
     expect(patch).toHaveBeenCalledWith('/api/chofer/cargas/7/datos', value);
     patch.mockRestore();
+  });
+  it('envía la entrega sin carga al registro por coordinación', async () => {
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { ok: true } });
+    await driverCommands.load('entrega-5', value);
+    expect(post).toHaveBeenCalledExactlyOnceWith('/api/chofer/coordinaciones/6/carga', value);
+    post.mockRestore();
   });
   it('rechaza proveedores ajenos, pesos inválidos y gastos negativos antes de escribir', async () => {
     const patch = vi.spyOn(apiClient, 'patch').mockResolvedValue({ data: { ok: true } });

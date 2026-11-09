@@ -517,6 +517,61 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
     if (pathname === '/chofer/contexto' && request.method === 'GET') {
       return { status: 200, data: buildOperationsContext() }
     }
+    const driverRegistration = /^\/chofer\/coordinaciones\/(\d+)\/carga$/.exec(pathname)
+    if (driverRegistration && request.method === 'POST') {
+      const coord = find('coordinacion_entrega', Number(driverRegistration[1]))
+      const delivery = find('entrega_programada', coord.entregaProgramadaId)
+      const sale = find('contrato_venta', delivery.contratoVentaId)
+      const campaign = campaignFor('coordinacion_entrega', coord)!
+      const body = await readJson(request) as Row
+      if (campaign.estado !== 'en proceso' || related('carga', 'coordinacionEntregaId', coord.coordinacionEntregaId).length)
+        throw new ApiV1Error(409, 'RESOURCE_IN_USE', 'La entrega ya tiene carga o su campaña no está en ejecución.')
+      const harvest = related('cosecha', 'entregaProgramadaId', delivery.entregaProgramadaId)[0]
+      const rejected = body.cumpleRequisitosIndustria === false
+      if ((sale.canal === 'INDUSTRIA' && typeof body.cumpleRequisitosIndustria !== 'boolean') || (rejected && sale.canal !== 'INDUSTRIA') || harvest?.industria?.inspectionResult === 'No cumple')
+        throw new ApiV1Error(400, 'INVALID_BODY', 'Revisa la inspección de Industria.')
+      const origins = related('origen_entrega', 'coordinacionEntregaId', coord.coordinacionEntregaId)
+      const expected = new Set(origins.map(origin => find('campania_x_proveedores', origin.cxpId).proveedorId))
+      const providers = Array.isArray(body.proveedores) ? body.proveedores as Row[] : []
+      const details = providers.map(provider => ({
+        provider,
+        origins: origins.filter(origin => {
+          const variety = find('fruta_derivada', find('finca', origin.fincaId).frutaDerivadaId)
+          return find('campania_x_proveedores', origin.cxpId).proveedorId === Number(provider.proveedorId)
+            && [provider.variedad, find('fruta', campaign.frutaId).name + ' ' + provider.variedad].includes(variety.name)
+        }),
+      }))
+      if (!rejected && (!body.fechaCarga || !String(body.anotador ?? '').trim() || !expected.size ||
+        expected.size !== providers.length || new Set(providers.map(p => Number(p.proveedorId))).size !== expected.size ||
+        details.some(item => !item.origins.length || !(Number(item.provider.kilosCargados) > 0)) ||
+        providers.reduce((sum, p) => sum + Number(p.kilosCargados), 0) > Number(delivery.kilosProgramados)))
+        throw new ApiV1Error(400, 'INVALID_BODY', 'Revisa los proveedores y los kilos programados.')
+      const now = new Date().toISOString()
+      const timestamps = { createdAt: now, updatedAt: now }
+      if (sale.canal === 'INDUSTRIA') {
+        const industria = { ...harvest?.industria, inspectionResult: rejected ? 'No cumple' : 'Cumple', rejectionReason: rejected ? body.observacionesCarga : '' }
+        if (harvest) Object.assign(harvest, { industria, updatedAt: now })
+        else db.cosecha.push({ ...meta.cosecha.defaults, cosechaId: nextIds.cosecha++, entregaProgramadaId: delivery.entregaProgramadaId,
+          codigoLote: ['LOT', campaign.campaniaId, delivery.entregaProgramadaId].join('-'), fechaPrevista: delivery.fecha, kilosEstimados: delivery.kilosProgramados, industria, ...timestamps })
+      }
+      if (rejected) return { status: 201, data: { ok: true } }
+      const cargaId = nextIds.carga++
+      db.carga.push({ ...meta.carga.defaults, cargaId, coordinacionEntregaId: coord.coordinacionEntregaId,
+        codigo: ['CAR', campaign.campaniaId, delivery.entregaProgramadaId].join('-'), fechaCarga: body.fechaCarga, anotadorNombre: body.anotador,
+        viaticosMovilidad: body.viaticosMovilidad, viaticosInsumos: body.viaticosInsumos, observaciones: body.observacionesCarga,
+        guiaSalidaId: null, guiaSalidaRegistradaAt: null, ...timestamps })
+      for (const { provider, origins: matches } of details) {
+        const { cxpId, fincaId } = matches[0]
+        const proveedorCargaId = nextIds.proveedor_carga++
+        const packs = Object.fromEntries(['jabasCargadas', 'jabasVacias', 'binesCargados', 'binesVacios', 'mallasCargadas', 'mallasVacias'].map(key => [key, provider[key]]))
+        db.proveedor_carga.push({ ...packs, proveedorCargaId, cargaId, cxpId, frutaDerivadaId: find('finca', fincaId).frutaDerivadaId,
+          kilosCargados: provider.kilosCargados, precioCompraKgAplicado: find('campania_x_proveedores', cxpId).precioCompraKg, ...timestamps })
+        for (const origin of matches) db.origen_carga.push({ origenCargaId: nextIds.origen_carga++, proveedorCargaId, cxpId, fincaId: origin.fincaId, kilosOrigen: null, ...timestamps })
+      }
+      for (const [concepto, monto] of [['Cuadrilla', body.gastoCuadrilla], ['Anotadores', body.gastoAnotadores]])
+        db.gasto_carga.push({ gastoCargaId: nextIds.gasto_carga++, cargaId, concepto, monto, ...timestamps })
+      return { status: 201, data: { ok: true } }
+    }
     const driverLoadDataRoute = /^\/chofer\/cargas\/(\d+)\/datos$/.exec(pathname)
     if (driverLoadDataRoute && request.method === 'PATCH') {
       const id = Number(driverLoadDataRoute[1])
@@ -541,8 +596,7 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
     const definition = meta[table]
     const resource = route.item['x-action'] ? undefined : resourceFor(route.template)
     if (resource?.parentTable) find(resource.parentTable,params.parentId)
-    const rows = db[table].filter(row => (!resource?.scope || row[resource.scope] === params.parentId)
-      && (!resource?.actorScope || coordination(row.cargaId).idChoferTransporteExterno === 1))
+    const rows = db[table].filter(row => !resource?.scope || row[resource.scope] === params.parentId)
     const current = params.id ? rows.find(row => row[definition.id] === params.id) : undefined
     if (params.id && !current) throw new ApiV1Error(404,'NOT_FOUND','El recurso no existe en este contexto.')
     let status = 200, data: unknown
@@ -597,6 +651,8 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
           current?.[key] ?? definition.defaults[key] ?? (key === 'createdAt' || key === 'updatedAt' || prop.format === 'date-time' && !Array.isArray(prop.type) ? now : null),
         ]))
         Object.assign(row,current,input,{ [definition.id]:current?.[definition.id] ?? nextIds[table],updatedAt:now })
+        if (table === 'recepcion_planta' && input.checklist) row.checklist = { ...current?.checklist, ...input.checklist }
+        if (table === 'recepcion_planta' && input.documentos) row.documentos = { ...current?.documentos, ...input.documentos }
         if (resource?.scope) row[resource.scope] = params.parentId
         if ('registradoPorUsuarioId' in row && !current) row.registradoPorUsuarioId = 1
         if (['contrato_venta','entrega_programada'].includes(table) && current?.desglosePendiente && (input as Row).variedades === undefined) fail('HISTORICAL_BREAKDOWN_REQUIRED','Envía el desglose completo para confirmar un registro histórico.')

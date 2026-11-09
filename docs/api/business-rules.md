@@ -209,7 +209,7 @@ La guía tiene contenido íntegro y snapshots de salida/llegada/conductor; `prov
 
 ### Recepción y chofer
 
-El chofer entra por `GET /chofer/cargas` y `GET /chofer/cargas/{id}`. El backend obtiene el chofer de la identidad autenticada, **no de un `driverId` confiado del navegador**. Solo puede registrar sus etapas y datos operativos permitidos. Administrador y Chofer comparten coordinación/carga/recepción, sin duplicar viajes en otra tabla. El mock usa el chofer fijo 1 para esta consulta; eso no representa autenticación ni autorización real.
+El rol Chofer puede consultar y operar todas las entregas coordinadas, incluidas las que esperan el registro de carga. El portal conserva el conductor y la unidad de la coordinación. El registro inicial guarda en una transacción la carga, los proveedores, las fincas y los gastos. Las etapas de despacho conservan sus requisitos y el rol Chofer solo puede escribir el checklist de llegada, su evidencia de descarte y la guía de salida en la recepción.
 
 `historial_chofer` avanza `EN_CARGA → SALIDA → EN_CAMINO → LLEGADA → CIERRE`, con prerequisitos de despacho/recepción del prototipo. El backend decide hora/actor y rechaza saltos y cambios del chofer de otro viaje. El mock no demuestra esos permisos ni la totalidad de prerequisitos documentales.
 

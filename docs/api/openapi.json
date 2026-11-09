@@ -37184,8 +37184,7 @@
         "parentTable": null,
         "scope": null,
         "module": "quality",
-        "mode": "r",
-        "actorScope": "authenticated-driver"
+        "mode": "r"
       },
       "get": {
         "operationId": "getChoferCargas",
@@ -37360,6 +37359,290 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Carga"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chofer/coordinaciones/{id}/carga": {
+      "post": {
+        "operationId": "registerDriverLoad",
+        "tags": [
+          "driver-portal"
+        ],
+        "x-roles": [
+          "Chofer"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverLoadData"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Operación correcta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chofer/cargas/{id}/datos": {
+      "patch": {
+        "operationId": "saveDriverLoad",
+        "tags": [
+          "driver-portal"
+        ],
+        "x-roles": [
+          "Chofer"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverLoadData"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación correcta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
                 }
               }
             }
@@ -53379,6 +53662,81 @@
           "page",
           "pageSize"
         ]
+      },
+      "DriverLoadData": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "observacionesCarga"
+        ],
+        "properties": {
+          "cumpleRequisitosIndustria": {
+            "type": "boolean"
+          },
+          "fechaCarga": {
+            "type": "string",
+            "format": "date"
+          },
+          "anotador": {
+            "type": "string"
+          },
+          "viaticosMovilidad": {
+            "type": "number"
+          },
+          "viaticosInsumos": {
+            "type": "number"
+          },
+          "gastoCuadrilla": {
+            "type": "number"
+          },
+          "gastoAnotadores": {
+            "type": "number"
+          },
+          "observacionesCarga": {
+            "type": "string"
+          },
+          "proveedores": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "proveedorId": {
+                  "type": "string"
+                },
+                "variedad": {
+                  "type": "string"
+                },
+                "kilosCargados": {
+                  "type": "number"
+                },
+                "jabasCargadas": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "jabasVacias": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "binesCargados": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "binesVacios": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "mallasCargadas": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "mallasVacias": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
       },
       "CampanaAction": {
         "type": "object",
