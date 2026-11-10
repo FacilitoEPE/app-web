@@ -1,5 +1,7 @@
 # 4. Estado de Integración Frontend ↔ Backend (`epe-web`)
 
+**Prefijo de la API actual.** NestJS y el mock usan `/v1`. En el despliegue de mismo origen, el frontend solicita `/api/v1` y Nginx quita `/api` antes de reenviar. La vista previa y la verificación de adjuntos usan la misma base pública.
+
 > **Fuente vigente del estado por vista.** Actualiza las entradas superiores al cambiar el estado y sincroniza los documentos afectados según las [reglas de epe-web](../AGENTS.md). Las entradas inferiores son evidencia histórica, no estado vigente; vencen 90 días después de su fecha salvo excepción documentada. Elimina las entradas vencidas al revisar el registro.
 
 ## Vínculo único por cliente y campaña — 2026-11-08
@@ -394,7 +396,7 @@ Validación prevista para los cambios: pruebas HTTP con las funciones reales y f
 - Las nuevas subidas de adjuntos generales se ordenan por módulo y tipo, como `campanas/lineamientos` y `facturacion/facturas`. Las referencias existentes se consultan con la misma URL protegida.
 
 - El campo compartido de archivos, incluido Lineamientos de campaña, consulta `GET /api/documentos/:id/estado`: verde solo tras verificar metadatos y existencia/tamaño/tipo del objeto; rojo si falta o no coincide; aviso si no pudo verificarse por red o permisos. Un archivo recién elegido queda pendiente de guardar. Se puede volver a verificar y reemplazar/quitar adjuntos faltantes.
-- El backend verifica el binario después de subirlo y antes de vincularlo. Un error leyendo el índice deja de simular una lista vacía, evitando sobrescribir vínculos ante fallos de permisos o conectividad. No usa almacenamiento local. Contrato en [API](api/README.md), implementación en el [flujo backend](../../epe-backend/docs/backend-flow.md#41-servicio-general-de-documentos-y-vínculos-en-s3-apidocumentos). Esto no confirma el estado de archivos ni el despliegue de un servidor productivo.
+- El backend verifica el binario después de subirlo y antes de vincularlo. Un error leyendo el índice deja de simular una lista vacía, evitando sobrescribir vínculos ante fallos de permisos o conectividad. No usa almacenamiento local. Contrato en [API](api/README.md), implementación en el [flujo backend](../../epe-backend/docs/backend-flow.md#41-servicio-general-de-documentos-y-vínculos-en-s3-v1documentos). Esto no confirma el estado de archivos ni el despliegue de un servidor productivo.
 - Validación: 107 pruebas backend y 377 frontend aprobadas; contrato generado y copia runtime sincronizados. Las pruebas cubren metadatos presentes con documento faltante, inconsistencias de tamaño/tipo, errores de permisos/red y rechazo de vínculos inválidos. No se hizo una comprobación contra el bucket productivo.
 
 ## Desembolso de adelantos de transporte — 2026-11-08 · Completo en desarrollo
@@ -915,7 +917,7 @@ No se consideran defectos nuevos la sesión simulada ni FC14, pues son límites 
 
 ## 4.1. Integración V1 de las pantallas — 2026-10-29
 
-**Completo para el consumo HTTP del contrato desde el modo local de desarrollo.** Con `VITE_API_BASE_URL=/mock-api/` las pantallas consumen la API ficticia y `json/v1-demo/`. Para el backend real, configurar su origen y `VITE_API_CONTRACT=v1`; el backend NestJS sirve las operaciones bajo `/api`. El estado de implementación del backend de este hito es histórico; ver la auditoría del 2026-11-03. `legacy` explícito mantiene la compatibilidad anterior.
+**Completo para el consumo HTTP del contrato desde el modo local de desarrollo.** Con `VITE_API_BASE_URL=/mock-api/` las pantallas consumen la API ficticia y `json/v1-demo/`. Para el backend real, configurar su origen y `VITE_API_CONTRACT=v1`; el backend NestJS sirve las operaciones bajo `/v1`. El estado de implementación del backend de este hito es histórico; ver la auditoría del 2026-11-03. `legacy` explícito mantiene la compatibilidad anterior.
 
 | Pantallas | Consumo V1 implementado | Límites vigentes |
 |---|---|---|

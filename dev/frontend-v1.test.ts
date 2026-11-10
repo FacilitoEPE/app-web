@@ -259,7 +259,7 @@ describe('existing frontend with the V1 HTTP contract', () => {
     expect(billing[0].cargas[0].facturas[0]).toMatchObject({ total: 1495, estado: 'Cobrado parcial' })
     const drivers = projectDriverData(graph)
     expect(drivers.loads[0].destinoLatitud).toBeNull()
-    expect(requested.every(url => url.startsWith('/mock-api/api/'))).toBe(true)
+    expect(requested.every(url => url.startsWith('/mock-api/v1/'))).toBe(true)
   })
 
   it('saves and reloads farms through the existing frontend store, preserving server identifiers', async () => {
@@ -271,7 +271,7 @@ describe('existing frontend with the V1 HTTP contract', () => {
     await updateFinca(1, index, { ...added, haCultivo: 1.5 })
     await refreshFrontendData()
     expect(getProviderLocalData().fincas[1].find(f => f.fincaId === added.fincaId)?.haCultivo).toBe(1.5)
-    expect(requested.some(url => url.startsWith('/mock-api/api/proveedores/1/fincas'))).toBe(true)
+    expect(requested.some(url => url.startsWith('/mock-api/v1/proveedores/1/fincas'))).toBe(true)
   })
 
   it('vincula una finca a la participación desde Entrevistas y conserva la relación al recargar', async () => {

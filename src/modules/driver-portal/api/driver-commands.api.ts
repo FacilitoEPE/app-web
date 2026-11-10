@@ -105,9 +105,9 @@ export const driverCommands = {
         if (row.pendienteRegistro) {
             const coordination = operationsContext().coordinations.find(item => item.entregaProgramadaId === Number(id.slice('entrega-'.length)));
             if (!coordination) throw new Error('No se encontró la entrega coordinada.');
-            await apiClient.post('/api/chofer/coordinaciones/' + coordination.coordinacionEntregaId + '/carga', value);
+            await apiClient.post('/v1/chofer/coordinaciones/' + coordination.coordinacionEntregaId + '/carga', value);
             return;
         }
-        await apiClient.patch(`/api/chofer/cargas/${requireId(id)}/datos`, value);
+        await apiClient.patch(`/v1/chofer/cargas/${requireId(id)}/datos`, value);
     }),
 };

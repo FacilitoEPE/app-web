@@ -61,7 +61,7 @@ describe("campaign mutation API routes", () => {
     expect(result.fechaRegistro.getFullYear()).toBe(2026);
     expect(result.fechaRegistro.getMonth()).toBe(5);
     expect(result.fechaRegistro.getDate()).toBe(21);
-    expect(patch).toHaveBeenCalledWith("/campanas/5/clientes-negocio/12", input);
+    expect(patch).toHaveBeenCalledWith("/v1/campanas/5/clientes-negocio/12", input);
   });
 
   it("creates and patches certificates with backend DTO field names and exact campaign routes", async () => {
@@ -86,7 +86,7 @@ describe("campaign mutation API routes", () => {
       certificadoId: 9,
       estado: "vigente",
     });
-    expect(post).toHaveBeenCalledWith("/campanas/5/certificados", input);
-    expect(patch).toHaveBeenCalledWith("/campanas/5/certificados/9", input);
+    expect(post).toHaveBeenCalledWith("/v1/campanas/5/certificados", input);
+    expect(patch).toHaveBeenCalledWith("/v1/campanas/5/certificados/9", input);
   });
 });

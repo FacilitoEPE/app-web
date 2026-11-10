@@ -448,7 +448,7 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
     if ((pathname === '/archivos-locales/vinculos' || pathname === '/documentos/vinculos') && request.method === 'GET') return { status: 200, data: localLinks }
     if ((pathname === '/archivos-locales/vinculos' || pathname === '/documentos/vinculos') && request.method === 'POST') {
       const body = await readJson(request) as { tipo: string; entidadId: number; archivoId: number | string }
-      const file = localFiles.get(Number(body.archivoId)) ?? { id: String(body.archivoId), url: `/api/documentos/${body.archivoId}`, name: 'documento.pdf', type: 'application/pdf', size: 128 }
+      const file = localFiles.get(Number(body.archivoId)) ?? { id: String(body.archivoId), url: `/v1/documentos/${body.archivoId}`, name: 'documento.pdf', type: 'application/pdf', size: 128 }
       localLinks = localLinks.filter(item => !(item.tipo === body.tipo && item.entidadId === Number(body.entidadId)))
       const link = { tipo: body.tipo, entidadId: Number(body.entidadId), archivoId: String(body.archivoId), ...file }
       localLinks.push(link)
@@ -464,7 +464,7 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
     const fileContentRoute = /^\/(?:archivos-locales|documentos)\/(\d+)(?:\/contenido)?$/.exec(pathname)
     if (fileContentRoute && request.method === 'GET') {
       const id = Number(fileContentRoute[1])
-      const file = localFiles.get(id) ?? { id: String(id), url: `/api/documentos/${id}`, name: `documento-${id}.pdf`, type: 'application/pdf', size: 128 }
+      const file = localFiles.get(id) ?? { id: String(id), url: `/v1/documentos/${id}`, name: `documento-${id}.pdf`, type: 'application/pdf', size: 128 }
       return { status: 200, data: file }
     }
     if (pathname === '/auth/login' && request.method === 'POST') {

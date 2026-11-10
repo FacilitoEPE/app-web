@@ -15,13 +15,13 @@ describe('registro de carga del chofer', () => {
   it('envía los datos al endpoint restringido de la carga seleccionada', async () => {
     const patch = vi.spyOn(apiClient, 'patch').mockResolvedValue({ data: { ok: true } });
     await driverCommands.load('7', value);
-    expect(patch).toHaveBeenCalledWith('/api/chofer/cargas/7/datos', value);
+    expect(patch).toHaveBeenCalledWith('/v1/chofer/cargas/7/datos', value);
     patch.mockRestore();
   });
   it('envía la entrega sin carga al registro por coordinación', async () => {
     const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { ok: true } });
     await driverCommands.load('entrega-5', value);
-    expect(post).toHaveBeenCalledExactlyOnceWith('/api/chofer/coordinaciones/6/carga', value);
+    expect(post).toHaveBeenCalledExactlyOnceWith('/v1/chofer/coordinaciones/6/carga', value);
     post.mockRestore();
   });
   it('rechaza proveedores ajenos, pesos inválidos y gastos negativos antes de escribir', async () => {

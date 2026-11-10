@@ -30,7 +30,7 @@ describe('desglose persistido con el cliente HTTP y mock V1',()=>{
     await resource.update(delivery.entregaProgramadaId,{variedades:rows(2000,200)})
     expect(await balances()).toMatchObject([{kilosDisponibles:8000},{kilosDisponibles:4800}])
     expect((await resource.get(delivery.entregaProgramadaId,true)).variedades).toEqual(rows(2000,200))
-    const excluded=await apiClient.get(`/api/requerimientos/1/contratos/${contractId}`,{params:{excluirEntregaId:delivery.entregaProgramadaId}})
+    const excluded=await apiClient.get(`/v1/requerimientos/1/contratos/${contractId}`,{params:{excluirEntregaId:delivery.entregaProgramadaId}})
     expect(excluded.data.saldosVariedades).toMatchObject([{kilosDisponibles:10000},{kilosDisponibles:5000}])
     await resource.update(delivery.entregaProgramadaId,{variedades:rows(500)})
     expect(await balances()).toMatchObject([{kilosDisponibles:9500},{kilosDisponibles:5000}])

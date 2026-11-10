@@ -15,31 +15,31 @@ export async function getCampaignDocument(id: number): Promise<StoredFile | null
 
 export async function getFrutas(): Promise<FrutaDto[]> {
   if (usesV1()) return campaignScreenV1.fruits();
-  const { data } = await apiClient.get<FrutaDto[]>("/frutas");
+  const { data } = await apiClient.get<FrutaDto[]>("/v1/frutas");
   return data;
 }
 
 export async function getFrutaDerivadas(frutaId: number): Promise<FrutaDerivadaDto[]> {
   if (usesV1()) return campaignScreenV1.varieties(frutaId);
-  const { data } = await apiClient.get<FrutaDerivadaDto[]>(`/frutas/${frutaId}/derivadas`);
+  const { data } = await apiClient.get<FrutaDerivadaDto[]>(`/v1/frutas/${frutaId}/derivadas`);
   return data;
 }
 
 export async function getCampanas(): Promise<Campana[]> {
   if (usesV1()) return campaignScreenV1.list();
-  const { data } = await apiClient.get<CampanaDto[]>("/campanas");
+  const { data } = await apiClient.get<CampanaDto[]>("/v1/campanas");
   return data.map(toCampana);
 }
 
 export async function getCampana(id: number): Promise<Campana> {
   if (usesV1()) return campaignScreenV1.get(id);
-  const { data } = await apiClient.get<CampanaDto>(`/campanas/${id}`);
+  const { data } = await apiClient.get<CampanaDto>(`/v1/campanas/${id}`);
   return toCampana(data);
 }
 
 export async function createCampana(input: CampaignFormInput): Promise<Campana> {
   if (usesV1()) return campaignScreenV1.create(input);
-  const { data } = await apiClient.post<CampanaDto>("/campanas", toCreateCampanaDto(input));
+  const { data } = await apiClient.post<CampanaDto>("/v1/campanas", toCreateCampanaDto(input));
   return toCampana(data);
 }
 
@@ -50,11 +50,11 @@ export async function updateCampana(id: number, input: Partial<CampaignFormInput
     fechaInicio: input.fechaInicio ? formatFecha(input.fechaInicio) : undefined,
     fechaFin: input.fechaFin ? formatFecha(input.fechaFin) : undefined,
   };
-  const { data } = await apiClient.patch<CampanaDto>(`/campanas/${id}`, dto);
+  const { data } = await apiClient.patch<CampanaDto>(`/v1/campanas/${id}`, dto);
   return toCampana(data);
 }
 
 export async function deleteCampana(id: number): Promise<void> {
   if (usesV1()) return campaignScreenV1.remove(id);
-  await apiClient.delete(`/campanas/${id}`);
+  await apiClient.delete(`/v1/campanas/${id}`);
 }

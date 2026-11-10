@@ -2,7 +2,7 @@
 
 Versión técnica del contrato **V1**. La implementación backend está completada según confirmación del usuario. Este documento conserva reglas de negocio de la V1; no es un plan de backend futuro.
 
-Este documento describe el contrato HTTP de la API V1 implementada en `epe-backend`. Sus controladores NestJS exponen las operaciones bajo `/api`, y sus servicios leen y escriben en PostgreSQL. El OpenAPI también alimenta los DTOs TypeScript del frontend. Las fixtures de `json/v1-demo/` sirven para desarrollo local y no son la implementación del backend. La API anterior conserva el modo `legacy`.
+Este documento describe el contrato HTTP de la API V1 implementada en `epe-backend`. Sus controladores NestJS exponen las operaciones bajo `/v1`, y sus servicios leen y escriben en PostgreSQL. El OpenAPI también alimenta los DTOs TypeScript del frontend. Las fixtures de `json/v1-demo/` sirven para desarrollo local y no son la implementación del backend.
 
 ## 1. Fuentes del contrato y la implementación
 
@@ -34,9 +34,9 @@ El nombre libre del responsable de campaña puede corresponder a cualquier perso
 
 ### Disponibilidad de adjuntos
 
-`POST /api/documentos` recibe el archivo y el campo multipart opcional `carpeta` con formato `modulo/tipo`. El frontend indica el destino según el formulario, por ejemplo `campanas/lineamientos`. La URL protegida conserva su UUID y el backend resuelve la ruta a partir de los metadatos. Los metadatos anteriores sin carpeta resuelven a la ruta plana.
+`POST /v1/documentos` recibe el archivo y el campo multipart opcional `carpeta` con formato `modulo/tipo`. El frontend indica el destino según el formulario, por ejemplo `campanas/lineamientos`. La URL protegida conserva su UUID y el backend resuelve la ruta a partir de los metadatos. Los metadatos anteriores sin carpeta resuelven a la ruta plana.
 
-`GET /api/documentos/{id}/estado` (también `/api/archivos-locales/{id}/estado`) requiere sesión de Administrador o Chofer propietario. Responde `{ estado }`: `DISPONIBLE` si existen metadatos y objeto real con tamaño y tipo coincidentes; `FALTANTE` ante ausencia confirmada; `INVALIDO` por metadatos corruptos o tamaño/tipo distintos; `NO_VERIFICABLE` por errores de permisos, configuración o conectividad. No se clasifica un 403 de S3 como ausencia. El 403 de la API impide consultar documentos de otro chofer. La respuesta no expone bucket, claves ni credenciales.
+`GET /v1/documentos/{id}/estado` (también `/v1/archivos-locales/{id}/estado`) requiere sesión de Administrador o Chofer propietario. Responde `{ estado }`: `DISPONIBLE` si existen metadatos y objeto real con tamaño y tipo coincidentes; `FALTANTE` ante ausencia confirmada; `INVALIDO` por metadatos corruptos o tamaño/tipo distintos; `NO_VERIFICABLE` por errores de permisos, configuración o conectividad. No se clasifica un 403 de S3 como ausencia. El 403 de la API impide consultar documentos de otro chofer. La respuesta no expone bucket, claves ni credenciales.
 
 El campo compartido `FileDropzone` verifica cada referencia guardada al montarse o cambiar de URL, cancela consultas anteriores y permite volver a verificar. Verde significa verificado, rojo faltante/inválido; un fallo de verificación se muestra con aviso y los archivos recién elegidos permanecen pendientes de guardar. Los enlaces externos no se validan ni reciben credenciales. La API valida el objeto después de subirlo y antes de guardar un vínculo; la disponibilidad se confirma en ese instante, sin garantizar permanencia futura ni validar el contenido interno del documento.
 
@@ -81,9 +81,9 @@ Los selectores V1 de finca admiten una variedad; la participación no presenta s
 
 ### Direcciones y convivencia
 
-- Backend V1: `/api`. Ejemplo `http://localhost:3000/api/campanas`.
+- Backend V1: `/v1`. Ejemplo `http://localhost:3000/v1/campanas`.
 - Las fixtures de frontend se sirven desde `/mock-api/` durante desarrollo; no forman parte de la API del backend ni del OpenAPI de V1.
-- `VITE_API_BASE_URL` contiene el origen del backend, por ejemplo `http://localhost:3000/`; los clientes agregan `/api`.
+- `VITE_API_BASE_URL` usa `/api` en el despliegue de mismo origen y el origen de NestJS para conexiones directas, por ejemplo `http://localhost:3000/`. Los clientes agregan `/v1`.
 
 ```dotenv
 # Servidor local de fixtures de desarrollo:
@@ -160,7 +160,7 @@ src/
   common/                errores, validación y protección de acceso
 ```
 
-Dentro de cada módulo: `controllers/`, `dto/`, `services/`, entidades y repositorios según las convenciones existentes. Controllers validan transporte HTTP; services aplican reglas y transacciones; repositorios persisten. Serializadores/mappers definen el DTO de salida. Las rutas versionadas deben coexistir con los controladores legacy hasta migrar sus consumidores.
+Dentro de cada módulo: `controllers/`, `dto/`, `services/`, entidades y repositorios según las convenciones existentes. Controllers validan transporte HTTP; services aplican reglas y transacciones; repositorios persisten. Serializadores/mappers definen el DTO de salida. Los controladores de negocio comparten `/v1` y cada combinación de método y ruta tiene un solo controlador.
 
 Los datos iniciales SQL son catálogos de referencia. No agregar un CRUD de configuración solo porque exista la tabla: frutas/variedades/normas/roles/UIT son lectura en V1. Tampoco exponer CRUD de `usuario`, hashes de contraseña o las tablas legacy de asignación/trazabilidad como pantallas nuevas. Sus escrituras de compatibilidad son responsabilidad interna del servicio de coordinación.
 

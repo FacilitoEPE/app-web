@@ -37,7 +37,7 @@ describe("cliente-negocio contratos API", () => {
     vi.mocked(apiClient.get).mockResolvedValue({ data: response });
 
     await expect(getClienteNegocioContratos(24)).resolves.toEqual(response);
-    expect(apiClient.get).toHaveBeenCalledWith("/clientes-negocio/24/contratos");
+    expect(apiClient.get).toHaveBeenCalledWith("/v1/clientes-negocio/24/contratos");
   });
 
   it("returns an empty list when the client has no campaign contracts", async () => {

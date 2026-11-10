@@ -19,7 +19,7 @@ export interface ApiV1Error {
 }
 export type ListQuery = Record<string, string | number | boolean | undefined>;
 function endpoint(resource: string) {
-    return `/api/${resource.replace(/^\/+/, '')}`;
+    return `/v1/${resource.replace(/^\/+/, '')}`;
 }
 let viewDetail: ((resource: string, id: number) => unknown) | undefined;
 export function registerViewDetailReader(reader: typeof viewDetail) { viewDetail = reader; }

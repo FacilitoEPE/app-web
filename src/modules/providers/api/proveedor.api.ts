@@ -6,7 +6,7 @@ import type { Proveedor } from "@/modules/providers/api/proveedor.mapper";
 
 export async function getProveedores(): Promise<Proveedor[]> {
   if (usesV1()) return providerScreenV1.list();
-  const { data } = await apiClient.get<ProveedorDto[]>("/proveedores");
+  const { data } = await apiClient.get<ProveedorDto[]>("/v1/proveedores");
   if (!Array.isArray(data)) {
     throw new Error("Invalid response format: expected an array");
   }
@@ -15,23 +15,23 @@ export async function getProveedores(): Promise<Proveedor[]> {
 
 export async function getProveedor(proveedorId: number): Promise<Proveedor> {
   if (usesV1()) return providerScreenV1.get(proveedorId);
-  const { data } = await apiClient.get<ProveedorDto>(`/proveedores/${proveedorId}`);
+  const { data } = await apiClient.get<ProveedorDto>(`/v1/proveedores/${proveedorId}`);
   return data;
 }
 
 export async function createProveedor(input: ProveedorInput): Promise<Proveedor> {
   if (usesV1()) return providerScreenV1.create(input);
-  const { data } = await apiClient.post<ProveedorDto>("/proveedores", input);
+  const { data } = await apiClient.post<ProveedorDto>("/v1/proveedores", input);
   return data;
 }
 
 export async function updateProveedor(proveedorId: number, input: ProveedorInput): Promise<Proveedor> {
   if (usesV1()) return providerScreenV1.update(proveedorId, input);
-  const { data } = await apiClient.patch<ProveedorDto>(`/proveedores/${proveedorId}`, input);
+  const { data } = await apiClient.patch<ProveedorDto>(`/v1/proveedores/${proveedorId}`, input);
   return data;
 }
 
 export async function deleteProveedor(proveedorId: number): Promise<void> {
   if (usesV1()) return providerScreenV1.remove(proveedorId);
-  await apiClient.delete(`/proveedores/${proveedorId}`);
+  await apiClient.delete(`/v1/proveedores/${proveedorId}`);
 }

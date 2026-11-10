@@ -5,6 +5,6 @@ import type { ContratosClienteNegocioResponseDto } from "@/modules/clients/api/c
 
 export async function getClienteNegocioContratos(clienteNegocioId: number): Promise<ContratosClienteNegocioResponseDto> {
   if (usesV1()) return clientScreenV1.contracts(clienteNegocioId);
-  const { data } = await apiClient.get<ContratosClienteNegocioResponseDto>(`/clientes-negocio/${clienteNegocioId}/contratos`);
+  const { data } = await apiClient.get<ContratosClienteNegocioResponseDto>(`/v1/clientes-negocio/${clienteNegocioId}/contratos`);
   return data;
 }

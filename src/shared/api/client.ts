@@ -2,7 +2,7 @@ import axios from "axios";
 import { clearSession, getAuthToken } from "@/shared/offline/session";
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? "/api" : ""),
   headers: {
     "Cache-Control": "no-store",
     Pragma: "no-cache",

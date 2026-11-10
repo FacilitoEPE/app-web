@@ -10,17 +10,17 @@ export async function createCertificadoCampana(
   campaniaId: number,
   input: CreateCertificadoCampanaDto,
 ): Promise<CertificadoCampana> {
-  const { data } = await apiClient.post<CertificadoCampanaDto>(`/campanas/${campaniaId}/certificados`, input);
+  const { data } = await apiClient.post<CertificadoCampanaDto>(`/v1/campanas/${campaniaId}/certificados`, input);
   return toCertificadoCampana(data);
 }
 
 export async function getCertificadosCampana(campaniaId: number): Promise<CertificadoCampana[]> {
-  const { data } = await apiClient.get<CertificadoCampanaDto[]>(`/campanas/${campaniaId}/certificados`);
+  const { data } = await apiClient.get<CertificadoCampanaDto[]>(`/v1/campanas/${campaniaId}/certificados`);
   return data.map(toCertificadoCampana);
 }
 
 export async function deleteCertificadoCampana(campaniaId: number, certificadoId: number): Promise<void> {
-  await apiClient.delete(`/campanas/${campaniaId}/certificados/${certificadoId}`);
+  await apiClient.delete(`/v1/campanas/${campaniaId}/certificados/${certificadoId}`);
 }
 
 export async function updateCertificadoCampana(
@@ -28,6 +28,6 @@ export async function updateCertificadoCampana(
   certificadoId: number,
   input: UpdateCertificadoCampanaDto,
 ): Promise<CertificadoCampana> {
-  const { data } = await apiClient.patch<CertificadoCampanaDto>(`/campanas/${campaniaId}/certificados/${certificadoId}`, input);
+  const { data } = await apiClient.patch<CertificadoCampanaDto>(`/v1/campanas/${campaniaId}/certificados/${certificadoId}`, input);
   return toCertificadoCampana(data);
 }

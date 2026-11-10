@@ -10,6 +10,6 @@ describe("getFrutaDerivadas", () => {
     const get = vi.spyOn(apiClient, "get").mockResolvedValue({ data: derivadas } as never);
 
     await expect(getFrutaDerivadas(3)).resolves.toEqual(derivadas);
-    expect(get).toHaveBeenCalledWith("/frutas/3/derivadas");
+    expect(get).toHaveBeenCalledWith("/v1/frutas/3/derivadas");
   });
 });

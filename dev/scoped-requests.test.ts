@@ -51,7 +51,7 @@ describe('lecturas acotadas a la vista con HTTP V1 real y datos aislados', () =>
         await refreshFrontendData(route);
         expect(getFrontendDataStatus()).toMatchObject({ phase: 'ready', pathname: route, error: '' });
         expect(getOperationsPlan().pathname).toBe(route);
-        expect(requests.every(req => req.url.startsWith('/mock-api/api/'))).toBe(true);
+        expect(requests.every(req => req.url.startsWith('/mock-api/v1/'))).toBe(true);
         if (!route.startsWith('/liquidacion-compra')) expect(requests.some(req => req.url.includes('/parametros-uit'))).toBe(false);
         if (!route.startsWith('/facturacion-cobros')) expect(requests.some(req => req.url.includes('/cobros'))).toBe(false);
     });
@@ -59,12 +59,12 @@ describe('lecturas acotadas a la vista con HTTP V1 real y datos aislados', () =>
     it('deduplica el arranque y crea una campaña con un POST sin recargar otros módulos', async () => {
         await Promise.all([refreshFrontendData('/campaigns'), refreshFrontendData('/campaigns')]);
         expect(requests).toHaveLength(2);
-        expect(requests.map(req => new URL(req.url, 'http://local').pathname).sort()).toEqual(['/mock-api/api/campanas', '/mock-api/api/frutas']);
+        expect(requests.map(req => new URL(req.url, 'http://local').pathname).sort()).toEqual(['/mock-api/v1/campanas', '/mock-api/v1/frutas']);
         const g = operationsContext(), fruit = g.fruits.find(f => !g.campaigns.some(c => c.frutaId === f.frutaId && c.estado !== 'terminado'))!;
         requests.length = 0;
         const saved = await createCampana({ nombre: 'Campaña acotada', frutaId: fruit.frutaId, fechaInicio: new Date(2027, 0, 1), fechaFin: new Date(2027, 11, 31), estado: 'planificacion', requerimientoComercial: '100' });
         expect((await getCampanas()).some(c => c.campaniaId === saved.campaniaId)).toBe(true);
-        expect(requests).toEqual([{ method: 'POST', url: '/mock-api/api/campanas' }]);
+        expect(requests).toEqual([{ method: 'POST', url: '/mock-api/v1/campanas' }]);
     });
 
     it('integra documento y desvinculación sin descargar el contexto', async () => {
@@ -85,7 +85,7 @@ describe('lecturas acotadas a la vista con HTTP V1 real y datos aislados', () =>
         const [first, second] = await Promise.all([ensureViewDocuments(), ensureViewDocuments()]);
         expect(first).toEqual(second);
         expect(first).toHaveLength(initial.filter(item => item.tipo !== 'campana' || item.entidadId !== 1).length + 1);
-        expect(requests).toEqual([{ method: 'GET', url: '/mock-api/api/documentos/vinculos' }]);
+        expect(requests).toEqual([{ method: 'GET', url: '/mock-api/v1/documentos/vinculos' }]);
     });
 
     it('un rechazo confirmado no recarga recursos y una escritura parcial reconcilia solo su vista', async () => {
@@ -107,12 +107,12 @@ describe('lecturas acotadas a la vista con HTTP V1 real y datos aislados', () =>
         await refreshFrontendData('/transportistas/1');
         const carrier = operationsContext().carriers[0]; requests.length = 0;
         await carrierScreenV1.update(carrier.idEmpresaTransporteExterno, { nombre: carrier.nombreCompleto, numero: carrier.numero, ruc: carrier.ruc ?? '', correo: carrier.correo ?? '' }, { ...EMPTY_CARRIER_EXTRAS, mtc: 'MTC-NUEVO' });
-        expect(requests).toEqual([{ method: 'PATCH', url: '/mock-api/api/transportistas/1' }]);
+        expect(requests).toEqual([{ method: 'PATCH', url: '/mock-api/v1/transportistas/1' }]);
         expect(operationsContext().carriers[0].registroMtc).toBe('MTC-NUEVO');
     });
 
     it('reutiliza los transportistas de campaña y difiere el directorio completo', async () => {
-        const rootCarrierReads = () => requests.filter(req => req.method === 'GET' && new URL(req.url, 'http://local').pathname === '/mock-api/api/transportistas');
+        const rootCarrierReads = () => requests.filter(req => req.method === 'GET' && new URL(req.url, 'http://local').pathname === '/mock-api/v1/transportistas');
         await refreshFrontendData('/campaigns/1/deliveries');
         requests.length = 0;
         expect(await getCarriersForCampaign(1)).not.toHaveLength(0);

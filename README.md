@@ -126,7 +126,7 @@ Este modo es exclusivo del servidor de desarrollo: el build se detiene si todav�
 
 ### Conexión con el backend V1
 
-Con `VITE_API_BASE_URL=/mock-api/`, las pantallas usan el servidor ficticio de desarrollo. Para el backend real configura su origen, por ejemplo `http://localhost:3000/`, y `VITE_API_CONTRACT=v1`; los servicios llaman las rutas `/api` implementadas por NestJS.
+Con `VITE_API_BASE_URL=/mock-api/`, las pantallas usan el servidor ficticio de desarrollo. Para el backend real configura su origen, por ejemplo `http://localhost:3000/`, y `VITE_API_CONTRACT=v1`; los servicios llaman las rutas `/v1` implementadas por NestJS.
 
 El backend mantiene una copia de ejecución del [OpenAPI](docs/api/openapi.json) para validar solicitudes y convertir filas de PostgreSQL. Ejecuta `pnpm contract:check` para comprobar que el SQL fuente y los archivos generados coincidan.
 
@@ -193,7 +193,7 @@ La imagen usa dos etapas: Node compila la aplicación y Nginx sirve los archivos
 Construye la imagen pasando la URL del backend:
 
 ```bash
-docker build --build-arg VITE_API_BASE_URL=https://api.ejemplo.com -t epe-web .
+docker build --build-arg VITE_API_BASE_URL=/api -t epe-web .
 ```
 
 Ejecuta el contenedor:

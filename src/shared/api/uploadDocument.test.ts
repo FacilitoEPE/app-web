@@ -5,11 +5,11 @@ import { getDocumentAvailability, getProtectedDocument, getUploadErrorMessage, u
 describe("uploadDocument", () => {
     it("resuelve una base relativa una sola vez antes de devolver la URL", async () => {
         const originalBase = apiClient.defaults.baseURL;
-        apiClient.defaults.baseURL = "/mock-api/";
-        const post = vi.spyOn(apiClient, "post").mockResolvedValue({ data: { url: "/api/documentos/example" } });
+        apiClient.defaults.baseURL = "/api/";
+        const post = vi.spyOn(apiClient, "post").mockResolvedValue({ data: { url: "/v1/documentos/example" } });
         try {
             const file = new File(["x"], "identidad.png", { type: "image/png" });
-            await expect(uploadDocument(file)).resolves.toBe("http://localhost/api/documentos/example");
+            await expect(uploadDocument(file)).resolves.toBe("http://localhost/api/v1/documentos/example");
         } finally {
             post.mockRestore();
             apiClient.defaults.baseURL = originalBase;
@@ -18,9 +18,9 @@ describe("uploadDocument", () => {
 
     it("sube el archivo a S3 mediante la API", async () => {
         apiClient.defaults.baseURL = 'http://localhost:3000/';
-        const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { url: '/api/documentos/example' } });
+        const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { url: '/v1/documentos/example' } });
         const file = new File(['x'], 'contrato.pdf', { type: 'application/pdf' });
-        await expect(uploadDocument(file, 'campanas/contratos')).resolves.toBe('http://localhost:3000/api/documentos/example');
+        await expect(uploadDocument(file, 'campanas/contratos')).resolves.toBe('http://localhost:3000/v1/documentos/example');
         const form = post.mock.calls[0][1] as FormData;
         expect(form.get('archivo')).toBe(file);
         expect(form.get('carpeta')).toBe('campanas/contratos');
@@ -48,15 +48,23 @@ describe('verificación de documentos guardados', () => {
         apiClient.defaults.baseURL = 'http://localhost:3000/';
         const get = vi.spyOn(apiClient, 'get').mockResolvedValue({ data: { estado } });
         try {
-            await expect(getDocumentAvailability(`http://localhost:3000/api/documentos/${id}`)).resolves.toBe(estado);
-            expect(get).toHaveBeenCalledWith(`http://localhost:3000/api/documentos/${id}/estado`, { signal: undefined });
+            await expect(getDocumentAvailability(`http://localhost:3000/v1/documentos/${id}`)).resolves.toBe(estado);
+            expect(get).toHaveBeenCalledWith(`http://localhost:3000/v1/documentos/${id}/estado`, { signal: undefined });
+        } finally { get.mockRestore(); }
+    });
+    it('consulta por V1 el estado de un adjunto guardado con el prefijo anterior', async () => {
+        apiClient.defaults.baseURL = '/api';
+        const get = vi.spyOn(apiClient, 'get').mockResolvedValue({ data: { estado: 'DISPONIBLE' } });
+        try {
+            await expect(getDocumentAvailability(`/api/archivos-locales/${id}`)).resolves.toBe('DISPONIBLE');
+            expect(get).toHaveBeenCalledWith(`http://localhost/api/v1/archivos-locales/${id}/estado`, { signal: undefined });
         } finally { get.mockRestore(); }
     });
     it('no envía credenciales a enlaces externos', async () => {
         apiClient.defaults.baseURL = 'http://localhost:3000/';
         const get = vi.spyOn(apiClient, 'get');
         try {
-            await expect(getDocumentAvailability(`https://otro.example/api/documentos/${id}`)).resolves.toBe('NO_VERIFICABLE');
+            await expect(getDocumentAvailability(`https://otro.example/v1/documentos/${id}`)).resolves.toBe('NO_VERIFICABLE');
             expect(get).not.toHaveBeenCalled();
         } finally { get.mockRestore(); }
     });
@@ -64,26 +72,37 @@ describe('verificación de documentos guardados', () => {
         apiClient.defaults.baseURL = 'http://localhost:3000/';
         const get = vi.spyOn(apiClient, 'get').mockResolvedValue({ data: '<html>SPA</html>' });
         try {
-            await expect(getDocumentAvailability(`/api/documentos/${id}`)).resolves.toBe('NO_VERIFICABLE');
+            await expect(getDocumentAvailability(`/v1/documentos/${id}`)).resolves.toBe('NO_VERIFICABLE');
         } finally { get.mockRestore(); }
     });
     it('conserva fallos de red para que la UI muestre que no pudo verificar', async () => {
         apiClient.defaults.baseURL = 'http://localhost:3000/';
         const get = vi.spyOn(apiClient, 'get').mockRejectedValue(new Error('timeout'));
-        try { await expect(getDocumentAvailability(`/api/documentos/${id}`)).rejects.toThrow('timeout'); }
+        try { await expect(getDocumentAvailability(`/v1/documentos/${id}`)).rejects.toThrow('timeout'); }
         finally { get.mockRestore(); }
     });
 });
 
 describe('vista previa de documentos protegidos', () => {
-    it('lee el documento del servidor configurado y admite cancelación', async () => {
+    it.each(['/v1/documentos/123', '/api/documentos/123'])('lee %s del servidor configurado y admite cancelación', async (path) => {
         apiClient.defaults.baseURL = 'http://localhost:3000/';
         const signal = new AbortController().signal;
         const data = new Blob(['%PDF'], { type: 'application/pdf' });
         const get = vi.spyOn(apiClient, 'get').mockResolvedValue({ data });
         try {
-            await expect(getProtectedDocument('/api/documentos/123', signal)).resolves.toBe(data);
-            expect(get).toHaveBeenCalledWith('http://localhost:3000/api/documentos/123', { responseType: 'blob', signal });
+            await expect(getProtectedDocument(path, signal)).resolves.toBe(data);
+            expect(get).toHaveBeenCalledWith('http://localhost:3000/v1/documentos/123', { responseType: 'blob', signal });
+        } finally { get.mockRestore(); }
+    });
+
+    it.each(['/v1/documentos/123', '/api/documentos/123', '/api/v1/documentos/123'])('abre %s por el proxy sin repetir el prefijo', async (path) => {
+        apiClient.defaults.baseURL = '/api';
+        const signal = new AbortController().signal;
+        const data = new Blob(['%PDF'], { type: 'application/pdf' });
+        const get = vi.spyOn(apiClient, 'get').mockResolvedValue({ data });
+        try {
+            await expect(getProtectedDocument(path, signal)).resolves.toBe(data);
+            expect(get).toHaveBeenCalledWith('http://localhost/api/v1/documentos/123', { responseType: 'blob', signal });
         } finally { get.mockRestore(); }
     });
 
@@ -91,7 +110,7 @@ describe('vista previa de documentos protegidos', () => {
         apiClient.defaults.baseURL = 'http://localhost:3000/';
         const get = vi.spyOn(apiClient, 'get');
         try {
-            await expect(getProtectedDocument('https://otro.example/api/documentos/123', new AbortController().signal)).rejects.toThrow();
+            await expect(getProtectedDocument('https://otro.example/v1/documentos/123', new AbortController().signal)).rejects.toThrow();
             expect(get).not.toHaveBeenCalled();
         } finally { get.mockRestore(); }
     });

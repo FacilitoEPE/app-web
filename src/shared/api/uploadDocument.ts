@@ -10,36 +10,56 @@ export type LocalDocument = S3Document;
 export type LocalDocumentLink = S3DocumentLink;
 export type DocumentAvailability = 'DISPONIBLE' | 'FALTANTE' | 'INVALIDO' | 'NO_VERIFICABLE';
 
-const protectedDocumentPath = /^\/api\/(?:documentos|archivos-locales)\//;
+const protectedDocumentPath = /^\/(?:v1|api(?:\/v1)?)\/(?:documentos|archivos-locales)\//;
+
+function documentLocation(documentUrl: string) {
+    const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
+    const base = new URL(apiClient.defaults.baseURL || origin, origin);
+    const url = new URL(documentUrl, base);
+    const prefix = base.pathname.replace(/\/$/, '');
+    const path = prefix && url.pathname.startsWith(`${prefix}/v1/`)
+        ? url.pathname.slice(prefix.length)
+        : url.pathname;
+    return { base, url, path };
+}
+
+function documentRequestUrl(url: URL, path: string): URL {
+    const endpoint = path.replace(/^\/api\/(?:v1\/)?/, '/v1/');
+    return new URL(apiClient.getUri({ url: `${endpoint}${url.search}` }), url.origin);
+}
+
+function publicDocumentUrl(documentUrl: string): string {
+    const { base, url, path } = documentLocation(documentUrl);
+    return url.origin === base.origin && protectedDocumentPath.test(path)
+        ? documentRequestUrl(url, path).href
+        : url.href;
+}
 
 export function isProtectedDocumentUrl(documentUrl: string): boolean {
-    const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
     try {
-        return protectedDocumentPath.test(new URL(documentUrl, origin).pathname);
+        return protectedDocumentPath.test(documentLocation(documentUrl).path);
     } catch {
         return false;
     }
 }
 
 export async function getProtectedDocument(documentUrl: string, signal: AbortSignal): Promise<Blob> {
-    const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
-    const base = new URL(apiClient.defaults.baseURL || origin, origin);
-    const url = new URL(documentUrl, base);
-    if (url.origin !== base.origin || !protectedDocumentPath.test(url.pathname)) {
+    const { base, url, path } = documentLocation(documentUrl);
+    if (url.origin !== base.origin || !protectedDocumentPath.test(path)) {
         throw new Error('La dirección del documento no permite una vista previa segura.');
     }
-    const { data } = await apiClient.get<Blob>(url.href, { responseType: 'blob', signal });
+    const { data } = await apiClient.get<Blob>(documentRequestUrl(url, path).href, { responseType: 'blob', signal });
     return data;
 }
 
 /** Consulta metadatos y objeto real sin descargar el documento ni enviar credenciales a otros orígenes. */
 export async function getDocumentAvailability(documentUrl: string, signal?: AbortSignal): Promise<DocumentAvailability> {
-    const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
-    const base = new URL(apiClient.defaults.baseURL || origin, origin);
-    let url: URL;
-    try { url = new URL(documentUrl, base); } catch { return 'NO_VERIFICABLE'; }
-    if (url.origin !== base.origin || !/\/api\/(?:documentos|archivos-locales)\/[0-9a-f-]{36}$/i.test(url.pathname)) return 'NO_VERIFICABLE';
-    const { data } = await apiClient.get<{ estado: DocumentAvailability }>(`${url.origin}${url.pathname}/estado`, { signal });
+    let location: ReturnType<typeof documentLocation>;
+    try { location = documentLocation(documentUrl); } catch { return 'NO_VERIFICABLE'; }
+    const { base, url, path } = location;
+    if (url.origin !== base.origin || !protectedDocumentPath.test(path) || !/^[0-9a-f-]{36}$/i.test(path.replace(protectedDocumentPath, ''))) return 'NO_VERIFICABLE';
+    url.search = '';
+    const { data } = await apiClient.get<{ estado: DocumentAvailability }>(documentRequestUrl(url, `${path}/estado`).href, { signal });
     return ['DISPONIBLE', 'FALTANTE', 'INVALIDO', 'NO_VERIFICABLE'].includes(data?.estado) ? data.estado : 'NO_VERIFICABLE';
 }
 
@@ -53,9 +73,8 @@ export async function uploadS3Document(file: File, carpeta?: string): Promise<S3
     const form = new FormData();
     form.append('archivo', file);
     if (carpeta) form.append('carpeta', carpeta);
-    const { data } = await apiClient.post<S3Document>('/api/documentos', form);
-    const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
-    return { ...data, url: new URL(data.url, new URL(apiClient.defaults.baseURL || origin, origin)).href };
+    const { data } = await apiClient.post<S3Document>('/v1/documentos', form);
+    return { ...data, url: publicDocumentUrl(data.url) };
 }
 export const uploadLocalDocument = uploadS3Document;
 
@@ -66,24 +85,21 @@ export async function persistFile(file: FileSource | null, carpeta?: string): Pr
 
 export async function linkS3Document(tipo: string, entidadId: number, archivoId: string): Promise<void> {
     const token = getAuthToken();
-    const { data } = await apiClient.post<S3DocumentLink>('/api/documentos/vinculos', { tipo, entidadId, archivoId });
-    const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
-    recordRemoteMutation('/documentos/vinculos', { ...data, url: new URL(data.url, new URL(apiClient.defaults.baseURL || origin, origin)).href }, undefined, token);
+    const { data } = await apiClient.post<S3DocumentLink>('/v1/documentos/vinculos', { tipo, entidadId, archivoId });
+    recordRemoteMutation('/documentos/vinculos', { ...data, url: publicDocumentUrl(data.url) }, undefined, token);
 }
 export const linkLocalDocument = linkS3Document;
 
 export async function unlinkS3Document(tipo: string, entidadId: number): Promise<void> {
     const token = getAuthToken();
-    await apiClient.delete(`/api/documentos/vinculos/${tipo}/${entidadId}`);
+    await apiClient.delete(`/v1/documentos/vinculos/${tipo}/${entidadId}`);
     recordRemoteMutation(`/documentos/vinculos/${tipo}/${entidadId}`, undefined, undefined, token);
 }
 export const unlinkLocalDocument = unlinkS3Document;
 
 export async function getS3DocumentLinks(): Promise<S3DocumentLink[]> {
-    const { data } = await apiClient.get<S3DocumentLink[]>('/api/documentos/vinculos');
-    const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin;
-    const base = new URL(apiClient.defaults.baseURL || origin, origin);
-    return data.map(item => ({ ...item, url: new URL(item.url, base).href }));
+    const { data } = await apiClient.get<S3DocumentLink[]>('/v1/documentos/vinculos');
+    return data.map(item => ({ ...item, url: publicDocumentUrl(item.url) }));
 }
 export const getLocalDocumentLinks = getS3DocumentLinks;
 

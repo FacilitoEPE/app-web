@@ -106,7 +106,7 @@ function toCarrier(dto: CarrierDto): Carrier {
 
 export async function getCarriers(): Promise<Carrier[]> {
   if (usesV1()) return carrierScreenV1.list();
-  const { data } = await apiClient.get<CarrierDto[]>("/empresas-transporte-externo");
+  const { data } = await apiClient.get<CarrierDto[]>("/v1/empresas-transporte-externo");
   return data.map(toCarrier);
 }
 
@@ -117,13 +117,13 @@ export async function getCarriersForCampaign(campaignId: number): Promise<Carrie
 
 export async function getCarrier(id: number): Promise<Carrier> {
   if (usesV1()) return carrierScreenV1.get(id);
-  const { data } = await apiClient.get<CarrierDto>(`/empresas-transporte-externo/${id}`);
+  const { data } = await apiClient.get<CarrierDto>(`/v1/empresas-transporte-externo/${id}`);
   return toCarrier(data);
 }
 
 export async function createCarrier(input: CarrierInput, extras?: CarrierExtras): Promise<Carrier> {
   if (usesV1()) return carrierScreenV1.create(input, extras);
-  const { data } = await apiClient.post<CarrierDto>("/empresas-transporte-externo", {
+  const { data } = await apiClient.post<CarrierDto>("/v1/empresas-transporte-externo", {
     nombreCompleto: input.nombre,
     // El independiente (privado) puede no tener RUC: se omite en vez de mandarlo vacío
     ...(input.ruc ? { ruc: input.ruc } : {}),
@@ -141,13 +141,13 @@ export async function updateCarrier(id: number, input: Partial<CarrierInput>, ex
     ...(input.correo !== undefined ? { correo: input.correo } : {}),
     ...(input.numero !== undefined ? { numero: input.numero } : {}),
   };
-  const { data } = await apiClient.patch<CarrierDto>(`/empresas-transporte-externo/${id}`, payload);
+  const { data } = await apiClient.patch<CarrierDto>(`/v1/empresas-transporte-externo/${id}`, payload);
   return toCarrier(data);
 }
 
 export async function deleteCarrier(id: number): Promise<void> {
   if (usesV1()) return carrierScreenV1.remove(id);
-  await apiClient.delete(`/empresas-transporte-externo/${id}`);
+  await apiClient.delete(`/v1/empresas-transporte-externo/${id}`);
 }
 
 function toVehiclePayload(carrierId: number, input: VehicleInput) {
@@ -165,13 +165,13 @@ function toVehiclePayload(carrierId: number, input: VehicleInput) {
 
 export async function createVehicle(carrierId: number, input: VehicleInput): Promise<Vehicle> {
   if (usesV1()) return carrierScreenV1.vehicle(carrierId, input);
-  const { data } = await apiClient.post<VehicleDto>("/vehiculos-externos", toVehiclePayload(carrierId, input));
+  const { data } = await apiClient.post<VehicleDto>("/v1/vehiculos-externos", toVehiclePayload(carrierId, input));
   return toVehicle(data, carrierId);
 }
 
 export async function updateVehicle(id: number, carrierId: number, input: VehicleInput): Promise<Vehicle> {
   if (usesV1()) return carrierScreenV1.vehicle(carrierId, input, id);
-  const { data } = await apiClient.patch<VehicleDto>(`/vehiculos-externos/${id}`, {
+  const { data } = await apiClient.patch<VehicleDto>(`/v1/vehiculos-externos/${id}`, {
     placa: input.placa.trim().toUpperCase(),
     volumen: input.volumen,
     ancho: input.ancho,
@@ -185,12 +185,12 @@ export async function updateVehicle(id: number, carrierId: number, input: Vehicl
 
 export async function deleteVehicle(id: number): Promise<void> {
   if (usesV1()) return carrierScreenV1.removeVehicle(id);
-  await apiClient.delete(`/vehiculos-externos/${id}`);
+  await apiClient.delete(`/v1/vehiculos-externos/${id}`);
 }
 
 export async function createDriver(carrierId: number, input: DriverInput): Promise<Driver> {
   if (usesV1()) return carrierScreenV1.driver(carrierId, input);
-  const { data } = await apiClient.post<DriverDto>("/choferes-transporte-externo", {
+  const { data } = await apiClient.post<DriverDto>("/v1/choferes-transporte-externo", {
     idEmpresaTransporteExterno: carrierId,
     ...input,
   });
@@ -199,11 +199,11 @@ export async function createDriver(carrierId: number, input: DriverInput): Promi
 
 export async function updateDriver(id: number, input: Partial<DriverInput>): Promise<Driver> {
   if (usesV1()) return carrierScreenV1.updateDriver(id, input);
-  const { data } = await apiClient.patch<DriverDto>(`/choferes-transporte-externo/${id}`, input);
+  const { data } = await apiClient.patch<DriverDto>(`/v1/choferes-transporte-externo/${id}`, input);
   return toDriver(data, data.idEmpresaTransporteExterno ?? 0);
 }
 
 export async function deleteDriver(id: number): Promise<void> {
   if (usesV1()) return carrierScreenV1.removeDriver(id);
-  await apiClient.delete(`/choferes-transporte-externo/${id}`);
+  await apiClient.delete(`/v1/choferes-transporte-externo/${id}`);
 }

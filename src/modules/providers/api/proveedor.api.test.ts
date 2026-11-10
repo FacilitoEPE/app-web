@@ -35,8 +35,8 @@ describe("proveedor API", () => {
 
     await expect(getProveedores()).resolves.toEqual([provider]);
     await expect(getProveedor(7)).resolves.toEqual(provider);
-    expect(get).toHaveBeenNthCalledWith(1, "/proveedores");
-    expect(get).toHaveBeenNthCalledWith(2, "/proveedores/7");
+    expect(get).toHaveBeenNthCalledWith(1, "/v1/proveedores");
+    expect(get).toHaveBeenNthCalledWith(2, "/v1/proveedores/7");
   });
 
   it("creates, patches, and deletes only on supported provider routes", async () => {
@@ -49,8 +49,8 @@ describe("proveedor API", () => {
     await expect(createProveedor(payload)).resolves.toEqual(provider);
     await expect(updateProveedor(7, payload)).resolves.toEqual(provider);
     await expect(deleteProveedor(7)).resolves.toBeUndefined();
-    expect(post).toHaveBeenCalledWith("/proveedores", payload);
-    expect(patch).toHaveBeenCalledWith("/proveedores/7", payload);
-    expect(deleteRequest).toHaveBeenCalledWith("/proveedores/7");
+    expect(post).toHaveBeenCalledWith("/v1/proveedores", payload);
+    expect(patch).toHaveBeenCalledWith("/v1/proveedores/7", payload);
+    expect(deleteRequest).toHaveBeenCalledWith("/v1/proveedores/7");
   });
 });

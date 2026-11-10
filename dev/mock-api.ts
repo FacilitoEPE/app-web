@@ -42,7 +42,7 @@ const routes: Route[] = [
   { pattern: /^\/frutas\/(\d+)\/derivadas(?:\/(\d+))?$/, resource: 'frutas-derivadas', parent: { resource: 'frutas', field: 'frutaId' }, readOnly: true },
   { pattern: /^\/campanas\/(\d+)\/clientes-negocio(?:\/(\d+))?$/, resource: 'clientes-campana', parent: { resource: 'campanas', field: 'campaniaId' } },
   { pattern: /^\/campanas\/(\d+)\/certificados(?:\/(\d+))?$/, resource: 'certificados-campana', parent: { resource: 'campanas', field: 'campaniaId' } },
-  { pattern: /^\/proveedores\/(\d+)\/frutas(?:\/(\d+))?$/, resource: 'frutas-proveedor', parent: { resource: 'proveedores', field: 'proveedorId' } },
+  { pattern: /^\/proveedores\/(\d+)\/frutas(?:\/(?:por-fruta\/)?(\d+))?$/, resource: 'frutas-proveedor', parent: { resource: 'proveedores', field: 'proveedorId' } },
   { pattern: /^\/proveedores\/(\d+)\/examenes(?:\/(\d+))?$/, resource: 'examenes-proveedor', parent: { resource: 'proveedores', field: 'proveedorId' } },
   { pattern: /^\/proveedores\/(\d+)\/certificados(?:\/(\d+))?$/, resource: 'certificados-proveedor', parent: { resource: 'proveedores', field: 'proveedorId' } },
   ...['frutas', 'campanas', 'proveedores', 'clientes-negocio', 'campanias-proveedores', 'empresas-transporte-externo', 'vehiculos-externos', 'choferes-transporte-externo'].map(resource => ({
@@ -258,7 +258,7 @@ export function createMockMiddleware(directory: string): Connect.NextHandleFunct
     response.setHeader('Content-Type', 'application/json; charset=utf-8')
     response.setHeader('Cache-Control', 'no-store')
     response.setHeader('Pragma', 'no-cache')
-    void handle(request, pathname.slice('/mock-api'.length).replace(/\/$/, '') || '/')
+    void handle(request, pathname.slice('/mock-api'.length).replace(/^\/v1(?=\/)/, '').replace(/\/$/, '') || '/')
       .then(({ status, data }) => {
         response.statusCode = status
         response.end(data === undefined ? undefined : JSON.stringify(data))

@@ -116,7 +116,7 @@ describe('Flujo de calidad con datos sintéticos de desarrollo', () => {
             proveedoresCarga: pending.proveedoresCarga.map(p => ({ ...p, kilosCargados: 200, jabasCargadas: 10 })) }
         const saved = await qualityCommands.saveLoad(pending.id, values)
         await expect(qualityCommands.saveLoad(pending.id, { ...values, anotador: 'Otro registro' })).rejects.toThrow(/ya tiene una carga/i)
-        const { data } = await apiClient.get<OperationsContext>('/api/chofer/contexto')
+        const { data } = await apiClient.get<OperationsContext>('/v1/chofer/contexto')
         const portal = projectDriverData(data).loads
         expect(portal.some(load => load.id === pending.id)).toBe(false)
         expect(portal.find(load => load.id === String(saved!.cargaId))).toMatchObject({
@@ -163,7 +163,7 @@ describe('Flujo de calidad con datos sintéticos de desarrollo', () => {
     it('permite completar una cabecera histórica de 0 kg sin enviarla al despacho o la facturación', async () => {
         const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'exportador' && l.puedeRegistrarCarga)!
         const coordination = operationsContext().coordinations.find(c => `entrega-${c.entregaProgramadaId}` === pending.id)!
-        const { data: orphan } = await apiClient.post<{ cargaId: number }>(`/api/coordinaciones/${coordination.coordinacionEntregaId}/cargas`, {
+        const { data: orphan } = await apiClient.post<{ cargaId: number }>(`/v1/coordinaciones/${coordination.coordinacionEntregaId}/cargas`, {
             codigo: 'CARGA-INCOMPLETA', fechaCarga: '2026-11-07', anotadorNombre: 'Calidad',
         })
         resetFrontendData()
@@ -197,7 +197,7 @@ describe('Flujo de calidad con datos sintéticos de desarrollo', () => {
         await expect(driverCommands.load(pending.id, { ...values, proveedores: [{ ...provider, variedad: 'Mango Edward' }, ...providers.slice(1)] }))
             .rejects.toThrow(/variedad de las fincas coordinadas/)
         await driverCommands.load(pending.id, values)
-        const { data } = await apiClient.get<OperationsContext>('/api/chofer/contexto')
+        const { data } = await apiClient.get<OperationsContext>('/v1/chofer/contexto')
         const coordination = data.coordinations.find(c => `entrega-${c.entregaProgramadaId}` === pending.id)!
         const saved = data.loads.find(row => row.coordinacionEntregaId === coordination.coordinacionEntregaId)!
         expect(projectDriverData(data).loads.find(row => row.id === String(saved.cargaId))?.proveedores[0]).toMatchObject({ variedad: 'Mango Kent', kilosCargados: 100 })
@@ -220,7 +220,7 @@ describe('Flujo de calidad con datos sintéticos de desarrollo', () => {
             cargaId: undefined, puedeRegistrarCarga: false, motivoRechazoIndustria: 'Fermentación',
         })
         await expect(qualityCommands.saveLoad(pending.id, { ...pending, cumpleRequisitosIndustria: true })).rejects.toThrow(/no está disponible/i)
-        const { data } = await apiClient.get<OperationsContext>('/api/chofer/contexto')
+        const { data } = await apiClient.get<OperationsContext>('/v1/chofer/contexto')
         expect(projectDriverData(data).loads.find(load => load.id === pending.id)).toMatchObject({
             pendienteRegistro: true, rechazada: true, permiteEditarCarga: false,
         })
@@ -236,7 +236,7 @@ describe('Flujo de calidad con datos sintéticos de desarrollo', () => {
             driverCommands.load(pending.id, driver),
         ])
         expect(attempts.filter(attempt => attempt.status === 'fulfilled')).toHaveLength(1)
-        const { data } = await apiClient.get<OperationsContext>('/api/chofer/contexto')
+        const { data } = await apiClient.get<OperationsContext>('/v1/chofer/contexto')
         const coordination = data.coordinations.find(c => `entrega-${c.entregaProgramadaId}` === pending.id)!
         const loads = data.loads.filter(load => load.coordinacionEntregaId === coordination.coordinacionEntregaId)
         expect(loads).toHaveLength(1)

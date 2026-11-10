@@ -3,11 +3,11 @@
   "info": {
     "title": "Agro Exportaciones F.V. — API V1",
     "version": "1.0.0",
-    "description": "Contrato HTTP de la API V1 implementada por epe-backend. Sus operaciones se exponen bajo /api y usan PostgreSQL. Ver business-rules.md para reglas y límites."
+    "description": "Contrato HTTP de la API V1 implementada por epe-backend. Sus operaciones se exponen bajo /v1 y usan PostgreSQL. Ver business-rules.md para reglas y límites."
   },
   "servers": [
     {
-      "url": "/api",
+      "url": "/v1",
       "description": "Backend EPE (NestJS)"
     }
   ],

@@ -80,14 +80,14 @@ describe("carrier API", () => {
         correo: "ana@example.com",
       }],
     }]);
-    expect(apiClient.get).toHaveBeenCalledWith("/empresas-transporte-externo");
+    expect(apiClient.get).toHaveBeenCalledWith("/v1/empresas-transporte-externo");
   });
 
   it("maps carrier payload names and vehicle volume to backend DTOs", async () => {
     apiClient.post.mockResolvedValue({ data: {} });
     const carrier = { nombre: "Carga Norte", numero: "+51987654321", correo: "contacto@example.com", ruc: "20123456789" };
     await createCarrier(carrier);
-    expect(apiClient.post).toHaveBeenCalledWith("/empresas-transporte-externo", {
+    expect(apiClient.post).toHaveBeenCalledWith("/v1/empresas-transporte-externo", {
       nombreCompleto: carrier.nombre,
       numero: carrier.numero,
       correo: carrier.correo,
@@ -95,7 +95,7 @@ describe("carrier API", () => {
     });
 
     await createVehicle(7, { placa: "abc-123", ancho: 2, altura: 2, profundidad: 3, volumen: 12, pesoNeto: 5, pesoBruto: 8 });
-    expect(apiClient.post).toHaveBeenCalledWith("/vehiculos-externos", {
+    expect(apiClient.post).toHaveBeenCalledWith("/v1/vehiculos-externos", {
       idEmpresaTransporteExterno: 7,
       placa: "ABC-123",
       volumen: 12,
@@ -114,28 +114,28 @@ describe("carrier API", () => {
     apiClient.post.mockResolvedValue({ data: {} });
 
     await getCarrier(7);
-    expect(apiClient.get).toHaveBeenCalledWith("/empresas-transporte-externo/7");
+    expect(apiClient.get).toHaveBeenCalledWith("/v1/empresas-transporte-externo/7");
     await updateCarrier(7, { nombre: "Carga Actualizada" });
-    expect(apiClient.patch).toHaveBeenCalledWith("/empresas-transporte-externo/7", { nombreCompleto: "Carga Actualizada" });
+    expect(apiClient.patch).toHaveBeenCalledWith("/v1/empresas-transporte-externo/7", { nombreCompleto: "Carga Actualizada" });
     await deleteCarrier(7);
-    expect(apiClient.delete).toHaveBeenCalledWith("/empresas-transporte-externo/7");
+    expect(apiClient.delete).toHaveBeenCalledWith("/v1/empresas-transporte-externo/7");
 
     await updateVehicle(9, 7, { placa: "XYZ-999", ancho: 2, altura: 2, profundidad: 3, volumen: 12, pesoNeto: 5, pesoBruto: 8 });
-    expect(apiClient.patch).toHaveBeenCalledWith("/vehiculos-externos/9", expect.objectContaining({ volumen: 12 }));
+    expect(apiClient.patch).toHaveBeenCalledWith("/v1/vehiculos-externos/9", expect.objectContaining({ volumen: 12 }));
     expect(apiClient.patch.mock.calls[1]?.[1]).not.toHaveProperty("idEmpresaTransporteExterno");
     await deleteVehicle(9);
-    expect(apiClient.delete).toHaveBeenCalledWith("/vehiculos-externos/9");
+    expect(apiClient.delete).toHaveBeenCalledWith("/v1/vehiculos-externos/9");
 
     await createDriver(7, { nombre: "Ana Ruiz", telefono: "+51912345678", correo: "ana@example.com" });
-    expect(apiClient.post).toHaveBeenCalledWith("/choferes-transporte-externo", {
+    expect(apiClient.post).toHaveBeenCalledWith("/v1/choferes-transporte-externo", {
       idEmpresaTransporteExterno: 7,
       nombre: "Ana Ruiz",
       telefono: "+51912345678",
       correo: "ana@example.com",
     });
     await updateDriver(11, { nombre: "Ana R." });
-    expect(apiClient.patch).toHaveBeenCalledWith("/choferes-transporte-externo/11", { nombre: "Ana R." });
+    expect(apiClient.patch).toHaveBeenCalledWith("/v1/choferes-transporte-externo/11", { nombre: "Ana R." });
     await deleteDriver(11);
-    expect(apiClient.delete).toHaveBeenCalledWith("/choferes-transporte-externo/11");
+    expect(apiClient.delete).toHaveBeenCalledWith("/v1/choferes-transporte-externo/11");
   });
 });

@@ -53,9 +53,9 @@ describe("provider subresource API", () => {
         await expect(getFrutasProveedor(7)).resolves.toEqual([fruta]);
         await expect(assignProveedorFruta(7, 3)).resolves.toEqual(fruta);
         await expect(unassignProveedorFruta(7, 3)).resolves.toBeUndefined();
-        expect(get).toHaveBeenCalledWith("/proveedores/7/frutas");
-        expect(post).toHaveBeenCalledWith("/proveedores/7/frutas/3");
-        expect(deleteRequest).toHaveBeenCalledWith("/proveedores/7/frutas/3");
+        expect(get).toHaveBeenCalledWith("/v1/proveedores/7/frutas");
+        expect(post).toHaveBeenCalledWith("/v1/proveedores/7/frutas/3");
+        expect(deleteRequest).toHaveBeenCalledWith("/v1/proveedores/7/frutas/por-fruta/3");
     });
 
     it("reads and mutates provider exams with exact IDs and DTO fields", async () => {
@@ -70,10 +70,10 @@ describe("provider subresource API", () => {
         await expect(createExamenProveedor(7, payload)).resolves.toEqual(examen);
         await expect(updateExamenProveedor(7, examenProveedorId, payload)).resolves.toEqual(examen);
         await expect(deleteExamenProveedor(7, examenProveedorId)).resolves.toBeUndefined();
-        expect(get).toHaveBeenCalledWith("/proveedores/7/examenes");
-        expect(post).toHaveBeenCalledWith("/proveedores/7/examenes", payload);
-        expect(patch).toHaveBeenCalledWith("/proveedores/7/examenes/8", payload);
-        expect(deleteRequest).toHaveBeenCalledWith("/proveedores/7/examenes/8");
+        expect(get).toHaveBeenCalledWith("/v1/proveedores/7/examenes");
+        expect(post).toHaveBeenCalledWith("/v1/proveedores/7/examenes", payload);
+        expect(patch).toHaveBeenCalledWith("/v1/proveedores/7/examenes/8", payload);
+        expect(deleteRequest).toHaveBeenCalledWith("/v1/proveedores/7/examenes/8");
     });
 
     it("reads and mutates provider certificates with exact IDs and DTO fields", async () => {
@@ -88,10 +88,10 @@ describe("provider subresource API", () => {
         await expect(createCertificadoProveedor(7, payload)).resolves.toEqual(certificado);
         await expect(updateCertificadoProveedor(7, certificadoProveedorId, payload)).resolves.toEqual(certificado);
         await expect(deleteCertificadoProveedor(7, certificadoProveedorId)).resolves.toBeUndefined();
-        expect(get).toHaveBeenCalledWith("/proveedores/7/certificados");
-        expect(post).toHaveBeenCalledWith("/proveedores/7/certificados", payload);
-        expect(patch).toHaveBeenCalledWith("/proveedores/7/certificados/9", payload);
-        expect(deleteRequest).toHaveBeenCalledWith("/proveedores/7/certificados/9");
+        expect(get).toHaveBeenCalledWith("/v1/proveedores/7/certificados/documentos/registro");
+        expect(post).toHaveBeenCalledWith("/v1/proveedores/7/certificados/documentos/registro", payload);
+        expect(patch).toHaveBeenCalledWith("/v1/proveedores/7/certificados/9/documentos/registro", payload);
+        expect(deleteRequest).toHaveBeenCalledWith("/v1/proveedores/7/certificados/9/documentos/registro");
     });
 
     it("uploads a certificate directly to S3, confirms availability, then creates it with the file ID", async () => {
@@ -106,9 +106,9 @@ describe("provider subresource API", () => {
         const file = new File(["pdf"], "certificado.pdf", { type: "application/pdf" });
         await createCertificadoProveedorWithFile(7, file, { fechaRevisionSenasa: "2026-09-21", nombre: "Registro SENASA" });
         expect(post.mock.calls).toEqual([
-            ["/proveedores/7/certificados/documentos/subida", { nombreOriginal: "certificado.pdf", mimeType: "application/pdf", tamanoBytes: 3 }],
-            ["/proveedores/7/certificados/documentos/4/confirmacion"],
-            ["/proveedores/7/certificados", { fechaRevisionSenasa: "2026-09-21", nombre: "Registro SENASA", documentoArchivoId: 4 }],
+            ["/v1/proveedores/7/certificados/documentos/subida", { nombreOriginal: "certificado.pdf", mimeType: "application/pdf", tamanoBytes: 3 }],
+            ["/v1/proveedores/7/certificados/documentos/4/confirmacion"],
+            ["/v1/proveedores/7/certificados/documentos/registro", { fechaRevisionSenasa: "2026-09-21", nombre: "Registro SENASA", documentoArchivoId: 4 }],
         ]);
         expect(fetchMock).toHaveBeenCalledWith("https://s3.test/upload", { method: "PUT", headers: { "Content-Type": "application/pdf" }, body: file });
         vi.unstubAllGlobals();
@@ -143,7 +143,7 @@ describe("provider subresource API", () => {
         get.mockResolvedValueOnce({ data: { archivoId: 4, downloadUrl: "https://s3.test/download", expiresInSeconds: 300 } });
         const { getCertificadoProveedorDownloadUrl } = await import("@/modules/providers/api/provider-subresources.api");
         await expect(getCertificadoProveedorDownloadUrl(7, 9)).resolves.toBe("https://s3.test/download");
-        expect(get).toHaveBeenCalledWith("/proveedores/7/certificados/9/documento/descarga");
+        expect(get).toHaveBeenCalledWith("/v1/proveedores/7/certificados/9/documento/descarga");
     });
 
     it("uploads and confirms a replacement before patching the certificate with the new file ID", async () => {
@@ -156,10 +156,10 @@ describe("provider subresource API", () => {
         const file = new File(["png"], "replacement.png", { type: "image/png" });
         await expect(updateCertificadoProveedorWithFile(7, 9, file, { fechaRevisionSenasa: "2026-09-21", nombre: "Registro SENASA" })).resolves.toMatchObject({ documentoArchivoId: 11 });
         expect(post.mock.calls).toEqual([
-            ["/proveedores/7/certificados/documentos/subida", { nombreOriginal: "replacement.png", mimeType: "image/png", tamanoBytes: 3 }],
-            ["/proveedores/7/certificados/documentos/11/confirmacion"],
+            ["/v1/proveedores/7/certificados/documentos/subida", { nombreOriginal: "replacement.png", mimeType: "image/png", tamanoBytes: 3 }],
+            ["/v1/proveedores/7/certificados/documentos/11/confirmacion"],
         ]);
-        expect(patch).toHaveBeenCalledWith("/proveedores/7/certificados/9", { fechaRevisionSenasa: "2026-09-21", nombre: "Registro SENASA", documentoArchivoId: 11 });
+        expect(patch).toHaveBeenCalledWith("/v1/proveedores/7/certificados/9/documentos/registro", { fechaRevisionSenasa: "2026-09-21", nombre: "Registro SENASA", documentoArchivoId: 11 });
         expect(fetchMock).toHaveBeenCalledWith("https://s3.test/replacement", { method: "PUT", headers: { "Content-Type": "image/png" }, body: file });
         vi.unstubAllGlobals();
     });

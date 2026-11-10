@@ -309,8 +309,8 @@ for (const resource of ['documentos', 'archivos-locales']) {
 }
 
 const contract = {
-  openapi: '3.1.0', info: { title: 'Agro Exportaciones F.V. — API V1', version: '1.0.0', description: 'Contrato HTTP de la API V1 implementada por epe-backend. Sus operaciones se exponen bajo /api y usan PostgreSQL. Ver business-rules.md para reglas y límites.' },
-  servers: [{ url: '/api', description: 'Backend EPE (NestJS)' }],
+  openapi: '3.1.0', info: { title: 'Agro Exportaciones F.V. — API V1', version: '1.0.0', description: 'Contrato HTTP de la API V1 implementada por epe-backend. Sus operaciones se exponen bajo /v1 y usan PostgreSQL. Ver business-rules.md para reglas y límites.' },
+  servers: [{ url: '/v1', description: 'Backend EPE (NestJS)' }],
   'x-source': { path: 'api/contract-schema.sql', sha256: crypto.createHash('sha256').update(sql).digest('hex'), date: '2026-10-29' },
   'x-database': tables, paths, components: { schemas },
 }

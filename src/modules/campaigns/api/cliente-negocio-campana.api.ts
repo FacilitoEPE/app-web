@@ -10,7 +10,7 @@ import { toClienteNegocioCampana, type ClienteNegocioCampana } from "@/modules/c
 
 export async function getClientesNegocioCampana(campaniaId: number, clienteNegocioId?: number): Promise<ClienteNegocioCampana[]> {
   if (usesV1()) return campaignScreenV1.clients(campaniaId, clienteNegocioId);
-  const { data } = await apiClient.get<ClienteNegocioCampanaDto[]>(`/campanas/${campaniaId}/clientes-negocio`);
+  const { data } = await apiClient.get<ClienteNegocioCampanaDto[]>(`/v1/campanas/${campaniaId}/clientes-negocio`);
   return data.map(toClienteNegocioCampana).filter(row => clienteNegocioId === undefined || row.clienteNegocioId === clienteNegocioId);
 }
 
@@ -31,7 +31,7 @@ export async function createClienteNegocioCampana(
   input: CreateClienteNegocioCampanaDto,
 ): Promise<ClienteNegocioCampana> {
   if (usesV1()) return campaignScreenV1.createClient(campaniaId, input);
-  const { data } = await apiClient.post<ClienteNegocioCampanaDto>(`/campanas/${campaniaId}/clientes-negocio`, input);
+  const { data } = await apiClient.post<ClienteNegocioCampanaDto>(`/v1/campanas/${campaniaId}/clientes-negocio`, input);
   return toClienteNegocioCampana(data);
 }
 
@@ -42,7 +42,7 @@ export async function updateClienteNegocioCampana(
 ): Promise<ClienteNegocioCampana> {
   if (usesV1()) return campaignScreenV1.updateClient(campaniaId, clienteNegocioCampanaId, input);
   const { data } = await apiClient.patch<ClienteNegocioCampanaDto>(
-    `/campanas/${campaniaId}/clientes-negocio/${clienteNegocioCampanaId}`,
+    `/v1/campanas/${campaniaId}/clientes-negocio/${clienteNegocioCampanaId}`,
     input,
   );
   return toClienteNegocioCampana(data);
@@ -50,5 +50,5 @@ export async function updateClienteNegocioCampana(
 
 export async function deleteClienteNegocioCampana(campaniaId: number, clienteNegocioCampanaId: number): Promise<void> {
   if (usesV1()) return campaignScreenV1.deleteClient(campaniaId, clienteNegocioCampanaId);
-  await apiClient.delete(`/campanas/${campaniaId}/clientes-negocio/${clienteNegocioCampanaId}`);
+  await apiClient.delete(`/v1/campanas/${campaniaId}/clientes-negocio/${clienteNegocioCampanaId}`);
 }

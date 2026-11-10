@@ -6,7 +6,7 @@ import { getAuthToken } from '@/shared/offline/session';
 
 export async function refreshDriverData(): Promise<void> {
     const token = getAuthToken();
-    const { data } = await apiClient.get<OperationsContext>('/api/chofer/contexto');
+    const { data } = await apiClient.get<OperationsContext>('/v1/chofer/contexto');
     if (getAuthToken() !== token) throw new Error('La sesión cambió durante la carga.');
     setOperationsContext(data);
     hydrateDriverData(projectDriverData(data));
