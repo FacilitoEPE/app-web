@@ -210,7 +210,7 @@ Abre `http://localhost:8080`.
 <summary><strong>🧩 Notas de ejecución y publicación</strong></summary>
 
 - **Rutas:** la aplicación utiliza `BrowserRouter`. El hosting debe servir `index.html` para las rutas de la SPA.
-- **Caché:** se registra el service worker de [`public/sw.js`](public/sw.js), que utiliza una estrategia de caché primero. Si una actualización no aparece en local, elimina la caché del sitio y desregistra el service worker desde las herramientas del navegador.
+- **Caché:** el arranque desregistra el service worker anterior y elimina la caché heredada `epe-shell-v1`. Consulta la [configuración de desarrollo](docs/development.md) para las reglas de caché.
 - **Conectividad:** la app muestra una pantalla al perder conexión y un aviso al recuperarla. Esto no equivale a sincronización de operaciones de negocio sin conexión.
 - **Persistencia:** conservar la sesión de demostración no implica guardar en un servidor los cambios realizados en los formularios.
 
@@ -223,12 +223,7 @@ La organización sigue **Screaming Architecture**: las carpetas principales desc
 
 ```text
 src/
-├── modules/
-│   ├── auth/                  Acceso y confirmación
-│   ├── campaigns/             Campañas y su operación
-│   ├── commercial-planning/   Clientes y planificación comercial
-│   ├── providers/             Proveedores y evaluación
-│   └── users/                 Centro de módulos
+├── modules/                   Campañas, clientes, proveedores, calidad, logística y demás módulos
 ├── shared/
 │   ├── api/                   Cliente HTTP único
 │   ├── components/
@@ -262,7 +257,7 @@ public/image/                 Banner, badges y otros recursos públicos
 - **UI vendorizada:** los componentes de `shared/components/ui/` se actualizan mediante shadcn; la lógica de negocio pertenece a los módulos.
 - **Integración backend:** API V1, DTO y mapper por dominio. Las páginas consumen modelos de frontend, sin depender de DTOs ni de Axios directamente.
 
-Consulta [AGENTS.md](AGENTS.md) para las decisiones de arquitectura y las reglas de trabajo del repositorio.
+Consulta la [guía de arquitectura](docs/architecture.md) para los límites entre módulos y [AGENTS.md](AGENTS.md) para las reglas de trabajo del repositorio.
 
 <a id="identidad-visual"></a>
 ## 🎨 Cultivando confianza, también en la interfaz

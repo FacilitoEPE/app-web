@@ -2,8 +2,11 @@
 
 Índice breve para personas y agentes. Consulta únicamente la guía relacionada con el cambio; las reglas generales están en [AGENTS.md](../AGENTS.md).
 
+Las referencias a documentación compartida y al backend usan el workspace con `docs`, `epe-web` y `epe-backend` como carpetas hermanas.
+
 | Si la tarea afecta… | Consulta… |
 |---|---|
+| SOLID, patrones y criterios de calidad del cambio | [Criterios compartidos](../../docs/criterios-de-calidad.md) |
 | Módulos, capas o límites de código | [architecture.md](architecture.md) |
 | Componentes, tokens o interacción visual | [design-system.md](design-system.md) |
 | Comandos, fixtures o configuración local | [development.md](development.md) |
@@ -15,6 +18,7 @@
 | Nombre libre del responsable de campaña | [Contrato y ejemplo](api/README.md#responsable-libre-de-campaña) |
 | Pasos visibles para un usuario | [guides/](guides/) |
 | Resultado de pruebas con alcance y fecha | [evidence/](evidence/) |
+| Riesgos y controles pendientes de seguridad | [Auditoría de seguridad](auditoria-seguridad.md) |
 
 El estado de integración es el registro operativo por vista. Las guías de usuario describen acciones disponibles, y los informes de `evidence/` son cortes fechados con vigencia limitada.
 
