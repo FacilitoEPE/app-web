@@ -211,6 +211,8 @@ Una cabecera sin kilos queda pendiente en Calidad y no habilita el despacho, la 
 
 La guía tiene contenido íntegro y snapshots de salida/llegada/conductor; `proveedor_guia` distribuye kilos y fincas. `guia_x_norma` es la selección persistida. `contenido.standardCodes` se sincroniza con ella; `standardText` conserva la frase histórica. Emisión con `POST /guias/{id}/emitir` congela cabecera, proveedores, fincas y normas. No es emisión electrónica ante un servicio tributario ni subida de PDF.
 
+Al seleccionar un proveedor en el formulario de guía, se proponen sus kilos reales disponibles, descontando lo asignado a otras guías. El peso bruto se propone con la suma de los kilos asignados. Cuando la guía incluye todos los kilos de cada proveedor seleccionado, se suman sus jabas, bines y mallas, tanto cargados como vacíos. Si algún proveedor se reparte entre guías, se registra manualmente el número de bultos de cada guía.
+
 ### Recepción y chofer
 
 El rol Chofer puede consultar y operar todas las entregas coordinadas, incluidas las que esperan el registro de carga. El portal conserva el conductor y la unidad de la coordinación. El registro inicial guarda en una transacción la carga, los proveedores, las fincas y los gastos. Las etapas de despacho conservan sus requisitos y el rol Chofer solo puede escribir el checklist de llegada, su evidencia de descarte y la guía de salida en la recepción.

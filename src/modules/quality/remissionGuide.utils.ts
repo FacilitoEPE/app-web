@@ -1,5 +1,21 @@
 import type { QualityDeliveryLoadItem, QualitySunatRemissionGuide } from '@/modules/quality/qualityOperations.models';
 
+export function guideAllocationTotals(
+    load: QualityDeliveryLoadItem,
+    included: string[],
+    allocations: Record<string, number>,
+) {
+    const kilos = included.reduce((sum, id) => sum + (allocations[id] ?? 0), 0);
+    const providers = load.proveedoresCarga.filter(provider => included.includes(provider.proveedorId));
+    const fullProviders = kilos > 0 && providers.length === included.length && providers.every(provider =>
+        provider.kilosCargados > 0 && allocations[provider.proveedorId] === provider.kilosCargados);
+    const bultos = fullProviders ? providers.reduce((sum, provider) =>
+        sum + provider.jabasCargadas + provider.jabasVacias
+        + provider.binesCargados + provider.binesVacios
+        + provider.mallasCargadas + provider.mallasVacias, 0) : null;
+    return { kilos, bultos };
+}
+
 /** Prefill only facts supplied by the load; missing legal snapshots stay editable and empty. */
 export function createGuideDraft(load: QualityDeliveryLoadItem): QualitySunatRemissionGuide {
     return {

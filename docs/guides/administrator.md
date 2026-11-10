@@ -97,7 +97,7 @@ En el listado de **Choferes** de una empresa transportista, abra **Ver detalles*
 ### Registrar la carga de una entrega coordinada
 
 1. En **Cosecha y Control de Calidad → Carga**, elija **Registrar carga** y seleccione una entrega coordinada de la campaña y del canal que está viendo. Registre la fecha, el responsable, los kilos y envases por proveedor, y los gastos. Si el chofer ya registró la carga, búsquela en **Cargas registradas**. En Industria, si la fruta no cumple los requisitos, guarde el motivo del rechazo.
-2. En **Guías de remisión**, ubique la carga y elija **Preparar guía**. Complete fechas, transportista, vehículo, chofer, origen/destino y los códigos reales de establecimiento de cuatro dígitos. Guarde o emita la guía desde el formulario.
+2. En **Guías de remisión**, ubique la carga y elija **Agregar guía**. Seleccione los proveedores. El formulario propone el peso con los kilos disponibles de la carga real y suma los bultos cargados y vacíos si incluye todos los kilos de los proveedores seleccionados. Si reparte los kilos de un proveedor entre guías, ingrese los bultos de cada guía. Complete los datos de traslado y guarde la guía.
 
 **Dirección:** `/calidad > campaña y canal > Carga > Registrar carga`.
 

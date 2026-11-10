@@ -578,7 +578,20 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
       const carga = db.carga.find(row => row.cargaId === id)
       if (!carga) throw new ApiV1Error(404, 'NOT_FOUND', 'Carga no encontrada')
       const body = await readJson(request) as Row
-      Object.assign(carga, { updatedAt: new Date().toISOString() })
+      const updatedAt = new Date().toISOString()
+      if (Array.isArray(body.proveedores) && body.cumpleRequisitosIndustria !== false) {
+        const fields = ['jabasCargadas', 'jabasVacias', 'binesCargados', 'binesVacios', 'mallasCargadas', 'mallasVacias']
+        const rows = related('proveedor_carga', 'cargaId', id)
+        for (const provider of body.proveedores as Row[]) {
+          const row = rows.find(item => find('campania_x_proveedores', item.cxpId).proveedorId === Number(provider.proveedorId))
+          if (!row || !Number.isFinite(provider.kilosCargados) || provider.kilosCargados <= 0
+            || fields.some(field => !Number.isSafeInteger(provider[field]) || provider[field] < 0))
+            throw new ApiV1Error(400, 'INVALID_BODY', 'Revisa los kilos y bultos de los proveedores de la carga.')
+          const packs = Object.fromEntries(fields.map(field => [field, provider[field]]))
+          Object.assign(row, packs, { kilosCargados: provider.kilosCargados, updatedAt })
+        }
+      }
+      Object.assign(carga, { updatedAt })
       if (body.fechaCarga !== undefined) carga.fechaCarga = body.fechaCarga
       if (body.observacionesCarga !== undefined) carga.observaciones = body.observacionesCarga
       return { status: 200, data: { ok: true, carga } }

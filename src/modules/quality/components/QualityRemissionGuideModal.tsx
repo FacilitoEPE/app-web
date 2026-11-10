@@ -1,6 +1,6 @@
 import { qualityGuideNormOptions } from '@/modules/quality/api/quality-commands.api';
 import { Checkbox } from '@/shared/components/ui/checkbox';
-import { createGuideDraft } from '@/modules/quality/remissionGuide.utils';
+import { createGuideDraft, guideAllocationTotals } from '@/modules/quality/remissionGuide.utils';
 import { qualityGuideStandardText } from '@/modules/quality/qualityGuideNorms.utils';
 import { useState } from "react";
 import {
@@ -85,11 +85,7 @@ export default function QualityRemissionGuideModal({
         setFechaInicioTraslado(guide.fechaInicioTraslado);
         setFechaEntregaTransportista(guide.fechaEntregaTransportista);
         setPesoBrutoTotalKg(editingGuide ? String(guide.pesoBrutoTotalKg) : "");
-        const fullPackages = selected.every(id => allocations[id] === load.proveedoresCarga.find(provider => provider.proveedorId === id)?.kilosCargados);
-        setNumeroBultos(editingGuide ? String(guide.numeroBultos) : fullPackages && selected.length > 0
-            ? String(load.proveedoresCarga.filter(provider => selected.includes(provider.proveedorId)).reduce((sum, provider) =>
-                sum + provider.jabasCargadas + provider.binesCargados + provider.mallasCargadas, 0))
-            : "");
+        setNumeroBultos(editingGuide ? String(guide.numeroBultos) : "");
         setTransportistaRuc(guide.transportistaRuc);
         setTransportistaDenominacion(guide.transportistaDenominacion);
         setTransportistaMtc(guide.transportistaMtc);
@@ -139,6 +135,13 @@ export default function QualityRemissionGuideModal({
         const used = load!.guiasRemision.filter(item => item.id !== editingGuide?.id).reduce((sum, item) =>
             sum + (item.kilosPorProveedor?.[providerId] ?? (item.proveedoresIncluidos.includes(providerId) ? provider.kilosCargados : 0)), 0);
         return Math.max(0, provider.kilosCargados - used);
+    }
+
+    function updateAllocations(selected: string[], allocations: Record<string, number>) {
+        const { kilos, bultos } = guideAllocationTotals(load!, selected, allocations);
+        setKilosPorProveedor(allocations);
+        setPesoBrutoTotalKg(kilos > 0 ? String(kilos) : "");
+        setNumeroBultos(bultos === null ? "" : String(bultos));
     }
 
     const toggleNorma = (id: string) => setNormasSeleccionadas(current =>
@@ -218,26 +221,13 @@ export default function QualityRemissionGuideModal({
                                 <Checkbox disabled={remainingKg(p.proveedorId) <= 0 && !included.includes(p.proveedorId)} checked={included.includes(p.proveedorId)} onCheckedChange={checked => {
                                     const next = checked ? [...new Set([...included, p.proveedorId])] : included.filter(id => id !== p.proveedorId);
                                     setIncluded(next);
-                                    const allocations = { ...kilosPorProveedor, [p.proveedorId]: 0 };
-                                    setKilosPorProveedor(allocations);
-                                    const kilos = next.reduce((sum, id) => sum + (allocations[id] || 0), 0);
-                                    setPesoBrutoTotalKg(kilos > 0 ? String(kilos) : "");
-                                    setNumeroBultos(next.length > 0 && next.every(id => allocations[id] === load.proveedoresCarga.find(row => row.proveedorId === id)?.kilosCargados)
-                                        ? String(load.proveedoresCarga.filter(row => next.includes(row.proveedorId)).reduce((sum, row) =>
-                                            sum + row.jabasCargadas + row.binesCargados + row.mallasCargadas, 0))
-                                        : "");
+                                    updateAllocations(next, { ...kilosPorProveedor, [p.proveedorId]: checked ? remainingKg(p.proveedorId) : 0 });
                                 }} />
                                 <Sprout size={13} />
                                 <span>{p.proveedorNombre} <span className="font-normal text-ink-muted">· {p.fincaNombre} · {p.rol} · {p.tipoFruta} · {formatKg(remainingKg(p.proveedorId))} kg disponibles</span></span>
                                 </label>
                                 <InputField id={`rg-provider-kg-${p.proveedorId}`} label="Kilos para esta guía" className="[&_[data-slot=field-label]]:sr-only" type="number" min={0} step="0.01" placeholder={`Máx. ${formatKg(remainingKg(p.proveedorId))} kg`} disabled={!included.includes(p.proveedorId)} value={included.includes(p.proveedorId) ? (kilosPorProveedor[p.proveedorId] ? String(kilosPorProveedor[p.proveedorId]) : "") : ""} onChange={value => {
-                                    const allocations = { ...kilosPorProveedor, [p.proveedorId]: Number(value) || 0 };
-                                    setKilosPorProveedor(allocations);
-                                    const kilos = included.reduce((sum, id) => sum + (allocations[id] || 0), 0);
-                                    setPesoBrutoTotalKg(kilos > 0 ? String(kilos) : "");
-                                    const full = included.length > 0 && included.every(id => allocations[id] === load.proveedoresCarga.find(row => row.proveedorId === id)?.kilosCargados);
-                                    setNumeroBultos(current => full ? current || String(load.proveedoresCarga.filter(row => included.includes(row.proveedorId)).reduce((sum, row) =>
-                                        sum + row.jabasCargadas + row.binesCargados + row.mallasCargadas, 0)) : "");
+                                    updateAllocations(included, { ...kilosPorProveedor, [p.proveedorId]: Number(value) || 0 });
                                 }} />
                             </div>
                         ))}

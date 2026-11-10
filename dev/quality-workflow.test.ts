@@ -14,7 +14,7 @@ import { projectLogisticsData } from '@/modules/logistics/api/logistics-screen-d
 import { projectSettlementData } from '@/modules/purchase-settlement/api/settlement-screen-data'
 import { driverCommands } from '@/modules/driver-portal/api/driver-commands.api'
 import { campaignAnalysisOrigins, qualityCommands } from '@/modules/quality/api/quality-commands.api'
-import { createGuideDraft } from '@/modules/quality/remissionGuide.utils'
+import { createGuideDraft, guideAllocationTotals } from '@/modules/quality/remissionGuide.utils'
 import { qualityGuideStandardText } from '@/modules/quality/qualityGuideNorms.utils'
 import { demoPdf } from '@/shared/utils/demoData'
 
@@ -186,7 +186,7 @@ describe('Flujo de calidad con datos sintéticos de desarrollo', () => {
         await refreshFrontendData('*')
         expect(projectDriverData(operationsContext()).loads.find(row => row.id === id)).toMatchObject({ permiteEditarCarga: true })
     })
-    it('ofrece al chofer las variedades de la finca coordinada y conserva una carga válida al recargar', async () => {
+    it('conserva la carga del chofer y precarga sus kilos y bultos en la guía', async () => {
         const g = operationsContext()
         const pending = projectDriverData(g).loads.find(row => row.pendienteRegistro && row.canal === 'Exportación')!
         const providers = pending.proveedores.map(p => ({ ...p, kilosCargados: 100, jabasCargadas: 4 }))
@@ -201,6 +201,17 @@ describe('Flujo de calidad con datos sintéticos de desarrollo', () => {
         const coordination = data.coordinations.find(c => `entrega-${c.entregaProgramadaId}` === pending.id)!
         const saved = data.loads.find(row => row.coordinacionEntregaId === coordination.coordinacionEntregaId)!
         expect(projectDriverData(data).loads.find(row => row.id === String(saved.cargaId))?.proveedores[0]).toMatchObject({ variedad: 'Mango Kent', kilosCargados: 100 })
+
+        await refreshFrontendData('*')
+        await driverCommands.load(String(saved.cargaId), { ...values, proveedores: [
+            { ...provider, kilosCargados: 500, jabasCargadas: 30, jabasVacias: 4, binesCargados: 15, binesVacios: 3, mallasCargadas: 5, mallasVacias: 3 },
+            ...providers.slice(1),
+        ] })
+        await refreshFrontendData('*')
+        const load = projectQualityData(operationsContext()).loads.find(row => row.cargaId === saved.cargaId)!
+        const included = [provider.proveedorId]
+        expect(guideAllocationTotals(load, included, { [provider.proveedorId]: 500 })).toEqual({ kilos: 500, bultos: 60 })
+        expect(guideAllocationTotals(load, included, { [provider.proveedorId]: 250 })).toEqual({ kilos: 250, bultos: null })
     })
     it('guarda el rechazo industrial sin crear carga y lo comparte con el chofer', async () => {
         const pending = projectQualityData(operationsContext()).loads.find(l => l.scope === 'industria' && l.puedeRegistrarCarga)!
