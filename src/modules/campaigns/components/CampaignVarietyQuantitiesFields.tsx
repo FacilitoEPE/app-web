@@ -1,3 +1,4 @@
+import RequiredMark from "@/shared/components/RequiredMark";
 import { Plus, X } from 'lucide-react';
 import FormField from '@/shared/components/FormField';
 import { InfoField, SummaryBar } from '@/shared/components/InfoField';
@@ -29,6 +30,7 @@ export default function CampaignVarietyQuantitiesFields({ id, fruitName, rows, o
     return (
         <div className="flex min-w-0 flex-col gap-4 sm:col-span-2">
             <InfoField label="Fruta de la campaña" value={fruitName || 'Sin fruta registrada'} />
+            <p className="text-sm font-semibold text-ink">Agrega al menos una variedad <RequiredMark /></p>
             {rows.map((row, index) => {
                 const selected = options.find(option => option.value === row.frutaDerivadaId);
                 const balance = varietyBalances?.find(item => String(item.frutaDerivadaId) === row.frutaDerivadaId);

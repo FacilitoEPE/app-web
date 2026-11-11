@@ -1,3 +1,4 @@
+import RequiredMark from "@/shared/components/RequiredMark";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CheckCircle2, FileCheck2, Save } from "lucide-react";
@@ -74,9 +75,11 @@ export default function LogisticsDocumentsPage() {
             <FormField error={errors._form} />
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{documentFields.map(field => {
                 const file = documents[field.key] ?? null;
+                const requiredFor = field.key === "guiaSalidaFirmada" ? "el cierre administrativo"
+                    : field.key === "guiaRemisionFruta" || field.key === "reporteRecepcionPlanta" ? "el cierre físico" : null;
                 return <div key={field.key} className="min-w-0 rounded-xl border border-border p-4">
-                    <p className="text-sm font-semibold text-ink">{field.label}</p>
-                    <p className="mb-3 text-xs text-ink-muted">Fuente: {field.source}</p>
+                    <p className="text-sm font-semibold text-ink">{field.label}{requiredFor && <> <RequiredMark /></>}</p>
+                    <p className="mb-3 text-xs text-ink-muted">Fuente: {field.source}{requiredFor && ` · Requerido para ${requiredFor}`}</p>
                     {field.key === "guiaRemisionFruta" && load.guiaFrutaEmitida && <p className="mb-2 text-xs text-brand">Guía electrónica emitida: {load.guiaFrutaEmitida}</p>}
                     <FileDropzone label={field.label} hideLabel file={file} onChange={value => updateFile(field.key, value)} disabled={saved.cierreAdministrativoConfirmado}
                         accept={field.key === "guiaRemisionFruta" ? "application/pdf" : undefined} variant="horizontal" replaceable />

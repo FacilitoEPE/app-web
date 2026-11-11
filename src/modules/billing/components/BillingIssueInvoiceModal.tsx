@@ -1,3 +1,4 @@
+import RequiredMark from "@/shared/components/RequiredMark";
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import { useState } from "react";
@@ -186,8 +187,8 @@ export default function BillingIssueInvoiceModal({
                         </div>
                         <div className="sm:col-span-3">
                             <label className="flex items-start gap-3 rounded-xl border border-border p-3 text-sm text-ink-body">
-                                <Checkbox checked={verified} onCheckedChange={checked => { setVerified(checked === true); clearError("verified"); }} />
-                                Verifiqué que este comprobante ya fue emitido en SUNAT y que el archivo adjunto corresponde a él.
+                                <Checkbox aria-required="true" checked={verified} onCheckedChange={checked => { setVerified(checked === true); clearError("verified"); }} />
+                                Verifiqué que este comprobante ya fue emitido en SUNAT y que el archivo adjunto corresponde a él. <RequiredMark />
                             </label>
                             {errors.verified && <p role="alert" className="mt-1 text-xs text-destructive">{errors.verified}</p>}
                         </div>

@@ -123,9 +123,9 @@ export default function QualityManagementView({ campaign, scope, section }: Prop
                 }}>Continuar <ArrowRight size={18} /></Button>}
             </>}>
             {pending.length > 0 ? (
-                <FormField label="Entrega coordinada" id="quality-load-delivery">
+                <FormField label="Entrega coordinada" required id="quality-load-delivery">
                     <Select value={delivery?.id ?? null} onValueChange={value => setDeliveryId(value ?? "")}>
-                        <SelectTrigger id="quality-load-delivery" className="w-full">
+                        <SelectTrigger id="quality-load-delivery" aria-required="true" className="w-full">
                             <SelectValue placeholder="Seleccionar entrega" />
                         </SelectTrigger>
                         <SelectContent>

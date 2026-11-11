@@ -209,6 +209,7 @@ export default function SettlementCarrierModal({
                                     <InputField
                                         id={`exp-conc-${idx}`}
                                         label="Concepto del gasto"
+                                        required
                                         variant="compact"
                                         placeholder="Ej. Peajes ruta Tambogrande - Paita"
                                         value={g.concepto}
@@ -224,6 +225,7 @@ export default function SettlementCarrierModal({
                                     <InputField
                                         id={`exp-monto-${idx}`}
                                         label="Monto real"
+                                        required
                                         variant="compact"
                                         step="0.01"
                                         min={0}

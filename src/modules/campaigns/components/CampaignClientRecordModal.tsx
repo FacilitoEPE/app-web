@@ -66,6 +66,8 @@ export default function CampaignClientRecordModal({ open, mode, client, campania
         setFormMessage(undefined);
     }, [open, client]);
 
+    const original = client ? toValues(client) : undefined;
+
     const update = (field: keyof CampaignClientUpdateValues, value: string) => {
         setValues((current) => current ? { ...current, [field]: value } : current);
         setErrors((current) => ({ ...current, [field]: undefined }));
@@ -73,8 +75,7 @@ export default function CampaignClientRecordModal({ open, mode, client, campania
     };
 
     const save = async () => {
-        if (!client || !values || !guard.current.acquire()) return;
-        const original = toValues(client);
+        if (!client || !original || !values || !guard.current.acquire()) return;
         const nextErrors = validateCampaignClientUpdate(values, original);
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length) { guard.current.release(); return; }
@@ -136,9 +137,9 @@ export default function CampaignClientRecordModal({ open, mode, client, campania
             ) : values && (
                 <div className="flex flex-col gap-5">
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <InputField id="client-link-cantidad" label="Cantidad requerida" value={values.cantidadKg} error={errors.cantidadKg} step="0.001" min={0} unit="kg" disabled={isSaving} onChange={(value) => update("cantidadKg", value)} />
-                        <InputField id="client-link-acordados" label="Kilos acordados" value={values.kilosAcordados} error={errors.kilosAcordados} step="0.001" min={0} unit="kg" disabled={isSaving} onChange={(value) => update("kilosAcordados", value)} />
-                        <InputField id="client-link-fecha" label="Fecha de registro" type="date" value={values.fechaRegistro} error={errors.fechaRegistro} disabled={isSaving} onChange={(value) => update("fechaRegistro", value)} />
+                        <InputField id="client-link-cantidad" label="Cantidad requerida" required={Boolean(original?.cantidadKg.trim())} value={values.cantidadKg} error={errors.cantidadKg} step="0.001" min={0} unit="kg" disabled={isSaving} onChange={(value) => update("cantidadKg", value)} />
+                        <InputField id="client-link-acordados" label="Kilos acordados" required={Boolean(original?.kilosAcordados.trim())} value={values.kilosAcordados} error={errors.kilosAcordados} step="0.001" min={0} unit="kg" disabled={isSaving} onChange={(value) => update("kilosAcordados", value)} />
+                        <InputField id="client-link-fecha" label="Fecha de registro" required={Boolean(original?.fechaRegistro.trim())} type="date" value={values.fechaRegistro} error={errors.fechaRegistro} disabled={isSaving} onChange={(value) => update("fechaRegistro", value)} />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                         <FormField error={errors.documentoUrl}>

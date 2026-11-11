@@ -284,6 +284,7 @@ export default function SettlementPaymentModal({
                         {modo === 'Caja' && medio !== 'Efectivo' && <div className="sm:col-span-2">
                             <FileDropzone
                                 label="Voucher o constancia de pago"
+                                required
                                 file={evidencia}
                                 onChange={(f) => setEvidencia(f)}
                                 variant="horizontal"

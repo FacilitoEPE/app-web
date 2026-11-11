@@ -81,7 +81,7 @@ export function LogisticsDiscardModal({ load, onClose }: ModalProps) {
         <div className="grid gap-4 sm:grid-cols-2">
             <FormField error={errors._form} className="sm:col-span-2" />
             <InputField id="log-discard-quantity" label="Cantidad descartada" type="number" min={0} step="0.01" unit="kg" required value={values.quantity} onChange={set("quantity")} className="sm:col-span-2" />
-            <FormField label="Motivo" error={errors.reason} className="sm:col-span-2"><Textarea value={values.reason} onChange={event => set("reason")(event.target.value)} rows={3} /></FormField>
+            <FormField label="Motivo" required={Number(values.quantity) > 0} error={errors.reason} className="sm:col-span-2"><Textarea aria-required={Number(values.quantity) > 0} value={values.reason} onChange={event => set("reason")(event.target.value)} rows={3} /></FormField>
             <FileDropzone label="Documento o evidencia" file={values.evidence} onChange={set("evidence")} variant="horizontal" className="sm:col-span-2" replaceable />
         </div>
     </AppModal>;
@@ -125,12 +125,12 @@ export function LogisticsEvaluationForm({ load, locked = false }: { load: Logist
             <InputField id="log-eval-result" label="Resultado" required disabled={locked} value={result} onChange={setResult} error={errors.result} className="sm:col-span-2" />
         </div>
         <FormField label="Observaciones"><Textarea value={observations} disabled={locked} onChange={event => setObservations(event.target.value)} rows={3} /></FormField>
-        <FileDropzone label="Informe de evaluación" file={report} onChange={setReport} disabled={locked} variant="horizontal" replaceable />
+        <FileDropzone label="Informe de evaluación" required={!locked && !load.documentosCierre.cierreFisicoConfirmado} hint={!load.documentosCierre.cierreFisicoConfirmado ? "Requerido para el cierre físico · PDF · Máx. 10 MB" : undefined} file={report} onChange={setReport} disabled={locked} variant="horizontal" replaceable />
         {providers.length > 1 && <div className="grid gap-2">
             <p className="text-sm font-semibold text-ink">Kilos reconocidos por proveedor</p>
             {providers.map(provider => <div key={provider.proveedorId} className="grid items-center gap-2 rounded-xl border border-border p-3 sm:grid-cols-[minmax(0,1fr)_11rem]">
                 <div><p className="text-sm font-semibold text-ink">{provider.proveedorNombre}</p><p className="text-xs text-ink-muted">{provider.fincaNombre} · {formatKg(provider.kilosCargados)} kg cargados</p></div>
-                <InputField id={`log-eval-${provider.proveedorId}`} label="Kilos recibidos" type="number" min={0} step="0.01" unit="kg"
+                <InputField id={`log-eval-${provider.proveedorId}`} label="Kilos recibidos" required type="number" min={0} step="0.01" unit="kg"
                     readOnly={locked || load.comprasBloqueadas} value={provider.kilosRecibidosPlanta ? String(provider.kilosRecibidosPlanta) : ""}
                     onChange={value => setProviders(rows => rows.map(row => row.proveedorId === provider.proveedorId
                         ? { ...row, kilosRecibidosPlanta: Number(value) || 0 } : row))} />

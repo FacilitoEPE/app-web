@@ -227,7 +227,7 @@ export default function CampaignFormModal({
             <div className="flex flex-col gap-5">
                 {/* Fila 1 */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <InputField id="campaign-nombre" label="Nombre de Campaña:" placeholder="Ej: Campaña Mango 2026" value={values.nombre} onChange={(value) => set("nombre", value)} error={errors.nombre} />
+                    <InputField id="campaign-nombre" label="Nombre de Campaña:" required placeholder="Ej: Campaña Mango 2026" value={values.nombre} onChange={(value) => set("nombre", value)} error={errors.nombre} />
                     {isEdit ? (
                         <InfoField label="Responsable" value={values.responsable} multiline />
                     ) : (
@@ -242,7 +242,7 @@ export default function CampaignFormModal({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <InputField
                         id="campaign-requerimiento"
-                        label="Requerimiento (KG):"
+                        label="Requerimiento (KG):" required
                         placeholder="Ej: 3000"
                         type="text"
                         inputMode="decimal"
@@ -254,14 +254,14 @@ export default function CampaignFormModal({
                         }}
                         error={errors.requerimientoComercial}
                     />
-                    <InputField id="campaign-fechaInicio" type="date" label="Fecha de inicio:" value={values.fechaInicio} error={errors.fechaInicio} onChange={(val) => set("fechaInicio", val)} />
-                    <InputField id="campaign-fechaFin" type="date" label="Fecha de fin:" value={values.fechaFin} error={errors.fechaFin} onChange={(val) => set("fechaFin", val)} />
+                    <InputField id="campaign-fechaInicio" type="date" label="Fecha de inicio:" required value={values.fechaInicio} error={errors.fechaInicio} onChange={(val) => set("fechaInicio", val)} />
+                    <InputField id="campaign-fechaFin" type="date" label="Fecha de fin:" required value={values.fechaFin} error={errors.fechaFin} onChange={(val) => set("fechaFin", val)} />
                 </div>
 
                 {/* Fila 3 */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <InputField id="campaign-temporada" label="Año o Temporada:" optional placeholder="Ej: 2025-2026" value={values.añoTemporada} onChange={(value) => set("añoTemporada", value)} error={errors.añoTemporada} />
-                    <FormField label="Seleccionar Frutas:" className="sm:col-span-2" error={errors.frutaId}>
+                    <FormField label="Seleccionar Frutas:" required className="sm:col-span-2" error={errors.frutaId}>
                         <Select
                             items={fruitItems}
                             value={values.frutaId !== null ? String(values.frutaId) : null}

@@ -58,7 +58,7 @@ export default function RecoverFormControl({ onBack }: RecoverFormControlProps) 
             <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
                 <Field className="space-y-1.5">
                     <FieldLabel htmlFor="recover-email" className="text-sm font-bold text-ink">
-                        Correo electrónico <span className="text-danger">*</span>
+                        Correo electrónico
                     </FieldLabel>
                     <InputGroup className="h-11 border-border/70 bg-background transition-colors rounded-lg has-[[data-slot=input-group-control]:focus-visible]:border-brand has-[[data-slot=input-group-control]:focus-visible]:ring-1 has-[[data-slot=input-group-control]:focus-visible]:ring-brand/30">
                         <InputGroupAddon align="inline-start" className="pl-4 pr-2">
@@ -82,7 +82,7 @@ export default function RecoverFormControl({ onBack }: RecoverFormControlProps) 
                 </Field>
 
                 {errorMessage && (
-                    <p role="alert" className="text-sm font-medium text-danger">
+                    <p role="alert" className="text-sm font-medium text-destructive">
                         {errorMessage}
                     </p>
                 )}

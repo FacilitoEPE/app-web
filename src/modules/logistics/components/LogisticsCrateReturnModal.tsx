@@ -47,7 +47,7 @@ export default function LogisticsCrateReturnModal({ load, onClose }: { load: Log
             <FormField error={errors._form} className="sm:col-span-2" />
             <InputField id="log-crates-initial" label="Cantidad que llegó" type="number" min={0} step="1" required value={values.initial} onChange={set("initial")} error={errors.initial} />
             <InputField id="log-crates-returned" label="Cantidad devuelta" type="number" min={0} step="1" required value={values.returned} onChange={set("returned")} error={errors.returned} />
-            <InputField id="log-crates-date" label="Fecha de devolución" type="date" value={values.date} onChange={set("date")} error={errors.date} />
+            <InputField id="log-crates-date" label="Fecha de devolución" required={Number(values.returned) > 0} type="date" value={values.date} onChange={set("date")} error={errors.date} />
             <InputField id="log-crates-coordination" label="Coordinación con planta" value={values.coordination} onChange={set("coordination")} />
             <InputField id="log-crates-exit" label="Salida del vehículo" type="datetime-local" value={values.vehicleExit} onChange={set("vehicleExit")} />
             <FormField label="Copia entregada al transportista"><label className="flex h-10 items-center gap-3 rounded-lg border border-border px-3 text-sm text-ink">

@@ -1,3 +1,4 @@
+import RequiredMark from "@/shared/components/RequiredMark";
 import type { ReactNode } from "react";
 import { AlertCircle } from "lucide-react";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/shared/components/ui/field";
@@ -35,7 +36,7 @@ export default function FormField({ id, label, required, optional, variant, erro
                 // `htmlFor` se conserva para el nombre accesible del control, pero un clic en el título no debe
                 // enfocar el input ni abrir el selector: solo el recuadro del campo responde.
                 <FieldLabel htmlFor={id} variant={variant} optional={optional} onClick={(event) => event.preventDefault()}>
-                    {label} {required && !optional && <span aria-hidden="true" className="text-destructive">*</span>}
+                    {label} {required && !optional && <RequiredMark />}
                 </FieldLabel>
             )}
             {children}

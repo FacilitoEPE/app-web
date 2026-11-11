@@ -632,7 +632,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                                     value={motivoDescarte}
                                                     onChange={setMotivoDescarte}
                                                 />
-                                                <div className="sm:col-span-2"><FileDropzone label="Evidencia del descarte" file={evidenciaDescarte} onChange={setEvidenciaDescarte} variant="horizontal" readOnly={activeLoad.etapa !== 'Llegada'} replaceable /></div>
+                                                <div className="sm:col-span-2"><FileDropzone label="Evidencia del descarte" required file={evidenciaDescarte} onChange={setEvidenciaDescarte} variant="horizontal" readOnly={activeLoad.etapa !== 'Llegada'} replaceable /></div>
                                             </>
                                         )}
 
@@ -671,6 +671,7 @@ export default function DriverPortalPage({ onLogout }: DriverPortalPageProps) {
                                         <div className="sm:col-span-2">
                                             <FileDropzone
                                                 label="Documento de guía de salida firmada"
+                                                required
                                                 file={archivoGuiaSalida}
                                                 onChange={(f) => setArchivoGuiaSalida(f)}
                                                 variant="horizontal"

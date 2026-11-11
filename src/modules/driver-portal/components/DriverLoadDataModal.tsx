@@ -1,3 +1,4 @@
+import RequiredMark from "@/shared/components/RequiredMark";
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from '@/shared/hooks/useFormSubmit';
 import SegmentedControl from '@/shared/components/SegmentedControl';
@@ -219,7 +220,7 @@ export default function DriverLoadDataModal({ open, onOpenChange, load, onSave }
                                     <InputField id={`prov-kg-${index}`} label="Kilos cargados" required step="0.01" min={0} unit="kg" value={String(prov.kilosCargados || '')} onChange={value => updateProvider(index, { kilosCargados: Number(value) })} className="col-span-2" />
                                 </div>
                                 <div className="space-y-3">
-                                    <div className="grid grid-cols-[5rem_1fr_1fr] gap-2 text-xs font-semibold text-ink-muted"><span>Bultos</span><span>Cargados</span><span>Vacíos</span></div>
+                                    <div className="grid grid-cols-[5rem_1fr_1fr] gap-2 text-xs font-semibold text-ink-muted"><span>Bultos <RequiredMark /></span><span>Cargados</span><span>Vacíos</span></div>
                                     {BULTO_TYPES.map(type => {
                                         const checked = selectedBultos[index]?.includes(type.label) ?? false;
                                         return <div key={type.label} className="grid grid-cols-[5rem_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2">

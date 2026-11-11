@@ -1,3 +1,4 @@
+import RequiredMark from "@/shared/components/RequiredMark";
 import { annualBeforeSettlement, importeParaUit } from '@/modules/purchase-settlement/settlementUit.utils';
 import { suggestSettlementNumber } from '@/modules/purchase-settlement/settlementNumber.utils';
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
@@ -398,7 +399,7 @@ export default function SettlementProviderModal({
                                 </div>
                                 {proyectadoPen >= limitSoles && <div className="flex items-center justify-between rounded-lg bg-card/90 px-3 py-2">
                                     <span className="text-[12.5px] font-bold text-ink">
-                                        He revisado el aviso del límite anual de la persona seleccionada
+                                        He revisado el aviso del límite anual de la persona seleccionada <RequiredMark />
                                     </span>
                                     <Switch
                                         checked={confirmacionExcesoUit}

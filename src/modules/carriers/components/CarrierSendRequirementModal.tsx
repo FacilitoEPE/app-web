@@ -131,7 +131,7 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
                     </p>
                 </div>
 
-                <ModalSection title="Empresas destinatarias" aside={<Badge variant="brand" className="h-5 px-2 text-[12px] font-bold">{count}</Badge>}>
+                <ModalSection title="Empresas destinatarias" required aside={<Badge variant="brand" className="h-5 px-2 text-[12px] font-bold">{count}</Badge>}>
                     {count > 0 ? (
                         <div className="flex max-h-32 flex-wrap gap-2 overflow-y-auto pr-1">
                             {selectedCarriers.map((carrier) => (

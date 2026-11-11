@@ -209,6 +209,7 @@ export default function QualityRemissionGuideModal({
                 {/* 1. Proveedores de esta guía */}
                 <ModalSection
                     title="Proveedores de esta guía"
+                    required
                     aside="Distribuye los kilos disponibles"
                 >
                     <div className="flex flex-col gap-2">
@@ -226,7 +227,7 @@ export default function QualityRemissionGuideModal({
                                 <Sprout size={13} />
                                 <span>{p.proveedorNombre} <span className="font-normal text-ink-muted">· {p.fincaNombre} · {p.rol} · {p.tipoFruta} · {formatKg(remainingKg(p.proveedorId))} kg disponibles</span></span>
                                 </label>
-                                <InputField id={`rg-provider-kg-${p.proveedorId}`} label="Kilos para esta guía" className="[&_[data-slot=field-label]]:sr-only" type="number" min={0} step="0.01" placeholder={`Máx. ${formatKg(remainingKg(p.proveedorId))} kg`} disabled={!included.includes(p.proveedorId)} value={included.includes(p.proveedorId) ? (kilosPorProveedor[p.proveedorId] ? String(kilosPorProveedor[p.proveedorId]) : "") : ""} onChange={value => {
+                                <InputField id={`rg-provider-kg-${p.proveedorId}`} label="Kilos para esta guía" required={included.includes(p.proveedorId)} type="number" min={0} step="0.01" placeholder={`Máx. ${formatKg(remainingKg(p.proveedorId))} kg`} disabled={!included.includes(p.proveedorId)} value={included.includes(p.proveedorId) ? (kilosPorProveedor[p.proveedorId] ? String(kilosPorProveedor[p.proveedorId]) : "") : ""} onChange={value => {
                                     updateAllocations(included, { ...kilosPorProveedor, [p.proveedorId]: Number(value) || 0 });
                                 }} />
                             </div>

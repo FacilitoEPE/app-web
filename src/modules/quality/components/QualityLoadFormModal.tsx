@@ -1,3 +1,4 @@
+import RequiredMark from "@/shared/components/RequiredMark";
 import { useState } from "react";
 import { PackageCheck, Save, Sprout, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -277,7 +278,7 @@ export default function QualityLoadFormModal({
                                     <InputField id={`lf-kg-${prov.proveedorId}-${idx}`} label="Kilos cargados" required type="number" min={0} step="0.01" placeholder="0" value={prov.kilosCargados ? String(prov.kilosCargados) : ""} onChange={value => updateProvider(idx, { kilosCargados: Number(value) || 0 })} />
                                 </div>
                                 <div className="border-t border-border px-4 pb-4 pt-3">
-                                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink">Bultos</p>
+                                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink">Bultos {prov.kilosCargados > 0 && <RequiredMark />}</p>
                                     <div className="grid grid-cols-[minmax(90px,1fr)_repeat(2,minmax(0,1.5fr))] gap-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">
                                         <span>Tipo</span><span>Cargados</span><span>Vacíos</span>
                                     </div>

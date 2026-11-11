@@ -173,7 +173,7 @@ export default function CampaignDeliveryCoordinationModal({
                     </div>
                 </ModalSection>
 
-                <ModalSection title="Proveedores y fincas">
+                <ModalSection title="Proveedores y fincas" required>
                     <CampaignDeliveryProviderPicker
                         providers={providers}
                         value={values.proveedores}
