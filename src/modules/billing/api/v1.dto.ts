@@ -11,7 +11,7 @@ export interface FacturaVentaV1 {
   fechaVencimiento: string | null
   kilosFacturados: number
   precioKgAplicado: number
-  moneda: "PEN" | "USD" | "EUR"
+  moneda: string
   importeVenta: number
   archivoId: number | null
   createdAt: string
@@ -29,7 +29,7 @@ export interface CreateFacturaVentaV1 {
   fechaEmision?: string | null
   fechaVencimiento?: string | null
   kilosFacturados: number
-  moneda: "PEN" | "USD" | "EUR"
+  moneda: string
   descuento?: number
   cargos?: number
   observaciones?: string | null

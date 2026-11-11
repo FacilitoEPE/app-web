@@ -143,7 +143,7 @@ export interface CotizacionTransporteV1 {
   invitacionTransporteId: number
   fecha: string
   monto: number
-  moneda: "PEN" | "USD" | "EUR"
+  moneda: string
   condiciones: string | null
   archivoId: number | null
   estado: string
@@ -155,7 +155,7 @@ export interface CotizacionTransporteV1 {
 export interface CreateCotizacionTransporteV1 {
   fecha: string
   monto: number
-  moneda: "PEN" | "USD" | "EUR"
+  moneda: string
   condiciones?: string | null
   estado?: string
   disponibilidad?: string | null

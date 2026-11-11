@@ -18,6 +18,8 @@ Genera y verifica desde `epe-web/` con `pnpm contract:generate` y `pnpm contract
 
 El SQL de esta carpeta es distinto del [modelo objetivo compartido](../../../docs/target-model/README.md). No los copies ni sincronices automáticamente: el primero alimenta el generador V1 y el segundo documenta una propuesta de modelo.
 
+Las escrituras V1 con moneda usan `PEN` o `USD`. El servicio valida el código de moneda, así como la consistencia de los conteos MTD. Las columnas de lectura conservan el tipo del [esquema PostgreSQL](../../../epe-backend/docs/database.md).
+
 ## Documento del chofer
 
 `POST /v1/transportistas/{id}/choferes` y su `PATCH` aceptan `tipoDocumento` y `numeroDocumento` como texto opcional. La API devuelve ambos campos y `numeroLicencia` al consultar el chofer. Los registros anteriores recuperan el documento de su persona vinculada si existe. [Migración](../../../epe-backend/docs/database.md#documento-del-chofer).

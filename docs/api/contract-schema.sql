@@ -1,22 +1,11 @@
--- MODELO DOCUMENTADO PARA REVISION MANUAL. No modifica entidades TypeORM ni la base desplegada.
-
--- D08 aprobado 2026-10-29: destino de entrega como texto; guía con dirección de llegada histórica; sin catálogo de destinos.
-
--- Actualización funcional FC01-FC14: tipos/borradores, detalle JSON, recepción reconocida, ajustes y cardinalidades autorizadas.
-
--- Instalación nueva en agro: incluye 19 tablas actuales y 41 propuestas; catálogos iniciales incluidos; archivo queda excluida.
-
--- Conserva los nombres de 173 columnas actuales y adapta tipos/nulabilidad para los formularios; retira archivo y campania_x_proveedores.finca_id. Referencias documentales opcionales, sin FK, pendientes de integración.
-
--- Decisión aprobada 2026-10-27: análisis previo por participación/finca; analisis_calidad.cosecha_id es opcional. Una variedad por finca; fruta se obtiene de la variedad.
-
--- Participación única campania_x_proveedores; retira puentes derivados y acuerdo_compra. Agrega atributos y 41 tablas propuestas.
-
--- Se modifican tipos y nulabilidad legacy documentados en modified_columns; no es una migración sobre datos existentes.
-
--- No es una migración de producción. Si agro existe, se aborta. Requiere btree_gist para la exclusión actual de choferes.
+-- Fuente del contrato HTTP V1 basada en el esquema agro implementado.
+-- Las tablas y columnas se declaran de forma explícita para el generador de OpenAPI.
+-- El servicio V1 valida las monedas y los conteos MTD al guardar.
+-- Para instalar el backend, consulta epe-backend/docs/database.md.
 
 BEGIN;
+
+SET LOCAL client_encoding = 'UTF8';
 
 CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;
 
@@ -88,7 +77,7 @@ CREATE TABLE "campania_x_proveedores" (
   CONSTRAINT "CHK_fruta_convencional_solo_productor" CHECK (((tipo_proveedor = 'productor'::campania_x_proveedores_tipo_proveedor_enum) OR (fruta_convencional_estimado IS NULL))),
   CONSTRAINT "PK_fd78570e9beb123e572cbc5914a" PRIMARY KEY (cxp_id),
   CONSTRAINT "UQ_campania_proveedor" UNIQUE (campania_id, proveedor_id),
-  CHECK (moneda = 'PEN' AND (precio_compra_kg IS NULL OR precio_compra_kg > 0)),
+  CHECK (precio_compra_kg IS NULL OR precio_compra_kg > 0),
   CHECK (disponibilidad_hasta >= disponibilidad_desde),
   UNIQUE (cxp_id, campania_id, proveedor_id)
 );
@@ -116,9 +105,8 @@ CREATE TABLE "certificado_campana" (
   "observaciones" text,
   "historial_cobertura" jsonb NOT NULL DEFAULT '[]'::jsonb,
   "tipo_certificacion" varchar(80),
-  "kilos_iniciales" numeric(14,3) CHECK (kilos_iniciales >= 0),
+  "kilos_iniciales" numeric(14,3),
   CONSTRAINT "PK_1856de725430dd73744896b9e4f" PRIMARY KEY (certificado_id),
-  CHECK (moneda IS NULL OR moneda IN ('PEN','USD','EUR')),
   CHECK (jsonb_typeof(historial_cobertura) = 'array'),
   CHECK (fecha_vencimiento >= vigencia_desde),
   CHECK (tipo_certificacion IN ('Global GAP','Orgánico USDA','Orgánico UE','Fairtrade','Rainforest Alliance')),
@@ -612,8 +600,7 @@ CREATE TABLE "contrato_venta" (
   UNIQUE (numero),
   CHECK (kilos_acordados > 0),
   CHECK (precio_kg > 0),
-  CHECK (canal IN ('EXPORTACION','INDUSTRIA')),
-  CHECK (moneda IN ('PEN','USD','EUR'))
+  CHECK (canal IN ('EXPORTACION','INDUSTRIA'))
 );
 
 -- TABLA PROPUESTA: entrega_programada
@@ -694,8 +681,7 @@ CREATE TABLE "cotizacion_transporte" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now(),
   "disponibilidad" text,
-  CHECK (monto > 0),
-  CHECK (moneda IN ('PEN','USD','EUR'))
+  CHECK (monto > 0)
 );
 
 -- TABLA PROPUESTA: acuerdo_transporte
@@ -720,7 +706,7 @@ CREATE TABLE "acuerdo_transporte" (
   UNIQUE (acuerdo_transporte_id, id_empresa_transporte_externo),
   CHECK (monto_acordado > 0),
   CHECK (tipo_pago IN ('INMEDIATO','CON_ADELANTO','AL_FINAL')),
-  CHECK (estado IN ('BORRADOR','CONFIRMADO') AND moneda = 'PEN'),
+  CHECK (estado IN ('BORRADOR','CONFIRMADO')),
   CHECK (estado <> 'CONFIRMADO' OR (tipo_pago IS NOT NULL AND monto_acordado IS NOT NULL AND fecha_acuerdo IS NOT NULL AND fecha_pago_final IS NOT NULL)),
   CHECK (adelanto_acordado >= 0 AND (monto_acordado IS NULL OR adelanto_acordado <= monto_acordado))
 );
@@ -830,12 +816,7 @@ CREATE TABLE "medicion_mtd" (
   "trampas" integer,
   "dias_exposicion" integer,
   CHECK (valor >= 0),
-  CHECK (limite_aplicado >= 0),
-  CONSTRAINT "CHK_medicion_mtd_conteo_completo" CHECK (
-    (capturas IS NULL AND trampas IS NULL AND dias_exposicion IS NULL)
-    OR (capturas IS NOT NULL AND capturas >= 0 AND trampas IS NOT NULL AND trampas > 0
-      AND dias_exposicion IS NOT NULL AND dias_exposicion > 0)
-  )
+  CHECK (limite_aplicado >= 0)
 );
 
 -- TABLA PROPUESTA: carga
@@ -1071,7 +1052,7 @@ CREATE TABLE "liquidacion_proveedor" (
   UNIQUE (numero),
   CHECK (importe_compra > 0),
   CHECK (valor_uit_aplicado > 0),
-  CHECK (kilos_reconocidos > 0 AND precio_kg_aplicado > 0 AND moneda = 'PEN'),
+  CHECK (kilos_reconocidos > 0 AND precio_kg_aplicado > 0),
   CHECK (importe_compra = round(kilos_reconocidos * precio_kg_aplicado, 2)),
   CHECK (jsonb_typeof(persona_snapshot) = 'object'),
   CHECK (limite_uit_aplicado > 0)
@@ -1094,8 +1075,7 @@ CREATE TABLE "liquidacion_transporte" (
   "observaciones" text,
   UNIQUE (carga_id),
   UNIQUE (numero),
-  CHECK (flete >= 0),
-  CHECK (moneda = 'PEN')
+  CHECK (flete >= 0)
 );
 
 -- TABLA PROPUESTA: gasto_transporte
@@ -1170,7 +1150,6 @@ CREATE TABLE "factura_venta" (
   CHECK (kilos_facturados > 0),
   CHECK (precio_kg_aplicado > 0),
   CHECK (estado IN ('PREPARADA','EMITIDA')),
-  CHECK (moneda IN ('PEN','USD','EUR')),
   CHECK (fecha_vencimiento >= fecha_emision),
   CHECK (estado <> 'EMITIDA' OR (numero_factura IS NOT NULL AND fecha_emision IS NOT NULL)),
   CHECK (descuento >= 0 AND cargos >= 0 AND importe_venta > 0),
@@ -2079,8 +2058,6 @@ REVOKE ALL ON ALL TABLES IN SCHEMA agro FROM PUBLIC;
 
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA agro FROM PUBLIC;
 
-COMMIT;
-
 CREATE TABLE "contrato_x_fruta_derivada" (
   "contrato_x_fruta_derivada_id" integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   "contrato_venta_id" integer NOT NULL,
@@ -2091,5 +2068,7 @@ CREATE TABLE "contrato_x_fruta_derivada" (
   UNIQUE (contrato_venta_id, fruta_derivada_id),
   CHECK (kilos_acordados > 0)
 );
-ALTER TABLE "contrato_x_fruta_derivada" ADD CONSTRAINT "fk_contrato_variedad_contrato" FOREIGN KEY ("contrato_venta_id") REFERENCES "contrato_venta" ("contrato_venta_id") ON DELETE CASCADE;
-ALTER TABLE "contrato_x_fruta_derivada" ADD CONSTRAINT "fk_contrato_variedad_fruta" FOREIGN KEY ("fruta_derivada_id") REFERENCES "fruta_derivada" ("fruta_derivada_id");
+ALTER TABLE "contrato_x_fruta_derivada" ADD CONSTRAINT "contrato_x_fruta_derivada_contrato_venta_id_fkey" FOREIGN KEY ("contrato_venta_id") REFERENCES "contrato_venta" ("contrato_venta_id") ON DELETE CASCADE;
+ALTER TABLE "contrato_x_fruta_derivada" ADD CONSTRAINT "contrato_x_fruta_derivada_fruta_derivada_id_fkey" FOREIGN KEY ("fruta_derivada_id") REFERENCES "fruta_derivada" ("fruta_derivada_id");
+
+COMMIT;

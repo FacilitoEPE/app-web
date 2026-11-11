@@ -13,7 +13,7 @@
   ],
   "x-source": {
     "path": "api/contract-schema.sql",
-    "sha256": "7d6158b677150150f1123cd10df5c31d5e1f1fd93f09a4783aee377c1d978dbe",
+    "sha256": "717843bc7de26514f363339386b8235016ebf31a3c2cf51ac7994a0746a31123",
     "date": "2026-10-29"
   },
   "x-database": {
@@ -41514,12 +41514,7 @@
             "type": "string",
             "x-column": "moneda",
             "maxLength": 3,
-            "minLength": 1,
-            "enum": [
-              "PEN",
-              "USD",
-              "EUR"
-            ]
+            "minLength": 1
           },
           "estado": {
             "type": "string",
@@ -42022,12 +42017,7 @@
             "type": "string",
             "x-column": "moneda",
             "maxLength": 3,
-            "minLength": 1,
-            "enum": [
-              "PEN",
-              "USD",
-              "EUR"
-            ]
+            "minLength": 1
           },
           "condiciones": {
             "type": [
@@ -44659,12 +44649,7 @@
             "type": "string",
             "x-column": "moneda",
             "maxLength": 3,
-            "minLength": 1,
-            "enum": [
-              "PEN",
-              "USD",
-              "EUR"
-            ]
+            "minLength": 1
           },
           "importeVenta": {
             "type": "number",
@@ -48259,12 +48244,7 @@
             "type": "string",
             "x-column": "moneda",
             "maxLength": 3,
-            "minLength": 1,
-            "enum": [
-              "PEN",
-              "USD",
-              "EUR"
-            ]
+            "minLength": 1
           },
           "estado": {
             "type": "string",
@@ -48364,12 +48344,7 @@
             "type": "string",
             "x-column": "moneda",
             "maxLength": 3,
-            "minLength": 1,
-            "enum": [
-              "PEN",
-              "USD",
-              "EUR"
-            ]
+            "minLength": 1
           },
           "estado": {
             "type": "string",
@@ -49564,12 +49539,7 @@
             "type": "string",
             "x-column": "moneda",
             "maxLength": 3,
-            "minLength": 1,
-            "enum": [
-              "PEN",
-              "USD",
-              "EUR"
-            ]
+            "minLength": 1
           },
           "condiciones": {
             "type": [
@@ -49617,12 +49587,7 @@
             "type": "string",
             "x-column": "moneda",
             "maxLength": 3,
-            "minLength": 1,
-            "enum": [
-              "PEN",
-              "USD",
-              "EUR"
-            ]
+            "minLength": 1
           },
           "condiciones": {
             "type": [
@@ -53705,12 +53670,7 @@
             "type": "string",
             "x-column": "moneda",
             "maxLength": 3,
-            "minLength": 1,
-            "enum": [
-              "PEN",
-              "USD",
-              "EUR"
-            ]
+            "minLength": 1
           },
           "descuento": {
             "type": "number",
@@ -53787,12 +53747,7 @@
             "type": "string",
             "x-column": "moneda",
             "maxLength": 3,
-            "minLength": 1,
-            "enum": [
-              "PEN",
-              "USD",
-              "EUR"
-            ]
+            "minLength": 1
           },
           "descuento": {
             "type": "number",

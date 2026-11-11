@@ -9,7 +9,7 @@ export interface ContratoVentaV1 {
   fecha: string
   kilosAcordados: number
   precioKg: number | null
-  moneda: "PEN" | "USD" | "EUR"
+  moneda: string
   estado: string
   condicionesPago: string | null
   archivoId: number | null
@@ -27,7 +27,7 @@ export interface CreateContratoVentaV1 {
   canal: "EXPORTACION" | "INDUSTRIA"
   fecha: string
   precioKg?: number | null
-  moneda: "PEN" | "USD" | "EUR"
+  moneda: string
   estado?: string
   condicionesPago?: string | null
   condicionesEntrega?: string | null
