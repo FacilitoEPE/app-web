@@ -39,10 +39,15 @@ En **Lineamientos**, elegir un archivo solo lo deja pendiente; se envía al crea
 4. Seleccione al proveedor, ingrese kilos estimados y guarde. En planificación elija el rol **Productor** o **Acopiador**. En ejecución, la ficha de un productor ya vinculado sigue disponible en su pestaña.
 5. Después de guardar la participación de un productor, abra **Ver detalles > Entrevistas > Vincular finca**. Seleccione una finca existente o registre una nueva eligiendo su departamento, provincia y distrito. Complete los datos agronómicos de esta campaña y guarde la entrevista.
 
+6. Desde el detalle de cada proveedor vinculado, abra **Exámenes** para registrar y consultar sus análisis de laboratorio. En el detalle del **Productor** también aparece **Entrevistas**; los acopiadores no tienen esa sección. Durante QA se guardaron exámenes de productor y acopiador y se verificó una entrevista existente del productor.
+7. Cuando los productores que participarán ya estén registrados, abra **Certificaciones** y use **Registrar certificación**. Asocie el certificado internacional a los productores de la campaña y revise los kilos calculados. Los campos **Documento del certificado** y **Cotización de la certificadora** son opcionales en la vista; pueden omitirse si no se dispone de esos archivos.
+
 En el registro de finca, **Ver ubicación en el mapa** muestra un marcador con la latitud y longitud ingresadas.
 
 **Dirección:** `/campaigns > Nueva Campaña`; luego `/campaigns/:id/providers`.  
 **Opción:** **Productor** cuando el abastecimiento proviene de fincas; **Acopiador** para una relación de acopio. Vincule una finca de la fruta de la campaña.
+
+En ejecución, la vista permite vincular acopiadores; no permite agregar productores nuevos. Planifique las participaciones de productores y sus entrevistas antes del inicio de campaña.
 
 ## 4. Vincular el cliente y su entrega
 
@@ -71,7 +76,11 @@ En cada variedad de la entrega verá **Disponible de la variedad**, **En esta en
 
 En **Programa semanal de entregas**, consulte los kilos programados por cliente y filtre por fecha, variedad o placa. Al abrir una celda verá el desglose y la unidad asignada.
 
-Use **Ver detalles** en el transportista vinculado para abrir la cotización adjunta. En **Certificaciones**, abra **Ver detalles** y busque la evidencia en el historial del pago correspondiente.
+Use **Ver detalles** en el transportista vinculado para comprobar si hay una cotización adjunta. En **Certificaciones**, abra **Ver detalles** y busque la evidencia en el historial del pago correspondiente.
+
+Para coordinar una entrega, abra **Entregas > Completar datos de entrega** y asigne la unidad, el chofer y los datos de origen y destino. La acción se habilita mientras exista al menos una entrega programada sin coordinación. En ejecución se pueden vincular transportistas desde **Transportistas**; el vehículo y el chofer se asignan desde la coordinación de la entrega.
+
+**Límite V1 observado en QA:** el formulario de vínculo exige seleccionar una cotización, pero informa que el archivo no se guardará. Al volver a abrir el detalle, la vista mostró **Sin documento de cotización adjunto**. No use ese campo como evidencia de que el archivo quedó conservado; compruebe el detalle del vínculo después de guardarlo.
 
 **Dirección:** `/campaigns/:id/carriers` y `/campaigns/:id/deliveries`.  
 **Opción:** use el vehículo y chofer pertenecientes al transportista vinculado y asigne una entrega real de la campaña.
@@ -148,5 +157,6 @@ En **Gestión de Campaña**, abra la campaña para consultar su avance integral,
 
 - Seleccionar un PDF lo deja pendiente hasta guardar el formulario. En Logística y en el detalle de factura, use **Documento verificado** para confirmar la disponibilidad del adjunto. En **Historial de cobros**, consulte el voucher desde la fila del movimiento.
 - En el detalle de una factura cobrada, la tarjeta **Saldo** puede conservar el texto **Pendiente de cobro** aunque indique cero. Confirme el estado y los movimientos en el historial. [Evidencia del QA](../evidence/qa-2026-11-10.md)
+- En **Entregas**, **Completar datos de entrega** se deshabilita si todas las entregas ya tienen coordinación. Una campaña sin entregas pendientes no permite probar desde esta pantalla una asignación nueva de transportista, vehículo y chofer. [Evidencia del QA](../evidence/qa-2026-11-10.md)
 - Los catálogos de referencia se mantienen por migración/semilla; revise [semillas](../../../epe-backend/docs/seed-data.md) antes de preparar una base nueva.
 - Si una operación no se conserva al volver a abrir la pantalla, reporte módulo, ruta, identificador y acción. No incluya contraseñas ni datos personales innecesarios.
