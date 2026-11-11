@@ -1,6 +1,6 @@
 # Guía de usuario V1 — Chofer
 
-**Actualizado:** 2026-11-09
+**Actualizado:** 2026-11-11
 **Formato:** se indican rutas y opciones de pantalla; esta guía no usa capturas.
 
 ## 1. Ingresar al portal
@@ -12,12 +12,14 @@
 
 El portal muestra todas las entregas coordinadas. La cuenta puede consultarlas y operar el despacho aunque no esté vinculada a un conductor. Cada carga muestra el chofer y la placa de su coordinación.
 
+Si estaba en los módulos administrativos, cierre esa sesión antes de ingresar con la cuenta habilitada para Chofer. [Manual del administrador](administrator.md) · [Flujo de navegación en Archify](../../../docs/business/flows/operacion-agro.html)
+
 **Dirección:** `/login > Perfil de acceso: Chofer`.
 **Opción:** use las credenciales de su cuenta de chofer y revise la placa al consultar el viaje.
 
 ## 2. Revisar el viaje
 
-Las entregas coordinadas que aún no tienen carga aparecen como **Por completar**. Abra **Registrar carga**, compruebe los proveedores y fincas asignados y elija una variedad de esas fincas para cada proveedor. Ingrese los kilos y marque cada tipo de bulto utilizado para completar cargados y vacíos. Registre fecha, responsable, viáticos, gastos y observaciones; guarde antes de abrir el despacho. El registro usa la misma carga que consulta Cosecha y Control de Calidad. Si ve **Pendiente en Calidad**, el administrador debe completar ese registro antes de habilitar el despacho.
+Las entregas coordinadas que aún no tienen carga aparecen como **Por completar**. Abra **Registrar carga**, compruebe los proveedores y fincas asignados y elija una variedad de esas fincas para cada proveedor. Ingrese los kilos y marque cada tipo de bulto utilizado para completar cargados y vacíos. Registre fecha, responsable, viáticos, gastos y observaciones. Guarde y anote el código de carga para compartirlo con el Administrador. El registro usa la misma carga que consulta **Cosecha y Control de Calidad**. Si ve **Pendiente en Calidad**, el Administrador debe completar ese registro antes de habilitar el despacho.
 
 El chofer no puede cambiar de conductor desde el portal. La edición de datos de carga se habilita durante **En carga**, en una campaña en ejecución y antes de emitir una guía.
 
@@ -48,13 +50,15 @@ En **Despacho**, seleccione la carga y registre cada evento cuando suceda:
 
 En cada etapa, elija la acción que aparece como siguiente estado y añada una observación concreta si hace falta. La aplicación exige el orden indicado.
 
+Para registrar **Salida de finca**, la carga debe contar con una guía de remisión emitida en **Cosecha y Control de Calidad**. Si falta, pida al Administrador que revise la guía de la carga y vuelva a abrir el despacho.
+
 **Dirección:** `/chofer > Despacho > seleccionar carga > siguiente etapa`.
 **Opción:** avance un estado por vez; no registre eventos antes de que ocurran.
 
 ## 4. Guardar el checklist de llegada
 
 1. En **Checklist de llegada a planta**, ingrese los kilos leídos en la balanza.
-2. Marque **¿Hubo fruta de descarte?** solo si corresponde. Si la marca, ingrese cantidad y motivo.
+2. Marque **¿Hubo fruta de descarte?** si corresponde. Ingrese cantidad y motivo y adjunte la evidencia. El peso en planta debe ser mayor que cero y hasta los kilos cargados.
 3. Añada observaciones de recepción y elija **Guardar checklist de llegada**.
 4. Confirme el aviso y vuelva a abrir el despacho para revisar los datos guardados.
 
@@ -66,19 +70,19 @@ En cada etapa, elija la acción que aparece como siguiente estado y añada una o
 1. Después de confirmar la llegada, abra **Guía de salida del vehículo**.
 2. Adjunte la guía de salida firmada; puede reemplazar un documento anterior.
 3. Añada observaciones si corresponde y elija **Guardar guía de salida**.
-4. Vuelva a abrir el panel para comprobar que los datos quedaron guardados.
+4. Vuelva a abrir el panel y compruebe que el archivo figure como **Documento verificado**. Avise a Logística que el checklist y la guía están disponibles. El Administrador tiene un campo separado para la guía de salida firmada del expediente de cierre.
 
 **Dirección:** `/chofer > Despacho > Guía de salida del vehículo`.
 **Opción:** compruebe el documento adjunto y su vínculo con la entrega.
 
 ## 6. Coordinar el cierre del despacho
 
-Cuando haya llegado a planta, complete primero todas las etapas hasta **Llegada a planta**, el checklist y la guía de salida. El Administrador revisa esos datos y confirma el **Cierre físico**. Después de esa confirmación, vuelva a **Despacho** y elija **Cerrar despacho** para registrar el último evento del viaje.
+Cuando haya llegado a planta, complete el checklist y guarde la guía de salida. El Administrador registra recepción y descarga, guarda el expediente y confirma el **Cierre físico** en Logística. Después de esa confirmación, vuelva a **Despacho**, seleccione la misma carga y elija **Cerrar despacho** para registrar el último evento del viaje.
 
 **Dirección:** `/chofer > Despacho > carga > Cerrar despacho`.
 **Opción:** realice este último paso solo cuando el Administrador confirme que el cierre físico está listo.
 
-La aplicación mostrará el despacho como completado. Si la acción todavía no está habilitada, comuníquese con el Administrador; no intente saltar estados.
+Confirme que el historial muestre **Cierre** y avise al Administrador para que registre el **Cierre administrativo** en Logística. Si **Cerrar despacho** sigue deshabilitado, revise el checklist y la guía de salida, confirme con Logística el cierre físico y actualice la vista.
 
 ## 7. Salir y cambiar de perfil
 
@@ -88,6 +92,6 @@ La aplicación mostrará el despacho como completado. Si la acción todavía no 
 
 ## 8. Límites conocidos de la V1
 
-- El portal muestra los viajes asociados al perfil seleccionado en este despliegue. El acceso productivo debe estar sujeto a autenticación y permisos habilitados.
-- Si **Adjuntar documento** está deshabilitado, el archivo no se ha enviado; reporte el bloqueo al Administrador.
+- Si la cuenta no permite ingresar, confirme con el Administrador que está habilitada para el perfil **Chofer**.
+- Si un archivo sigue en **Pendiente de guardar**, guarde el formulario antes de salir. Si la verificación falla, use **Volver a verificar** y reporte el problema con el código de carga.
 - No registre información falsa ni incluya datos personales innecesarios en observaciones.

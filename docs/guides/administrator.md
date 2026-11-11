@@ -1,6 +1,7 @@
 # Guía de usuario V1 — Administrador
 
-**Actualizado:** 2026-10-30  
+**Actualizado:** 2026-11-11
+
 **Formato:** se indican rutas y opciones de pantalla; esta guía no usa capturas.
 
 ## 1. Acceso
@@ -10,7 +11,7 @@
 3. Complete **Usuario** y **Contraseña** y elija **Ingresar**.
 4. En el selector de módulos, abra el módulo que necesita.
 
-La sesión V1 utiliza el mecanismo de acceso disponible en este despliegue. No asuma permisos productivos hasta que autenticación y autorización estén habilitadas para el entorno.
+Use el selector de módulos de la cabecera para cambiar de módulo. Mantenga a mano la campaña y el código de la carga para encontrar el mismo registro en Calidad, Logística y Facturación. Para operar el despacho como Chofer, cierre la sesión y elija ese perfil en `/login` con una cuenta habilitada. [Manual del chofer](driver.md) · [Flujo de navegación en Archify](../../../docs/business/flows/operacion-agro.html)
 
 ## 2. Preparar los datos de operación
 
@@ -33,7 +34,7 @@ Frutas, variedades, normas, roles y parámetros UIT son catálogos de referencia
 
 En **Lineamientos**, elegir un archivo solo lo deja pendiente; se envía al crear/guardar la campaña. Al consultar un adjunto guardado, verde indica documento verificado, rojo indica que falta o no coincide con sus metadatos: quítelo y vuelva a adjuntarlo. Si aparece «No se pudo verificar», revise la conexión o solicite revisar los permisos del almacenamiento y pulse **Volver a verificar**. La vista previa se deshabilita para documentos confirmados como faltantes o inconsistentes.
 
-2. Ingrese nombre, fruta, meta en kilogramos y fechas. Si lo desea, escriba un **Responsable**. Elija **Crear Campaña** y verifique que figure como **Planificado**. El nombre guardado aparece en el detalle al volver a abrir la campaña.
+2. Ingrese nombre, fruta, meta en kilogramos y fechas. Si lo desea, escriba un **Responsable**. Elija **Crear Campaña** y revise su estado. Con fecha de inicio futura queda en planificación. Pasa automáticamente a ejecución desde el día de inicio y a terminado cuando pasa la fecha de fin, según la fecha de Lima. Planifique los vínculos de productores antes del inicio.
 3. Abra el detalle de campaña, sección **Proveedores**. En planificación elija **Vincular proveedor**. En ejecución elija **Vincular acopiador**.
 4. Seleccione al proveedor, ingrese kilos estimados y guarde. En planificación elija el rol **Productor** o **Acopiador**. En ejecución, la ficha de un productor ya vinculado sigue disponible en su pestaña.
 5. Después de guardar la participación de un productor, abra **Ver detalles > Entrevistas > Vincular finca**. Seleccione una finca existente o registre una nueva eligiendo su departamento, provincia y distrito. Complete los datos agronómicos de esta campaña y guarde la entrevista.
@@ -47,8 +48,8 @@ En el registro de finca, **Ver ubicación en el mapa** muestra un marcador con l
 
 1. En el detalle de campaña, abra **Clientes** y elija **Vincular cliente**.
    El selector muestra los clientes disponibles. Si ya existe un vínculo, abra sus detalles para gestionar los contratos.
-2. Seleccione el cliente y complete kilos, variedades solicitadas, destino y fechas de entrega.
-3. Abra **Ver detalles** para revisar cantidades, precios, moneda y entregas programadas.
+2. Seleccione el cliente y guarde su requerimiento con las variedades y cantidades solicitadas.
+3. Abra **Ver detalles > Contratos**. Registre las variedades, los kilos, el precio y la moneda del acuerdo. Desde el contrato, abra **Entregas** y programe las variedades, los kilos, el destino y la fecha.
 
 **Dirección:** `/campaigns/:id/clients > Vincular cliente`.  
 **Opción:** indique la moneda, precio, variedad y destino que figuran en el acuerdo comercial confirmado.
@@ -97,30 +98,40 @@ En el listado de **Choferes** de una empresa transportista, abra **Ver detalles*
 ### Registrar la carga de una entrega coordinada
 
 1. En **Cosecha y Control de Calidad → Carga**, elija **Registrar carga** y seleccione una entrega coordinada de la campaña y del canal que está viendo. Registre la fecha, el responsable, los kilos y envases por proveedor, y los gastos. Si el chofer ya registró la carga, búsquela en **Cargas registradas**. En Industria, si la fruta no cumple los requisitos, guarde el motivo del rechazo.
-2. En **Guías de remisión**, ubique la carga y elija **Agregar guía**. Seleccione los proveedores. El formulario propone el peso con los kilos disponibles de la carga real y suma los bultos cargados y vacíos si incluye todos los kilos de los proveedores seleccionados. Si reparte los kilos de un proveedor entre guías, ingrese los bultos de cada guía. Complete los datos de traslado y guarde la guía.
+2. En **Guías de remisión**, ubique la carga y elija **Agregar guía**. Seleccione los proveedores. El formulario propone el peso con los kilos disponibles de la carga real y suma los bultos cargados y vacíos si incluye todos los kilos de los proveedores seleccionados. Si reparte los kilos de un proveedor entre guías, ingrese los bultos de cada guía. Complete los datos de traslado, guarde y use **Emitir** para habilitar la salida del chofer. Revise número, fechas, origen, destino, unidad y conductor antes de emitir. Una vez emitida, la guía queda en consulta.
 
 **Dirección:** `/calidad > campaña y canal > Carga > Registrar carga`.
 
-**Opción:** la carga debe existir y contener sus proveedores antes de preparar la guía. Los dos códigos de establecimiento son obligatorios.
+**Opción:** la carga debe existir y contener sus proveedores antes de preparar la guía. Los códigos de establecimiento de partida y llegada requieren cuatro dígitos.
 
 Si un registro anterior quedó sin kilos, vuelva a **Registrar carga** y seleccione la entrega marcada **Completar registro**.
 
 ## 8. Recepción en planta y despacho del chofer
 
-1. Abra **Logística y Despacho** (`/logistica-despacho`) y seleccione la carga.
-2. Registre recepción de planta: kilos recibidos, aceptación/rechazo, Brix y observaciones.
-3. Distribuya los kilos aceptados al proveedor correspondiente.
-4. El chofer registra las etapas del viaje, el checklist de llegada y la guía de salida del vehículo desde su sesión. No cierre físicamente el despacho hasta revisar la información del conductor.
-5. En logística, confirme **Cierre físico** y guarde el expediente. El chofer vuelve a su sesión y realiza **Cerrar despacho**. Regrese a la sesión de administrador, confirme **Cierre administrativo** y guarde el expediente final.
+1. Desde el selector de módulos, abra **Logística y Despacho**, seleccione la campaña y abra el **Detalle de carga**.
+2. En **Recepción y calidad**, use **Registrar llegada** para guardar la hora real y la ventana de atención. Use **Registrar descarga** para guardar inicio, término y responsable. Guarde la evaluación con el peso recibido, el resultado y, cuando corresponda, los datos de descarte y su evidencia.
+3. Revise la distribución de kilos reconocidos y los soportes en **Compras**. Use **Jabas** para conciliar los envases de la carga y registrar el retorno.
+4. Abra **Documentos y cierre**. Adjunte el PDF de la guía de remisión de la fruta y el informe de recepción si aún falta. Adjunte también la **Guía de salida firmada del vehículo** para el cierre administrativo. El documento que guarda el chofer en su portal se consulta en el detalle, mientras que el expediente administrativo tiene su propio campo de guía de salida firmada.
+5. Pulse **Guardar documentos** y espere a que termine. Si la tarjeta sigue mostrando **Pendiente de guardar**, vuelva a abrir la vista y compruebe **Documento verificado** antes de confirmar. El cierre físico exige horarios de descarga válidos, peso y resultado de recepción, informe de recepción, guía de fruta emitida y su PDF adjunto.
+6. Elija **Registrar cierre físico** y mantenga presionado el botón de confirmación. El chofer registra **Cerrar despacho** desde su cuenta después de guardar su checklist de llegada y contar con la guía firmada. Regrese a **Documentos y cierre** como Administrador, revise el expediente y confirme **Registrar cierre administrativo** cuando esté habilitado.
 
-**Dirección:** `/logistica-despacho > Recepción en planta / Documentos y cierre`.  
+**Dirección:** `/logistica-despacho > campaña > carga > Recepción y calidad / Documentos y cierre`.
+
 **Opción:** cierre físico antes del evento final del chofer; cierre administrativo después de que el chofer complete ese evento.
 
 El **Detalle de carga** muestra el responsable, las observaciones y la evidencia de descarga. Los motivos de descarte de recepción y del chofer aparecen en sus respectivas secciones.
 
 ## 9. Facturación, cobranza y liquidaciones
 
-- **Facturación y Cobros** (`/facturacion-cobros`): elija **Ver clientes** y luego **Facturar**. Ahí se muestran las cargas del cliente para toda la campaña, con su contrato y moneda correspondientes. Prepare la factura, registre el documento emitido y registre el cobro con referencia, fecha e importe.
+### Facturación y Cobros
+
+1. Abra **Facturación y Cobros > Ver clientes > Facturar**. Ubique la carga por su código. Para **Preparar factura** se necesita una carga con kilos registrados y una recepción con peso, resultado e informe. Este paso puede avanzar con el cierre administrativo pendiente.
+2. Seleccione **Preparar factura**. Revise los kilos disponibles, el precio por kilo y la moneda del contrato. Puede repartir los kilos disponibles en varias preparaciones. Complete los ajustes, sustento u observaciones que correspondan y elija **Guardar preparación**. La preparación reserva los kilos y recibe una referencia.
+3. Para un comprobante ya emitido externamente, elija **Registrar factura emitida**. Ingrese número, fecha de emisión y vencimiento, adjunte el PDF y confirme que corresponde al comprobante emitido. Pulse **Guardar factura emitida**. La pantalla registra los datos en el sistema. La emisión y validación ante SUNAT se hacen fuera de este módulo.
+4. Elija **Registrar cobro** y complete la fecha, el importe, el medio y la referencia del movimiento. Adjunte el **Voucher o evidencia del movimiento** en su propio campo. El importe debe ser mayor que cero y hasta el saldo pendiente. Guarde y abra **Historial de cobros** para comprobar el movimiento, el adjunto y el saldo. Un cobro completo muestra **Cobrado** y saldo cero.
+
+### Liquidaciones
+
 - **Liquidación de Compra** (`/liquidacion-compra`): liquide al proveedor según kilos aceptados y precio pactado; revise retenciones/alertas del límite UIT y registre el pago con referencia bancaria.
 - **Liquidaciones de Transporte**: revise flete y costos de ruta. En **Registrar pago / Aplicar adelanto**, seleccione un desembolso disponible del mismo acuerdo para descontarlo del saldo. Registre cualquier pago en caja por separado.
 
@@ -135,7 +146,7 @@ En **Gestión de Campaña**, abra la campaña para consultar su avance integral,
 
 ## 11. Límites conocidos de la V1
 
-- La guía y la factura que aparecen como emitidas son registros del flujo de la aplicación; esta prueba no verificó conexión con SUNAT ni con bancos.
-- Algunos flujos de Facturación y Logística ofrecen adjuntar archivos; su prueba disponible usa el servidor ficticio de desarrollo. Verifique que el archivo quede asociado al registro antes de tratarlo como persistido. No hay emisión directa a SUNAT ni conexión bancaria documentada.
+- Seleccionar un PDF lo deja pendiente hasta guardar el formulario. En Logística y en el detalle de factura, use **Documento verificado** para confirmar la disponibilidad del adjunto. En **Historial de cobros**, consulte el voucher desde la fila del movimiento.
+- En el detalle de una factura cobrada, la tarjeta **Saldo** puede conservar el texto **Pendiente de cobro** aunque indique cero. Confirme el estado y los movimientos en el historial. [Evidencia del QA](../evidence/qa-2026-11-10.md)
 - Los catálogos de referencia se mantienen por migración/semilla; revise [semillas](../../../epe-backend/docs/seed-data.md) antes de preparar una base nueva.
 - Si una operación no se conserva al volver a abrir la pantalla, reporte módulo, ruta, identificador y acción. No incluya contraseñas ni datos personales innecesarios.

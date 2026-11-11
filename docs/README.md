@@ -16,8 +16,8 @@ Las referencias a documentación compartida y al backend usan el workspace con `
 | Peticiones por pantalla y actualización tras escrituras | [Optimización implementada](integration-status.md#optimización-de-peticiones-por-vista--2026-11-05--implementada-en-desarrollo-y-revisada) y [referencia de diseño](integration-status.md#plan-de-consumo-api-por-vista--2026-11-05--referencia-de-diseño) |
 | Rutas, payloads o reglas API | [api/README.md](api/README.md) |
 | Nombre libre del responsable de campaña | [Contrato y ejemplo](api/README.md#responsable-libre-de-campaña) |
-| Pasos visibles para un usuario | [guides/](guides/) |
-| Resultado de pruebas con alcance y fecha | [evidence/](evidence/) |
+| Pasos visibles para un usuario | [Manual del administrador](guides/administrator.md), [manual del chofer](guides/driver.md) y [navegación entre módulos y perfiles](../../docs/business/flows/operacion-agro.html) |
+| Resultado de pruebas con alcance y fecha | [QA de despacho, facturación y cobros](evidence/qa-2026-11-10.md) y [evidencia anterior](evidence/) |
 | Riesgos y controles pendientes de seguridad | [Auditoría de seguridad](auditoria-seguridad.md) |
 
 El estado de integración es el registro operativo por vista. Las guías de usuario describen acciones disponibles, y los informes de `evidence/` son cortes fechados con vigencia limitada.

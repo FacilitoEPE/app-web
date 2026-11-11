@@ -4,6 +4,10 @@
 
 > **Fuente vigente del estado por vista.** Actualiza las entradas superiores al cambiar el estado y sincroniza los documentos afectados según las [reglas de epe-web](../AGENTS.md). Las entradas inferiores son evidencia histórica, no estado vigente; vencen 90 días después de su fecha salvo excepción documentada. Elimina las entradas vencidas al revisar el registro.
 
+## QA local con backend y S3 — 2026-11-10
+
+En la carga `CAR-8-7`, la interfaz confirmó los adjuntos de recepción y facturación, el cierre físico, el registro de factura de prueba y un cobro con saldo cero. El cierre administrativo quedó pendiente del evento final del chofer. Consulte el [recorrido y los hallazgos](evidence/qa-2026-11-10.md).
+
 ## Vínculo único por cliente y campaña — 2026-11-08
 
 Los selectores de Campañas y Planificación Comercial muestran solo vínculos disponibles. La API V1 serializa las altas y cambios por campaña y devuelve `409 CAMPAIGN_CLIENT_ALREADY_LINKED` ante un duplicado. El mock aplica la misma regla y conserva sus ejemplos históricos para verificar que siguen disponibles. El cambio conserva los contratos y entregas de los vínculos anteriores y no requiere una migración.
