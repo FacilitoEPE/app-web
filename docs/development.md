@@ -23,7 +23,8 @@
 6. **Explicar el impacto:** cierra con 3–5 viñetas cortas: cambio visible, regla y simulación ajustadas, implicación para el desarrollador y verificación/pendientes. Indica, cuando aplique, si habrá que adaptar el backend, completar datos anteriores o revisar otra pantalla. Ejemplo: «Ahora cada entrega requiere un chofer. Los ejemplos ya lo incluyen y la simulación rechaza entregas sin chofer. Para usarlo con datos reales, falta exigirlo también en el backend y completar las entregas existentes. Se verificó el flujo en modo simulado».
 
 ### Protocolo paso a paso en cada tarea
-1. **Rama `developer` (Hook `.claude/settings.json`):** Al iniciar sesión en `developer`, leer [`docs/integration-status.md`](./integration-status.md) para identificar qué vistas o contratos están pendientes y priorizarlos.
+
+1. **Contexto de la tarea.** Parte de `master` actualizada para tareas nuevas y aplica las [reglas de integración](../AGENTS.md#integración-y-entregas). Si vas a tocar una vista conectada, el contrato web–API o un flujo compartido, consulta el [estado de integración](integration-status.md) para conocer los pendientes relacionados.
 2. **Ante una ambigüedad de contrato (Backend vs. UI):**
    - Contrasta la solicitud con `epe-backend/src` y el contrato. Una diferencia conocida no exige volver a aprobar lo solicitado: aplica el flujo anterior y consulta solo la definición funcional o de contrato que falte, continuando las partes independientes.
    - Registra en `docs/integration-status.md` qué parte funciona con API real, cuál solo en mock y qué definición o adaptación queda pendiente; no marques toda la vista como `Sin cambios` si hubo avances.
