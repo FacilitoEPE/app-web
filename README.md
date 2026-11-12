@@ -216,6 +216,29 @@ Abre `http://localhost:8080`.
 
 </details>
 
+## Despliegue y rollback manual de la web
+
+GitHub Actions verifica los pull requests y los pushes a la rama principal.
+Publica `app-web` desde un tag Git estable como `v1.0.0`, con etiquetas de
+versión, commit y ejecución. El resumen muestra el digest exacto de la imagen.
+
+En el servidor físico, antes de actualizar, guarda la versión del backend y el
+digest que usa el contenedor web que acabas de verificar. Para consultar ese
+digest, sustituye `nombre-del-contenedor-web` por el nombre real.
+
+```bash
+WEB_CONTAINER=nombre-del-contenedor-web
+docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' \
+  "$(docker inspect --format '{{.Image}}' "$WEB_CONTAINER")"
+```
+
+Guarda la referencia completa de `app-web@sha256:…` en el registro de la release.
+Para volver a esa versión, descarga la referencia con `docker pull` y úsala como
+imagen en el mismo procedimiento con el que actualizas el contenedor web. Tras
+recrearlo, abre la URL pública, inicia sesión y verifica una lectura habitual con
+la API activa. Si necesitas recuperar también la API, usa la
+[guía de rollback del backend](../epe-backend/docs/guia-on-premise-despliegue-backend.md#rollback-manual-por-versión).
+
 <a id="arquitectura"></a>
 ## 🧱 Una base compartida, módulos por dominio
 
