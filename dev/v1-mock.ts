@@ -11,6 +11,7 @@ const fail = (code: string, message: string, field?: string): never => {
 }
 const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100
 const number = (row: Row, key: string) => Number(row[key] ?? 0)
+const isRow = (value: unknown): value is Row => value !== null && typeof value === 'object' && !Array.isArray(value)
 const asRows = (value: unknown): Row[] => Array.isArray(value) ? value as Row[] : []
 
 async function readJson(request: IncomingMessage): Promise<unknown> {
@@ -230,7 +231,7 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
     if (table === 'carga' && !current) {
       const coordination = find('coordinacion_entrega', row.coordinacionEntregaId)
       const harvest = related('cosecha', 'entregaProgramadaId', coordination.entregaProgramadaId)[0]
-      if (harvest && (harvest.industria as Row)?.inspectionResult === 'No cumple') fail('INDUSTRY_REJECTED', 'La entrega tiene un rechazo industrial registrado.')
+      if (isRow(harvest?.industria) && harvest.industria.inspectionResult === 'No cumple') fail('INDUSTRY_REJECTED', 'La entrega tiene un rechazo industrial registrado.')
     }
     if (table === 'historial_chofer') {
       const stages = ['EN_CARGA','SALIDA','EN_CAMINO','LLEGADA','CIERRE']
@@ -527,8 +528,9 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
       if (campaign.estado !== 'en proceso' || related('carga', 'coordinacionEntregaId', coord.coordinacionEntregaId).length)
         throw new ApiV1Error(409, 'RESOURCE_IN_USE', 'La entrega ya tiene carga o su campaña no está en ejecución.')
       const harvest = related('cosecha', 'entregaProgramadaId', delivery.entregaProgramadaId)[0]
+      const previousInspection = isRow(harvest?.industria) ? harvest.industria : undefined
       const rejected = body.cumpleRequisitosIndustria === false
-      if ((sale.canal === 'INDUSTRIA' && typeof body.cumpleRequisitosIndustria !== 'boolean') || (rejected && sale.canal !== 'INDUSTRIA') || harvest?.industria?.inspectionResult === 'No cumple')
+      if ((sale.canal === 'INDUSTRIA' && typeof body.cumpleRequisitosIndustria !== 'boolean') || (rejected && sale.canal !== 'INDUSTRIA') || previousInspection?.inspectionResult === 'No cumple')
         throw new ApiV1Error(400, 'INVALID_BODY', 'Revisa la inspección de Industria.')
       const origins = related('origen_entrega', 'coordinacionEntregaId', coord.coordinacionEntregaId)
       const expected = new Set(origins.map(origin => find('campania_x_proveedores', origin.cxpId).proveedorId))
@@ -549,7 +551,7 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
       const now = new Date().toISOString()
       const timestamps = { createdAt: now, updatedAt: now }
       if (sale.canal === 'INDUSTRIA') {
-        const industria = { ...harvest?.industria, inspectionResult: rejected ? 'No cumple' : 'Cumple', rejectionReason: rejected ? body.observacionesCarga : '' }
+        const industria = { ...previousInspection, inspectionResult: rejected ? 'No cumple' : 'Cumple', rejectionReason: rejected ? body.observacionesCarga : '' }
         if (harvest) Object.assign(harvest, { industria, updatedAt: now })
         else db.cosecha.push({ ...meta.cosecha.defaults, cosechaId: nextIds.cosecha++, entregaProgramadaId: delivery.entregaProgramadaId,
           codigoLote: ['LOT', campaign.campaniaId, delivery.entregaProgramadaId].join('-'), fechaPrevista: delivery.fecha, kilosEstimados: delivery.kilosProgramados, industria, ...timestamps })
@@ -584,11 +586,15 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
         const rows = related('proveedor_carga', 'cargaId', id)
         for (const provider of body.proveedores as Row[]) {
           const row = rows.find(item => find('campania_x_proveedores', item.cxpId).proveedorId === Number(provider.proveedorId))
-          if (!row || !Number.isFinite(provider.kilosCargados) || provider.kilosCargados <= 0
-            || fields.some(field => !Number.isSafeInteger(provider[field]) || provider[field] < 0))
+          const { kilosCargados } = provider
+          if (!row || typeof kilosCargados !== 'number' || !Number.isFinite(kilosCargados) || kilosCargados <= 0
+            || fields.some(field => {
+              const count = provider[field]
+              return typeof count !== 'number' || !Number.isSafeInteger(count) || count < 0
+            }))
             throw new ApiV1Error(400, 'INVALID_BODY', 'Revisa los kilos y bultos de los proveedores de la carga.')
           const packs = Object.fromEntries(fields.map(field => [field, provider[field]]))
-          Object.assign(row, packs, { kilosCargados: provider.kilosCargados, updatedAt })
+          Object.assign(row, packs, { kilosCargados, updatedAt })
         }
       }
       Object.assign(carga, { updatedAt })
@@ -650,8 +656,7 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
       status = 204
     } else {
       const input = await readJson(request)
-      if (table === 'campana' && input && typeof input === 'object'
-        && 'responsableNombre' in input && typeof input.responsableNombre === 'string') {
+      if (table === 'campana' && isRow(input) && typeof input.responsableNombre === 'string') {
         input.responsableNombre = input.responsableNombre.trim() || null
       }
       const errors = validateV1Schema(contract,operation.requestBody!.content['application/json'].schema,input)
@@ -664,8 +669,13 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
           current?.[key] ?? definition.defaults[key] ?? (key === 'createdAt' || key === 'updatedAt' || prop.format === 'date-time' && !Array.isArray(prop.type) ? now : null),
         ]))
         Object.assign(row,current,input,{ [definition.id]:current?.[definition.id] ?? nextIds[table],updatedAt:now })
-        if (table === 'recepcion_planta' && input.checklist) row.checklist = { ...current?.checklist, ...input.checklist }
-        if (table === 'recepcion_planta' && input.documentos) row.documentos = { ...current?.documentos, ...input.documentos }
+        if (table === 'recepcion_planta' && isRow(input)) {
+          for (const key of ['checklist', 'documentos']) {
+            const changes = input[key]
+            const previous = current?.[key]
+            if (isRow(changes)) row[key] = { ...(isRow(previous) ? previous : {}), ...changes }
+          }
+        }
         if (resource?.scope) row[resource.scope] = params.parentId
         if ('registradoPorUsuarioId' in row && !current) row.registradoPorUsuarioId = 1
         if (['contrato_venta','entrega_programada'].includes(table) && current?.desglosePendiente && (input as Row).variedades === undefined) fail('HISTORICAL_BREAKDOWN_REQUIRED','Envía el desglose completo para confirmar un registro histórico.')
