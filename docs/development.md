@@ -42,11 +42,16 @@ $env:EPE_E2E_FULL_STACK = '1'
 pnpm test:e2e
 ```
 
-El escenario usa los puertos 4174 y 4175. Prepara el contrato, la entrega,
-Calidad y el borrador de la guía mediante HTTP. Continúa en el navegador con
-la emisión de la guía, el despacho, la recepción, el expediente, los cierres
-y la facturación y el cobro. La ampliación verifica examen, entrevista,
-certificación y cotización con la misma API.
+El escenario usa los puertos 4174 y 4175. Desde el navegador se registra
+el contrato, se programa y coordina la entrega, y se registra la carga y
+su guía. La misma carga pasa por el portal del chofer, la recepción,
+el expediente, los cierres, la facturación y el cobro.
+La aprobación de cosecha se prepara mediante la API porque la interfaz
+vigente no expone esa acción. La prueba comprueba que la API rechaza la
+aprobación hasta registrar la medición MTD y los análisis requeridos.
+La ampliación verifica en el navegador la vinculación del acopiador,
+el registro de un examen, la consulta de una entrevista existente,
+la certificación y el vínculo de transporte con su cotización.
 Los endpoints de documentos son los del backend y el almacenamiento externo
 se reemplaza por memoria durante la prueba.
 
