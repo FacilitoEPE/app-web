@@ -51,7 +51,7 @@ export default function BillingInvoiceDetailPage() {
             <MetricCards label="Resumen de la factura" metrics={[
                 { title: "Total", value: money(invoice.total, invoice.moneda), unit: "", description: issued ? "Facturado" : "Por facturar", icon: Receipt },
                 { title: "Cobrado", value: money(paid, invoice.moneda), unit: "", description: `${invoice.cobros.length} movimientos`, icon: Banknote },
-                { title: issued ? "Saldo" : "Por facturar", value: money(balance, invoice.moneda), unit: "", description: issued ? "Pendiente de cobro" : "Pendiente de emisión", icon: Wallet },
+                { title: issued ? "Saldo" : "Por facturar", value: money(balance, invoice.moneda), unit: "", description: issued ? (balance > 0 ? "Pendiente de cobro" : "Sin saldo pendiente") : "Pendiente de emisión", icon: Wallet },
             ]} />
         </div>
         <div className="grid gap-4 lg:grid-cols-2">

@@ -7,7 +7,6 @@ import { Button } from "@/shared/components/ui/button";
 import { Combobox } from "@/shared/components/ui/combobox";
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
-import { usesV1 } from "@/shared/api/data-contract";
 import { CARRIER_TIPOS, type CarrierProfile } from "@/modules/carriers/carrierProfile.utils";
 
 interface CampaignLinkCarrierModalProps {
@@ -27,7 +26,6 @@ interface CampaignLinkCarrierModalProps {
 export default function CampaignLinkCarrierModal({ open, onOpenChange, campaignName, carriers, isLoading, onSave }: CampaignLinkCarrierModalProps) {
     const [carrierId, setCarrierId] = useState("");
     const [cotizacion, setCotizacion] = useState<File | null>(null);
-    const isV1 = usesV1();
     const { errors, saving, clearError, submit } = useFormSubmit({
         open,
         validate: (values: { carrierId: string; cotizacion: File | null }) => ({
@@ -82,7 +80,7 @@ export default function CampaignLinkCarrierModal({ open, onOpenChange, campaignN
                         disabled={isLoading}
                     />
                 </FormField>
-                <FormField error={errors.cotizacion} hint={isV1 ? "El archivo se puede previsualizar, pero no se guardará al vincular el transportista." : undefined}>
+                <FormField error={errors.cotizacion}>
                     <FileDropzone
                         label="Cotización del transportista"
                         required

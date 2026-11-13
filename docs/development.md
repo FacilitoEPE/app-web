@@ -22,6 +22,16 @@
 5. **Mantener la documentación:** actualiza `api/business-rules.md` para reglas funcionales, la guía de usuario si cambian sus pasos y `../../docs/business/processes.md` si cambia un proceso compartido. Distingue lo implementado en API real, lo disponible solo en mock y lo pendiente. Actualiza índices y resúmenes solo cuando su información cambie; evita reportes paralelos.
 6. **Explicar el impacto:** cierra con 3–5 viñetas cortas: cambio visible, regla y simulación ajustadas, implicación para el desarrollador y verificación/pendientes. Indica, cuando aplique, si habrá que adaptar el backend, completar datos anteriores o revisar otra pantalla. Ejemplo: «Ahora cada entrega requiere un chofer. Los ejemplos ya lo incluyen y la simulación rechaza entregas sin chofer. Para usarlo con datos reales, falta exigirlo también en el backend y completar las entregas existentes. Se verificó el flujo en modo simulado».
 
+### Pruebas de navegador
+
+Instala Chromium con `pnpm exec playwright install chromium` y ejecuta
+`pnpm test:e2e`. Playwright abre la aplicación con la API de demostración en
+el puerto 4174. Los escenarios verifican cobro y voucher, cierre logístico,
+acceso del chofer y persistencia de la cotización tras recargar. Para la
+persistencia en PostgreSQL, ejecuta la suite E2E del backend.
+La API de demostración conserva los adjuntos en memoria. El resultado no
+acredita la verificación de un archivo almacenado en S3.
+
 ### Protocolo paso a paso en cada tarea
 
 1. **Contexto de la tarea.** Parte de `master` actualizada para tareas nuevas y aplica las [reglas de integración](../AGENTS.md#integración-y-entregas). Si vas a tocar una vista conectada, el contrato web–API o un flujo compartido, consulta el [estado de integración](integration-status.md) para conocer los pendientes relacionados.
