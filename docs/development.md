@@ -29,8 +29,26 @@ Instala Chromium con `pnpm exec playwright install chromium` y ejecuta
 el puerto 4174. Los escenarios verifican cobro y voucher, cierre logístico,
 acceso del chofer y persistencia de la cotización tras recargar. Para la
 persistencia en PostgreSQL, ejecuta la suite E2E del backend.
-La API de demostración conserva los adjuntos en memoria. El resultado no
-acredita la verificación de un archivo almacenado en S3.
+Para ejecutar el recorrido con Nest y PostgreSQL, coloca `epe-backend` junto
+a `epe-web` y usa la rama que incluye los datos de prueba del backend.
+Compila el backend y aplica sus migraciones a una base PostgreSQL dedicada
+`epe_e2e_*`. Desde el frontend, configura `DB_HOST`, `DB_PORT`,
+`DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE` y `E2E_DB_NAME` en el entorno.
+Las dos últimas variables deben indicar la misma base de prueba. El arranque
+del escenario vuelve a cargar sus datos.
+
+```powershell
+$env:EPE_E2E_FULL_STACK = '1'
+pnpm test:e2e
+```
+
+El escenario usa los puertos 4174 y 4175. Prepara el contrato, la entrega,
+Calidad y el borrador de la guía mediante HTTP. Continúa en el navegador con
+la emisión de la guía, el despacho, la recepción, el expediente, los cierres
+y la facturación y el cobro. La ampliación verifica examen, entrevista,
+certificación y cotización con la misma API.
+Los endpoints de documentos son los del backend y el almacenamiento externo
+se reemplaza por memoria durante la prueba.
 
 ### Protocolo paso a paso en cada tarea
 
