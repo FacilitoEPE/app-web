@@ -28,6 +28,8 @@ coverage
 build-errors.txt
 git_diff.txt
 *_report.json
+/playwright-report/
+/test-results/
 *_audit.json
 scratch/
 

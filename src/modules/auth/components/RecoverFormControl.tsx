@@ -30,7 +30,7 @@ export default function RecoverFormControl({ onBack }: RecoverFormControlProps) 
         try {
             const response = await requestPasswordRecovery(trimmed);
             setSuccessMessage(
-                response.message || "Se enviaron las instrucciones de recuperación a tu correo electrónico.",
+                response.message,
             );
         } catch (err) {
             setErrorMessage(
@@ -52,7 +52,7 @@ export default function RecoverFormControl({ onBack }: RecoverFormControlProps) 
             <h1 className="text-[24px] font-semibold text-ink tracking-tight text-center">Recuperar contraseña</h1>
             <div className="h-1 w-10 bg-brand rounded-full my-3"></div>
             <p className="text-xs text-muted-foreground text-center max-w-70 mb-6">
-                Ingresa el correo electrónico de tu cuenta para recibir una contraseña temporal por correo.
+                Ingresa el correo de tu cuenta para recibir un enlace de recuperación.
             </p>
 
             <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>

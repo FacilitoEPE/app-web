@@ -38,6 +38,7 @@ type Status = {
 };
 let state: Status = { phase: 'idle', refreshing: false, error: '', pathname: '' };
 let inFlight: Promise<void> | undefined, inFlightPath = '', generation = 0;
+let activeLoad: AbortController | undefined;
 const listeners = new Set<() => void>();
 export const getFrontendDataStatus = () => state;
 export const subscribeFrontendData = (listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
@@ -45,6 +46,8 @@ function publish(next: Status) { state = next; listeners.forEach(listener => lis
 export function cancelFrontendDataLoad() { resetFrontendData(); }
 export function resetFrontendData() {
     generation++;
+    activeLoad?.abort();
+    activeLoad = undefined;
     inFlight = undefined;
     clearOperationsContext();
     hydrateDriverData({ drivers: [], loads: [] });
@@ -55,18 +58,24 @@ export function refreshFrontendData(pathname = getOperationsPlan().pathname): Pr
     if (inFlight && inFlightPath === pathname)
         return inFlight;
     const activeGeneration = ++generation;
+    activeLoad?.abort();
+    const controller = new AbortController();
+    activeLoad = controller;
     inFlightPath = pathname;
     publish({ ...state, pathname, phase: state.phase === 'ready' && state.pathname === pathname ? 'ready' : 'loading', refreshing: true, error: '' });
     const job = (async () => {
         try {
-            let revision: number;
-            do {
-                revision = remoteMutationRevision();
-                const g = await loadOperationsContext(pathname, () => activeGeneration === generation);
+            for (let attempt = 0; attempt < 2; attempt++) {
+                const revision = remoteMutationRevision();
+                const g = await loadOperationsContext(pathname, () => activeGeneration === generation, controller.signal);
                 if (activeGeneration !== generation) return;
                 publishViewData(g);
-            } while (revision !== remoteMutationRevision());
-            if (activeGeneration === generation) publish({ phase: 'ready', pathname, refreshing: false, error: '' });
+                if (revision === remoteMutationRevision()) {
+                    publish({ phase: 'ready', pathname, refreshing: false, error: '' });
+                    return;
+                }
+            }
+            publish({ phase: 'ready', pathname, refreshing: false, error: 'Hubo cambios mientras se cargaba la pantalla. Actualiza los datos para ver el último estado.' });
         }
         catch (error) {
             if (activeGeneration !== generation) return;
@@ -74,7 +83,10 @@ export function refreshFrontendData(pathname = getOperationsPlan().pathname): Pr
             throw error;
         }
         finally {
-            if (activeGeneration === generation) inFlight = undefined;
+            if (activeGeneration === generation) {
+                inFlight = undefined;
+                activeLoad = undefined;
+            }
         }
     })();
     inFlight = job;
@@ -84,8 +96,21 @@ function publishViewData(g: OperationsContext) {
     const plan = getOperationsPlan();
     const providers = projectProviderData(g), campaigns = projectCampaignData(g), carriers = projectCarrierData(g);
     const quality = plan.projection === 'billing' ? { campaigns: [], analyses: [], loads: [] } : projectQualityData(g);
-    CATALOGO_FRUTAS.splice(0, CATALOGO_FRUTAS.length, ...g.fruits.map(f => ({ id: String(f.frutaId), nombre: f.name, variedades: g.varieties.filter(v => v.frutaId === f.frutaId).map(v => v.name) })));
-    PRODUCER_FARM_OPTIONS.splice(0, PRODUCER_FARM_OPTIONS.length, ...g.participations.flatMap(p => g.farms.filter(f => f.proveedorId === p.proveedorId).map(f => ({ value: `${p.cxpId}:${f.fincaId}`, productor: `${g.providers.find(v => v.proveedorId === p.proveedorId)?.nombres ?? ''} ${g.providers.find(v => v.proveedorId === p.proveedorId)?.apellido ?? ''}`.trim(), finca: f.nombreFinca, campaniaId: p.campaniaId }))));
+    const varietiesByFruit = groupById(g.varieties, variety => variety.frutaId);
+    const farmsByProvider = groupById(g.farms, farm => farm.proveedorId);
+    const providerById = new Map(g.providers.map(provider => [provider.proveedorId, provider]));
+    CATALOGO_FRUTAS.length = 0;
+    for (const fruit of g.fruits) {
+        CATALOGO_FRUTAS.push({ id: String(fruit.frutaId), nombre: fruit.name, variedades: varietiesByFruit.get(fruit.frutaId)?.map(variety => variety.name) ?? [] });
+    }
+    PRODUCER_FARM_OPTIONS.length = 0;
+    for (const participation of g.participations) {
+        const provider = providerById.get(participation.proveedorId);
+        const productor = `${provider?.nombres ?? ''} ${provider?.apellido ?? ''}`.trim();
+        for (const farm of farmsByProvider.get(participation.proveedorId) ?? []) {
+            PRODUCER_FARM_OPTIONS.push({ value: `${participation.cxpId}:${farm.fincaId}`, productor, finca: farm.nombreFinca, campaniaId: participation.campaniaId });
+        }
+    }
     ORGANIC_NORMS_CATALOG.splice(0, ORGANIC_NORMS_CATALOG.length, ...g.standards.map(n => ({ id: n.codigo, label: n.nombre, certText: n.nombre })));
     const parameter = g.uit.find(p => p.anio === new Date().getFullYear());
     clearUitParameters();
@@ -105,8 +130,19 @@ function publishViewData(g: OperationsContext) {
     hydrateQualityOperations(quality.loads);
     if (plan.pathname === '*' || plan.projection === 'billing') hydrateBillingData(projectBillingData(g));
     if (plan.pathname === '*' || plan.projection === 'settlement') hydrateSettlementData(projectSettlementData(g));
-    if (plan.pathname === '*' || plan.projection === 'logistics') hydrateLogisticsData(projectLogisticsData(g));
+    if (plan.pathname === '*' || plan.projection === 'logistics') hydrateLogisticsData(projectLogisticsData(g, quality.loads));
     if (plan.pathname === '*') hydrateDriverData(projectDriverData(g));
+}
+
+function groupById<T>(rows: T[], idOf: (row: T) => number): Map<number, T[]> {
+    const groups = new Map<number, T[]>();
+    for (const row of rows) {
+        const id = idOf(row);
+        const group = groups.get(id);
+        if (group) group.push(row);
+        else groups.set(id, [row]);
+    }
+    return groups;
 }
 registerDataRefresh(async (reconcile = false) => {
     const { getSession } = await import('@/shared/offline/session');

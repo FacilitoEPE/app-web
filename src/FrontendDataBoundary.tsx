@@ -17,6 +17,7 @@ export default function FrontendDataBoundary({ children }: {
         if (needsOperations) void refreshFrontendData(pathname).catch(() => undefined);
         else cancelFrontendDataLoad();
     }, [needsOperations, pathname]);
+    useEffect(() => () => { if (usesV1()) cancelFrontendDataLoad(); }, []);
     if (!usesV1() || !needsOperations)
         return children;
     if (state.pathname !== pathname || state.phase === 'idle' || state.phase === 'loading')

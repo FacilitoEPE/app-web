@@ -22,6 +22,39 @@
 5. **Mantener la documentación:** actualiza `api/business-rules.md` para reglas funcionales, la guía de usuario si cambian sus pasos y `../../docs/business/processes.md` si cambia un proceso compartido. Distingue lo implementado en API real, lo disponible solo en mock y lo pendiente. Actualiza índices y resúmenes solo cuando su información cambie; evita reportes paralelos.
 6. **Explicar el impacto:** cierra con 3–5 viñetas cortas: cambio visible, regla y simulación ajustadas, implicación para el desarrollador y verificación/pendientes. Indica, cuando aplique, si habrá que adaptar el backend, completar datos anteriores o revisar otra pantalla. Ejemplo: «Ahora cada entrega requiere un chofer. Los ejemplos ya lo incluyen y la simulación rechaza entregas sin chofer. Para usarlo con datos reales, falta exigirlo también en el backend y completar las entregas existentes. Se verificó el flujo en modo simulado».
 
+### Pruebas de navegador
+
+Instala Chromium con `pnpm exec playwright install chromium` y ejecuta
+`pnpm test:e2e`. Playwright abre la aplicación con la API de demostración en
+el puerto 4174. Los escenarios verifican cobro y voucher, cierre logístico,
+acceso del chofer y persistencia de la cotización tras recargar. Para la
+persistencia en PostgreSQL, ejecuta la suite E2E del backend.
+Para ejecutar el recorrido con Nest y PostgreSQL, coloca `epe-backend` junto
+a `epe-web` y usa la rama que incluye los datos de prueba del backend.
+Compila el backend y aplica sus migraciones a una base PostgreSQL dedicada
+`epe_e2e_*`. Desde el frontend, configura `DB_HOST`, `DB_PORT`,
+`DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE` y `E2E_DB_NAME` en el entorno.
+Las dos últimas variables deben indicar la misma base de prueba. El arranque
+del escenario vuelve a cargar sus datos.
+
+```powershell
+$env:EPE_E2E_FULL_STACK = '1'
+pnpm test:e2e
+```
+
+El escenario usa los puertos 4174 y 4175. Desde el navegador se registra
+el contrato, se programa y coordina la entrega, y se registra la carga y
+su guía. La misma carga pasa por el portal del chofer, la recepción,
+el expediente, los cierres, la facturación y el cobro.
+La aprobación de cosecha se prepara mediante la API porque la interfaz
+vigente no expone esa acción. La prueba comprueba que la API rechaza la
+aprobación hasta registrar la medición MTD y los análisis requeridos.
+La ampliación verifica en el navegador la vinculación del acopiador,
+el registro de un examen, la consulta de una entrevista existente,
+la certificación y el vínculo de transporte con su cotización.
+Los endpoints de documentos son los del backend y el almacenamiento externo
+se reemplaza por memoria durante la prueba.
+
 ### Protocolo paso a paso en cada tarea
 
 1. **Contexto de la tarea.** Parte de `master` actualizada para tareas nuevas y aplica las [reglas de integración](../AGENTS.md#integración-y-entregas). Si vas a tocar una vista conectada, el contrato web–API o un flujo compartido, consulta el [estado de integración](integration-status.md) para conocer los pendientes relacionados.

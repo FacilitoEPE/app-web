@@ -1,4 +1,4 @@
-![Agro Exportaciones F.V. — Software de gestión](public/image/banner.png)
+![Agro Exportaciones F.V. — Software de gestión](docs/assets/banner.png)
 
 <p align="center">
   <strong>El centro de operaciones digital de Agro Exportaciones F.V.</strong><br>
@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="public/image/stack.svg" width="920" alt="React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 · shadcn/ui · pnpm">
+  <img src="docs/assets/stack.svg" width="920" alt="React 19 · TypeScript 6 · Vite 8 · Tailwind CSS 4 · shadcn/ui · pnpm">
 </p>
 
 <p align="center">
@@ -293,7 +293,7 @@ El sistema utiliza el **verde de marca**, su degradado principal, superficies cl
 | Degradados y superficies activas | [`brandGradients.ts`](src/shared/styles/brandGradients.ts) |
 | Logo de Agro Exportaciones F.V. | [Logo original](src/assets/image/logo_empresa_only.webp) |
 | Imágenes por fruta | [Configuración visual de campañas](src/modules/campaigns/campaignFruit.ts) |
-| Cabecera del repositorio | [PNG](public/image/banner.png) · [SVG editable](public/image/banner.svg) |
+| Cabecera del repositorio | [PNG](docs/assets/banner.png) · [SVG editable](docs/assets/banner.svg) |
 
 Los gráficos de esta presentación están guardados en el repositorio. El banner presenta el logo real en blanco, centrado sobre un degradado verde de la identidad del sistema.
 

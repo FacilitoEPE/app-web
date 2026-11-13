@@ -4,6 +4,14 @@
 
 > **Fuente vigente del estado por vista.** Actualiza las entradas superiores al cambiar el estado y sincroniza los documentos afectados según las [reglas de epe-web](../AGENTS.md). Las entradas inferiores son evidencia histórica, no estado vigente; vencen 90 días después de su fecha salvo excepción documentada. Elimina las entradas vencidas al revisar el registro.
 
+## Correcciones prioritarias de la auditoría · 12/11/2026
+
+- La web cancela la carga principal al salir de una pantalla, ir al selector o cerrar sesión. Las lecturas del plan tienen un tiempo máximo de 15 segundos por petición.
+- El backend condiciona cada actualización del índice de adjuntos a la versión leída en S3 y consulta en PostgreSQL los solapes y el flete acumulado del acuerdo.
+- La recuperación usa un enlace de un solo uso. El mock simula la solicitud y el consumo con el token de prueba formado por 64 letras `a`. El envío real requiere configurar Resend y el origen público de la web en el backend. [Contrato y configuración](api/README.md#recuperación-de-contraseña).
+- Las cargas de pantalla y de documentos repiten la lectura completa hasta una vez si coinciden con escrituras. Si vuelve a cambiar la información, la pantalla permite actualizar manualmente y la lectura de documentos pide volver a abrirlos.
+- Logística y el portal del chofer reutilizan la proyección de Calidad. El portal conserva las entregas coordinadas del alcance compartido y recibe solo los campos operativos de contratos y acuerdos. El mock aplica la misma selección de campos.
+
 ## QA local con backend y S3 — 2026-11-10
 
 En la carga `CAR-8-7`, la interfaz confirmó los adjuntos de recepción y facturación, el cierre físico, el registro de factura de prueba y un cobro con saldo cero. El cierre administrativo quedó pendiente del evento final del chofer. Consulte el [recorrido y los hallazgos](evidence/qa-2026-11-10.md).
@@ -636,7 +644,7 @@ Validación prevista para los cambios: pruebas HTTP con las funciones reales y f
 
 ## Auditoría de navegación de transportistas — 2026-10-31 · Sin cambios
 
-- El reflog local confirma que el pull de `master` pasó de `7589cef` a `60c1a5a`. Dentro de ese rango, `4414ac0` retiró de `CarriersPage` las pestañas globales Vehículos, Choferes y Requerimientos y cotizaciones. Sus componentes `CarriersGlobalVehiclesSubView`, `CarriersGlobalDriversSubView` y `CarriersQuotationsSubView` siguen presentes, pero no tienen consumidores en `src`.
+- El cambio `4414ac0` retiró en ese corte las pestañas globales de `CarriersPage`. Estado actual: las vistas globales de vehículos y choferes se retiraron del código. `CarriersQuotationsSubView` se usa en la sección de cotizaciones de `CarriersPage`.
 - Ese mismo commit sustituyó las acciones de fila Registrar vehículo / Registrar chofer (modales directos) por Vehículos / Choferes, que navegan al detalle `/transportistas/:id?tab=vehiculos` o `?tab=choferes`.
 - En el historial disponible no se encontraron páginas de ruta eliminadas dentro de `src/modules/carriers/pages`: las gestiones globales eran sub-vistas en `components`, no páginas adicionales. Las pestañas globales existían antes de `4414ac0`, aunque no estaban aún en el checkout local previo al pull (`7589cef`).
 - Auditoría de código e historial; no se restauraron vistas ni se alteraron flujos o contratos.
@@ -649,7 +657,7 @@ Validación prevista para los cambios: pruebas HTTP con las funciones reales y f
 4. **API sin versionado (`/api/...`)** — Completo: frontend (`usesV1() => true`) y backend unificados en `/api/...` con validación JWT y permisos por rol (`Administrador` / `Chofer`). Añadido `GET /api/auth/usuarios/:id` para resolver el nombre completo del responsable de campaña en edición (`CampaignFormModal.tsx`) incluso cuando pertenece a otro usuario.
 5. **Monedas (`PEN` y `USD`) y columnas anulables de conteo/kilos** — Completo: soporte de `PEN` y `USD` validado en código de aplicación (backend `V1BusinessService` y frontend, sin restricciones `CHECK (moneda ...)` en base de datos) en participaciones de compra, acuerdos de transporte, cotizaciones de transporte (`CarriersQuotationsSubView.tsx`, `quotationCommands.respond`), contratos comerciales, certificaciones, facturas y liquidaciones, bloqueando monedas distintas (`INVALID_CURRENCY`) y mezclas de moneda con el documento origen (`CURRENCY_MISMATCH`), y calculando UIT en código con conversión `S/ 3.70` por USD. Las columnas `capturas`, `trampas` y `dias_exposicion` en `agro.medicion_mtd` y `kilos_iniciales` en `agro.certificado_campana` son anulables (`NULL`) sin `CHECK` de base de datos. El [SQL fuente del contrato](api/contract-schema.sql) y el OpenAPI generado reflejan esa estructura.
 6. **Correo con Resend (solicitudes de transporte y recuperación de contraseña)** — Completo:
-   - **Recuperación de contraseña**: endpoint público `POST /api/auth/recuperar-password` conectado a `ResendService` y formulario `RecoverFormControl.tsx` (`requestPasswordRecovery`). Genera contraseña temporal y envía el correo antes de actualizar el hash (evitando bloqueos si el proveedor falla).
+   - **Recuperación de contraseña**: el flujo de contraseña temporal fue sustituido el 12/11/2026 por el enlace de un solo uso. Consulta el [contrato vigente](api/README.md#recuperación-de-contraseña).
    - **Solicitudes e invitaciones de transporte**: `TransporteV1Service.createInvitacion` (`POST /api/solicitudes-transporte/:id/invitaciones`) conectado a `ResendService` con clave de idempotencia y reversión automática de la invitación si falla el envío. En `CarriersPage.tsx` se habilitaron selección de empresas, botón y modal `"Enviar requerimiento"` con adjunto obligatorio (`*`) y pestaña `"Solicitudes y cotizaciones"`.
    - **Estado del proveedor Resend**: verificado `GET https://api.resend.com/domains` con `RESEND_API_KEY` configurada (HTTP `200`, remitente `Agro Exportaciones <agroexportadores@adkventurie.com>`, 2 dominios registrados).
 7. **Verificación integral de cierre**:

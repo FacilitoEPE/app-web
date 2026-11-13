@@ -105,11 +105,11 @@ function DriverDataBoundary({ onLogout }: { onLogout: () => void }) {
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
-    let active = true
-    void import('@/modules/driver-portal/api/driver-context.api').then(({ refreshDriverData }) => refreshDriverData())
-      .then(() => { if (active) setState('ready') })
-      .catch(() => { if (active) setState('error') })
-    return () => { active = false }
+    const controller = new AbortController()
+    void import('@/modules/driver-portal/api/driver-context.api').then(({ refreshDriverData }) => refreshDriverData(controller.signal))
+      .then(() => { if (!controller.signal.aborted) setState('ready') })
+      .catch(() => { if (!controller.signal.aborted) setState('error') })
+    return () => controller.abort()
   }, [attempt])
   if (state === 'loading') return <PageLoading label="Cargando tus cargas…" />
   if (state === 'error') return <PageError title="No se pudieron cargar tus cargas" message="Comprueba tu conexión e inténtalo nuevamente." onRetry={() => { setState('loading'); setAttempt(value => value + 1) }} />
@@ -190,6 +190,7 @@ function App() {
           path="/login" 
           element={!session ? <AdminLoginPage onLogin={handleLogin} /> : <Navigate to={session.user.rol.nombre === 'Chofer' ? '/chofer' : '/modules'} />}
         />
+        <Route path="/restablecer-password" element={<AdminLoginPage onLogin={handleLogin} resetting />} />
         <Route path="/chofer" element={<RequireDriver session={session} onLogout={handleLogout} />} />
         <Route element={<ProtectedLayout session={session} onLogout={handleLogout} />}>
           <Route path="/modules" element={null} />

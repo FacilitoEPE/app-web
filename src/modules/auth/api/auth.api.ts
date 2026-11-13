@@ -22,3 +22,8 @@ export async function requestPasswordRecovery(correo: string): Promise<{ message
   const { data } = await apiClient.post<{ message: string }>('/v1/auth/recuperar-password', { correo })
   return data
 }
+
+export async function resetPassword(token: string, password: string): Promise<{ message: string }> {
+  const { data } = await apiClient.post<{ message: string }>('/v1/auth/restablecer-password', { token, password })
+  return data
+}

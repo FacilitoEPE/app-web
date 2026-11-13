@@ -1,5 +1,7 @@
 # Frontend/backend integration alignment
 
+> Registro histórico. Consulta el [estado de integración](../../docs/integration-status.md) y el [contrato V1](../../docs/api/README.md) para los flujos vigentes. Revisar este registro el 10/02/2027.
+
 ## Objective and rationale
 
 Connect approved frontend flows to existing backend contracts, replace fixture-backed workflows where approved, and make form outcomes accessible and honest. The integration matrix must distinguish persisted API data from local/sample state.
