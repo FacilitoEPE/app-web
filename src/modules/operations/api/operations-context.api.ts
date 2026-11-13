@@ -101,11 +101,17 @@ export async function ensureViewDocuments(): Promise<LocalDocumentLink[]> {
     let job = documentReads.get(context);
     if (!job) {
         job = (async () => {
-            let revision: number, files: LocalDocumentLink[];
-            do { revision = documentRevision; files = await getLocalDocumentLinks(); }
-            while (revision !== documentRevision && current === context);
-            if (current === context) { context.localDocuments = files; completeDocuments.add(context); }
-            return files;
+            for (let attempt = 0; attempt < 2; attempt++) {
+                const revision = documentRevision;
+                const files = await getLocalDocumentLinks();
+                if (current !== context) return files;
+                if (revision === documentRevision) {
+                    context.localDocuments = files;
+                    completeDocuments.add(context);
+                    return files;
+                }
+            }
+            throw new Error('Los adjuntos cambiaron durante la consulta. Vuelve a abrir los documentos.');
         })().finally(() => documentReads.delete(context));
         documentReads.set(context, job);
     }

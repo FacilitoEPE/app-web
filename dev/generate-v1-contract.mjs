@@ -325,6 +325,28 @@ for (const [route, operationId, properties, summary] of [
   } }
 }
 
+const operationalDriverRows = (schema, visible) => ({
+  type: 'array', items: {
+    type: 'object',
+    properties: Object.fromEntries(Object.entries(schemas[schema].properties).map(([key, value]) => [
+      key, visible.includes(key) ? value : { type: 'null' },
+    ])),
+  },
+})
+paths['/chofer/contexto'] = { get: {
+  operationId: 'getDriverContext', tags: ['driver-portal'], 'x-roles': ['Chofer'],
+  summary: 'Consultar entregas coordinadas y datos operativos del portal compartido',
+  responses: { 200: response({
+    type: 'object', required: ['contracts', 'agreements', 'coordinations'],
+    additionalProperties: { type: 'array', items: { type: 'object' } },
+    properties: {
+      contracts: operationalDriverRows('ContratoVenta', ['contratoVentaId', 'clienteNegocioCampanaId', 'numero', 'canal']),
+      agreements: operationalDriverRows('AcuerdoTransporte', ['acuerdoTransporteId', 'campaniaId', 'idEmpresaTransporteExterno', 'estado']),
+      coordinations: { type: 'array', items: ref('CoordinacionEntrega') },
+    },
+  }), ...errorResponses },
+} }
+
 const contract = {
   openapi: '3.1.0', info: { title: 'Agro Exportaciones F.V. — API V1', version: '1.0.0', description: 'Contrato HTTP de la API V1 implementada por epe-backend. Sus operaciones se exponen bajo /v1 y usan PostgreSQL. Ver business-rules.md para reglas y límites.' },
   servers: [{ url: '/v1', description: 'Backend EPE (NestJS)' }],

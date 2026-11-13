@@ -527,7 +527,19 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
       return { status: 200, data: { usuarioId: u.usuarioId, usuario: u.usuario, personaId: u.personaId, nombres: p?.nombres ?? '', apellidos: p?.apellidos ?? '', correo: p?.correo ?? null, rol: { rolId: u.rolId, nombre: r?.nombre ?? '' } } }
     }
     if (pathname === '/chofer/contexto' && request.method === 'GET') {
-      return { status: 200, data: buildOperationsContext() }
+      return { status: 200, data: {
+        ...buildOperationsContext(),
+        contracts: db.contrato_venta.map(row => ({
+          ...Object.fromEntries(Object.keys(row).map(key => [key, null])),
+          contratoVentaId: row.contratoVentaId, clienteNegocioCampanaId: row.clienteNegocioCampanaId,
+          numero: row.numero, canal: row.canal,
+        })),
+        agreements: db.acuerdo_transporte.map(row => ({
+          ...Object.fromEntries(Object.keys(row).map(key => [key, null])),
+          acuerdoTransporteId: row.acuerdoTransporteId, campaniaId: row.campaniaId,
+          idEmpresaTransporteExterno: row.idEmpresaTransporteExterno, estado: row.estado,
+        })),
+      } }
     }
     const driverRegistration = /^\/chofer\/coordinaciones\/(\d+)\/carga$/.exec(pathname)
     if (driverRegistration && request.method === 'POST') {

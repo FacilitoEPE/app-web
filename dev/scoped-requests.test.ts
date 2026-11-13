@@ -10,6 +10,7 @@ import { ensureViewDocuments, getOperationsPlan, operationsContext, readAllV1 } 
 import { operationResources } from '@/modules/operations/api/operations-resources';
 import { createCampana, getCampanas, updateCampana } from '@/modules/campaigns/api/campaign.api';
 import { commitRemote, refreshRemoteData } from '@/shared/api/data-contract';
+import { recordRemoteMutation } from '@/shared/api/remote-mutations';
 import { carrierScreenV1 } from '@/modules/carriers/api/v1-screen.api';
 import { getCarriers, getCarriersForCampaign } from '@/modules/carriers/api/carrier.api';
 import { EMPTY_CARRIER_EXTRAS } from '@/modules/carriers/carrierProfile.utils';
@@ -22,12 +23,16 @@ let server: Server, original: string | undefined;
 const requests: { method: string; url: string }[] = [];
 let rejectPatch = false;
 let holdCampaignPage: (() => void) | undefined;
+let mutateDuringCampaignRead = false;
 beforeEach(async () => {
     vi.stubEnv('VITE_API_CONTRACT', 'v1');
-    resetFrontendData(); requests.length = 0; rejectPatch = false;
+    resetFrontendData(); requests.length = 0; rejectPatch = false; mutateDuringCampaignRead = false;
     const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'));
     server = createServer((req, res) => {
         requests.push({ method: req.method ?? '', url: req.url ?? '' });
+        if (mutateDuringCampaignRead && req.url?.startsWith('/mock-api/v1/campanas?')) {
+            recordRemoteMutation('/campanas');
+        }
         if (holdCampaignPage && req.url?.startsWith('/mock-api/v1/campanas?')) {
             res.on('close', holdCampaignPage);
             return;
@@ -137,6 +142,14 @@ describe('lecturas acotadas a la vista con HTTP V1 real y datos aislados', () =>
         await Promise.all([previous, current]);
         expect(getFrontendDataStatus()).toMatchObject({ phase: 'ready', pathname: '/calidad' });
         expect(getOperationsPlan().pathname).toBe('/calidad');
+    });
+    it('limita la reconciliación cuando siguen llegando escrituras durante la carga', async () => {
+        mutateDuringCampaignRead = true;
+        await refreshFrontendData('/campaigns');
+        expect(requests.filter(req => req.url.startsWith('/mock-api/v1/campanas?'))).toHaveLength(2);
+        expect(getFrontendDataStatus()).toMatchObject({
+            phase: 'ready', refreshing: false, error: expect.stringContaining('Actualiza los datos'),
+        });
     });
     it('cierra la conexión de una lectura en curso al abandonar la pantalla', async () => {
         const closed = new Promise<void>(resolve => { holdCampaignPage = resolve; });

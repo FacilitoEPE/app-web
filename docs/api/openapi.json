@@ -38798,6 +38798,287 @@
           }
         }
       }
+    },
+    "/chofer/contexto": {
+      "get": {
+        "operationId": "getDriverContext",
+        "tags": [
+          "driver-portal"
+        ],
+        "x-roles": [
+          "Chofer"
+        ],
+        "summary": "Consultar entregas coordinadas y datos operativos del portal compartido",
+        "responses": {
+          "200": {
+            "description": "Operación correcta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "contracts",
+                    "agreements",
+                    "coordinations"
+                  ],
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "properties": {
+                    "contracts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "desgloseConfirmado": {
+                            "type": "null"
+                          },
+                          "contratoVentaId": {
+                            "type": "integer",
+                            "x-column": "contrato_venta_id",
+                            "minimum": 1,
+                            "readOnly": true
+                          },
+                          "clienteNegocioCampanaId": {
+                            "type": "integer",
+                            "x-column": "cliente_negocio_campana_id",
+                            "minimum": 1
+                          },
+                          "numero": {
+                            "type": "string",
+                            "x-column": "numero",
+                            "maxLength": 60,
+                            "minLength": 1
+                          },
+                          "canal": {
+                            "type": "string",
+                            "x-column": "canal",
+                            "maxLength": 20,
+                            "minLength": 1,
+                            "enum": [
+                              "EXPORTACION",
+                              "INDUSTRIA"
+                            ]
+                          },
+                          "fecha": {
+                            "type": "null"
+                          },
+                          "kilosAcordados": {
+                            "type": "null"
+                          },
+                          "precioKg": {
+                            "type": "null"
+                          },
+                          "moneda": {
+                            "type": "null"
+                          },
+                          "estado": {
+                            "type": "null"
+                          },
+                          "condicionesPago": {
+                            "type": "null"
+                          },
+                          "archivoId": {
+                            "type": "null"
+                          },
+                          "createdAt": {
+                            "type": "null"
+                          },
+                          "updatedAt": {
+                            "type": "null"
+                          },
+                          "condicionesEntrega": {
+                            "type": "null"
+                          },
+                          "observaciones": {
+                            "type": "null"
+                          },
+                          "variedades": {
+                            "type": "null"
+                          },
+                          "desglosePendiente": {
+                            "type": "null"
+                          },
+                          "saldosVariedades": {
+                            "type": "null"
+                          }
+                        }
+                      }
+                    },
+                    "agreements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "acuerdoTransporteId": {
+                            "type": "integer",
+                            "x-column": "acuerdo_transporte_id",
+                            "minimum": 1,
+                            "readOnly": true
+                          },
+                          "campaniaId": {
+                            "type": "integer",
+                            "x-column": "campania_id",
+                            "minimum": 1
+                          },
+                          "idEmpresaTransporteExterno": {
+                            "type": "integer",
+                            "x-column": "id_empresa_transporte_externo",
+                            "minimum": 1
+                          },
+                          "cotizacionTransporteId": {
+                            "type": "null"
+                          },
+                          "tipoPago": {
+                            "type": "null"
+                          },
+                          "montoAcordado": {
+                            "type": "null"
+                          },
+                          "fechaAcuerdo": {
+                            "type": "null"
+                          },
+                          "fechaPagoFinal": {
+                            "type": "null"
+                          },
+                          "archivoId": {
+                            "type": "null"
+                          },
+                          "createdAt": {
+                            "type": "null"
+                          },
+                          "updatedAt": {
+                            "type": "null"
+                          },
+                          "estado": {
+                            "type": "string",
+                            "x-column": "estado",
+                            "maxLength": 20,
+                            "minLength": 1,
+                            "enum": [
+                              "BORRADOR",
+                              "CONFIRMADO"
+                            ],
+                            "default": "BORRADOR"
+                          },
+                          "moneda": {
+                            "type": "null"
+                          },
+                          "adelantoAcordado": {
+                            "type": "null"
+                          },
+                          "referenciaCotizacion": {
+                            "type": "null"
+                          }
+                        }
+                      }
+                    },
+                    "coordinations": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CoordinacionEntrega"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error: ver code, message y fieldErrors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
