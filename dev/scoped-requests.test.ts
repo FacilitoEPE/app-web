@@ -21,12 +21,17 @@ import { loadCarrierQuotations } from '@/modules/carriers/api/quotation-commands
 let server: Server, original: string | undefined;
 const requests: { method: string; url: string }[] = [];
 let rejectPatch = false;
+let holdCampaignPage: (() => void) | undefined;
 beforeEach(async () => {
     vi.stubEnv('VITE_API_CONTRACT', 'v1');
     resetFrontendData(); requests.length = 0; rejectPatch = false;
     const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'));
     server = createServer((req, res) => {
         requests.push({ method: req.method ?? '', url: req.url ?? '' });
+        if (holdCampaignPage && req.url?.startsWith('/mock-api/v1/campanas?')) {
+            res.on('close', holdCampaignPage);
+            return;
+        }
         if (rejectPatch && req.method === 'PATCH') {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ statusCode: 400, message: 'Rechazo confirmado' })); return;
@@ -43,7 +48,7 @@ afterEach(async () => {
 });
 const app = readFileSync(path.resolve(import.meta.dirname, '../src/App.tsx'), 'utf8');
 const adminRoutes = [...app.matchAll(/<Route\s+path="([^"]+)"/g)].map(match => match[1])
-    .filter(route => !['/', '*', '/login', '/chofer', '/modules'].includes(route))
+    .filter(route => !['/', '*', '/login', '/restablecer-password', '/chofer', '/modules'].includes(route))
     .map(route => route.replace(':scope', 'exportador').replace(':section', route.startsWith('/calidad') ? 'guias' : 'proveedores').replace(/:[A-Za-z]+/g, '1'));
 
 describe('lecturas acotadas a la vista con HTTP V1 real y datos aislados', () => {
@@ -132,6 +137,21 @@ describe('lecturas acotadas a la vista con HTTP V1 real y datos aislados', () =>
         await Promise.all([previous, current]);
         expect(getFrontendDataStatus()).toMatchObject({ phase: 'ready', pathname: '/calidad' });
         expect(getOperationsPlan().pathname).toBe('/calidad');
+    });
+    it('cierra la conexión de una lectura en curso al abandonar la pantalla', async () => {
+        const closed = new Promise<void>(resolve => { holdCampaignPage = resolve; });
+        const previous = refreshFrontendData('/campaigns');
+        try {
+            await vi.waitFor(() => expect(requests.some(req => req.url.startsWith('/mock-api/v1/campanas?'))).toBe(true));
+            cancelFrontendDataLoad();
+            await closed;
+            await previous;
+            expect(requests.some(req => req.url.includes('page=2'))).toBe(false);
+            expect(getFrontendDataStatus().phase).toBe('idle');
+        } finally {
+            holdCampaignPage = undefined;
+            cancelFrontendDataLoad();
+        }
     });
     it('no descarga análisis/cotizaciones ocultos y los obtiene al abrir su gestión', async () => {
         await refreshFrontendData('/calidad/exportador/1');

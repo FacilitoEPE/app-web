@@ -38,6 +38,7 @@ type Status = {
 };
 let state: Status = { phase: 'idle', refreshing: false, error: '', pathname: '' };
 let inFlight: Promise<void> | undefined, inFlightPath = '', generation = 0;
+let activeLoad: AbortController | undefined;
 const listeners = new Set<() => void>();
 export const getFrontendDataStatus = () => state;
 export const subscribeFrontendData = (listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener); }; };
@@ -45,6 +46,8 @@ function publish(next: Status) { state = next; listeners.forEach(listener => lis
 export function cancelFrontendDataLoad() { resetFrontendData(); }
 export function resetFrontendData() {
     generation++;
+    activeLoad?.abort();
+    activeLoad = undefined;
     inFlight = undefined;
     clearOperationsContext();
     hydrateDriverData({ drivers: [], loads: [] });
@@ -55,6 +58,9 @@ export function refreshFrontendData(pathname = getOperationsPlan().pathname): Pr
     if (inFlight && inFlightPath === pathname)
         return inFlight;
     const activeGeneration = ++generation;
+    activeLoad?.abort();
+    const controller = new AbortController();
+    activeLoad = controller;
     inFlightPath = pathname;
     publish({ ...state, pathname, phase: state.phase === 'ready' && state.pathname === pathname ? 'ready' : 'loading', refreshing: true, error: '' });
     const job = (async () => {
@@ -62,7 +68,7 @@ export function refreshFrontendData(pathname = getOperationsPlan().pathname): Pr
             let revision: number;
             do {
                 revision = remoteMutationRevision();
-                const g = await loadOperationsContext(pathname, () => activeGeneration === generation);
+                const g = await loadOperationsContext(pathname, () => activeGeneration === generation, controller.signal);
                 if (activeGeneration !== generation) return;
                 publishViewData(g);
             } while (revision !== remoteMutationRevision());
@@ -74,7 +80,10 @@ export function refreshFrontendData(pathname = getOperationsPlan().pathname): Pr
             throw error;
         }
         finally {
-            if (activeGeneration === generation) inFlight = undefined;
+            if (activeGeneration === generation) {
+                inFlight = undefined;
+                activeLoad = undefined;
+            }
         }
     })();
     inFlight = job;

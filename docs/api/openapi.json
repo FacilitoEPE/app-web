@@ -38685,6 +38685,119 @@
           }
         }
       }
+    },
+    "/auth/recuperar-password": {
+      "post": {
+        "operationId": "requestPasswordRecovery",
+        "tags": [
+          "auth"
+        ],
+        "summary": "Solicitar un enlace de recuperación. Devuelve el mismo mensaje para cualquier correo válido.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "correo": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "correo"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación correcta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida o enlace vencido o consumido."
+          }
+        }
+      }
+    },
+    "/auth/restablecer-password": {
+      "post": {
+        "operationId": "resetPassword",
+        "tags": [
+          "auth"
+        ],
+        "summary": "Cambiar la contraseña mediante un token vigente de un solo uso.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 12,
+                    "maxLength": 72,
+                    "description": "Máximo 72 bytes en UTF-8."
+                  }
+                },
+                "required": [
+                  "token",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación correcta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Entrada inválida o enlace vencido o consumido."
+          }
+        }
+      }
     }
   },
   "components": {

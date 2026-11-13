@@ -4,6 +4,12 @@
 
 > **Fuente vigente del estado por vista.** Actualiza las entradas superiores al cambiar el estado y sincroniza los documentos afectados según las [reglas de epe-web](../AGENTS.md). Las entradas inferiores son evidencia histórica, no estado vigente; vencen 90 días después de su fecha salvo excepción documentada. Elimina las entradas vencidas al revisar el registro.
 
+## Correcciones prioritarias de la auditoría · 12/11/2026
+
+- La web cancela la carga principal al salir de una pantalla, ir al selector o cerrar sesión. Las lecturas del plan tienen un tiempo máximo de 15 segundos por petición.
+- El backend condiciona cada actualización del índice de adjuntos a la versión leída en S3 y consulta en PostgreSQL los solapes y el flete acumulado del acuerdo.
+- La recuperación usa un enlace de un solo uso. El mock simula la solicitud y el consumo con el token de prueba formado por 64 letras `a`. El envío real requiere configurar Resend y el origen público de la web en el backend. [Contrato y configuración](api/README.md#recuperación-de-contraseña).
+
 ## QA local con backend y S3 — 2026-11-10
 
 En la carga `CAR-8-7`, la interfaz confirmó los adjuntos de recepción y facturación, el cierre físico, el registro de factura de prueba y un cobro con saldo cero. El cierre administrativo quedó pendiente del evento final del chofer. Consulte el [recorrido y los hallazgos](evidence/qa-2026-11-10.md).
@@ -649,7 +655,7 @@ Validación prevista para los cambios: pruebas HTTP con las funciones reales y f
 4. **API sin versionado (`/api/...`)** — Completo: frontend (`usesV1() => true`) y backend unificados en `/api/...` con validación JWT y permisos por rol (`Administrador` / `Chofer`). Añadido `GET /api/auth/usuarios/:id` para resolver el nombre completo del responsable de campaña en edición (`CampaignFormModal.tsx`) incluso cuando pertenece a otro usuario.
 5. **Monedas (`PEN` y `USD`) y columnas anulables de conteo/kilos** — Completo: soporte de `PEN` y `USD` validado en código de aplicación (backend `V1BusinessService` y frontend, sin restricciones `CHECK (moneda ...)` en base de datos) en participaciones de compra, acuerdos de transporte, cotizaciones de transporte (`CarriersQuotationsSubView.tsx`, `quotationCommands.respond`), contratos comerciales, certificaciones, facturas y liquidaciones, bloqueando monedas distintas (`INVALID_CURRENCY`) y mezclas de moneda con el documento origen (`CURRENCY_MISMATCH`), y calculando UIT en código con conversión `S/ 3.70` por USD. Las columnas `capturas`, `trampas` y `dias_exposicion` en `agro.medicion_mtd` y `kilos_iniciales` en `agro.certificado_campana` son anulables (`NULL`) sin `CHECK` de base de datos. El [SQL fuente del contrato](api/contract-schema.sql) y el OpenAPI generado reflejan esa estructura.
 6. **Correo con Resend (solicitudes de transporte y recuperación de contraseña)** — Completo:
-   - **Recuperación de contraseña**: endpoint público `POST /api/auth/recuperar-password` conectado a `ResendService` y formulario `RecoverFormControl.tsx` (`requestPasswordRecovery`). Genera contraseña temporal y envía el correo antes de actualizar el hash (evitando bloqueos si el proveedor falla).
+   - **Recuperación de contraseña**: el flujo de contraseña temporal fue sustituido el 12/11/2026 por el enlace de un solo uso. Consulta el [contrato vigente](api/README.md#recuperación-de-contraseña).
    - **Solicitudes e invitaciones de transporte**: `TransporteV1Service.createInvitacion` (`POST /api/solicitudes-transporte/:id/invitaciones`) conectado a `ResendService` con clave de idempotencia y reversión automática de la invitación si falla el envío. En `CarriersPage.tsx` se habilitaron selección de empresas, botón y modal `"Enviar requerimiento"` con adjunto obligatorio (`*`) y pestaña `"Solicitudes y cotizaciones"`.
    - **Estado del proveedor Resend**: verificado `GET https://api.resend.com/domains` con `RESEND_API_KEY` configurada (HTTP `200`, remitente `Agro Exportaciones <agroexportadores@adkventurie.com>`, 2 dominios registrados).
 7. **Verificación integral de cierre**:

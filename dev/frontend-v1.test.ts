@@ -375,8 +375,12 @@ describe('existing frontend with the V1 HTTP contract', () => {
 
   it('recovers password by email and resolves user details by id', async () => {
     const recovered = await requestPasswordRecovery('persona5@example.com')
-    expect(recovered.message).toContain('contraseña temporal')
-    await expect(requestPasswordRecovery('noexiste@epe.local')).rejects.toMatchObject({ statusCode: 404 })
+    expect(recovered.message).toContain('enlace')
+    await expect(requestPasswordRecovery('noexiste@epe.local')).resolves.toEqual(recovered)
+    const token = 'a'.repeat(64)
+    const password = 'Nueva-clave-EPE-123'
+    await expect(apiClient.post('/v1/auth/restablecer-password', { token, password })).resolves.toMatchObject({ status: 200 })
+    await expect(apiClient.post('/v1/auth/restablecer-password', { token, password })).rejects.toMatchObject({ statusCode: 400 })
     const user = await getUserById(1)
     expect(user).toMatchObject({ usuarioId: 1, usuario: 'admin-demo', nombres: 'Administrador', apellidos: 'Demo' })
   })

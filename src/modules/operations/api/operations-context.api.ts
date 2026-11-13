@@ -147,19 +147,20 @@ export async function readAllV1<T>(path: string, query: ListQuery = {}, fresh = 
     try { return await job; }
     finally { if (pendingReads.get(key) === job) pendingReads.delete(key); }
 }
-async function fetchAllV1<T>(path: string, query: ListQuery): Promise<T[]> {
+async function fetchAllV1<T>(path: string, query: ListQuery, signal?: AbortSignal): Promise<T[]> {
     const resource = createV1ReadResource<T>(path);
-    const first = await resource.list({ ...query, pageSize: 100 });
+    const first = await resource.list({ ...query, pageSize: 100 }, signal);
     const result = [...first.items];
     for (let page = 2; result.length < first.total; page++) {
-        const next = await resource.list({ ...query, page, pageSize: 100 });
+        signal?.throwIfAborted();
+        const next = await resource.list({ ...query, page, pageSize: 100 }, signal);
         if (!next.items.length)
             throw new Error('La API devolvió una página incompleta. Recarga los datos.');
         result.push(...next.items);
     }
     return result;
 }
-export async function loadOperationsContext(pathname = '*', isCurrent = () => true): Promise<OperationsContext> {
+export async function loadOperationsContext(pathname = '*', isCurrent = () => true, signal?: AbortSignal): Promise<OperationsContext> {
     const token = getAuthToken();
     const generation = contextGeneration;
     const plan = operationsPlan(pathname);
@@ -218,8 +219,8 @@ export async function loadOperationsContext(pathname = '*', isCurrent = () => tr
             const uniqueParents = parents === undefined ? [undefined] : [...new Set(parents)];
             const groups = await Promise.all(uniqueParents.map(parentId => request(async () => {
                 const path = parentId === undefined || !resource.parent ? resource.path : resource.path.replace('{parentId}', String(parentId));
-                if (!resource.parent && parentId !== undefined) return [await createV1ReadResource<Row>(path).get(parentId, true)];
-                const rows = await readAllV1<Row>(path, query, true);
+                if (!resource.parent && parentId !== undefined) return [await createV1ReadResource<Row>(path).get(parentId, true, signal)];
+                const rows = await fetchAllV1<Row>(path, query, signal);
                 nextLists.set(queryKey(path, query), { key, parentId: resource.parent ? parentId : undefined, query });
                 return rows;
             })));
@@ -235,7 +236,7 @@ export async function loadOperationsContext(pathname = '*', isCurrent = () => tr
     }
     try { await Promise.all([...plan.keys].map(load)); }
     catch (error) { failed = true; await Promise.allSettled(jobs.values()); throw error; }
-    if (plan.documents) { data.localDocuments = await request(getLocalDocumentLinks); completeDocuments.add(data); }
+    if (plan.documents) { data.localDocuments = await request(() => getLocalDocumentLinks(signal)); completeDocuments.add(data); }
     if (getAuthToken() !== token) throw new Error('La sesión cambió durante la carga.');
     if (!isCurrent() || generation !== contextGeneration) throw new Error('La vista cambió durante la carga.');
     current = data; contextToken = token; activePlan = plan; lists = nextLists; changed();

@@ -29,6 +29,7 @@ async function readJson(request: IncomingMessage): Promise<unknown> {
 
 /** Contract-driven V1 mock. Auth/storage/PostgreSQL remain responsibilities of the real backend. */
 export function createV1MockMiddleware(root: string, clock: () => Date = () => new Date(), qualityDemo = false): Connect.NextHandleFunction {
+  let demoResetExpiresAt = 0
   const loaded = loadV1Contract(root)
   const contract = loaded.contract
   let db = loaded.database
@@ -503,8 +504,18 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
       const body = await readJson(request) as { correo?: string }
       const correo = String(body?.correo ?? '').trim().toLowerCase()
       const matched = db.usuario.some(u => u.activo && db.persona.some(p => p.personaId === u.personaId && String(p.correo ?? '').trim().toLowerCase() === correo))
-      if (!correo || !matched) throw new ApiV1Error(404, 'NOT_FOUND', 'No se encontró una cuenta activa asociada a ese correo electrónico.')
-      return { status: 200, data: { message: 'Se envió una contraseña temporal a tu correo electrónico.' } }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) throw new ApiV1Error(400, 'BAD_REQUEST', 'Ingresa un correo electrónico válido.')
+      if (matched) demoResetExpiresAt = clock().getTime() + 30 * 60_000
+      return { status: 200, data: { message: 'Si hay una cuenta activa para ese correo, recibirás un enlace para restablecer la contraseña.' } }
+    }
+    if (pathname === '/auth/restablecer-password' && request.method === 'POST') {
+      const body = await readJson(request) as { token?: string; password?: string }
+      if (typeof body?.password !== 'string' || body.password.length < 12 || Buffer.byteLength(body.password) > 72)
+        throw new ApiV1Error(400, 'BAD_REQUEST', 'El enlace o la contraseña no son válidos.')
+      if (body.token !== 'a'.repeat(64) || demoResetExpiresAt <= clock().getTime())
+        throw new ApiV1Error(400, 'BAD_REQUEST', 'El enlace venció o ya fue usado. Solicita uno nuevo.')
+      demoResetExpiresAt = 0
+      return { status: 200, data: { message: 'Contraseña actualizada. Ya puedes iniciar sesión.' } }
     }
     const userByIdRoute = /^\/auth\/usuarios\/(\d+)$/.exec(pathname)
     if (userByIdRoute && request.method === 'GET') {

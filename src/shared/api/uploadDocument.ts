@@ -97,8 +97,8 @@ export async function unlinkS3Document(tipo: string, entidadId: number): Promise
 }
 export const unlinkLocalDocument = unlinkS3Document;
 
-export async function getS3DocumentLinks(): Promise<S3DocumentLink[]> {
-    const { data } = await apiClient.get<S3DocumentLink[]>('/v1/documentos/vinculos');
+export async function getS3DocumentLinks(signal?: AbortSignal): Promise<S3DocumentLink[]> {
+    const { data } = await apiClient.get<S3DocumentLink[]>('/v1/documentos/vinculos', { signal, timeout: 15000 });
     return data.map(item => ({ ...item, url: publicDocumentUrl(item.url) }));
 }
 export const getLocalDocumentLinks = getS3DocumentLinks;

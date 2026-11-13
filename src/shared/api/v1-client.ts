@@ -26,14 +26,14 @@ export function registerViewDetailReader(reader: typeof viewDetail) { viewDetail
 /** VITE_API_BASE_URL selects real backend or /mock-api/. No fallback after errors. */
 export function createV1ReadResource<T>(resource: string) {
     return {
-        async list(query: ListQuery = {}): Promise<ApiPage<T>> {
-            const { data } = await apiClient.get<ApiPage<T>>(endpoint(resource), { params: query });
+        async list(query: ListQuery = {}, signal?: AbortSignal): Promise<ApiPage<T>> {
+            const { data } = await apiClient.get<ApiPage<T>>(endpoint(resource), { params: query, signal, timeout: 15000 });
             return data;
         },
-        async get(id: number, fresh = false): Promise<T> {
+        async get(id: number, fresh = false, signal?: AbortSignal): Promise<T> {
             const existing = !fresh ? viewDetail?.(resource, id) : undefined;
             if (existing !== undefined) return existing as T;
-            const { data } = await apiClient.get<T>(`${endpoint(resource)}/${id}`);
+            const { data } = await apiClient.get<T>(`${endpoint(resource)}/${id}`, { signal, timeout: 15000 });
             return data;
         },
     };
