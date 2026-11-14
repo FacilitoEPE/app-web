@@ -14,7 +14,6 @@ import type { FileSource } from "@/shared/utils/fileSource";
 import { formatKg } from "@/shared/utils/format";
 import type { BillingClient, BillingInvoice, BillingLoad } from "@/modules/billing/billing.models";
 import { billingAvailableKg } from "@/modules/billing/billing.utils";
-import { useBillingClients } from "@/modules/billing/billing.store";
 
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 
@@ -39,7 +38,6 @@ export default function BillingPrepareInvoiceModal({
     editingInvoice,
     onSave,
 }: BillingPrepareInvoiceModalProps) {
-    const clients = useBillingClients();
     const [referenciaPreparacion, setReferenciaPreparacion] = useState("");
     const [fechaPreparacion, setFechaPreparacion] = useState("");
     const [fechaVencimiento, setFechaVencimiento] = useState("");
@@ -50,8 +48,9 @@ export default function BillingPrepareInvoiceModal({
     const [archivoPreparacion, setArchivoPreparacion] = useState<FileSource | null>(null);
     const [observaciones, setObservaciones] = useState("");
 
-    const existingReferences = clients.flatMap(c => c.cargas.flatMap(l => l.facturas.map(f => Number(f.referenciaPreparacion.match(/^LV-(\d+)$/)?.[1] || 0))));
-    const nextReference = `LV-${String(1 + Math.max(0, ...existingReferences)).padStart(6, "0")}`;
+    // The database enforces this reference globally, including other campaigns.
+    // The backend allocates the real value atomically when the invoice is saved.
+    const pendingReference = "LV-PENDIENTE";
 
     useResetOnToggle(open, () => {
         if (!load || !client || !open) return;
@@ -66,7 +65,7 @@ export default function BillingPrepareInvoiceModal({
             setArchivoPreparacion(editingInvoice.archivoPreparacion);
             setObservaciones(editingInvoice.observaciones);
         } else {
-            setReferenciaPreparacion(nextReference);
+            setReferenciaPreparacion(pendingReference);
             setFechaPreparacion(load.fechaRecepcion > today() ? load.fechaRecepcion : today());
             setFechaVencimiento("");
             setKilosFacturados(String(billingAvailableKg(load)));
@@ -171,7 +170,7 @@ export default function BillingPrepareInvoiceModal({
                             required
                             value={referenciaPreparacion}
                             readOnly
-                            hint="Se genera al preparar la factura."
+                            hint="El backend asigna una referencia única al guardar."
                             error={errors.referencia}
                             className="sm:col-span-2"
                         />

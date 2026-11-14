@@ -1,5 +1,7 @@
 # Disable Development WebSocket and Cache Features
 
+> Registro histórico. La [guía de desarrollo](../../docs/development.md) define la configuración actual de HMR. La decisión de conservar `public/sw.js` sigue vigente. Revisar este registro el 10/02/2027.
+
 ## Objective
 Temporarily stop Vite's development HMR websocket and stop the application service worker from registering or serving cached content, while preserving its source for later reactivation.
 

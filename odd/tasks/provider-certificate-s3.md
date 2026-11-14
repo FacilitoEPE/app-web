@@ -1,5 +1,7 @@
 # Provider certificate S3 integration
 
+> Registro histórico. Consulta el [flujo de certificados en S3](../../../epe-backend/docs/backend-flow.md#42-flujo-s3-con-url-prefirmada-certificados-de-proveedor) para la implementación actual. Revisar este registro el 10/02/2027.
+
 ## Objective
 Integrate direct-to-S3 document upload and ephemeral download for `certificado_proveedor`, matching `test_documento.txt` without changing other document-bearing resources.
 

@@ -20,6 +20,14 @@ El SQL de esta carpeta es distinto del [modelo objetivo compartido](../../../doc
 
 Las escrituras V1 con moneda usan `PEN` o `USD`. El servicio valida el código de moneda, así como la consistencia de los conteos MTD. Las columnas de lectura conservan el tipo del [esquema PostgreSQL](../../../epe-backend/docs/database.md).
 
+## Recuperación de contraseña
+
+`POST /v1/auth/recuperar-password` recibe `correo` y devuelve un mensaje uniforme. El enlace abre `/restablecer-password`. El formulario envía `token` y `password` a `POST /v1/auth/restablecer-password`. La contraseña vigente se conserva hasta la confirmación, el enlace vence en 30 minutos y solo se puede usar una vez. [Configuración y persistencia](../../../epe-backend/docs/backend-flow.md#recuperación-de-contraseña).
+
+## Contexto del chofer
+
+`GET /v1/chofer/contexto` conserva el conjunto de entregas coordinadas para el portal compartido. En `contracts` se informan el identificador, requerimiento, número y canal. En `agreements` se informan el identificador, campaña, transportista y estado. Los demás campos de esos dos recursos se devuelven como `null` en este contexto.
+
 ## Documento del chofer
 
 `POST /v1/transportistas/{id}/choferes` y su `PATCH` aceptan `tipoDocumento` y `numeroDocumento` como texto opcional. La API devuelve ambos campos y `numeroLicencia` al consultar el chofer. Los registros anteriores recuperan el documento de su persona vinculada si existe. [Migración](../../../epe-backend/docs/database.md#documento-del-chofer).

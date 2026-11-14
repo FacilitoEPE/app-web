@@ -366,7 +366,7 @@ export default function CampaignCarriersPage() {
                 carriers={available}
                 isLoading={isLoading || isLoadingDirectory}
                 onSave={async (carrierId, cotizacion) => {
-                    await linkCampaignCarrier(campaniaId, carrierId, usesV1() ? null : cotizacion);
+                    await linkCampaignCarrier(campaniaId, carrierId, cotizacion);
                     setLinkOpen(false);
                     showSuccess("carrier");
                 }}

@@ -1,6 +1,7 @@
 import FormControl from "@/modules/auth/components/FormControl";
 import { useLayoutEffect, useRef, useState } from "react";
 import RecoverFormControl from "@/modules/auth/components/RecoverFormControl";
+import ResetPasswordForm from "@/modules/auth/components/ResetPasswordForm";
 import { Leaf } from "lucide-react";
 import LogoEmpresaOnly from "@/assets/image/logo_empresa_only.webp";
 import type { AccessProfile } from "@/modules/auth/api/auth.api";
@@ -8,27 +9,29 @@ type ViewState = 'login' | 'recover';
 
 interface AdminLoginFormProps {
     onLogin: (profile: AccessProfile, username: string, password: string) => Promise<void>;
+    resetting?: boolean;
 }
 
-export default function AdminLoginForm({ onLogin }: AdminLoginFormProps) {
+export default function AdminLoginForm({ onLogin, resetting = false }: AdminLoginFormProps) {
     const [view, setView] = useState<ViewState>('login');
     const contentRef = useRef<HTMLDivElement>(null);
     const [cardHeight, setCardHeight] = useState<number>();
     useLayoutEffect(() => {
-        if (contentRef.current) {
+        if (contentRef.current && view === 'login' && !resetting) {
             setCardHeight(contentRef.current.scrollHeight);
         }
-    }, [view]);
+    }, [view, resetting]);
 
     return (
         <div
             className="w-full max-w-md rounded-2xl overflow-hidden relative z-10 bg-card shadow-2xl border border-border/40 transition-[height] duration-300 ease-in-out"
-            style={{ height: cardHeight }}
+            style={{ height: !resetting && view === 'login' ? cardHeight : undefined }}
         >
             <div ref={contentRef} className="px-5 py-7 sm:px-10 sm:py-8 lg:px-12 flex flex-col">
-                {view === 'recover' && <RecoverFormControl onBack={() => setView('login')} />}
+                {resetting && <ResetPasswordForm />}
+                {!resetting && view === 'recover' && <RecoverFormControl onBack={() => setView('login')} />}
 
-                {view === 'login' && (
+                {!resetting && view === 'login' && (
                     <div className="w-full flex flex-col">
                         <div className="flex items-center gap-4 w-full mb-8">
                             <img src={LogoEmpresaOnly} alt="Agro Exportaciones Logo" className="h-14 w-auto object-contain shrink-0" />
