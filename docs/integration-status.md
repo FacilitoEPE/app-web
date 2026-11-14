@@ -1,5 +1,17 @@
 # 4. Estado de Integración Frontend ↔ Backend (`epe-web`)
 
+## QA del despacho de chofer y cierres — 2026-11-14 · Completo en desarrollo local
+
+En `http://localhost:5173/chofer`, la carga sintética `DEMO-PAL-GUIA-BORRADOR` (`DEMO-T001-000003`) recorrió Salida, En camino, Llegada y Cierre. El checklist de llegada guardó 50 kg y persistió al reabrir. El PDF de salida firmado registrado por Logística se mostró en el portal; el estado de disponibilidad del archivo aún mostró «No se pudo verificar el documento», aunque el nombre y tamaño del PDF estaban visibles y el flujo pudo continuar. Logística registró recepción dentro de la ventana, descarga, devolución de 3/3 jabas y copia entregada; el cierre físico y el administrativo quedaron registrados, en ese orden. Tras recargar, ambos cierres persistieron.
+
+El registro de compras de esta carga ya estaba aplicado a liquidaciones y quedó en solo lectura; la compra mostraba «Pendiente de revisión», aunque el cierre físico permitió continuar. Registrar cierre físico con compras sin revisar es una brecha funcional reproducible que debe revisarse. La secuencia de etapa del chofer también se corrigió para respetar el orden de etapas aunque sus marcas de tiempo estén desordenadas; las pruebas unitarias y la revisión manual lo verificaron.
+
+La interfaz muestra «Generada» para la guía interna `DEMO-T001-000003`; no se hizo consulta ni emisión SUNAT. Los documentos de prueba se llaman `prueba-qa.pdf`. Todo dato, documento, usuario y movimiento utilizado pertenece al ambiente controlado de QA y es ficticio; no representa ni se relaciona con SUNAT, bancos o integraciones externas. No se realizó una transferencia bancaria ni se validó una integración externa. El mensaje visual de disponibilidad del PDF sigue pendiente de corregir. La suite automatizada completa y el E2E con base aislada no se pudieron validar en este entorno por la restricción de loopback (`EACCES`); las 6 pruebas unitarias enfocadas, ESLint y TypeScript sí pasaron.
+
+## Referencia global de preparación de factura — 2026-11-13
+
+El código local del backend asigna `LV-######` al crear `factura_venta`, bajo advisory lock transaccional y consultando el máximo global de la tabla; al editar también reemplaza `LV-PENDIENTE` legado. La pantalla muestra `LV-PENDIENTE` antes de guardar y usa la referencia devuelta por la API. No requiere migración; despliega/reinicia el backend actualizado para aplicar el cambio en el entorno. El retest manual registrado de CAR-1-8 mostró `LV-000002` persistido al recargar, F001-0002 emitida y cobro QA con saldo cero e historial/voucher visibles. Falta repetir el POST en otra carga QA disponible; no se validó SUNAT ni una transferencia bancaria externa.
+
 **Prefijo de la API actual.** NestJS y el mock usan `/v1`. En el despliegue de mismo origen, el frontend solicita `/api/v1` y Nginx quita `/api` antes de reenviar. La vista previa y la verificación de adjuntos usan la misma base pública.
 
 > **Fuente vigente del estado por vista.** Actualiza las entradas superiores al cambiar el estado y sincroniza los documentos afectados según las [reglas de epe-web](../AGENTS.md). Las entradas inferiores son evidencia histórica, no estado vigente; vencen 90 días después de su fecha salvo excepción documentada. Elimina las entradas vencidas al revisar el registro.

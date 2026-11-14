@@ -179,6 +179,14 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
       row.flete = freight
     }
     if (table === 'factura_venta') {
+      if (!current || current.referenciaPreparacion === 'LV-PENDIENTE') {
+        const next = db.factura_venta.reduce((max, invoice) => {
+          const match = /^LV-(\d{6})$/.exec(String(invoice.referenciaPreparacion))
+          return match ? Math.max(max, Number(match[1])) : max
+        }, 0) + 1
+        if (next > 999999) fail('INVOICE_REFERENCE_EXHAUSTED','Se agotaron las referencias de preparación disponibles.')
+        row.referenciaPreparacion = `LV-${String(next).padStart(6, '0')}`
+      }
       const source = saleContract(row.cargaId)
       if (!source.precioKg) fail('SALE_PRICE_REQUIRED', 'Completa el precio del contrato antes de facturar.')
       row.precioKgAplicado = source.precioKg

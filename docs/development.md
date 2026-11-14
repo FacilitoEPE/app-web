@@ -24,6 +24,9 @@
 
 ### Pruebas de navegador
 
+> [!IMPORTANT]
+> **Datos y límites de QA automático:** usa exclusivamente datos, usuarios, identificadores y PDF ficticios de prueba; no cargues información real o sensible. La suite no está conectada con SUNAT ni realiza emisión, validación tributaria, pagos o transferencias bancarias. Tampoco envía correos externos. El modo normal usa el API ficticio local; el modo full-stack usa una API local y una base PostgreSQL dedicada `epe_e2e_*`, guarda los documentos en memoria y deja sin configurar las credenciales de correo. No apuntes las pruebas a una base productiva ni a integraciones externas: el propósito es verificar el comportamiento interno de la aplicación sin efectos legales, financieros o de seguridad en servicios externos.
+
 Instala Chromium con `pnpm exec playwright install chromium` y ejecuta
 `pnpm test:e2e`. Playwright abre la aplicación con la API de demostración en
 el puerto 4174. Los escenarios verifican cobro y voucher, cierre logístico,

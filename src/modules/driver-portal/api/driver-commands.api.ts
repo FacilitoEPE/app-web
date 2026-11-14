@@ -8,6 +8,7 @@ import { writeReceipt } from '@/modules/logistics/api/logistics-commands.api';
 import { apiClient } from '@/shared/api/client';
 import { jsonObject } from '@/modules/quality/api/quality-screen-data';
 import { projectDriverData } from '@/modules/driver-portal/api/driver-screen-data';
+import { nextDriverStage } from '@/modules/driver-portal/api/driver-stage.utils';
 import type { DriverArrivalChecklist, DriverVehicleExitGuide, DriverProviderLoadDetail } from '@/modules/driver-portal/driverPortal.models';
 function activeDispatch(id: string) {
     const row = projectDriverData(operationsContext()).loads.find(item => item.id === id);
@@ -18,12 +19,11 @@ function activeDispatch(id: string) {
 export const driverCommands = {
     advance: (id: string, note?: string) => commitRemote(async () => {
         activeDispatch(id);
-        const g = operationsContext(), c = loadContext(id), history = g.histories.filter(h => h.coordinacionEntregaId === c.coordination.coordinacionEntregaId), stages = ['EN_CARGA', 'SALIDA', 'EN_CAMINO', 'LLEGADA', 'CIERRE'] as const;
+        const g = operationsContext(), c = loadContext(id), history = g.histories.filter(h => h.coordinacionEntregaId === c.coordination.coordinacionEntregaId);
         if (!history.length) {
             await historialChoferV1(c.coordination.coordinacionEntregaId).create({ estado: 'EN_CARGA', observacion: 'Inicio de seguimiento del despacho.' });
         }
-        const last = [...history].sort((a, b) => a.fechaHora.localeCompare(b.fechaHora)).at(-1);
-        const next = stages[stages.indexOf(last?.estado ?? 'EN_CARGA') + 1];
+        const next = nextDriverStage(history);
         if (!next)
             throw new Error('El despacho ya está cerrado.');
         if (next === 'CIERRE') {
