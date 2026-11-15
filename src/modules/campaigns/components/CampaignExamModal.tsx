@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { useState } from "react";
 import { X, Save, FlaskConical } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -71,6 +72,7 @@ export default function CampaignExamModal({ open, onOpenChange, providerName, mo
         const nextErrors = validateExam(values);
         if (Object.keys(nextErrors).length > 0) {
             setErrors(nextErrors);
+            revealFormErrors();
             return;
         }
         if (onSave) await onSave(normalizeExam(values));

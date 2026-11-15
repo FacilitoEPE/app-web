@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import RequiredMark from "@/shared/components/RequiredMark";
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
@@ -43,6 +44,7 @@ export default function BillingIssueInvoiceModal({
     invoice,
     onIssue,
 }: BillingIssueInvoiceModalProps) {
+    const showSaveSuccess = useSaveSuccess();
     const [numeroFacturaElectronica, setNumeroFacturaElectronica] = useState("");
     const [fechaEmision, setFechaEmision] = useState("");
     const [fechaVencimiento, setFechaVencimiento] = useState("");
@@ -91,6 +93,7 @@ export default function BillingIssueInvoiceModal({
             observaciones: "",
         });
         onOpenChange(false);
+        showSaveSuccess("Factura emitida registrada", "Se guardaron los datos y el documento de la factura emitida.");
         },
         backendFields: { numeroFactura: "numero", fechaEmision: "fechaEmision", fechaVencimiento: "fechaVencimiento" },
     });

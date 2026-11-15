@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { useState } from "react";
 import { X, Send, Truck, Building2, Info } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -71,7 +72,10 @@ export default function CarrierSendRequirementModal({ open, onOpenChange, onSucc
         const noFile = file === null;
         setRecipientsError(noRecipients ? "Selecciona al menos una empresa en la tabla." : "");
         setFileError(noFile ? "Adjunta el documento del requerimiento." : "");
-        if (noRecipients || noFile) return;
+        if (noRecipients || noFile) {
+            revealFormErrors();
+            return;
+        }
         setSubmitError("");
         setSaving(true);
         try {

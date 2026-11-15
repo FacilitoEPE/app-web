@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { useNavigate } from 'react-router-dom';
 import { usesV1 } from '@/shared/api/data-contract';
 import { useMemo, useState } from "react";
@@ -62,6 +63,7 @@ interface CarriersQuotationsSubViewProps {
 const currencySymbol = (moneda?: "PEN" | "USD") => (moneda === "USD" ? "US$" : "S/");
 
 export default function CarriersQuotationsSubView({ carriers, groups }: CarriersQuotationsSubViewProps) {
+    const showSaveSuccess = useSaveSuccess();
     const navigate = useNavigate();
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -422,6 +424,7 @@ export default function CarriersQuotationsSubView({ carriers, groups }: Carriers
                                     observaciones: responseModal.observaciones,
                                 });
                                 setResponseModal((current) => ({ ...current, open: false }));
+                                showSaveSuccess("Cotización guardada", "La respuesta del transportista quedó guardada.");
                             }}
                         >
                             <Save size={18} /> Guardar cotización
@@ -529,6 +532,7 @@ export default function CarriersQuotationsSubView({ carriers, groups }: Carriers
                                     choferAsignadoLicencia: assignModal.licencia,
                                 });
                                 setAssignModal((current) => ({ ...current, open: false }));
+                                showSaveSuccess("Asignación guardada", "El vehículo y el chofer quedaron registrados en la asignación.");
                             }}
                         >
                             <CheckCircle2 size={18} /> Confirmar asignación

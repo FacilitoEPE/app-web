@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { usesV1 } from '@/shared/api/data-contract';
 import { useEffect, useRef, useState } from "react";
 import { X, Link2, Sprout } from "lucide-react";
@@ -211,6 +212,7 @@ export default function CampaignLinkProviderModal({ open, campaniaId, onOpenChan
         if (Object.keys(draftErrors).length > 0 || (!proveedor && mode === "create")) {
             setErrors(draftErrors);
             setFormError("Revisa los campos marcados antes de guardar.");
+            revealFormErrors();
             return;
         }
 

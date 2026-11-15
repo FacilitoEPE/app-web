@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { CalendarDays, CheckCircle2, FileCheck2, Package, Pencil, Scale, Truck, Users } from "lucide-react";
@@ -23,6 +24,7 @@ function DetailSection({ title, children }: { title: string; children: ReactNode
 const dateOrDash = (value: string) => value ? formatDisplayDate(value) : "—";
 
 export default function QualityGuideDetailView({ load, guide, backHref }: Props) {
+    const showSaveSuccess = useSaveSuccess();
     const navigate = useNavigate();
     const [editing, setEditing] = useState(false);
     const [generating, setGenerating] = useState(false);
@@ -41,6 +43,7 @@ export default function QualityGuideDetailView({ load, guide, backHref }: Props)
         setError("");
         try {
             for (const item of pending) await saveQualityRemissionGuide(load.id, { ...item, estado: "Generada" });
+            showSaveSuccess("Guías generadas", "Las guías de remisión pendientes quedaron registradas como generadas.");
         } catch (cause) {
             setError(cause instanceof Error ? cause.message : "No se pudieron generar las guías.");
         } finally {

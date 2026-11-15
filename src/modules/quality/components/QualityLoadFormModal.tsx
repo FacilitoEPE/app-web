@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import RequiredMark from "@/shared/components/RequiredMark";
 import { useState } from "react";
 import { PackageCheck, Save, Sprout, X } from "lucide-react";
@@ -73,6 +74,7 @@ export default function QualityLoadFormModal({
     load,
     onSave,
 }: QualityLoadFormModalProps) {
+    const showSaveSuccess = useSaveSuccess();
     const [fechaCargaReal, setFechaCargaReal] = useState("");
     const [anotador, setAnotador] = useState("");
     const [cumpleRequisitos, setCumpleRequisitos] = useState(true);
@@ -133,6 +135,11 @@ export default function QualityLoadFormModal({
                 viaticosMovilidad: Number(viaticosMovilidad), viaticosInsumos: Number(viaticosInsumos),
                 gastoCuadrilla: Number(gastoCuadrilla), gastoAnotadores: Number(gastoAnotadores), observacionesCarga: observacionesCarga.trim(), proveedoresCarga: proveedores });
             onOpenChange(false);
+            if (load.scope === "industria" && !cumpleRequisitos) {
+                showSaveSuccess("Rechazo registrado", "Se guardó el motivo de rechazo de la carga.");
+            } else {
+                showSaveSuccess("Datos de carga guardados", "Los datos de la carga quedaron registrados.");
+            }
         },
     });
 

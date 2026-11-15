@@ -9,6 +9,7 @@ import DashboardLayout from '@/shared/layout/DashboardLayout'
 import FrontendDataBoundary from '@/FrontendDataBoundary'
 import { resetFrontendData } from '@/frontend-data'
 import OfflinePage from '@/shared/components/OfflinePage'
+import SaveSuccessProvider from '@/shared/components/SaveSuccessProvider'
 import { PageError, PageLoading } from '@/shared/components/PageState'
 import WelcomeSplash from '@/shared/components/WelcomeSplash'
 import { unlockSplashAudio } from '@/shared/components/welcomeSplashSound'
@@ -20,6 +21,7 @@ import HeroPhraseImg from '@/assets/hero_phrase.webp'
 import { clearSession, getSession, saveSession } from '@/shared/offline/session'
 import type { PersistedSession, AuthUser } from '@/shared/offline/session'
 import { getAuthenticatedUser, login, type AccessProfile } from '@/modules/auth/api/auth.api'
+import { observeErrorScroll } from '@/shared/utils/errorScroll'
 
 const AdminLoginPage = lazy(() => import('@/modules/auth/pages/AdminLoginPage'))
 const UsersModulesPage = lazy(() => import('@/modules/users/pages/UsersModulesPage'))
@@ -125,6 +127,8 @@ function App() {
   const [showWelcome, setShowWelcome] = useState(false)
   const modulesImagesReady = useImagesReady(MODULES_IMAGES, showWelcome)
 
+  useEffect(observeErrorScroll, [])
+
   useEffect(() => {
     const saved = getSession()
     if (!saved) return
@@ -184,7 +188,7 @@ function App() {
   if (!sessionReady) return null
 
   return (
-    <MotionRouter><ContainerMotionScope>
+    <MotionRouter><ContainerMotionScope><SaveSuccessProvider>
       <Suspense fallback={<PageLoading label="Cargando pantalla…" />}><Routes>
         <Route 
           path="/login" 
@@ -246,7 +250,7 @@ function App() {
       </Routes></Suspense>
       {justReconnected && <div className="online-transition" role="status">Conexión restaurada</div>}
       {showWelcome && <WelcomeSplash ready={modulesImagesReady} onFinished={() => setShowWelcome(false)} />}
-    </ContainerMotionScope></MotionRouter>
+    </SaveSuccessProvider></ContainerMotionScope></MotionRouter>
   )
 }
 

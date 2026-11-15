@@ -4,6 +4,12 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 const api = 'http://127.0.0.1:4175/v1'
 const pdf = (name: string) => ({ name, mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF') })
 
+async function acceptSuccess(page: Page, name: string) {
+  const dialog = page.getByRole('dialog', { name, exact: true })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('button', { name: 'Aceptar', exact: true }).click()
+}
+
 async function adminApi(request: APIRequestContext) {
   const login = await request.post(`${api}/auth/login`, {
     data: { usuario: 'qa_web_admin', password: 'QA-web-admin-password' },
@@ -102,6 +108,7 @@ async function prepareDispatch(post: Awaited<ReturnType<typeof adminApi>>, page:
   await dialog.getByRole('checkbox', { name: 'Jabas', exact: true }).check()
   await dialog.getByLabel(/^Jabas cargadas/).fill('50')
   const load = await saveFromPage(page, new RegExp(`/coordinaciones/${coordination.coordinacionEntregaId}/cargas$`), 'Guardar datos de carga')
+  await acceptSuccess(page, 'Datos de carga guardados')
   const code = load.codigo
   const loadPath = `/cargas/${load.cargaId}`
   await page.goto(`/calidad/exportador/1/guias/${load.cargaId}`)
@@ -118,6 +125,7 @@ async function prepareDispatch(post: Awaited<ReturnType<typeof adminApi>>, page:
     await page.getByRole('option', { name: new RegExp(ubigeo) }).click()
   }
   const guide = await saveFromPage(page, /\/cargas\/\d+\/guias$/, 'Guardar guía')
+  await acceptSuccess(page, 'Guía guardada')
   return { code, date, loadPath, loadId: load.cargaId, guideId: guide.guiaRemisionId }
 }
 
@@ -138,6 +146,7 @@ test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', asyn
   const { code, date, loadPath, loadId, guideId } = await prepareDispatch(await adminApi(request), page)
   await page.goto(`/calidad/exportador/1/guias/${loadId}/${guideId}`)
   await page.getByRole('button', { name: 'Generar guías (1)' }).click()
+  await acceptSuccess(page, 'Guías generadas')
   await expect(page.getByText('Generada', { exact: true })).toBeVisible()
   const driver = await browser.newPage()
   driver.setDefaultTimeout(10_000)
@@ -161,13 +170,13 @@ test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', asyn
     await page.getByRole('button', { name: 'Registrar llegada' }).click()
     await page.getByLabel('Fecha y hora real de llegada').fill(`${date}T13:00`)
     await page.getByRole('button', { name: 'Guardar llegada' }).click()
-    await expect(page.getByRole('dialog')).toBeHidden()
+    await acceptSuccess(page, 'Llegada guardada')
     await page.getByRole('button', { name: 'Registrar descarga' }).click()
     await page.getByLabel('Inicio de descarga').fill(`${date}T13:10`)
     await page.getByLabel('Término de descarga').fill(`${date}T13:40`)
     await page.getByLabel('Responsable de recepción').fill('Recepción QA')
     await page.getByRole('button', { name: 'Guardar descarga' }).click()
-    await expect(page.getByRole('dialog')).toBeHidden()
+    await acceptSuccess(page, 'Descarga guardada')
     await page.getByLabel('Peso en planta').fill('1000')
     await page.getByLabel(/^Resultado/).fill('Conforme')
     const evaluation = page.waitForResponse(response => response.request().method() === 'PATCH'
@@ -175,6 +184,7 @@ test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', asyn
     await page.getByRole('button', { name: 'Guardar evaluación' }).click()
     const evaluationResponse = await evaluation
     expect(evaluationResponse.ok(), await evaluationResponse.text()).toBeTruthy()
+    await acceptSuccess(page, 'Evaluación guardada')
     await driver.reload()
     await openDispatch()
     await driver.getByLabel('Kilos recibidos en planta').fill('1000')
@@ -196,6 +206,7 @@ test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', asyn
     }
     await confirmPhysical()
     await expect(page.getByRole('alert').filter({ hasText: /Adjunta el informe de recepción/ })).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Cierre físico registrado' })).toBeHidden()
     const files = page.locator('input[type=file]')
     await files.nth(0).setInputFiles(pdf('guia-fruta.pdf'))
     await files.nth(2).setInputFiles(pdf('recepcion.pdf'))
@@ -205,9 +216,11 @@ test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', asyn
     await page.getByRole('button', { name: 'Guardar documentos' }).click()
     const updatedReceipt = await receiptSaved
     expect(updatedReceipt.ok(), await updatedReceipt.text()).toBeTruthy()
+    await acceptSuccess(page, 'Documentos guardados')
     await page.reload()
     await expect(page.getByRole('status').filter({ hasText: 'Documento verificado' })).toHaveCount(3)
     await confirmPhysical()
+    await acceptSuccess(page, 'Cierre físico registrado')
     await expect(physical).toBeDisabled()
     await expect(administrative).toBeDisabled()
     await driver.reload()
@@ -218,6 +231,7 @@ test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', asyn
     await page.reload()
     await administrative.click()
     await page.getByRole('button', { name: /^Sí, cerrar administrativamente/ }).click({ delay: 1600 })
+    await acceptSuccess(page, 'Cierre administrativo registrado')
     await expect(page.getByText(/El cierre administrativo bloquea cambios posteriores/)).toBeVisible()
 
     const client = '/facturacion-cobros/1/clientes/1'
@@ -229,7 +243,7 @@ test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', asyn
     await expect(dialog.getByLabel('Referencia de preparación')).toHaveValue('LV-000001')
     await dialog.getByLabel('Kilos a facturar').fill('1000')
     await dialog.getByRole('button', { name: 'Guardar preparación' }).click()
-    await expect(dialog).toBeHidden()
+    await acceptSuccess(page, 'Preparación guardada')
     const prepared = page.locator('[data-slot=card]').filter({ hasText: code })
       .filter({ has: page.getByText('Preparación LV-000001', { exact: true }) })
     await prepared.getByRole('button', { name: 'Registrar factura emitida' }).click()
@@ -238,7 +252,7 @@ test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', asyn
     await dialog.locator('input[type=file]').setInputFiles(pdf('factura-qa.pdf'))
     await dialog.getByRole('checkbox').check()
     await dialog.getByRole('button', { name: 'Guardar factura emitida' }).click()
-    await expect(dialog).toBeHidden()
+    await acceptSuccess(page, 'Factura emitida registrada')
     const saved = await request.post(`${api}/auth/login`, {
       data: { usuario: 'qa_web_admin', password: 'QA-web-admin-password' },
     })
@@ -255,7 +269,7 @@ test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', asyn
     await dialog.getByLabel(/Referencia de operación/).fill('QA-WEB-PAGO')
     await dialog.locator('input[type=file]').setInputFiles(pdf('voucher-qa.pdf'))
     await dialog.getByRole('button', { name: 'Guardar cobro' }).click()
-    await expect(dialog).toBeHidden()
+    await acceptSuccess(page, 'Cobro registrado')
     await page.reload()
     const summary = page.getByRole('region', { name: 'Resumen de la factura' })
     await expect(summary.getByText('Sin saldo pendiente')).toBeVisible()

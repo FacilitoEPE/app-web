@@ -1,3 +1,5 @@
+import { revealFormErrors } from '@/shared/utils/errorScroll'
+import { useSaveSuccess } from '@/shared/hooks/useSaveSuccess'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/shared/components/ui/button'
@@ -7,6 +9,7 @@ import { resetPassword } from '@/modules/auth/api/auth.api'
 import { actionErrorMessage } from '@/shared/api/action-errors'
 
 export default function ResetPasswordForm() {
+  const showSaveSuccess = useSaveSuccess()
   const location = useLocation()
   const navigate = useNavigate()
   const [token] = useState(() => new URLSearchParams(location.hash.slice(1)).get('token') ?? '')
@@ -26,16 +29,20 @@ export default function ResetPasswordForm() {
     const password = String(fields.get('password') ?? '')
     if (password !== fields.get('confirmation')) {
       setError('Las contraseñas no coinciden.')
+      revealFormErrors(event.currentTarget)
       return
     }
     if (new TextEncoder().encode(password).length > 72) {
       setError('La contraseña es demasiado larga. Usa menos caracteres.')
+      revealFormErrors(event.currentTarget)
       return
     }
     setSubmitting(true)
     setError('')
     try {
-      setMessage((await resetPassword(token, password)).message)
+      const { message } = await resetPassword(token, password)
+      setMessage(message)
+      showSaveSuccess('Contraseña actualizada', message)
     } catch (cause) {
       setError(actionErrorMessage(cause))
     } finally {

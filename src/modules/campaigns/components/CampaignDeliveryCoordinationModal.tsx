@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { usesV1 } from '@/shared/api/data-contract';
 import { useMemo, useState } from "react";
 import { PackageCheck, Save, X } from "lucide-react";
@@ -103,6 +104,7 @@ export default function CampaignDeliveryCoordinationModal({
         if (!selectedEntry) setSelectionError("Selecciona la entrega.");
         if (hasCoordinationErrors(next) || !selectedEntry) {
             setErrors(next);
+            revealFormErrors();
             return;
         }
         await onSave(selectedEntry, values);

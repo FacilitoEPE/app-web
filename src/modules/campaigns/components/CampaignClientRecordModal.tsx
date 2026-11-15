@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { Eye, Pencil, Save, X } from "lucide-react";
@@ -78,7 +79,11 @@ export default function CampaignClientRecordModal({ open, mode, client, campania
         if (!client || !original || !values || !guard.current.acquire()) return;
         const nextErrors = validateCampaignClientUpdate(values, original);
         setErrors(nextErrors);
-        if (Object.keys(nextErrors).length) { guard.current.release(); return; }
+        if (Object.keys(nextErrors).length) {
+            guard.current.release();
+            revealFormErrors();
+            return;
+        }
         if (!hasCampaignClientChanges(values, original) && !files.documentoUrl && !files.fichaTecnicaUrl) {
             setFormMessage("No hay cambios para guardar.");
             guard.current.release();

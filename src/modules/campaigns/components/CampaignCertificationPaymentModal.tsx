@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { useState } from "react";
 import { Save, Wallet, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -55,7 +56,10 @@ export default function CampaignCertificationPaymentModal({ open, onOpenChange, 
     const handleSave = async () => {
         const nextErrors = validatePago(values, balance);
         setErrors(nextErrors);
-        if (Object.keys(nextErrors).length > 0) return;
+        if (Object.keys(nextErrors).length > 0) {
+            revealFormErrors();
+            return;
+        }
         await onSave(values, evidence);
     };
 

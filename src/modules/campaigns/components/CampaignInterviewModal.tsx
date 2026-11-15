@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { usesV1 } from '@/shared/api/data-contract';
 import { useState } from "react";
 import { ClipboardList, LandPlot, Save, Sprout, X } from "lucide-react";
@@ -162,7 +163,10 @@ export default function CampaignInterviewModal({
             if (Object.keys(nextFincaErrors).length === 0) finca = toFinca(newFinca);
         }
 
-        if (!finca || Object.keys(nextAgronomicErrors).length > 0) return;
+        if (!finca || Object.keys(nextAgronomicErrors).length > 0) {
+            revealFormErrors();
+            return;
+        }
         try {
             const baseValues = await toInterviewValues(finca, agronomic);
             await onSave({

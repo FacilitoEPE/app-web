@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { Plus, ShieldCheck } from "lucide-react";
@@ -16,6 +17,7 @@ import {
 import { addQualityCampaign, useQualityCampaigns } from "@/modules/quality/quality.store";
 
 export default function QualityPage() {
+    const showSaveSuccess = useSaveSuccess();
     const navigate = useNavigate();
     const campaigns = useQualityCampaigns();
     const [scope, setScope] = useState<QualityScope>("exportador");
@@ -153,6 +155,7 @@ export default function QualityPage() {
                     setFeedback(
                         `Campaña ${input.nombre} agregada a ${scope === "exportador" ? "Exportador" : "Industria"}.`,
                     );
+                    showSaveSuccess("Campaña agregada a Calidad", "La campaña ya está disponible para seguimiento en el canal seleccionado.");
                 }}
             />
         </div>
