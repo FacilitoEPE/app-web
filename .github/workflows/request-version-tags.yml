@@ -1,0 +1,37 @@
+name: Request EPE version tags
+
+on:
+  workflow_run:
+    workflows: [Verify and publish Docker image]
+    branches: [master]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  request-tags:
+    if: >-
+      github.repository == 'FacilitoEPE/app-web' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'master' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      vars.VERSION_DISPATCH_APP_CLIENT_ID != ''
+    runs-on: ubuntu-latest
+    environment: version-dispatch
+    timeout-minutes: 5
+    steps:
+      - name: Authorize workflow dispatch
+        id: dispatch-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.VERSION_DISPATCH_APP_CLIENT_ID }}
+          private-key: ${{ secrets.VERSION_DISPATCH_APP_PRIVATE_KEY }}
+          owner: FacilitoEPE
+          repositories: BackendAgroexportaciones
+          permission-actions: write
+
+      - name: Request tags from the backend coordinator
+        env:
+          GH_TOKEN: ${{ steps.dispatch-token.outputs.token }}
+        run: gh workflow run version-tags.yml --repo FacilitoEPE/BackendAgroexportaciones --ref master
