@@ -93,8 +93,6 @@ jobs:
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/app-web:${{ github.ref_name }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/app-web:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/app-web:run-${{ github.run_id }}-${{ github.run_attempt }}
             ${{ secrets.DOCKERHUB_USERNAME }}/app-web:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
