@@ -219,8 +219,11 @@ Abre `http://localhost:8080`.
 ## Despliegue y rollback manual de la web
 
 GitHub Actions verifica los pull requests y los pushes a la rama principal.
-Publica `app-web` desde un tag Git estable como `v1.0.0`, con etiquetas de
-versión, commit y ejecución. El resumen muestra el digest exacto de la imagen.
+Cuando el push a `master` pasa CI, **Request EPE version tags** solicita el tag al
+coordinador del backend. El tag estable dispara la publicación de la imagen
+`app-web`. El resumen de Actions muestra el digest exacto de la imagen. La
+release de GitHub se publica manualmente.
+[Guía de versionado](https://github.com/FacilitoEPE/BackendAgroexportaciones/blob/master/docs/integracion-y-entregas.md#versionado-de-la-aplicaci%C3%B3n)
 
 En el servidor físico, antes de actualizar, guarda la versión del backend y el
 digest que usa el contenedor web que acabas de verificar. Para consultar ese
