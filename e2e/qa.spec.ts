@@ -48,8 +48,9 @@ test('vuelve al primer error del modal al guardar y al reintentar', async ({ pag
 test('un error en una caja anidada conserva el scroll de la caja exterior y la lateral', async ({ page }) => {
   await login(page)
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.evaluate(() => {
-    document.body.insertAdjacentHTML('beforeend', `
+  await page.locator('body').evaluate(body => {
+    const document = body.ownerDocument
+    body.insertAdjacentHTML('beforeend', `
       <form style="position:fixed;inset:20px auto auto 20px;width:460px;display:flex;">
         <div id="qa-outer" class="overflow-y-auto" style="width:300px;height:210px">
           <div style="height:100px"></div>
