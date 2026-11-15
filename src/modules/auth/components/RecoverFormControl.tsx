@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Field, FieldLabel } from "@/shared/components/ui/field";
@@ -22,6 +23,7 @@ export default function RecoverFormControl({ onBack }: RecoverFormControlProps) 
         const trimmed = correo.trim();
         if (!trimmed) {
             setErrorMessage("Ingresa tu correo electrónico.");
+            revealFormErrors(e.currentTarget);
             return;
         }
         setSubmitting(true);

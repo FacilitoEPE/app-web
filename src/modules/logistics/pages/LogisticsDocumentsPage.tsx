@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import RequiredMark from "@/shared/components/RequiredMark";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -29,6 +30,7 @@ const documentFields: { key: DocumentKey; label: string; source: string }[] = [
 ];
 
 export default function LogisticsDocumentsPage() {
+    const showSaveSuccess = useSaveSuccess();
     const navigate = useNavigate();
     const { campaignId, loadId } = useParams<{ campaignId: string; loadId: string }>();
     const backHref = `/logistica-despacho/${campaignId}`;
@@ -39,7 +41,11 @@ export default function LogisticsDocumentsPage() {
     const [error, setError] = useState("");
     const { errors, saving, submit } = useFormSubmit<LogisticsDocumentsClosure>({
         open: true, backendFields: {}, validate: () => ({}),
-        onSubmit: async value => { if (load) await saveLogisticsDocuments(load.id, value); },
+        onSubmit: async value => {
+            if (!load) return;
+            await saveLogisticsDocuments(load.id, value);
+            showSaveSuccess("Documentos guardados", "El expediente de la entrega quedó actualizado.");
+        },
     });
     if (!load || !documents) return <PageError title="Carga no encontrada" message="No se encontró esta carga en la campaña." back={{ to: backHref, label: "Volver a cargas" }} />;
     const saved = load.documentosCierre;
@@ -62,6 +68,10 @@ export default function LogisticsDocumentsPage() {
             if (confirm === "physical") await closeLogisticsPhysical(load.id);
             else await closeLogisticsAdministrative(load.id);
             setConfirm(null);
+            showSaveSuccess(
+                confirm === "physical" ? "Cierre físico registrado" : "Cierre administrativo registrado",
+                "El cierre quedó registrado en el expediente de la entrega.",
+            );
         } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo registrar el cierre."); setConfirm(null); }
         finally { setClosing(false); }
     };

@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import { useState } from "react";
@@ -47,6 +48,7 @@ export default function BillingRegisterCollectionModal({
     invoice,
     onRegister,
 }: BillingRegisterCollectionModalProps) {
+    const showSaveSuccess = useSaveSuccess();
     const [fecha, setFecha] = useState("");
     const [importe, setImporte] = useState("");
     const [medio, setMedio] = useState<BillingCollectionItem["medio"]>("Transferencia");
@@ -88,6 +90,7 @@ export default function BillingRegisterCollectionModal({
             observaciones: "",
         });
         onOpenChange(false);
+        showSaveSuccess("Cobro registrado", "El cobro ya figura en el historial de la factura.");
         },
         backendFields: { fecha: "fecha", monto: "importe", referencia: "referencia", evidencia: "evidencia" },
     });

@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, ShieldCheck, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -77,12 +78,14 @@ export default function QualityAddCampaignModal({
     const handleSave = async () => {
         if (!selectedId) {
             setError("Selecciona una campaña en proceso.");
+            revealFormErrors();
             return;
         }
 
         const found = campaigns.find((c) => String(c.campaniaId) === selectedId);
         if (!found) {
             setError("La campaña seleccionada no es válida.");
+            revealFormErrors();
             return;
         }
 

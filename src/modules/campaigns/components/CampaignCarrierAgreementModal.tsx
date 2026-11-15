@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { usesV1 } from '@/shared/api/data-contract';
 import { useState } from "react";
 import { Banknote, Save, Wallet, X } from "lucide-react";
@@ -77,6 +78,7 @@ export default function CampaignCarrierAgreementModal({ open, onOpenChange, mode
 
         if (Object.keys(next).length > 0) {
             setErrors(next);
+            revealFormErrors();
             return;
         }
 

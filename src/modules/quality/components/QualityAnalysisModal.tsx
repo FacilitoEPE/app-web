@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { FlaskConical, Save, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
 import FileDropzone from "@/shared/components/FileDropzone";
@@ -18,6 +19,7 @@ import { ANALYSIS_TYPE_OPTIONS, CERATITIS_MTD_LIMIT, determineResultState, mtdCe
 
 interface Props { open: boolean; onOpenChange: (open: boolean) => void; campaignId: number; record: QualityAnalysisRecord | null; readOnly?: boolean }
 export default function QualityAnalysisModal({ open, onOpenChange, campaignId, record, readOnly }: Props) {
+    const showSaveSuccess = useSaveSuccess();
     const origins = open ? campaignAnalysisOrigins(campaignId) : [];
     const [values, , set] = useModalForm(open, {
         origin: origins.find(o => o.productor === record?.productorNombre && o.finca === record?.fincaNombre)?.value ?? "",
@@ -43,6 +45,7 @@ export default function QualityAnalysisModal({ open, onOpenChange, campaignId, r
                 fechaMuestreo: v.fecha, tipo: v.tipo, mtd: Number(v.mtd), mtdTrampa: origin.trampa, mtdEvidencia: v.evidencia,
                 resultado: v.resultado, unidad: v.unidad, estadoResultado: determineResultState(v.resultado), documento: v.documento, observaciones: v.observaciones });
             onOpenChange(false);
+            showSaveSuccess("Análisis guardado", "Los datos del análisis quedaron registrados en la campaña.");
         },
     });
     const mtdStatus = mtdCeratitisStatus(values.mtd);

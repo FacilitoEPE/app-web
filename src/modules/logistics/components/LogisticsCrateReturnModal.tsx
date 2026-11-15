@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { Layers, Save, X } from "lucide-react";
 import type { LogisticsCrateReturn, LogisticsLoad } from "@/modules/logistics/logistics.models";
 import { saveLogisticsCrateReturn } from "@/modules/logistics/logistics.store";
@@ -12,6 +13,7 @@ import { useModalForm } from "@/shared/hooks/useModalForm";
 import type { FileSource } from "@/shared/utils/fileSource";
 
 export default function LogisticsCrateReturnModal({ load, onClose }: { load: LogisticsLoad; onClose: () => void }) {
+    const showSaveSuccess = useSaveSuccess();
     const current = load.devolucionJabas;
     const [values, , set] = useModalForm<{
         initial: string; returned: string; date: string; coordination: string; vehicleExit: string;
@@ -33,7 +35,11 @@ export default function LogisticsCrateReturnModal({ load, onClose }: { load: Log
             if (value.jabasDevueltas > 0 && !value.fechaDevolucion) return { date: "Registra la fecha de devolución." };
             return {};
         },
-        onSubmit: async value => { await saveLogisticsCrateReturn(load.id, value); onClose(); },
+        onSubmit: async value => {
+            await saveLogisticsCrateReturn(load.id, value);
+            onClose();
+            showSaveSuccess("Devolución guardada", "Los datos de la devolución de jabas quedaron guardados.");
+        },
     });
     const save = () => void submit({ jabasIniciales: values.initial === "" ? null : Number(values.initial),
         jabasDevueltas: values.returned === "" ? null : Number(values.returned), fechaDevolucion: values.date,

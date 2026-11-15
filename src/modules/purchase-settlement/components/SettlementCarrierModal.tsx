@@ -144,7 +144,7 @@ export default function SettlementCarrierModal({
                         },
                     ]}
                 />
-                {totalLiquidar < alreadyPaid && <p role="alert" className="text-sm text-destructive">El total actualizado no puede ser menor que los {symbol} {alreadyPaid.toFixed(2)} ya pagados o aplicados.</p>}
+                {totalLiquidar < alreadyPaid && <p role="alert" data-error-scroll="off" className="text-sm text-destructive">El total actualizado no puede ser menor que los {symbol} {alreadyPaid.toFixed(2)} ya pagados o aplicados.</p>}
 
                 <ModalSection
                     title="1. Datos de liquidación y flete del viaje"

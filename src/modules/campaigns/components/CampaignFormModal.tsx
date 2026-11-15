@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { refreshRemoteData, usesV1 } from '@/shared/api/data-contract';
 import { useEffect, useState } from "react";
 import { X, Save, Sprout } from "lucide-react";
@@ -158,6 +159,7 @@ export default function CampaignFormModal({
         const validation = campaignFormSchema.safeParse({ ...values, frutaId: values.frutaId ?? 0 });
         if (!validation.success) {
             setErrors(getZodFieldErrors(validation.error));
+            revealFormErrors();
             return;
         }
         setSaving(true);

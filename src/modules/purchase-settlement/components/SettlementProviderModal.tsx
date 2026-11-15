@@ -2,9 +2,11 @@ import RequiredMark from "@/shared/components/RequiredMark";
 import { annualBeforeSettlement, importeParaUit } from '@/modules/purchase-settlement/settlementUit.utils';
 import { suggestSettlementNumber } from '@/modules/purchase-settlement/settlementNumber.utils';
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { useState } from "react";
 import { AlertTriangle, FileSpreadsheet, Save, Scale, UserPlus, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
+import SuccessModal from "@/shared/components/SuccessModal";
 import FileDropzone from "@/shared/components/FileDropzone";
 import FormField from "@/shared/components/FormField";
 import { SummaryBar } from "@/shared/components/InfoField";
@@ -63,6 +65,7 @@ export default function SettlementProviderModal({
     onAddLinkedPerson,
     onSave,
 }: SettlementProviderModalProps) {
+    const [personSaved, setPersonSaved] = useState(false);
     const [numeroLiquidacion, setNumeroLiquidacion] = useState("");
     const [fechaLiquidacion, setFechaLiquidacion] = useState("");
     const [selectedPersonId, setSelectedPersonId] = useState("");
@@ -82,6 +85,7 @@ export default function SettlementProviderModal({
     const [personError, setPersonError] = useState('');
 
     useResetOnToggle(open, () => {
+        setPersonSaved(false);
         if (!providerEntry || !open) return;
         const date = providerEntry.fechaLiquidacion || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
         setNumeroLiquidacion(providerEntry.numeroLiquidacion || suggestSettlementNumber(existingNumbers, date, 'LC'));
@@ -120,17 +124,20 @@ export default function SettlementProviderModal({
         label: `${p.nombres} ${p.apellidos} · ${p.tipoDocumento} ${p.numeroDocumento} (${p.vinculo})`,
     }));
 
-    const handleCreatePerson = async () => {
+    const handleCreatePerson = async (scope: Element | null) => {
         if (!newNombres.trim() || !newApellidos.trim() || !newDocumento.trim() || !newVinculo.trim()) {
             setPersonError('Completa los datos de identidad y el vínculo.');
+            revealFormErrors(scope);
             return;
         }
         if (newTipoDocumento === 'DNI' && !/^\d{8}$/.test(newDocumento.trim())) {
             setPersonError('El DNI debe tener 8 dígitos.');
+            revealFormErrors(scope);
             return;
         }
         if (providerEntry.personasVinculadas.some(person => person.tipoDocumento === newTipoDocumento && person.numeroDocumento === newDocumento.trim())) {
             setPersonError('Esta persona ya está vinculada al proveedor.');
+            revealFormErrors(scope);
             return;
         }
         try {
@@ -147,6 +154,7 @@ export default function SettlementProviderModal({
         setNewDocumento("");
         setPersonError('');
         setShowAddPerson(false);
+        setPersonSaved(true);
         } catch (cause) {
             setPersonError(cause instanceof Error ? cause.message : 'No se pudo vincular a la persona.');
         }
@@ -202,7 +210,7 @@ export default function SettlementProviderModal({
             }
         >
             <div className="flex flex-col gap-6">
-                {!uit && <p role="alert" className="text-sm text-destructive">No hay parámetro UIT para el año de la liquidación. Elige un año configurado.</p>}
+                {!uit && <p role="alert" data-error-scroll="off" className="text-sm text-destructive">No hay parámetro UIT para el año de la liquidación. Elige un año configurado.</p>}
                 {formError && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">{formError}</p>}
                 <SummaryBar
                     items={[
@@ -287,7 +295,7 @@ export default function SettlementProviderModal({
                         </FormField>
 
                         {showAddPerson && (
-                            <div className="flex flex-col gap-4 rounded-2xl border border-brand-border bg-brand-surface/35 p-4">
+                            <div data-error-scope className="flex flex-col gap-4 rounded-2xl border border-brand-border bg-brand-surface/35 p-4">
                                 <p className="text-[13px] font-bold text-ink">
                                     Registrar nueva persona vinculada al proveedor
                                 </p>
@@ -334,7 +342,7 @@ export default function SettlementProviderModal({
                                 </div>
                                 {personError && <p role="alert" className="text-sm text-destructive">{personError}</p>}
                                 <div className="flex justify-end">
-                                    <Button size="sm" onClick={handleCreatePerson}>
+                                    <Button size="sm" onClick={event => handleCreatePerson(event.currentTarget.closest('[data-error-scope]'))}>
                                         <UserPlus size={15} strokeWidth={2.4} /> Guardar y seleccionar persona
                                     </Button>
                                 </div>
@@ -441,6 +449,12 @@ export default function SettlementProviderModal({
                     </div>
                 </ModalSection>
             </div>
+            <SuccessModal
+                open={personSaved}
+                onOpenChange={setPersonSaved}
+                title="Persona vinculada"
+                description="Se guardó el vínculo con el proveedor y la persona quedó seleccionada para la liquidación."
+            />
         </AppModal>
     );
 }

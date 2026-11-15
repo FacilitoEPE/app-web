@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { useState } from "react";
 import { Save, UserPlus, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -92,7 +93,10 @@ export default function ProviderFormModal({ open, onOpenChange, mode = "create",
                     setSaveError(null);
                 }
             );
-            if (result.status === "invalid") setErrors(result.errors);
+            if (result.status === "invalid") {
+                setErrors(result.errors);
+                revealFormErrors();
+            }
             if (result.status === "saved") onOpenChange(false);
         } catch {
             setSaveError("No se pudieron guardar los cambios. Revisa la información e intenta nuevamente.");

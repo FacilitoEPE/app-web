@@ -1,4 +1,5 @@
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { getBadRequestFieldErrors } from '@/shared/validation/api-form-errors';
 import { useState } from "react";
 import { Banknote, Save, X } from "lucide-react";
@@ -82,22 +83,26 @@ export default function SettlementPaymentModal({
 
     const handleSubmit = async () => {
         if (saving) return;
+        const invalid = (message: string) => {
+            setError(message);
+            revealFormErrors();
+        };
         const amount = Number(importe);
         if (!fecha || !Number.isFinite(amount) || amount <= 0 || amount > saldoPendiente) {
-            setError('Indica una fecha y un importe mayor que cero que no supere el saldo pendiente.');
+            invalid('Indica una fecha y un importe mayor que cero que no supere el saldo pendiente.');
             return;
         }
         if (modo === 'Caja' && !referencia.trim()) {
-            setError(medio === 'Efectivo' ? 'Indica la referencia del pago en caja.' : 'Indica el número de operación bancaria para este medio de pago.');
+            invalid(medio === 'Efectivo' ? 'Indica la referencia del pago en caja.' : 'Indica el número de operación bancaria para este medio de pago.');
             return;
         }
         if (modo === 'Caja' && medio !== 'Efectivo' && !evidencia) {
-            setError('Adjunta el voucher o constancia de este pago.');
+            invalid('Adjunta el voucher o constancia de este pago.');
             return;
         }
         const advance = activeAdvances.find(a => a.id === selectedAdvanceId);
         if (modo === 'Adelanto' && (!advance || amount > advance.saldoDisponible)) {
-            setError('Selecciona un adelanto con saldo suficiente.');
+            invalid('Selecciona un adelanto con saldo suficiente.');
             return;
         }
         setSaving(true);

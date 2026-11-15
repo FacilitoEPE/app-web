@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { usesV1 } from '@/shared/api/data-contract';
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -122,6 +123,7 @@ export default function CampaignDetailsPage() {
 const BACK_TO_CAMPAIGNS = { to: "/campaigns", label: "Volver a campañas" };
 
 function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
+    const showSaveSuccess = useSaveSuccess();
     const [state, setState] = useState<LoadState>({ status: "loading" });
     const [openModal, setOpenModal] = useState<"providers" | "edit" | null>(null);
     const [successOpen, setSuccessOpen] = useState(false);
@@ -189,6 +191,7 @@ function CampaignDetailsView({ campaniaId }: { campaniaId: number }) {
         try {
             await updateCampana(campaniaId, { estado: "en proceso" });
             retry();
+            showSaveSuccess("Campaña iniciada", "El estado de la campaña se actualizó a En proceso.");
         } catch (error) {
             setStartError(error instanceof Error ? error.message : "No se pudo iniciar la campaña.");
         } finally {

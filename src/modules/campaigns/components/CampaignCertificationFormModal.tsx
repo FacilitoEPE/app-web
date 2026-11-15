@@ -1,3 +1,4 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 import { useEffect, useMemo, useState } from "react";
 import { Save, ShieldCheck, X } from "lucide-react";
 import AppModal from "@/shared/components/AppModal";
@@ -182,7 +183,10 @@ export default function CampaignCertificationFormModal({ open, onOpenChange, cam
         };
         const nextErrors = validateCertificadoCampana(payload);
         setErrors(nextErrors);
-        if (Object.keys(nextErrors).length > 0) return;
+        if (Object.keys(nextErrors).length > 0) {
+            revealFormErrors();
+            return;
+        }
         const selected = producers.filter((producer) => values.productores.includes(producer.id));
         await onSave(payload, selected, { documento: certificateFile, cotizacion: quoteFile });
     };

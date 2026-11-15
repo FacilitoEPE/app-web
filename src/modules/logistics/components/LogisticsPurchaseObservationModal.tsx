@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { Pencil, Save, X } from "lucide-react";
 import type { LogisticsPurchase } from "@/modules/logistics/logistics.models";
 import AppModal from "@/shared/components/AppModal";
@@ -10,11 +11,16 @@ import { useModalForm } from "@/shared/hooks/useModalForm";
 interface Props { purchase: LogisticsPurchase; providerName: string; onClose: () => void; onSave: (observation: string) => Promise<unknown> | void }
 
 export default function LogisticsPurchaseObservationModal({ purchase, providerName, onClose, onSave }: Props) {
+    const showSaveSuccess = useSaveSuccess();
     const [values, , set] = useModalForm(true, { observation: purchase.observacion });
     const { errors, saving, submit } = useFormSubmit<{ observation: string }>({
         open: true, backendFields: {},
         validate: () => ({}),
-        onSubmit: async value => { await onSave(value.observation.trim()); onClose(); },
+        onSubmit: async value => {
+            await onSave(value.observation.trim());
+            onClose();
+            showSaveSuccess("Observación guardada", "La observación se actualizó en el registro de compra.");
+        },
     });
     return <AppModal open onOpenChange={open => { if (!open) onClose(); }} busy={saving} icon={<Pencil size={22} />}
         title="Observación de compra" description={`${purchase.referencia || "Compra sin referencia"} · ${providerName}`} size="md"

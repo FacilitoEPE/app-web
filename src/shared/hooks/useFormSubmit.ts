@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { getBadRequestFieldErrors, type FormFieldErrors } from "@/shared/validation/api-form-errors";
+import { revealFormErrors } from "@/shared/utils/errorScroll";
 
 interface UseFormSubmitOptions<V> {
     /** El modal que contiene el formulario: sus errores y su estado de guardado se reinician al abrirse o cerrarse */
@@ -38,6 +39,7 @@ export function useFormSubmit<V>({ open, validate, onSubmit, backendFields }: Us
         const found = validate(values);
         if (Object.keys(found).length > 0) {
             setErrors(found);
+            revealFormErrors();
             return;
         }
         inFlight.current = true;

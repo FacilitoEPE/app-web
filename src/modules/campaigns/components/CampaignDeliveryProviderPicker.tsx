@@ -84,7 +84,7 @@ export default function CampaignDeliveryProviderPicker({ providers, value, onCha
                                     })}
                                 </div>
                                 {missing && (
-                                    <p className="flex items-center gap-1.5 text-[12.5px] font-medium text-destructive">
+                                    <p role="alert" className="flex items-center gap-1.5 text-[12.5px] font-medium text-destructive">
                                         <AlertCircle size={14} className="shrink-0" /> Elige al menos una finca de este proveedor.
                                     </p>
                                 )}
@@ -94,7 +94,7 @@ export default function CampaignDeliveryProviderPicker({ providers, value, onCha
                 );
             })}
             {error && (
-                <p className="flex items-center gap-1.5 text-[13px] font-medium text-destructive">
+                <p role="alert" className="flex items-center gap-1.5 text-[13px] font-medium text-destructive">
                     <AlertCircle size={14} className="shrink-0" /> {error}
                 </p>
             )}

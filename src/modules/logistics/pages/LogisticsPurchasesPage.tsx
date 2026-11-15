@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Pencil, PackageCheck, Send } from "lucide-react";
@@ -19,6 +20,7 @@ import PageHeader from "@/shared/layout/PageHeader";
 import { formatKg } from "@/shared/utils/format";
 
 export default function LogisticsPurchasesPage() {
+    const showSaveSuccess = useSaveSuccess();
     const navigate = useNavigate();
     const { campaignId, loadId } = useParams<{ campaignId: string; loadId: string }>();
     const backHref = `/logistica-despacho/${campaignId}`;
@@ -45,7 +47,10 @@ export default function LogisticsPurchasesPage() {
     ]} />;
     const share = async () => {
         setSharing(true); setError("");
-        try { await shareLogisticsPurchases(load.id); }
+        try {
+            await shareLogisticsPurchases(load.id);
+            showSaveSuccess("Información marcada como compartida", "Se guardó el estado de revisión de las compras de la carga.");
+        }
         catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo marcar la información como compartida."); }
         finally { setSharing(false); }
     };

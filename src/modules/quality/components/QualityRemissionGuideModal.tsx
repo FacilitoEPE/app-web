@@ -1,3 +1,5 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { qualityGuideNormOptions } from '@/modules/quality/api/quality-commands.api';
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import { createGuideDraft, guideAllocationTotals } from '@/modules/quality/remissionGuide.utils';
@@ -42,6 +44,7 @@ export default function QualityRemissionGuideModal({
     editingGuide,
     onSave,
 }: QualityRemissionGuideModalProps) {
+    const showSaveSuccess = useSaveSuccess();
     const norms = open ? qualityGuideNormOptions() : [];
     const [included, setIncluded] = useState<string[]>([]);
     const [kilosPorProveedor, setKilosPorProveedor] = useState<Record<string, number>>({});
@@ -121,7 +124,12 @@ export default function QualityRemissionGuideModal({
             if (!guide.transportistaDenominacion.trim() || !guide.vehiculoPlaca.trim() || !guide.conductorNumeroDoc.trim() || !guide.conductorNombres.trim() || !guide.conductorApellidos.trim() || !guide.conductorLicencia.trim()) errors._form = "Completa los datos del transportista y del conductor.";
             return errors;
         },
-        onSubmit: async guide => { if (!load) return; await onSave(load.id, guide); onOpenChange(false); },
+        onSubmit: async guide => {
+            if (!load) return;
+            await onSave(load.id, guide);
+            onOpenChange(false);
+            showSaveSuccess("Guía guardada", "Los datos de la guía de remisión quedaron guardados.");
+        },
     });
     if (!load) return null;
     const selectedProviders = load.proveedoresCarga.filter(provider => included.includes(provider.proveedorId));
@@ -149,7 +157,10 @@ export default function QualityRemissionGuideModal({
 
     const saveDraft = async () => {
         setAttemptedSave(true);
-        if (!/^\d{4}$/.test(codEstablecimientoPartida) || !/^\d{4}$/.test(codEstablecimientoLlegada)) return;
+        if (!/^\d{4}$/.test(codEstablecimientoPartida) || !/^\d{4}$/.test(codEstablecimientoLlegada)) {
+            revealFormErrors();
+            return;
+        }
         const guide: QualitySunatRemissionGuide = {
             id: editingGuide?.id ?? `guia-${Date.now()}`,
             numeroGuia,

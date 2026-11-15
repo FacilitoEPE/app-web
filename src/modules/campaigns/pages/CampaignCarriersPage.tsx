@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { usesV1 } from "@/shared/api/data-contract";
 import { campaignCarrierAssignments } from "@/modules/campaigns/api/carrier-assignments";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -72,6 +73,7 @@ function agreementCaption(link: CampaignCarrierLink): string | null {
 
 /** Transportistas vinculados a una campaña en ejecución, con su cotización y su acuerdo de pago. */
 export default function CampaignCarriersPage() {
+    const showSaveSuccess = useSaveSuccess();
     const { id } = useParams<{ id: string }>();
     const campaniaId = Number(id);
     const isValidCampaign = Number.isInteger(campaniaId) && campaniaId > 0;
@@ -390,6 +392,7 @@ export default function CampaignCarriersPage() {
                     onSave={async values => {
                         await campaignCommands.carrierAdvance(campaniaId, selectedAgreementRow.link.id, values);
                         returnToAgreement();
+                        showSaveSuccess("Desembolso registrado", "El adelanto quedó registrado en el acuerdo de transporte.");
                     }}
                 />
             ) : agreement.mode !== "advance" && <CampaignCarrierAgreementModal

@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { useState } from "react";
 import { ClipboardCheck, PackageX, Save, X } from "lucide-react";
 import type { LogisticsLoad, LogisticsProviderBreakdown } from "@/modules/logistics/logistics.models";
@@ -17,6 +18,7 @@ import type { FileSource } from "@/shared/utils/fileSource";
 interface ModalProps { load: LogisticsLoad; onClose: () => void }
 
 export function LogisticsUnloadingModal({ load, onClose }: ModalProps) {
+    const showSaveSuccess = useSaveSuccess();
     const current = load.recepcion;
     const [values, , set] = useModalForm<{
         start: string; end: string; responsible: string; observations: string; evidence: FileSource | null;
@@ -37,6 +39,7 @@ export function LogisticsUnloadingModal({ load, onClose }: ModalProps) {
                 responsableRecepcion: values.responsible.trim(), observacionesDescarga: values.observations.trim(),
                 evidenciaDescarga: values.evidence });
             onClose();
+            showSaveSuccess("Descarga guardada", "El registro de descarga quedó actualizado.");
         },
     });
     return <AppModal open onOpenChange={open => { if (!open) onClose(); }} busy={saving} size="lg"
@@ -55,6 +58,7 @@ export function LogisticsUnloadingModal({ load, onClose }: ModalProps) {
 }
 
 export function LogisticsDiscardModal({ load, onClose }: ModalProps) {
+    const showSaveSuccess = useSaveSuccess();
     const current = load.recepcion;
     const [values, , set] = useModalForm<{ quantity: string; reason: string; evidence: FileSource | null }>(true, {
         quantity: current.huboDescarte ? String(current.kilosDescarte) : "",
@@ -72,6 +76,7 @@ export function LogisticsDiscardModal({ load, onClose }: ModalProps) {
             await saveLogisticsDiscard(load.id, { huboDescarte: value.quantity > 0, kilosDescarte: value.quantity,
                 unidadDescarte: "kg", motivoDescarte: value.reason.trim(), actaDescarteArchivo: values.evidence });
             onClose();
+            showSaveSuccess("Descarte guardado", "Los datos de descarte quedaron guardados en la recepción.");
         },
     });
     return <AppModal open onOpenChange={open => { if (!open) onClose(); }} busy={saving} size="md"
@@ -88,6 +93,7 @@ export function LogisticsDiscardModal({ load, onClose }: ModalProps) {
 }
 
 export function LogisticsEvaluationForm({ load, locked = false }: { load: LogisticsLoad; locked?: boolean }) {
+    const showSaveSuccess = useSaveSuccess();
     const current = load.recepcion;
     const [weight, setWeight] = useState(current.pesoRecibidoPlanta ? String(current.pesoRecibidoPlanta) : "");
     const [result, setResult] = useState(current.resultadoRecepcion);
@@ -111,6 +117,7 @@ export function LogisticsEvaluationForm({ load, locked = false }: { load: Logist
         onSubmit: async value => {
             await saveLogisticsEvaluation(load.id, { pesoRecibidoPlanta: value.weight, resultadoRecepcion: value.result.trim(),
                 observacionesEvaluacion: observations.trim(), reporteRecepcionArchivo: report }, allocatedProviders(value.weight));
+            showSaveSuccess("Evaluación guardada", "El peso recibido y el resultado de la evaluación quedaron guardados.");
         },
     });
     const totalLoaded = load.proveedores.reduce((sum, provider) => sum + provider.kilosCargados, 0);

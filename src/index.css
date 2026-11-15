@@ -5,6 +5,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Impide que el navegador ajuste un scroll exterior al aparecer un error en una caja anidada. */
+:where(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-scroll):has([role="alert"]:not([data-error-scroll="off"]):not([data-slot="alert"]:not([data-variant="destructive"]))) {
+    overflow-anchor: none;
+}
+
 @theme inline {
     /* Sombras: tarjetas en reposo y en hover, brillo de marca (botones de ícono, tooltips) y acción destructiva */
     --shadow-card: 0 2px 12px rgb(0 0 0 / 0.03);

@@ -1,3 +1,5 @@
+import { revealFormErrors } from "@/shared/utils/errorScroll";
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Link2, Save, X } from "lucide-react";
@@ -59,6 +61,7 @@ const CAMPAIGN_STATUS_LABEL: Record<string, string> = {
 };
 
 export default function CampaignLinkClientModal({ open, onOpenChange, onSave, campaniaId = null, campaign = null, cliente = null }: CampaignLinkClientModalProps) {
+    const showSaveSuccess = useSaveSuccess();
     const isClientContext = cliente !== null;
     const [draft, setDraft] = useState<ClientParticipationDraft>(emptyDraft);
     const [fichaTecnica, setFichaTecnica] = useState<File | null>(null);
@@ -151,11 +154,14 @@ export default function CampaignLinkClientModal({ open, onOpenChange, onSave, ca
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) {
             setFormError("Revisa los campos marcados antes de guardar la participación.");
+            revealFormErrors();
             return;
         }
-        if (usesV1()) await campaignCommands.linkClient(selectedCampaign!.campaniaId, draft, fichaTecnica);
+        const connected = usesV1();
+        if (connected) await campaignCommands.linkClient(selectedCampaign!.campaniaId, draft, fichaTecnica);
         await onSave?.();
         onOpenChange(false);
+        if (connected) showSaveSuccess("Cliente vinculado", "El cliente ya aparece en la gestión de clientes de esta campaña.");
     };
 
     return (

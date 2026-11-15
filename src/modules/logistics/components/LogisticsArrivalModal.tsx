@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { MapPin, Save, X } from "lucide-react";
 import type { LogisticsArrival, LogisticsLoad } from "@/modules/logistics/logistics.models";
 import { saveLogisticsArrival } from "@/modules/logistics/logistics.store";
@@ -11,6 +12,7 @@ import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import { useModalForm } from "@/shared/hooks/useModalForm";
 
 export default function LogisticsArrivalModal({ load, onClose }: { load: LogisticsLoad; onClose: () => void }) {
+    const showSaveSuccess = useSaveSuccess();
     const current = load.llegada;
     const [values, , set] = useModalForm<LogisticsArrival>(true, current ?? {
         llegadaEstimada: "", ventanaInicio: "", ventanaFin: "", llegadaReal: "", observaciones: "",
@@ -27,7 +29,11 @@ export default function LogisticsArrivalModal({ load, onClose }: { load: Logisti
                 return { _form: "La llegada quedó fuera de la ventana: registra el motivo de espera y la nueva atención." };
             return {};
         },
-        onSubmit: async value => { await saveLogisticsArrival(load.id, value); onClose(); },
+        onSubmit: async value => {
+            await saveLogisticsArrival(load.id, value);
+            onClose();
+            showSaveSuccess("Llegada guardada", "El registro de llegada de la carga quedó actualizado.");
+        },
     });
     const save = () => void submit({ ...values, observaciones: values.observaciones.trim(),
         motivoEspera: outside ? values.motivoEspera.trim() : "", atencionReprogramada: outside ? values.atencionReprogramada : "" });

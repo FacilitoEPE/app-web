@@ -1,3 +1,4 @@
+import { useSaveSuccess } from "@/shared/hooks/useSaveSuccess";
 import { useResetOnToggle } from "@/shared/hooks/useModalForm";
 import { useFormSubmit } from "@/shared/hooks/useFormSubmit";
 import { useState } from "react";
@@ -38,6 +39,7 @@ export default function BillingPrepareInvoiceModal({
     editingInvoice,
     onSave,
 }: BillingPrepareInvoiceModalProps) {
+    const showSaveSuccess = useSaveSuccess();
     const [referenciaPreparacion, setReferenciaPreparacion] = useState("");
     const [fechaPreparacion, setFechaPreparacion] = useState("");
     const [fechaVencimiento, setFechaVencimiento] = useState("");
@@ -122,6 +124,7 @@ export default function BillingPrepareInvoiceModal({
             observaciones: observaciones.trim(),
         });
         onOpenChange(false);
+        showSaveSuccess("Preparación guardada", "Los datos de preparación de la factura quedaron guardados.");
         },
         backendFields: { referenciaPreparacion: "referencia", fechaPreparacion: "fecha", fechaVencimiento: "vencimiento", kilosFacturados: "kilos", descuento: "descuento", cargos: "cargos" },
     });
