@@ -4,6 +4,8 @@ NestJS registra las rutas de negocio bajo `/v1`. En el despliegue de mismo orige
 
 Cuando dos controladores declaraban el mismo método y ruta, se conserva el contrato V1 actual. Swagger en NestJS incluye las operaciones adicionales. La gestión de certificados con un archivo S3 registrado usa `/v1/proveedores/:proveedorId/certificados/documentos/registro` para la colección y `/v1/proveedores/:proveedorId/certificados/:id/documentos/registro` para el detalle.
 
+Las nuevas subidas con URL prefirmada se organizan por proveedor y fecha en la carpeta `documentos/proveedores/certificados/`. [Flujo de certificados en S3](../../../epe-backend/docs/backend-flow.md#42-flujo-s3-con-url-prefirmada-certificados-de-proveedor).
+
 Esta carpeta reúne el contrato que consume el frontend. Para cambios de rutas, payloads o reglas, consulta primero este índice y las fuentes indicadas; no es necesario leerlo para tareas que no afectan la API.
 
 ## Fuentes y salidas
@@ -12,7 +14,7 @@ Esta carpeta reúne el contrato que consume el frontend. Para cambios de rutas, 
 - [`openapi.json`](openapi.json) es la salida generada y la especificación consumida por los DTOs frontend. El backend conserva una copia runtime en `epe-backend/src/common/v1/contract/`; ambas deben coincidir.
 - [`business-rules.md`](business-rules.md) documenta reglas de uso, decisiones y límites que OpenAPI no representa.
 - Para modificar una regla junto con sus vistas y datos simulados, sigue el [flujo de cambios](../development.md#cambios-de-vistas-reglas-de-negocio-y-mock). En `business-rules.md`, identifica cualquier regla nueva disponible solo en mock y su adaptación backend pendiente; no la presentes como parte de la API implementada.
-- El [generador](../../dev/generate-v1-contract.mjs) complementa el SQL con las rutas auxiliares sin tabla propia, incluyendo `GET /v1/documentos/{id}/estado` y su alias `archivos-locales`: verifican metadatos y objeto real en S3. Consulta los estados y permisos en [business-rules.md](business-rules.md#disponibilidad-de-adjuntos).
+- El [generador](../../dev/generate-v1-contract.mjs) complementa el SQL con las rutas auxiliares, incluyendo `GET /v1/documentos/{id}/estado` y su alias `archivos-locales`. La API compara los metadatos con el objeto real en S3. Consulta el almacenamiento, los estados y los permisos en [business-rules.md](business-rules.md#disponibilidad-de-adjuntos).
 
 Genera y verifica desde `epe-web/` con `pnpm contract:generate` y `pnpm contract:check`. No edites OpenAPI a mano. La implementación del comportamiento vive en controladores, servicios, entidades y migraciones de `epe-backend`; consulta sus fuentes al evaluar diferencias con el contrato.
 

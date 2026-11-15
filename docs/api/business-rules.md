@@ -34,7 +34,7 @@ El nombre libre del responsable de campaña puede corresponder a cualquier perso
 
 ### Disponibilidad de adjuntos
 
-`POST /v1/documentos` recibe el archivo y el campo multipart opcional `carpeta` con formato `modulo/tipo`. El frontend indica el destino según el formulario, por ejemplo `campanas/lineamientos`. La URL protegida conserva su UUID y el backend resuelve la ruta a partir de los metadatos. Los metadatos anteriores sin carpeta resuelven a la ruta plana.
+`POST /v1/documentos` recibe el archivo y el campo multipart opcional `carpeta` con formato `modulo/tipo`. El frontend indica el destino según el formulario, por ejemplo `campanas/lineamientos`. Cada subida guarda un archivo bajo `documentos/` y actualiza el índice compartido `vinculos-app/archivos.json`. La URL protegida mantiene su UUID, incluidos los documentos anteriores. El [flujo de documentos](../../../epe-backend/docs/backend-flow.md#41-servicio-general-de-documentos-y-vínculos-en-s3-v1documentos) describe los vínculos y su almacenamiento.
 
 `GET /v1/documentos/{id}/estado` (también `/v1/archivos-locales/{id}/estado`) requiere sesión de Administrador o Chofer propietario. Responde `{ estado }`: `DISPONIBLE` si existen metadatos y objeto real con tamaño y tipo coincidentes; `FALTANTE` ante ausencia confirmada; `INVALIDO` por metadatos corruptos o tamaño/tipo distintos; `NO_VERIFICABLE` por errores de permisos, configuración o conectividad. No se clasifica un 403 de S3 como ausencia. El 403 de la API impide consultar documentos de otro chofer. La respuesta no expone bucket, claves ni credenciales.
 
