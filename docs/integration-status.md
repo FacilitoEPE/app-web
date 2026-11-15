@@ -417,11 +417,14 @@ Validación prevista para los cambios: pruebas HTTP con las funciones reales y f
 
 ## Disponibilidad real de adjuntos — 2026-11-05 · Implementada, pendiente verificación productiva
 
-- Las nuevas subidas de adjuntos generales se ordenan por módulo y tipo, como `campanas/lineamientos` y `facturacion/facturas`. Las referencias existentes se consultan con la misma URL protegida.
+- Cada subida nueva de adjuntos generales escribe un archivo con extensión en `documentos/<módulo>/<tipo>/`. Los metadatos y vínculos se guardan en `vinculos-app/archivos.json` y `vinculos-app/vinculos.json`. Las referencias existentes se consultan con la misma URL protegida. El [comando de limpieza](../../epe-backend/docs/diagnostico-s3-despliegue.md#limpieza-de-documentos-huérfanos) conserva los adjuntos con vínculos registrados o referencias en las tablas de negocio.
+- Los certificados con URL prefirmada también se escriben bajo `documentos/`. Usan `proveedores/certificados/<proveedorId>/<año>/<mes>/` y la API acepta certificados existentes en el prefijo anterior. [Flujo de certificados en S3](../../epe-backend/docs/backend-flow.md#42-flujo-s3-con-url-prefirmada-certificados-de-proveedor).
+- El traslado de adjuntos históricos conserva sus URLs y registra metadatos y vínculos en los índices de `vinculos-app/` antes de retirar los JSON antiguos. [Procedimiento de reorganización](../../epe-backend/docs/diagnostico-s3-despliegue.md#retirar-la-carpeta-histórica-de-s3).
 
 - El campo compartido de archivos, incluido Lineamientos de campaña, consulta `GET /api/documentos/:id/estado`: verde solo tras verificar metadatos y existencia/tamaño/tipo del objeto; rojo si falta o no coincide; aviso si no pudo verificarse por red o permisos. Un archivo recién elegido queda pendiente de guardar. Se puede volver a verificar y reemplazar/quitar adjuntos faltantes.
 - El backend verifica el binario después de subirlo y antes de vincularlo. Un error leyendo el índice deja de simular una lista vacía, evitando sobrescribir vínculos ante fallos de permisos o conectividad. No usa almacenamiento local. Contrato en [API](api/README.md), implementación en el [flujo backend](../../epe-backend/docs/backend-flow.md#41-servicio-general-de-documentos-y-vínculos-en-s3-v1documentos). Esto no confirma el estado de archivos ni el despliegue de un servidor productivo.
 - Validación: 107 pruebas backend y 377 frontend aprobadas; contrato generado y copia runtime sincronizados. Las pruebas cubren metadatos presentes con documento faltante, inconsistencias de tamaño/tipo, errores de permisos/red y rechazo de vínculos inválidos. No se hizo una comprobación contra el bucket productivo.
+- El catálogo nuevo y la limpieza se verificaron con PostgreSQL local aislado y S3 simulado. La prueba cubre documentos anteriores, vínculos simultáneos, URLs directas y borrado de huérfanos.
 
 ## Desembolso de adelantos de transporte — 2026-11-08 · Completo en desarrollo
 
