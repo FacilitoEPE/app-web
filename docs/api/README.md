@@ -14,7 +14,7 @@ Esta carpeta reúne el contrato que consume el frontend. Para cambios de rutas, 
 - [`openapi.json`](openapi.json) es la salida generada y la especificación consumida por los DTOs frontend. El backend conserva una copia runtime en `epe-backend/src/common/v1/contract/`; ambas deben coincidir.
 - [`business-rules.md`](business-rules.md) documenta reglas de uso, decisiones y límites que OpenAPI no representa.
 - Para modificar una regla junto con sus vistas y datos simulados, sigue el [flujo de cambios](../development.md#cambios-de-vistas-reglas-de-negocio-y-mock). En `business-rules.md`, identifica cualquier regla nueva disponible solo en mock y su adaptación backend pendiente; no la presentes como parte de la API implementada.
-- El [generador](../../dev/generate-v1-contract.mjs) complementa el SQL con las rutas auxiliares, incluyendo `GET /v1/documentos/{id}/estado` y su alias `archivos-locales`. La API compara los metadatos con el objeto real en S3. Consulta el almacenamiento, los estados y los permisos en [business-rules.md](business-rules.md#disponibilidad-de-adjuntos).
+- El [generador](../../dev/generate-v1-contract.mjs) incluye las rutas de disponibilidad y vínculos de documentos, junto con el alias `archivos-locales`. Consulta sus estados y la limpieza al confirmar cambios en [business-rules.md](business-rules.md#disponibilidad-de-adjuntos).
 
 Genera y verifica desde `epe-web/` con `pnpm contract:generate` y `pnpm contract:check`. No edites OpenAPI a mano. La implementación del comportamiento vive en controladores, servicios, entidades y migraciones de `epe-backend`; consulta sus fuentes al evaluar diferencias con el contrato.
 

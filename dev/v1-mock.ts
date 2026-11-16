@@ -49,6 +49,17 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
   let nextLocalFileId = 1
   const localFiles = new Map<number, { id: string | number; url: string; name: string; type: string; size: number }>()
   let localLinks: Array<{ tipo: string; entidadId: number; id: string | number; archivoId?: string; url: string; name: string; type: string; size: number }> = []
+  const removedLocalFileIds = new Set<number>()
+  const retireDocumentLinks = (previous: typeof localLinks) => {
+    for (const entry of previous) {
+      const id = Number(entry.archivoId ?? entry.id)
+      if (localLinks.some(link => Number(link.archivoId ?? link.id) === id)) continue
+      const file = localFiles.get(id)
+      if (file && JSON.stringify(db).includes(JSON.stringify(file.url))) continue
+      localFiles.delete(id)
+      removedLocalFileIds.add(id)
+    }
+  }
   // Fixtures documentales exclusivos del servidor ficticio de desarrollo.
   const qualityDocumentsReady = Promise.all([
     ...(qualityDemo ? db.analisis_calidad : []).filter(row => row.estado !== 'PENDIENTE').map(row => ({ tipo: 'analisis_calidad', entidadId: Number(row.analisisCalidadId), name: `analisis-${row.analisisCalidadId}.pdf` })),
@@ -458,22 +469,30 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
     if ((pathname === '/archivos-locales/vinculos' || pathname === '/documentos/vinculos') && request.method === 'GET') return { status: 200, data: localLinks }
     if ((pathname === '/archivos-locales/vinculos' || pathname === '/documentos/vinculos') && request.method === 'POST') {
       const body = await readJson(request) as { tipo: string; entidadId: number; archivoId: number | string }
+      if (removedLocalFileIds.has(Number(body.archivoId))) throw new ApiV1Error(404, 'NOT_FOUND', 'Documento no encontrado.')
       const file = localFiles.get(Number(body.archivoId)) ?? { id: String(body.archivoId), url: `/v1/documentos/${body.archivoId}`, name: 'documento.pdf', type: 'application/pdf', size: 128 }
-      localLinks = localLinks.filter(item => !(item.tipo === body.tipo && item.entidadId === Number(body.entidadId)))
+      const matches = (item: (typeof localLinks)[number]) => item.tipo === body.tipo && item.entidadId === Number(body.entidadId)
+      const previous = localLinks.filter(matches)
+      localLinks = localLinks.filter(item => !matches(item))
       const link = { tipo: body.tipo, entidadId: Number(body.entidadId), archivoId: String(body.archivoId), ...file }
       localLinks.push(link)
+      retireDocumentLinks(previous)
       return { status: 201, data: link }
     }
     const unlinkRoute = /^\/(?:archivos-locales|documentos)\/vinculos\/([^/]+)\/(\d+)$/.exec(pathname)
     if (unlinkRoute && request.method === 'DELETE') {
       const tipo = decodeURIComponent(unlinkRoute[1])
       const entidadId = Number(unlinkRoute[2])
-      localLinks = localLinks.filter(item => !(item.tipo === tipo && item.entidadId === entidadId))
+      const matches = (item: (typeof localLinks)[number]) => item.tipo === tipo && item.entidadId === entidadId
+      const previous = localLinks.filter(matches)
+      localLinks = localLinks.filter(item => !matches(item))
+      retireDocumentLinks(previous)
       return { status: 200, data: { ok: true } }
     }
     const fileContentRoute = /^\/(?:archivos-locales|documentos)\/(\d+)(?:\/contenido)?$/.exec(pathname)
     if (fileContentRoute && request.method === 'GET') {
       const id = Number(fileContentRoute[1])
+      if (removedLocalFileIds.has(id)) throw new ApiV1Error(404, 'NOT_FOUND', 'Documento no encontrado.')
       const file = localFiles.get(id) ?? { id: String(id), url: `/v1/documentos/${id}`, name: `documento-${id}.pdf`, type: 'application/pdf', size: 128 }
       return { status: 200, data: file }
     }

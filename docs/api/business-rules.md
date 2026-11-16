@@ -40,6 +40,8 @@ El nombre libre del responsable de campaña puede corresponder a cualquier perso
 
 El campo compartido `FileDropzone` verifica cada referencia guardada al montarse o cambiar de URL, cancela consultas anteriores y permite volver a verificar. Verde significa verificado, rojo faltante/inválido; un fallo de verificación se muestra con aviso y los archivos recién elegidos permanecen pendientes de guardar. Los enlaces externos no se validan ni reciben credenciales. La API valida el objeto después de subirlo y antes de guardar un vínculo; la disponibilidad se confirma en ese instante, sin garantizar permanencia futura ni validar el contenido interno del documento.
 
+En Lineamientos de campaña, la X retira el adjunto del formulario. Al guardar, la API solo elimina el archivo anterior de S3 y de `archivos.json` cuando el vínculo se quitó o reemplazó y el UUID dejó de tener referencias. Cancelar la edición conserva el archivo vinculado.
+
 | Tema | Contrato objetivo |
 |---|---|
 | Empresa y perfiles | Una agroexportadora; Administrador y Chofer. Sin multempresa ni nuevos perfiles. |
