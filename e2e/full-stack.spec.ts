@@ -33,12 +33,14 @@ async function saveFromPage(page: Page, path: RegExp, button: string) {
   return response.json()
 }
 
-async function selectToday(page: Page, label: RegExp | string) {
+async function selectDate(page: Page, label: RegExp | string, date?: string) {
   const trigger = page.getByRole('dialog').getByLabel(label)
   await trigger.click()
-  const today = page.locator('[data-slot=popover-content]:visible:not([inert])')
-    .locator('[data-today=true] button').last()
-  if (await today.getAttribute('data-selected-single') !== 'true') await today.click()
+  const calendar = page.locator('[data-slot=popover-content]:visible:not([inert])')
+  const day = calendar.locator(date ? `[role=gridcell][data-day="${date}"] button` : '[data-today=true] button').last()
+  await expect(calendar).toBeVisible()
+  if (date && await day.count() === 0) await calendar.locator('.rdp-button_next').click()
+  if (await day.getAttribute('data-selected-single') !== 'true') await day.click()
   if (await trigger.getAttribute('aria-expanded') === 'true') await trigger.click()
   await expect(trigger).toHaveAttribute('aria-expanded', 'false')
   await expect(trigger).toHaveText(/\d{2}\/\d{2}\/\d{4}/)
@@ -62,7 +64,7 @@ async function planDelivery(page: Page) {
   const contract = await saveFromPage(page, /\/requerimientos\/1\/contratos$/, 'Guardar contrato')
   await page.goto(`/campaigns/1/clients/1/contracts/${contract.contratoVentaId}/deliveries`)
   await page.getByRole('button', { name: 'Registrar entrega' }).filter({ visible: true }).first().click()
-  await selectToday(page, /^Fecha programada/)
+  await selectDate(page, /^Fecha programada/)
   await dialog.getByLabel(/^Destino/).fill('Puerto QA Paita')
   const quantity = dialog.getByLabel(/^Cantidad/)
   if (await quantity.isDisabled()) await choose('#delivery-variety-0', /Kent/)
@@ -115,7 +117,7 @@ async function prepareDispatch(post: Awaited<ReturnType<typeof adminApi>>, page:
   await page.getByRole('button', { name: 'Agregar guía' }).click()
   await dialog.getByRole('checkbox', { name: /José Luis Ramos/ }).check()
   await dialog.getByLabel(/^Número de guía/).fill('QAW-000001')
-  await selectToday(page, /^Fecha de inicio de traslado/)
+  await selectDate(page, /^Fecha de inicio de traslado/)
   for (const [id, value] of Object.entries({
     'rg-peso-bruto': '1000', 'rg-num-bultos': '50', 'rg-dir-partida': 'Finca QA', 'rg-dir-llegada': 'Planta Paita',
     'rg-est-partida': '0001', 'rg-est-llegada': '0001',
@@ -138,6 +140,37 @@ async function login(page: Page, driver = false) {
   await page.getByRole('button', { name: /^Ingresar/ }).click()
   await expect(page).toHaveURL(driver ? /\/chofer$/ : /\/modules$/)
 }
+
+test('el mapa de recojo calcula la ruta y muestra una referencia si OSRM falla', async ({ page, context }) => {
+  await context.grantPermissions(['geolocation'])
+  await context.setGeolocation({ latitude: -4.92, longitude: -80.35 })
+  let routingAvailable = true
+  await page.route('**/route/v1/driving/**', async (route) => {
+    const headers = { 'access-control-allow-origin': '*' }
+    if (!routingAvailable) {
+      await route.fulfill({ status: 503, headers })
+      return
+    }
+    await route.fulfill({
+      headers,
+      json: { routes: [{ distance: 2500, duration: 300, geometry: { coordinates: [[-80.35, -4.92], [-80.3423, -4.9299]] } }] },
+    })
+  })
+
+  await login(page, true)
+  await page.getByRole('button', { name: 'Cargas', exact: true }).click()
+  const card = page.locator('[data-slot=card]').filter({ hasText: 'CAR-DEMO-1' })
+  await card.getByRole('button', { name: 'Ubicación y ruta' }).click()
+  const map = page.getByRole('dialog', { name: 'Ubicación de fincas y ruta al destino' })
+  await map.getByRole('button', { name: 'Usar mi ubicación' }).click()
+  await map.getByRole('button', { name: 'Ver ruta' }).click()
+  await expect(map.getByText('2.5 km · aprox. 5 min')).toBeVisible()
+
+  routingAvailable = false
+  await map.getByRole('button', { name: 'Ver ruta' }).click()
+  await expect(map.getByText(/línea recta de referencia/)).toBeVisible()
+  await expect(map.getByRole('link', { name: 'Abrir ruta de recojo en Google Maps' })).toBeVisible()
+})
 
 test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', async ({ page, browser, request }) => {
   test.setTimeout(180_000)
@@ -240,15 +273,17 @@ test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', asyn
       .filter({ has: page.getByRole('button', { name: 'Preparar factura' }) })
     await load.getByRole('button', { name: 'Preparar factura' }).click()
     const dialog = page.getByRole('dialog')
-    await expect(dialog.getByLabel('Referencia de preparación')).toHaveValue('LV-000001')
+    await expect(dialog.getByLabel('Referencia de preparación')).toHaveValue('LV-PENDIENTE')
+    const preparationDate = (await dialog.getByLabel('Fecha de preparación').innerText()).trim()
+      .split('/').reverse().join('-')
     await dialog.getByLabel('Kilos a facturar').fill('1000')
     await dialog.getByRole('button', { name: 'Guardar preparación' }).click()
     await acceptSuccess(page, 'Preparación guardada')
     const prepared = page.locator('[data-slot=card]').filter({ hasText: code })
-      .filter({ has: page.getByText('Preparación LV-000001', { exact: true }) })
+      .filter({ has: page.getByText(/^Preparación LV-\d{6}$/) })
     await prepared.getByRole('button', { name: 'Registrar factura emitida' }).click()
     await dialog.getByLabel('N° de factura electrónica').fill('FQA-WEB-000001')
-    for (const label of ['Fecha de emisión', 'Fecha de vencimiento']) await selectToday(page, label)
+    for (const label of ['Fecha de emisión', 'Fecha de vencimiento']) await selectDate(page, label, preparationDate)
     await dialog.locator('input[type=file]').setInputFiles(pdf('factura-qa.pdf'))
     await dialog.getByRole('checkbox').check()
     await dialog.getByRole('button', { name: 'Guardar factura emitida' }).click()
@@ -261,10 +296,14 @@ test('despacha, cierra y cobra una misma carga usando la API y PostgreSQL', asyn
     })
     expect(invoices.ok()).toBeTruthy()
     const [invoice] = (await invoices.json()).items
-    expect(invoice).toMatchObject({ importeVenta: 1500, estado: 'EMITIDA', numeroFactura: 'FQA-WEB-000001' })
+    expect(invoice).toMatchObject({
+      importeVenta: 1500, estado: 'EMITIDA', numeroFactura: 'FQA-WEB-000001',
+      referenciaPreparacion: expect.stringMatching(/^LV-\d{6}$/),
+    })
     await page.goto(`${client}/facturas/${invoice.facturaVentaId}`)
     await expect(page.getByRole('status').filter({ hasText: 'Documento verificado' }).first()).toBeVisible()
     await page.getByRole('button', { name: 'Registrar cobro' }).click()
+    await selectDate(page, 'Fecha del movimiento', preparationDate)
     await dialog.getByLabel(/Importe cobrado/).fill('1500')
     await dialog.getByLabel(/Referencia de operación/).fill('QA-WEB-PAGO')
     await dialog.locator('input[type=file]').setInputFiles(pdf('voucher-qa.pdf'))
@@ -319,7 +358,7 @@ test('comprueba el registro de QA de proveedores, certificación y transporte co
   await dialog.getByPlaceholder('Buscar...').fill('Plaguicidas')
   await page.getByRole('option', { name: 'Residuos de Plaguicidas' }).click()
   await dialog.getByLabel('Identificación de muestra').fill('MUESTRA-QA-WEB')
-  await selectToday(page, 'Fecha del examen')
+  await selectDate(page, 'Fecha del examen')
   await dialog.getByRole('button', { name: 'Guardar examen' }).click()
   await expect(dialog).toBeHidden()
   await page.reload()

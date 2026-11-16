@@ -18,7 +18,7 @@ export default defineConfig({
     command: 'node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4174 --strictPort',
     url: baseURL,
     reuseExistingServer: false,
-    env: { VITE_API_BASE_URL: fullStack ? api : '/mock-api', VITE_API_CONTRACT: 'v1', VITE_DISABLE_HMR: 'true' },
+    env: { VITE_API_BASE_URL: fullStack ? api : '/mock-api' },
   }, ...(fullStack ? [{
     command: 'node e2e/serve-backend.mjs',
     url: `${api}/health`,

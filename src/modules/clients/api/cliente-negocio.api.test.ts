@@ -9,7 +9,7 @@ import {
 import { toClienteNegocioInput } from "@/modules/clients/api/cliente-negocio.validation";
 
 vi.mock("@/shared/api/client", () => ({
-  apiClient: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
+  apiClient: { defaults: {}, get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }));
 
 const input = {
@@ -27,9 +27,9 @@ beforeEach(() => vi.clearAllMocks());
 
 describe("cliente-negocio API", () => {
   it("loads and maps the persisted client list", async () => {
-    vi.mocked(apiClient.get).mockResolvedValue({ data: [dto] });
+    vi.mocked(apiClient.get).mockResolvedValue({ data: { items: [dto], total: 1, page: 1, pageSize: 100 } });
     await expect(getClientesNegocio()).resolves.toEqual([dto]);
-    expect(apiClient.get).toHaveBeenCalledWith("/v1/clientes-negocio");
+    expect(apiClient.get).toHaveBeenCalledWith("/v1/clientes-negocio", expect.objectContaining({ params: { pageSize: 100 } }));
   });
 
   it("creates clients using the verified backend contract", async () => {

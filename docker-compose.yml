@@ -24,7 +24,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-dev_only_change_me}
       POSTGRES_DB: ${DB_DATABASE:-backend_epe}
     ports:
-      - "${DB_PORT_HOST:-5432}:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

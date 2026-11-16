@@ -2,7 +2,7 @@ import { campaignCarrierAssignments } from "@/modules/campaigns/api/carrier-assi
 import { campaignCommands } from '@/modules/campaigns/api/campaign-commands.api';
 import { EMPTY_INTERVIEW } from '@/modules/campaigns/campaignInterview';
 import { harvestedWeeklyItems } from "@/modules/campaigns/weeklyHarvest.utils";
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
@@ -32,7 +32,7 @@ import { projectLogisticsData } from '@/modules/logistics/api/logistics-screen-d
 import { qualityCommands } from '@/modules/quality/api/quality-commands.api'
 import { requestPasswordRecovery, getUserById } from '@/modules/auth/api/auth.api'
 import { quotationCommands, projectCarrierData } from '@/modules/carriers/api/quotation-commands.api'
-import { empresaTransporteExternoV1 } from '@/modules/carriers/api/v1.api'
+import { choferTransporteExternoV1, empresaTransporteExternoV1 } from '@/modules/carriers/api/v1.api'
 import { createDriver, getCarrier, updateDriver } from '@/modules/carriers/api/carrier.api'
 import { projectCampaignData } from '@/modules/campaigns/api/campaign-screen-data'
 import { getLinkedCampaignIds } from '@/modules/campaigns/api/cliente-negocio-campana.api'
@@ -43,7 +43,6 @@ let originalBase: string | undefined
 const requested: string[] = []
 
 beforeEach(async () => {
-  vi.stubEnv('VITE_API_CONTRACT', 'v1')
   requested.length = 0
   const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'))
   server = createServer((request, response) => {
@@ -57,7 +56,6 @@ beforeEach(async () => {
 })
 afterEach(async () => {
   apiClient.defaults.baseURL = originalBase
-  vi.unstubAllEnvs()
   await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
 })
 
@@ -67,6 +65,7 @@ describe('existing frontend with the V1 HTTP contract', () => {
       nombre: 'Chofer QA', telefono: '900000011', correo: 'chofer-qa@example.com',
       tipoDocumento: 'DNI', numeroDocumento: '00123456', numeroLicencia: 'Q000123456',
     })
+    await expect(choferTransporteExternoV1(1).get(driver.id, true)).resolves.toMatchObject({ usuarioId: 2 })
     await updateDriver(driver.id, { numeroDocumento: '00123457' })
     expect((await getCarrier(1)).choferes.find(row => row.id === driver.id)).toMatchObject({
       tipoDocumento: 'DNI', numeroDocumento: '00123457', numeroLicencia: 'Q000123456',

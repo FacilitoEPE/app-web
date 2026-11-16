@@ -1,4 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock(import("@/shared/api/data-contract"), async (importOriginal) => ({
+  ...await importOriginal(),
+  usesV1: () => false,
+}));
 import {
     filterQualityCampaigns,
     getQualityActionsForScope,

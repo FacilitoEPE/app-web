@@ -7,9 +7,9 @@ describe("getFrutaDerivadas", () => {
 
   it("lee los derivados del ID de fruta provisto y devuelve la respuesta", async () => {
     const derivadas = [{ frutaDerivadaId: 10, name: "Mango Kent", frutaId: 3, createdAt: "", updatedAt: "" }];
-    const get = vi.spyOn(apiClient, "get").mockResolvedValue({ data: derivadas } as never);
+    const get = vi.spyOn(apiClient, "get").mockResolvedValue({ data: { items: derivadas, total: 1, page: 1, pageSize: 100 } });
 
     await expect(getFrutaDerivadas(3)).resolves.toEqual(derivadas);
-    expect(get).toHaveBeenCalledWith("/v1/frutas/3/derivadas");
+    expect(get).toHaveBeenCalledWith("/v1/frutas/3/variedades", expect.objectContaining({ params: { pageSize: 100 } }));
   });
 });

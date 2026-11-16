@@ -1,4 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock(import("@/shared/api/data-contract"), async (importOriginal) => ({
+  ...await importOriginal(),
+  usesV1: () => false,
+}));
 import { apiClient } from "@/shared/api/client";
 import { getClienteNegocioContratos } from "@/modules/clients/api/cliente-negocio-contratos.api";
 

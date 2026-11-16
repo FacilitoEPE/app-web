@@ -25,7 +25,6 @@ let rejectPatch = false;
 let holdCampaignPage: (() => void) | undefined;
 let mutateDuringCampaignRead = false;
 beforeEach(async () => {
-    vi.stubEnv('VITE_API_CONTRACT', 'v1');
     resetFrontendData(); requests.length = 0; rejectPatch = false; mutateDuringCampaignRead = false;
     const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'));
     server = createServer((req, res) => {
@@ -49,7 +48,7 @@ beforeEach(async () => {
 });
 afterEach(async () => {
     await new Promise<void>(resolve => server.close(() => resolve()));
-    apiClient.defaults.baseURL = original; resetFrontendData(); vi.unstubAllEnvs();
+    apiClient.defaults.baseURL = original; resetFrontendData();
 });
 const app = readFileSync(path.resolve(import.meta.dirname, '../src/App.tsx'), 'utf8');
 const adminRoutes = [...app.matchAll(/<Route\s+path="([^"]+)"/g)].map(match => match[1])

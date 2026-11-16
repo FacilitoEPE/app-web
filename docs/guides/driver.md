@@ -32,7 +32,7 @@ En Industria, elija primero **Sí cumple** o **No cumple**. La segunda opción g
 
 **Usar mi ubicación** requiere conceder acceso a la ubicación en el navegador y abrir el portal por HTTPS o desde `localhost` durante el desarrollo. En pruebas desde otro equipo o un celular, una dirección HTTP de la red local impide usar el GPS. En ese caso, elige **Marcar salida en el mapa**.
 
-**Ver ruta** dibuja el recorrido y estima tiempo y distancia cuando la instalación tiene un servicio OSRM operativo. Si el servicio no está configurado o falla, muestra una línea recta de referencia. **Abrir ruta de recojo en Google Maps** permite consultar el trayecto por carretera desde el punto de salida elegido.
+**Ver ruta** dibuja el trayecto por carretera y estima la distancia y el tiempo en el portal. Al pulsar el botón, el portal envía las coordenadas de salida y de la finca al servicio OSRM. Si el cálculo falla, el mapa muestra una línea recta de referencia y puedes usar **Abrir ruta de recojo en Google Maps** para consultar el trayecto.
 
 Si el mapa base no carga, el visor muestra un aviso. Usa **Abrir ruta de recojo en Google Maps** para consultar la ubicación de la finca.
 

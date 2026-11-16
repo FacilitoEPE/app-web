@@ -4,7 +4,7 @@ import { Button } from "@/shared/components/ui/button";
 type Point = [latitude: number, longitude: number];
 type RouteEstimate = { distance: number; duration: number; path: Point[] };
 const routeService = import.meta.env.VITE_PICKUP_ROUTE_URL?.trim()
-    || (import.meta.env.DEV ? "https://routing.openstreetmap.de/routed-car/route/v1/driving" : "");
+    || "https://routing.openstreetmap.de/routed-car/route/v1/driving";
 const manualOrigin = "Puedes marcar la salida en el mapa.";
 const directLineNotice = "Se muestra una línea recta de referencia. Abre Google Maps para ver la ruta por carretera.";
 
@@ -81,11 +81,6 @@ export default function DriverPickupMap({ latitude, longitude }: { latitude: num
 
     const showRoute = async () => {
         if (!origin || loading) return;
-        if (!routeService) {
-            setShowDirectLine(true);
-            setMessage("");
-            return;
-        }
         const request = new AbortController();
         routeRequest.current = request;
         setLoading(true);
