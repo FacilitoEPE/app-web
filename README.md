@@ -126,7 +126,7 @@ Este modo es exclusivo del servidor de desarrollo: el build se detiene si todav�
 
 ### Conexión con el backend V1
 
-Con `VITE_API_BASE_URL=/mock-api/`, las pantallas usan el servidor ficticio de desarrollo. Para el backend real configura su origen, por ejemplo `http://localhost:3000/`, y `VITE_API_CONTRACT=v1`; los servicios llaman las rutas `/v1` implementadas por NestJS.
+Con `VITE_API_BASE_URL=/mock-api/`, las pantallas usan el servidor ficticio de desarrollo. Para el backend real configura su origen, por ejemplo `http://localhost:3000/`. Los servicios llaman las rutas `/v1` implementadas por NestJS.
 
 El backend mantiene una copia de ejecución del [OpenAPI](docs/api/openapi.json) para validar solicitudes y convertir filas de PostgreSQL. Ejecuta `pnpm contract:check` para comprobar que el SQL fuente y los archivos generados coincidan.
 
@@ -184,7 +184,7 @@ docker compose up -d --force-recreate api
 
 No necesitas reconstruir la imagen del backend para este cambio: `CORS_ORIGIN` se lee al iniciar el contenedor. Admite varios orígenes separados por comas. En desarrollo, `localhost`, `127.0.0.1` y `::1` se aceptan en cualquier puerto; en producción solo se admiten los orígenes configurados. Para trabajar por IP LAN o dominio, agrega el origen exacto y recrea la API.
 
-Los puertos predeterminados son `3000` (API) y `5432` (base). Si alguno ya está ocupado, crea `epe-web/.env` y sobrescribe `API_PORT` o `DB_PORT_HOST`. También puedes establecer `DB_PASSWORD` y `DB_DATABASE` ahí. La contraseña predeterminada solo es para desarrollo local; cámbiala si expones servicios fuera de tu máquina. Si cambias el puerto de la API, configura `VITE_API_BASE_URL` para la web y vuelve a iniciar Vite.
+Los puertos predeterminados son `3000` (API) y `5432` (base). Si alguno ya está ocupado, crea `epe-web/.env` y sobrescribe `API_PORT` o `DB_PORT` para cambiar el puerto publicado. También puedes establecer `DB_PASSWORD` y `DB_DATABASE` ahí. La contraseña predeterminada solo es para desarrollo local; cámbiala si expones servicios fuera de tu máquina. Si cambias el puerto de la API, configura `VITE_API_BASE_URL` para la web y vuelve a iniciar Vite.
 
 #### Solo el contenedor web
 
@@ -205,6 +205,8 @@ docker run --rm -p 8080:80 epe-web
 Abre `http://localhost:8080`.
 
 > `VITE_API_BASE_URL` queda incorporada en el bundle durante `docker build`; cambiar variables al ejecutar el contenedor no modifica una imagen ya construida. Para otro backend, vuelve a construir la imagen.
+
+El mapa de recojo usa el [servicio público de rutas OSRM](https://routing.openstreetmap.de/about.html) por defecto. Si necesitas otro servidor OSRM, define `VITE_PICKUP_ROUTE_URL` antes de `pnpm build` o pásala con `--build-arg VITE_PICKUP_ROUTE_URL=...` al construir la imagen. El workflow de publicación toma este valor de las variables del repositorio. Usa una URL HTTPS que termine en `/route/v1/driving` y permita solicitudes desde el dominio del portal (CORS).
 
 <details>
 <summary><strong>🧩 Notas de ejecución y publicación</strong></summary>

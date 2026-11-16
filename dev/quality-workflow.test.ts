@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, afterEach, describe, expect, it } from 'vitest'
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
@@ -21,7 +21,6 @@ import { demoPdf } from '@/shared/utils/demoData'
 let server: Server
 let previousBase: string | undefined
 beforeEach(async () => {
-    vi.stubEnv('VITE_API_CONTRACT', 'v1')
     const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'), () => new Date('2026-11-08T15:00:00Z'), true)
     server = createServer((req, res) => middleware(req, res, () => { res.statusCode = 404; res.end() }))
     await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
@@ -31,7 +30,6 @@ beforeEach(async () => {
 })
 afterEach(async () => {
     apiClient.defaults.baseURL = previousBase
-    vi.unstubAllEnvs()
     await new Promise<void>(resolve => server.close(() => resolve()))
 })
 describe('Flujo de calidad con datos sintéticos de desarrollo', () => {

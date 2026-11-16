@@ -37,7 +37,7 @@ Los selectores de Campañas y Planificación Comercial muestran solo vínculos d
 - El documento y la licencia del chofer se recuperan al volver a abrir su ficha. La API y el mock conservan el número como texto. La [migración](../../epe-backend/docs/database.md#documento-del-chofer) incorpora los campos y copia el documento de la persona vinculada cuando existe.
 - Las fotos de identidad y las fichas técnicas pueden subirse con una URL base relativa. El detalle de certificación abre la evidencia por pago. El detalle del transportista permite consultar la cotización vinculada incluso si el acuerdo está en borrador.
 - El programa semanal agrupa entregas programadas por cliente y día, con filtros de fecha, variedad y placa. Esta vista usa kilos programados, por lo que sustituye el comportamiento histórico que mostraba cargas realizadas.
-- El registro de transportista selecciona ciudad con el catálogo de ubigeo y el de finca permite ver un marcador con sus coordenadas. En el portal del chofer se puede usar la ubicación actual en un contexto seguro con permiso del navegador o marcar una salida. El mapa dibuja la ruta por carretera y estima kilómetros y minutos con `VITE_PICKUP_ROUTE_URL`, que apunta a un endpoint OSRM. Sin servicio operativo, muestra una línea recta de referencia y ofrece el trayecto por carretera en Google Maps.
+- El registro de transportista selecciona ciudad con el catálogo de ubigeo y el de finca permite ver un marcador con sus coordenadas. En el portal del chofer se puede usar la ubicación actual en un contexto seguro con permiso del navegador o marcar una salida. El mapa calcula la ruta por carretera con OSRM en local y en los despliegues. Usa el servicio público por defecto y admite otro endpoint mediante `VITE_PICKUP_ROUTE_URL` al compilar. Si falla, muestra una línea recta de referencia y ofrece el trayecto por carretera en Google Maps.
 - La migración y los flujos con almacenamiento real quedan por verificar en el entorno de destino.
 
 ## Vinculación de proveedores en ejecución — 2026-11-08
@@ -666,7 +666,7 @@ Validación prevista para los cambios: pruebas HTTP con las funciones reales y f
 
 ## Plan de cierre funcional — 2026-11-01 · Completo
 
-1. **Roles (`Administrador` y `Chofer`)** — Completo: `AuthService.seedDefaultRolesAndUsers`, esquemas SQL (`03_schema_total.sql`, `05_seed_reference_catalogs_production.sql`) y `V1DatabaseService.list('rol')` restringidos exclusivamente a `Administrador` y `Chofer`. Cuenta compartida de chofer configurada como `chofer` (`DRIVER_SHARED_USERNAME=chofer`), vinculando conductores activos y nuevos.
+1. **Roles (`Administrador` y `Chofer`)** — El backend consulta las cuentas guardadas en PostgreSQL. El alta de conductor asigna automáticamente la cuenta si hay un único chofer activo. Con varias cuentas, la solicitud indica `usuarioId`.
 2. **Fincas y múltiples variedades** — Completo: cada proveedor puede registrar múltiples fincas y cada finca conserva su variedad directamente en `agro.finca.fruta_derivada_id` (sin tabla intermedia `finca_variedad` ni vistas adicionales). Adaptados los flujos de campaña (`campaignCommands.interview`), calidad (`QualityLoadFormModal.tsx`, `qualityCommands.saveLoad`) y portal del chofer (`DriverLoadDataModal.tsx`, `PATCH /api/chofer/cargas/:id/datos`).
 3. **Documentos obligatorios (`*`) y almacenamiento local** — Completo: servicio local autenticado (`/api/archivos-locales` y `/api/archivos-locales/vinculos`) con almacenamiento en `epe-backend/uploads`. Validación obligatoria (`*`) aplicada en formularios y validadores de requerimiento de transporte (`CarrierSendRequirementModal.tsx`), exámenes de laboratorio con resultado (`campaignExam.ts`), emisión de factura (`BillingIssueInvoiceModal.tsx`) y cierre documental de logística (`LogisticsDocumentsClosureModal.tsx`).
 4. **API sin versionado (`/api/...`)** — Completo: frontend (`usesV1() => true`) y backend unificados en `/api/...` con validación JWT y permisos por rol (`Administrador` / `Chofer`). Añadido `GET /api/auth/usuarios/:id` para resolver el nombre completo del responsable de campaña en edición (`CampaignFormModal.tsx`) incluso cuando pertenece a otro usuario.
@@ -824,7 +824,7 @@ Esta sección actualiza el resultado de la auditoría anterior; las secciones in
 ### Entornos y protección de los datos
 
 1. La primera pasada utilizó `5173 → 3000`, legacy, y encontró colecciones `public` vacías. Su evidencia se conserva más abajo como fase inicial.
-2. Al revisar `epe-backend`, se comprobó que V1 sí existe en código y en `dist`, y que PostgreSQL `desarrolloEPE` contiene el esquema `agro` con 3 campañas, 5 frutas, 2 proveedores, 1 cliente y 1 carga. El proceso original de 3000 no exponía esas rutas. Se inició una instancia temporal en **3001** y Vite en **5174**, con `VITE_API_CONTRACT=v1`, mediante variables de proceso, sin editar `.env` ni detener los servidores originales.
+2. Al revisar `epe-backend`, se comprobó que V1 sí existe en código y en `dist`, y que PostgreSQL `desarrolloEPE` contiene el esquema `agro` con 3 campañas, 5 frutas, 2 proveedores, 1 cliente y 1 carga. El proceso original de 3000 no exponía esas rutas. Se inició una instancia temporal en **3001** y Vite en **5174**, con el contrato V1 habilitado para esa prueba, sin editar `.env` ni detener los servidores originales.
 3. Contra `desarrolloEPE` se ejecutaron principalmente lecturas. Única edición reversible: ubicación del cliente 1, `Lima, Perú → QA MANUAL 2026-10-29 → Lima, Perú`. La persistencia y la restauración se verificaron recargando la página tras cada guardado; `updated_at` puede reflejar esta prueba.
 4. Para probar escrituras y cierres se creó la base **`epe_manual_qa_20261029`**, se instaló el SQL del backend y se ejecutó `seed-v1.mjs` **solo en esa base nueva**: 100 registros de ejemplo. Luego se reinició exclusivamente el backend temporal de 3001 sobre QA; Vite 5174 siguió apuntando a él. No se truncó ni migró `desarrolloEPE`.
 5. Al reanudar, `.env` de la instancia original 5173 ya apuntaba a `/mock-api/`, cambio ajeno a esta auditoría. Los resultados V1 siguientes pertenecen a **5174 → 3001 → PostgreSQL**, no a los mocks.
@@ -889,7 +889,7 @@ Los IDs QA-01–QA-04 permanecen en la primera fase. QA-01 fue un bloqueo de con
 
 ### Entorno comprobado
 
-- `.env` tiene `VITE_API_BASE_URL=http://localhost:3000/` y no define `VITE_API_CONTRACT=v1`; `usesV1()` selecciona legacy.
+- En esa revisión, `.env` apuntaba a `http://localhost:3000/` y el selector de entonces usaba el contrato anterior.
 - Lecturas reales: `GET /campanas`, `/frutas`, `/proveedores`, `/clientes-negocio` y `/empresas-transporte-externo`: HTTP 200 con `[]`. CORS de los cuatro últimos permite `http://localhost:5173`.
 - `GET /v1/campanas`: HTTP 404. Hay implementación V1 en el árbol de trabajo del backend, pero su presencia en disco no acredita que el proceso del puerto 3000 la esté sirviendo.
 - El catálogo de frutas vacío impide crear una campaña desde el formulario. Sin campaña, participaciones, contratos, fincas y unidades no se pueden recorrer los procesos dependientes con datos válidos.
@@ -944,7 +944,7 @@ No se consideran defectos nuevos la sesión simulada ni FC14, pues son límites 
 
 ## 4.1. Integración V1 de las pantallas — 2026-10-29
 
-**Completo para el consumo HTTP del contrato desde el modo local de desarrollo.** Con `VITE_API_BASE_URL=/mock-api/` las pantallas consumen la API ficticia y `json/v1-demo/`. Para el backend real, configurar su origen y `VITE_API_CONTRACT=v1`; el backend NestJS sirve las operaciones bajo `/v1`. El estado de implementación del backend de este hito es histórico; ver la auditoría del 2026-11-03. `legacy` explícito mantiene la compatibilidad anterior.
+**Completo para el consumo HTTP del contrato desde el modo local de desarrollo.** Con `VITE_API_BASE_URL=/mock-api/` las pantallas consumen la API ficticia y `json/v1-demo/`. El backend NestJS sirve las operaciones bajo `/v1`. El estado de implementación registrado en este hito corresponde a la revisión del 29 de octubre de 2026.
 
 | Pantallas | Consumo V1 implementado | Límites vigentes |
 |---|---|---|

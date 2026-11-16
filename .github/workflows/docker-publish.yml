@@ -49,6 +49,7 @@ jobs:
       - name: Build frontend
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_PICKUP_ROUTE_URL: ${{ vars.VITE_PICKUP_ROUTE_URL }}
         run: pnpm build
 
   publish:
@@ -86,6 +87,7 @@ jobs:
           context: .
           build-args: |
             VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
+            VITE_PICKUP_ROUTE_URL=${{ vars.VITE_PICKUP_ROUTE_URL }}
           push: true
           labels: |
             org.opencontainers.image.version=${{ github.ref_name }}

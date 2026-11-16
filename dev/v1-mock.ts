@@ -708,6 +708,12 @@ export function createV1MockMiddleware(root: string, clock: () => Date = () => n
           }
         }
         if (resource?.scope) row[resource.scope] = params.parentId
+        if (!current && table === 'chofer_transporte_externo' && row.usuarioId == null) {
+          const role = db.rol.find(item => String(item.nombre).toLowerCase() === 'chofer')
+          const drivers = db.usuario.filter(item => item.activo === true && item.rolId === role?.rolId)
+          if (drivers.length !== 1) fail('DRIVER_ACCOUNT_REQUIRED', 'Configura una única cuenta activa de chofer antes de registrar conductores.')
+          row.usuarioId = drivers[0].usuarioId
+        }
         if ('registradoPorUsuarioId' in row && !current) row.registradoPorUsuarioId = 1
         if (['contrato_venta','entrega_programada'].includes(table) && current?.desglosePendiente && (input as Row).variedades === undefined) fail('HISTORICAL_BREAKDOWN_REQUIRED','Envía el desglose completo para confirmar un registro histórico.')
         protect(table,row,current)

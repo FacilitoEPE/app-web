@@ -1,10 +1,8 @@
 import { remoteMutationRevision } from '@/shared/api/remote-mutations';
 import { reportActionError } from '@/shared/api/action-errors';
 
-/** En la aplicación se utiliza siempre la API actual; las pruebas históricas conservan su modo local. */
-export const usesV1 = () => import.meta.env.MODE !== 'test'
-    || import.meta.env.VITE_API_CONTRACT === 'v1'
-    || import.meta.env.VITE_API_BASE_URL?.startsWith('/mock-api') === true;
+// Las pruebas del contrato anterior aíslan su comportamiento con un mock local.
+export const usesV1 = (): boolean => true;
 let refresh: ((reconcile?: boolean) => Promise<void>) | undefined;
 export function registerDataRefresh(callback: (reconcile?: boolean) => Promise<void>) { refresh = callback; }
 export async function refreshRemoteData(reconcile = false) {

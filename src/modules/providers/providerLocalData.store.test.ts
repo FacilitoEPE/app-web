@@ -1,4 +1,9 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock(import("@/shared/api/data-contract"), async (importOriginal) => ({
+  ...await importOriginal(),
+  usesV1: () => false,
+}));
 import {
     addCertificado,
     addFinca,

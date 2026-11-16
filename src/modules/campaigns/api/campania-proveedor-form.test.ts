@@ -20,6 +20,9 @@ describe("campaign provider form contract", () => {
       tipoProveedor: "productor",
       cantidadProveedor: 12.5,
       frutaConvencionalEstimado: null,
+      moneda: "PEN",
+      precioCompraKg: null,
+      observaciones: null,
     });
   });
 
@@ -47,6 +50,9 @@ describe("campaign provider form contract", () => {
       tipoProveedor: "productor",
       cantidadProveedor: 12.5,
       frutaConvencionalEstimado: 500,
+      moneda: "PEN",
+      precioCompraKg: null,
+      observaciones: null,
     });
   });
 
@@ -55,6 +61,9 @@ describe("campaign provider form contract", () => {
       tipoProveedor: "productor",
       cantidadProveedor: 12.5,
       frutaConvencionalEstimado: null,
+      moneda: "PEN",
+      precioCompraKg: null,
+      observaciones: null,
     });
   });
 

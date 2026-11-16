@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import path from 'node:path';
@@ -16,7 +16,6 @@ let server: Server;
 let previousBase: string | undefined;
 
 beforeEach(async () => {
-    vi.stubEnv('VITE_API_CONTRACT', 'v1');
     const middleware = createV1MockMiddleware(path.resolve(import.meta.dirname, '..'), () => new Date('2026-11-08T15:00:00Z'), true);
     server = createServer((request, response) => middleware(request, response, () => {
         response.statusCode = 418;
@@ -30,7 +29,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
     apiClient.defaults.baseURL = previousBase;
-    vi.unstubAllEnvs();
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
 });
 

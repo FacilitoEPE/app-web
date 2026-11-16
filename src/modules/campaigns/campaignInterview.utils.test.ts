@@ -1,4 +1,9 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock(import("@/shared/api/data-contract"), async (importOriginal) => ({
+  ...await importOriginal(),
+  usesV1: () => false,
+}));
 import { EMPTY_INTERVIEW, EMPTY_INTERVIEW_AGRONOMICS, validateInterviewAgronomics } from "@/modules/campaigns/campaignInterview";
 import { fruitCodePrefix, getAvailableInterviewFincas, getCampaignInterviews, getNextCampaignFincaCode, resetCampaignInterviews, saveCampaignInterview, toInterviewValues } from "@/modules/campaigns/campaignInterview.utils";
 import type { Finca } from "@/modules/providers/providerFinca.utils";

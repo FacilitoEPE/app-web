@@ -18,19 +18,16 @@ Object.assign(process.env, {
   S3_DOCUMENTS_BUCKET: 'epe-qa-local',
   RESEND_API_KEY: '',
   RESEND_FROM: '',
-  AUTH_ADMIN_USERNAME: 'qa_web_admin',
-  AUTH_ADMIN_PASSWORD: 'QA-web-admin-password',
-  AUTH_ADMIN_DOCUMENT: '90000301',
-  AUTH_ADMIN_NAMES: 'QA',
-  AUTH_ADMIN_SURNAMES: 'Admin',
-  AUTH_DRIVER_USERNAME: 'qa_web_driver',
-  AUTH_DRIVER_PASSWORD: 'QA-web-driver-password',
-  AUTH_DRIVER_DOCUMENT: '90000302',
-  AUTH_DRIVER_NAMES: 'QA',
-  AUTH_DRIVER_SURNAMES: 'Chofer',
-  DRIVER_SHARED_USERNAME: 'qa_web_driver',
 })
 execFileSync(process.execPath, ['scripts/seed-v1.mjs'], { stdio: 'inherit' })
+for (const account of [
+  { usuario: 'qa_web_admin', password: 'QA-web-admin-password', documento: '90000301', rol: 'Administrador' },
+  { usuario: 'qa_web_driver', password: 'QA-web-driver-password', documento: '90000302', rol: 'Chofer' },
+]) {
+  execFileSync(process.execPath, ['scripts/provision-user.mjs'], {
+    input: JSON.stringify({ ...account, nombres: 'QA', apellidos: account.rol }),
+  })
+}
 
 // Keep real HTTP and document controllers while isolating external storage.
 const { S3StorageService } = await import(new URL('dist/archivo/services/s3-storage.service.js', backend).href)

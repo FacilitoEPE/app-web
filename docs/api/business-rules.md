@@ -90,7 +90,6 @@ Los selectores V1 de finca admiten una variedad; la participación no presenta s
 VITE_API_BASE_URL=/mock-api/
 # Backend NestJS con API V1:
 # VITE_API_BASE_URL=http://localhost:3000/
-# VITE_API_CONTRACT=v1
 ```
 
 Reiniciar Vite al cambiar `.env`, OpenAPI o fixtures. Los mocks son exclusivos de `pnpm dev`/`pnpm dev:network`; el build con base ficticia se rechaza. Los datos no se empaquetan para producción.
@@ -197,6 +196,8 @@ Requerimiento → contratos → entregas. El precio de contrato puede ser null d
 
 Un transportista puede vincularse en `BORRADOR`; confirmar exige tipo de pago, importe y fechas. Desembolso de adelanto no se crea por guardar el acuerdo. La coordinación usa un acuerdo confirmado, vehículo y chofer de la misma empresa, y una entrega de esa campaña. La reserva del chofer usa intervalos `[inicio,fin)` y se valida transaccionalmente.
 
+Al registrar un conductor, la API asigna la cuenta si hay un único chofer activo. Con varias cuentas activas, el alta requiere `usuarioId`.
+
 El servicio de coordinación sincroniza las asignaciones/trazabilidad conservadas por compatibilidad. Los orígenes son participaciones/fincas de esa misma campaña y proveedor. Un flete por entrega puede superar la referencia total con observación, como el prototipo; no añadir una aprobación jerárquica. Un flete ya liquidado queda protegido.
 
 ### Calidad, cosecha, carga y guía
@@ -278,7 +279,7 @@ const fincas = await fincaV1(proveedor.proveedorId).list()
 const requerimientos = await clienteNegocioCampanaV1(1).list({ clienteNegocioId: 1 })
 ```
 
-Cada objeto expone `list/get`; CRUD agrega `create/update/remove`; append-only agrega solo `create`. Los tipos de entrada excluyen IDs y auditoría. Los adaptadores de dominio convierten DTOs para las vistas y muestran errores HTTP. El backend real se configura con su origen y `VITE_API_CONTRACT=v1`; las fixtures locales son independientes y no actúan como fallback ante errores.
+Cada objeto expone `list/get`; CRUD agrega `create/update/remove`; append-only agrega solo `create`. Los tipos de entrada excluyen IDs y auditoría. Los adaptadores de dominio convierten DTOs para las vistas y muestran errores HTTP. La web usa el contrato V1 y conecta con el origen configurado en `VITE_API_BASE_URL`. Las fixtures locales se usan con la API ficticia de desarrollo.
 
 Resúmenes, KPIs, programa semanal y vistas del chofer se derivan de esas entidades. Por ahora no se fija un endpoint de dashboard adicional: primero implementar el flujo y medir su consumo. No crear tablas para un resumen de pantalla.
 
