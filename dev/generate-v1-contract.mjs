@@ -285,7 +285,16 @@ schemas.UploadedDocument = {
     name: { type: 'string' }, type: { type: 'string' }, size: { type: 'integer', minimum: 1 },
   },
 }
+schemas.DocumentLink = {
+  type: 'object', required: ['tipo', 'entidadId', 'archivoId', 'name', 'type', 'size', 'url'],
+  properties: {
+    tipo: { type: 'string' }, entidadId: { type: 'integer', minimum: 1 }, archivoId: { type: 'string', format: 'uuid' },
+    url: { type: 'string' }, name: { type: 'string' }, type: { type: 'string' }, size: { type: 'integer', minimum: 1 },
+    ownerId: { type: 'integer' },
+  },
+}
 for (const resource of ['documentos', 'archivos-locales']) {
+  const suffix = resource === 'documentos' ? '' : 'Legacy'
   paths[`/${resource}`] = { post: {
     operationId: resource === 'documentos' ? 'uploadDocument' : 'uploadLegacyDocument',
     tags: ['documentos'], summary: 'Subir un adjunto a S3 por módulo y tipo',
@@ -305,6 +314,32 @@ for (const resource of ['documentos', 'archivos-locales']) {
     'x-roles': ['Administrador', 'Chofer'],
     parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
     responses: { 200: response(ref('DocumentAvailability')), ...errorResponses },
+  } }
+  paths[`/${resource}/vinculos`] = {
+    get: {
+      operationId: `list${suffix}DocumentLinks`, tags: ['documentos'], 'x-roles': ['Administrador'],
+      summary: 'Consultar los vínculos de documentos',
+      responses: { 200: response({ type: 'array', items: ref('DocumentLink') }), ...errorResponses },
+    },
+    post: {
+      operationId: `save${suffix}DocumentLink`, tags: ['documentos'], 'x-roles': ['Administrador'],
+      summary: 'Guardar un vínculo y retirar el adjunto reemplazado si queda sin referencias',
+      requestBody: { required: true, content: { 'application/json': { schema: {
+        type: 'object', required: ['tipo', 'entidadId', 'archivoId'], properties: {
+          tipo: { type: 'string' }, entidadId: { type: 'integer', minimum: 1 }, archivoId: { type: 'string', format: 'uuid' },
+        },
+      } } } },
+      responses: { 201: response(ref('DocumentLink')), ...errorResponses },
+    },
+  }
+  paths[`/${resource}/vinculos/{tipo}/{entidadId}`] = { delete: {
+    operationId: `remove${suffix}DocumentLink`, tags: ['documentos'], 'x-roles': ['Administrador'],
+    summary: 'Quitar un vínculo guardado y retirar su adjunto si queda sin referencias',
+    parameters: [
+      { name: 'tipo', in: 'path', required: true, schema: { type: 'string' } },
+      { name: 'entidadId', in: 'path', required: true, schema: { type: 'integer', minimum: 1 } },
+    ],
+    responses: { 200: response({ type: 'object', required: ['ok'], properties: { ok: { type: 'boolean' } } }), ...errorResponses },
   } }
 }
 

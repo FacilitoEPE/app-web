@@ -39,6 +39,31 @@ afterEach(async () => {
 })
 
 describe('V1 API contract', () => {
+  it('retira del mock el archivo anterior al confirmar un reemplazo o desvinculación', async () => {
+    const endpoint = `${origin}/mock-api/v1/documentos`
+    const upload = async (name: string) => {
+      const form = new FormData()
+      form.append('archivo', new Blob(['%PDF'], { type: 'application/pdf' }), name)
+      const result = await fetch(endpoint, { method: 'POST', body: form })
+      expect(result.status).toBe(201)
+      return (await result.json()).id as string
+    }
+    const link = async (archivoId: string) => fetch(`${endpoint}/vinculos`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo: 'campana', entidadId: 1, archivoId }),
+    })
+
+    const previous = await upload('original.pdf')
+    expect((await link(previous)).status).toBe(201)
+    const replacement = await upload('nuevo.pdf')
+    expect((await fetch(`${endpoint}/${previous}`)).status).toBe(200)
+    expect((await link(replacement)).status).toBe(201)
+    expect((await fetch(`${endpoint}/${previous}`)).status).toBe(404)
+    expect((await fetch(`${endpoint}/${replacement}`)).status).toBe(200)
+    expect((await fetch(`${endpoint}/vinculos/campana/1`, { method: 'DELETE' })).status).toBe(200)
+    expect((await fetch(`${endpoint}/${replacement}`)).status).toBe(404)
+  })
+
   it('calcula el estado por fecha de Lima al crear, editar y consultar', async () => {
     const created = await campanaV1.create({ nombre:'Prueba', frutaId:4, fechaInicio:'2026-11-02', fechaFin:'2026-11-03', requerimientoComercial:100 })
     expect(created.estado).toBe('planificacion')
